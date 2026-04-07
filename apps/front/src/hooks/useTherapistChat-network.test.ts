@@ -1,20 +1,55 @@
 // @vitest-environment jsdom
 
 /**
- * useTherapistChat — Network error retry tests (Story 31-5)
+ * useTherapistChat — Network error and retry tests (Story 31-5)
  *
- * Verifies that unsent messages are preserved and retryable after network errors.
+ * Verifies that errors are surfaced via toast, cache is rolled back,
+ * and the toast action allows retrying the failed message.
  */
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { Effect } from "effect";
 import { createElement, type ReactNode } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { setupDefaultMocks } from "./__fixtures__/use-therapist-chat.fixtures";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the assessment hooks
-const { mockMutate, mockResumeSession } = vi.hoisted(() => ({
-	mockMutate: vi.fn(),
+// ── Mocks ────────────────────────────────────────────────────────────────────
+
+const mockToastError = vi.fn();
+vi.mock("sonner", () => ({
+	toast: {
+		error: (...args: unknown[]) => mockToastError(...args),
+	},
+}));
+
+let sendMessageMock: vi.Mock;
+
+vi.mock("@/lib/api-client", () => ({
+	makeApiClient: Effect.succeed({
+		assessment: {
+			sendMessage: (opts: { payload: { sessionId: string; message: string } }) =>
+				Effect.tryPromise({
+					try: () => sendMessageMock(opts.payload),
+					catch: (e) => e, // preserve original error for parseApiError
+				}),
+			resumeSession: () =>
+				Effect.succeed({
+					messages: [],
+					confidence: {
+						openness: 0,
+						conscientiousness: 0,
+						extraversion: 0,
+						agreeableness: 0,
+						neuroticism: 0,
+					},
+					freeTierMessageThreshold: 25,
+					status: "active",
+				}),
+		},
+	}),
+}));
+
+const { mockResumeSession } = vi.hoisted(() => ({
 	mockResumeSession: vi.fn(() => ({
 		data: undefined,
 		isLoading: false,
@@ -34,131 +69,142 @@ vi.mock("@/hooks/use-assessment", () => ({
 			this.details = details;
 		}
 	},
-	useSendMessage: () => ({
-		mutate: mockMutate,
-		isPending: false,
-	}),
 	useResumeSession: mockResumeSession,
 }));
 
 import { useTherapistChat } from "./useTherapistChat";
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-const wrapper = ({ children }: { children: ReactNode }) =>
-	createElement(QueryClientProvider, { client: queryClient }, children);
+let queryClient: QueryClient;
+let wrapper: ({ children }: { children: ReactNode }) => ReactNode;
 
 describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		vi.useFakeTimers();
-		setupDefaultMocks(mockResumeSession);
-	});
-
-	afterEach(() => {
-		vi.useRealTimers();
-	});
-
-	it("preserves user message in messages array after network error", async () => {
-		// Setup with an existing conversation (not a new session)
-		mockResumeSession.mockReturnValue({
-			data: {
-				messages: [
-					{ role: "assistant", content: "Hi there!", timestamp: "2026-01-01T00:00:00Z" },
-					{ role: "user", content: "Hello", timestamp: "2026-01-01T00:01:00Z" },
-					{ role: "assistant", content: "How are you?", timestamp: "2026-01-01T00:02:00Z" },
-				],
-				confidence: {
-					openness: 50,
-					conscientiousness: 50,
-					extraversion: 50,
-					agreeableness: 50,
-					neuroticism: 50,
-				},
-				freeTierMessageThreshold: 25,
+		sendMessageMock = vi.fn().mockResolvedValue({ response: "OK", isFinalTurn: false });
+		queryClient = new QueryClient({
+			defaultOptions: {
+				queries: { retry: false },
+				mutations: { retry: false },
 			},
+		});
+		wrapper = ({ children }: { children: ReactNode }) =>
+			createElement(QueryClientProvider, { client: queryClient }, children);
+	});
+
+	it("rolls back cache and shows toast after network error", async () => {
+		const existingMessages = [
+			{ role: "assistant" as const, content: "Hi there!", timestamp: "2026-01-01T00:00:00Z" },
+			{ role: "user" as const, content: "Hello", timestamp: "2026-01-01T00:01:00Z" },
+			{ role: "assistant" as const, content: "How are you?", timestamp: "2026-01-01T00:02:00Z" },
+		];
+
+		const resumeData = {
+			messages: existingMessages,
+			confidence: {
+				openness: 50,
+				conscientiousness: 50,
+				extraversion: 50,
+				agreeableness: 50,
+				neuroticism: 50,
+			},
+			freeTierMessageThreshold: 25,
+			status: "active",
+		};
+
+		mockResumeSession.mockReturnValue({
+			data: resumeData,
 			isLoading: false,
 			error: null,
 			refetch: vi.fn(),
 		});
+		queryClient.setQueryData(["assessment", "session", "session-123"], resumeData);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 		expect(result.current.messages).toHaveLength(3);
 
-		// Send a message that will fail
-		mockMutate.mockImplementation((_input: unknown, opts: { onError: (err: Error) => void }) => {
-			opts.onError(new Error("Failed to fetch"));
-		});
+		sendMessageMock.mockRejectedValue(new Error("Failed to fetch"));
 
 		await act(async () => {
-			await result.current.sendMessage("My unsent message");
+			result.current.sendMessage("My unsent message");
 		});
 
-		// User message should still be in messages (optimistic update)
-		expect(result.current.messages).toHaveLength(4);
-		expect(result.current.messages[3].content).toBe("My unsent message");
-		expect(result.current.messages[3].role).toBe("user");
+		await waitFor(() => {
+			expect(result.current.isLoading).toBe(false);
+		});
 
-		// Error should be set
-		expect(result.current.errorMessage).toBeTruthy();
-		expect(result.current.errorType).toBe("network");
+		// Error should be surfaced via toast
+		expect(mockToastError).toHaveBeenCalledWith(
+			expect.stringContaining("Connection lost"),
+			expect.any(Object),
+		);
+
+		// Cache should be rolled back (optimistic user message removed)
+		const cached = queryClient.getQueryData<{
+			messages: Array<{ role: string; content: string }>;
+		}>(["assessment", "session", "session-123"]);
+		expect(cached?.messages).toHaveLength(3);
 	});
 
-	it("retryLastMessage re-sends the failed message", async () => {
-		mockResumeSession.mockReturnValue({
-			data: {
-				messages: [{ role: "assistant", content: "Hi!", timestamp: "2026-01-01T00:00:00Z" }],
-				confidence: {
-					openness: 50,
-					conscientiousness: 50,
-					extraversion: 50,
-					agreeableness: 50,
-					neuroticism: 50,
-				},
-				freeTierMessageThreshold: 25,
+	it("toast action allows retry of the failed message", async () => {
+		const resumeData = {
+			messages: [{ role: "assistant" as const, content: "Hi!", timestamp: "2026-01-01T00:00:00Z" }],
+			confidence: {
+				openness: 50,
+				conscientiousness: 50,
+				extraversion: 50,
+				agreeableness: 50,
+				neuroticism: 50,
 			},
+			freeTierMessageThreshold: 25,
+			status: "active",
+		};
+
+		mockResumeSession.mockReturnValue({
+			data: resumeData,
 			isLoading: false,
 			error: null,
 			refetch: vi.fn(),
 		});
+		queryClient.setQueryData(["assessment", "session", "session-123"], resumeData);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 		// First send fails
-		mockMutate.mockImplementation((_input: unknown, opts: { onError: (err: Error) => void }) => {
-			opts.onError(new Error("Failed to fetch"));
-		});
+		sendMessageMock.mockRejectedValue(new Error("Failed to fetch"));
 
 		await act(async () => {
-			await result.current.sendMessage("Retry me");
+			result.current.sendMessage("Retry me");
 		});
 
-		expect(result.current.errorMessage).toBeTruthy();
+		await waitFor(() => {
+			expect(result.current.isLoading).toBe(false);
+		});
 
-		// Now retry succeeds
-		mockMutate.mockImplementation(
-			(
-				_input: unknown,
-				opts: { onSuccess: (data: { response: string; isFinalTurn: boolean }) => void },
-			) => {
-				opts.onSuccess({ response: "Nerin responds", isFinalTurn: false });
-			},
-		);
+		expect(mockToastError).toHaveBeenCalled();
+
+		// The toast should include a retry action
+		const toastCall = mockToastError.mock.calls[0];
+		const toastOpts = toastCall[1] as { action?: { label: string; onClick: () => void } };
+		expect(toastOpts.action).toBeDefined();
+		expect(toastOpts.action?.label).toBe("Retry");
+
+		// Now make the retry succeed
+		sendMessageMock.mockResolvedValue({ response: "Nerin responds", isFinalTurn: false });
 
 		await act(async () => {
-			result.current.retryLastMessage();
+			toastOpts.action?.onClick();
 		});
 
-		// The retry should have called sendMessageMutate with the same message
-		expect(mockMutate).toHaveBeenCalledTimes(2);
+		// The retry should have called sendMessage again
+		expect(sendMessageMock).toHaveBeenCalledTimes(2);
 	});
 
 	it("shows correct progress after resume", () => {
-		// 5 user messages in a 25-turn conversation = 20%
 		const msgs = [];
 		for (let i = 0; i < 10; i++) {
 			msgs.push({
-				role: i % 2 === 0 ? "assistant" : "user",
+				role: i % 2 === 0 ? ("assistant" as const) : ("user" as const),
 				content: `Message ${i}`,
 				timestamp: "2026-01-01T00:00:00Z",
 			});

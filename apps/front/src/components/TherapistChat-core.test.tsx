@@ -99,31 +99,20 @@ describe("TherapistChat", () => {
 		expect(bouncingDots.length).toBe(0);
 	});
 
-	it("displays error banner when errorMessage is set", () => {
-		mockHookReturn.errorMessage = "Something went wrong";
-		mockHookReturn.errorType = "generic";
+	it("displays error banner when resumeError is set", () => {
+		mockHookReturn.resumeError = new Error("Something went wrong");
 
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 		expect(screen.getByText("Something went wrong")).toBeTruthy();
 	});
 
-	it("shows retry button for network errors", () => {
-		mockHookReturn.errorMessage = "Connection lost";
-		mockHookReturn.errorType = "network";
+	it("shows retry button when resumeError is set", () => {
+		mockHookReturn.resumeError = new Error("Connection lost");
 
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
 		expect(screen.getByText("Retry")).toBeTruthy();
-	});
-
-	it("does not show retry button for budget errors", () => {
-		mockHookReturn.errorMessage = "Budget reached";
-		mockHookReturn.errorType = "budget";
-
-		renderWithProviders(<TherapistChat sessionId="session-123" />);
-
-		expect(screen.queryByText("Retry")).toBeNull();
 	});
 
 	it("adds data-message-id attribute to messages", () => {

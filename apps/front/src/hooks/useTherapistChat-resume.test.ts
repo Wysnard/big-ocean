@@ -2,13 +2,40 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
+import { Effect } from "effect";
 import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setupDefaultMocks } from "./__fixtures__/use-therapist-chat.fixtures";
 
+// Mock sonner toast (imported by the hook)
+vi.mock("sonner", () => ({
+	toast: { error: vi.fn() },
+}));
+
+// Mock makeApiClient (used by the hook's internal useMutation)
+vi.mock("@/lib/api-client", () => ({
+	makeApiClient: Effect.succeed({
+		assessment: {
+			sendMessage: () => Effect.succeed({ response: "OK", isFinalTurn: false }),
+			resumeSession: () =>
+				Effect.succeed({
+					messages: [],
+					confidence: {
+						openness: 0,
+						conscientiousness: 0,
+						extraversion: 0,
+						agreeableness: 0,
+						neuroticism: 0,
+					},
+					freeTierMessageThreshold: 25,
+					status: "active",
+				}),
+		},
+	}),
+}));
+
 // Mock the assessment hooks using vi.hoisted to avoid hoisting issues
-const { mockMutate, mockResumeSession } = vi.hoisted(() => ({
-	mockMutate: vi.fn(),
+const { mockResumeSession } = vi.hoisted(() => ({
 	mockResumeSession: vi.fn(() => ({
 		data: undefined,
 		isLoading: false,
@@ -28,10 +55,6 @@ vi.mock("@/hooks/use-assessment", () => ({
 			this.details = details;
 		}
 	},
-	useSendMessage: () => ({
-		mutate: mockMutate,
-		isPending: false,
-	}),
 	useResumeSession: mockResumeSession,
 }));
 
@@ -111,7 +134,7 @@ describe("useTherapistChat", () => {
 			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
 			// Should have generated ID from index
-			expect(result.current.messages[0].id).toBe("msg-resume-0");
+			expect(result.current.messages[0].id).toBe("msg-0");
 			expect(result.current.messages[0].timestamp).toBeInstanceOf(Date);
 		});
 

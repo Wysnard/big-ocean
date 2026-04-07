@@ -4,8 +4,6 @@ import { vi } from "vitest";
 
 // Default mock return values
 export const mockSendMessage = vi.fn();
-export const mockClearError = vi.fn();
-export const mockRetryLastMessage = vi.fn();
 
 export let mockHookReturn = {
 	messages: [
@@ -25,17 +23,13 @@ export let mockHookReturn = {
 	},
 	isLoading: false,
 	isCompleted: false,
-	errorMessage: null as string | null,
-	errorType: null as string | null,
-	clearError: mockClearError,
-	retryLastMessage: mockRetryLastMessage,
 	sendMessage: mockSendMessage,
 	isResuming: false,
 	resumeError: null as Error | null,
 	isResumeSessionNotFound: false,
 	isConfidenceReady: false,
 	progressPercent: 0,
-	freeTierMessageThreshold: 27,
+	freeTierMessageThreshold: 25,
 	// Story 7.18: Farewell transition state
 	isFarewellReceived: false,
 	portraitWaitMinMs: undefined as number | undefined,
@@ -60,19 +54,13 @@ export function resetMockHookReturn() {
 		},
 		isLoading: false,
 		isCompleted: false,
-		errorMessage: null,
-		errorType: null,
-		clearError: mockClearError,
-		retryLastMessage: mockRetryLastMessage,
 		sendMessage: mockSendMessage,
 		isResuming: false,
 		resumeError: null,
 		isResumeSessionNotFound: false,
 		isConfidenceReady: false,
 		progressPercent: 0,
-		freeTierMessageThreshold: 27,
-		hasShownCelebration: false,
-		setHasShownCelebration: vi.fn(),
+		freeTierMessageThreshold: 25,
 		isFarewellReceived: false,
 		portraitWaitMinMs: undefined,
 	};
