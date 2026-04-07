@@ -18,6 +18,7 @@ import {
 	SendMessageResponseSchema,
 	StartAssessmentResponseSchema,
 } from "@workspace/contracts";
+import { TRAIT_LETTER_MAP } from "@workspace/domain";
 import { Schema } from "effect";
 import pg from "pg";
 import { describe, expect, test } from "vitest";
@@ -30,15 +31,15 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 const TEST_DB_URL = "postgresql://test_user:test_password@localhost:5433/bigocean_test";
 
 /**
- * Story 11.1: Complete a finalizing session via direct DB update.
+ * Story 11.1: Preserve a session in "finalizing" via direct DB update.
  * Used in integration tests where generate-results requires auth
- * but the test uses anonymous sessions.
+ * but anonymous result retrieval relies on GET /results lazy finalization.
  */
 async function completeSessionViaDb(sessionId: string): Promise<void> {
 	const pool = new pg.Pool({ connectionString: TEST_DB_URL });
 	try {
 		await pool.query(
-			`UPDATE assessment_session SET status = 'completed', finalization_progress = 'completed', updated_at = NOW() WHERE id = $1`,
+			`UPDATE conversations SET status = 'finalizing', finalization_progress = 'analyzing', updated_at = NOW() WHERE id = $1`,
 			[sessionId],
 		);
 	} finally {
@@ -271,8 +272,8 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		const thirdDecoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(thirdMsgData);
 		expect(thirdDecoded.isFinalTurn).toBe(true);
 
-		// Story 11.1: Session is now "finalizing". generate-results requires auth,
-		// so for this anonymous integration test we complete the session via DB directly.
+		// Story 11.1: generate-results requires auth, so for this anonymous
+		// integration test we keep the session in "finalizing" via direct DB update.
 		await completeSessionViaDb(sessionId);
 
 		// Fetch results
@@ -299,29 +300,13 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		expect(typeof decoded.isCurated).toBe("boolean");
 
 		// Traits — levels are trait-specific letters (e.g., P/G/O for openness, not H/M/L)
-		const VALID_TRAIT_LEVELS = [
-			"P",
-			"G",
-			"O",
-			"F",
-			"B",
-			"D",
-			"I",
-			"A",
-			"E",
-			"C",
-			"N",
-			"W",
-			"R",
-			"T",
-			"S",
-		];
+		const VALID_TRAIT_LEVELS = new Set(Object.values(TRAIT_LETTER_MAP).flat());
 		expect(decoded.traits).toHaveLength(5);
 		for (const trait of decoded.traits) {
 			expect(typeof trait.name).toBe("string");
 			expect(trait.score).toBeGreaterThanOrEqual(0);
 			expect(trait.score).toBeLessThanOrEqual(120);
-			expect(VALID_TRAIT_LEVELS).toContain(trait.level);
+			expect(VALID_TRAIT_LEVELS.has(trait.level)).toBe(true);
 			expect(trait.confidence).toBeGreaterThanOrEqual(0);
 			expect(trait.confidence).toBeLessThanOrEqual(100);
 		}

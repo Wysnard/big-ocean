@@ -7,6 +7,7 @@ import {
 	assessmentSession,
 	bigfiveFacetNameEnum,
 	conversationEvidence,
+	conversationTypeEnum,
 	evidenceDomainEnum,
 	publicProfile,
 } from "../drizzle/schema";
@@ -47,6 +48,21 @@ describe("Assessment Session Schema", () => {
 		expect(assessmentSession.messageCount).toBeDefined();
 		expect(assessmentSession.createdAt).toBeDefined();
 		expect(assessmentSession.updatedAt).toBeDefined();
+	});
+
+	it("should have conversationType and metadata columns (Story 45-1)", () => {
+		expect(assessmentSession.conversationType).toBeDefined();
+		expect(assessmentSession.metadata).toBeDefined();
+	});
+
+	it("conversation_type enum should have ADR-39 values", () => {
+		expect(conversationTypeEnum.enumValues).toEqual([
+			"assessment",
+			"extension",
+			"coach",
+			"journal",
+			"career",
+		]);
 	});
 });
 

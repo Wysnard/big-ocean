@@ -123,7 +123,7 @@ export async function toggleProfileVisibility(
 
 /**
  * Seed a session with enough data for the results page to render:
- * - 2 assessment_message rows (user + assistant)
+ * - 2 messages rows (user + assistant)
  * - 30 conversation_evidence rows (one per facet, Story 9.1 schema)
  * - Updates session to status=completed, message_count=2
  */
@@ -138,7 +138,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 
 		// 1. Insert two conversation messages
 		const userMsgResult = await client.query(
-			`INSERT INTO assessment_message (session_id, role, content, created_at)
+			`INSERT INTO messages (session_id, role, content, created_at)
 			 VALUES ($1, 'user', $2, NOW())
 			 RETURNING id`,
 			[sessionId, "I enjoy spending time with close friends and exploring new ideas."],
@@ -146,7 +146,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 		const userMsgId: string = userMsgResult.rows[0].id;
 
 		await client.query(
-			`INSERT INTO assessment_message (session_id, role, content, created_at)
+			`INSERT INTO messages (session_id, role, content, created_at)
 			 VALUES ($1, 'assistant', $2, NOW())
 			 RETURNING id`,
 			[
@@ -242,7 +242,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 
 		// 5. Update session to completed with message_count >= 2
 		await client.query(
-			`UPDATE assessment_session
+			`UPDATE conversations
 			 SET status = 'completed', message_count = 2, updated_at = NOW()
 			 WHERE id = $1`,
 			[sessionId],
@@ -267,10 +267,10 @@ export async function linkSessionToUser(sessionId: string, userId: string): Prom
 	const client = await pool.connect();
 
 	try {
-		await client.query(
-			`UPDATE assessment_session SET user_id = $1, updated_at = NOW() WHERE id = $2`,
-			[userId, sessionId],
-		);
+		await client.query(`UPDATE conversations SET user_id = $1, updated_at = NOW() WHERE id = $2`, [
+			userId,
+			sessionId,
+		]);
 	} finally {
 		client.release();
 		await pool.end();
@@ -285,9 +285,7 @@ export async function getSessionUserId(sessionId: string): Promise<string | null
 	const client = await pool.connect();
 
 	try {
-		const result = await client.query(`SELECT user_id FROM assessment_session WHERE id = $1`, [
-			sessionId,
-		]);
+		const result = await client.query(`SELECT user_id FROM conversations WHERE id = $1`, [sessionId]);
 		return result.rows[0]?.user_id ?? null;
 	} finally {
 		client.release();

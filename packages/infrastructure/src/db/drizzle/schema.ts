@@ -72,6 +72,9 @@ export const depthSignalEnum = pgEnum("depth_signal", DEPTH_SIGNAL_LEVELS);
 
 export const purchaseEventTypeEnum = pgEnum("purchase_event_type", PURCHASE_EVENT_TYPES);
 
+const CONVERSATION_TYPES = ["assessment", "extension", "coach", "journal", "career"] as const;
+export const conversationTypeEnum = pgEnum("conversation_type", CONVERSATION_TYPES);
+
 // ─── Better Auth tables ───────────────────────────────────────────────────
 
 export const user = pgTable("user", {
@@ -156,7 +159,7 @@ export const verification = pgTable(
  * Tracks personality assessment conversation sessions linked to authenticated users.
  */
 export const assessmentSession = pgTable(
-	"assessment_session",
+	"conversations",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
@@ -172,14 +175,16 @@ export const assessmentSession = pgTable(
 		dropOffEmailSentAt: timestamp("drop_off_email_sent_at"),
 		checkInEmailSentAt: timestamp("check_in_email_sent_at"),
 		recaptureEmailSentAt: timestamp("recapture_email_sent_at"),
-		parentSessionId: uuid("parent_session_id"),
+		parentSessionId: uuid("parent_conversation_id"),
+		conversationType: conversationTypeEnum("conversation_type").notNull().default("assessment"),
+		metadata: jsonb("metadata"),
 	},
 	(table) => [
 		index("assessment_session_user_id_idx").on(table.userId),
 		uniqueIndex("assessment_session_original_lifetime_unique")
 			.on(table.userId)
 			.where(
-				sql`user_id IS NOT NULL AND parent_session_id IS NULL AND status IN ('finalizing', 'completed')`,
+				sql`user_id IS NOT NULL AND parent_conversation_id IS NULL AND status IN ('finalizing', 'completed')`,
 			),
 		uniqueIndex("assessment_session_token_unique")
 			.on(table.sessionToken)
@@ -201,7 +206,7 @@ export const assessmentSession = pgTable(
  * Added: director_output (text), coverage_targets (jsonb).
  */
 export const assessmentExchange = pgTable(
-	"assessment_exchange",
+	"exchanges",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		sessionId: uuid("session_id")
@@ -234,7 +239,7 @@ export const assessmentExchange = pgTable(
  * (territory/energy now live on assessment_exchange; userId derivable from session).
  */
 export const assessmentMessage = pgTable(
-	"assessment_message",
+	"messages",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		sessionId: uuid("session_id")
