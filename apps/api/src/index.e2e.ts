@@ -18,7 +18,6 @@ import { AppConfig, PortraitJobQueue } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
 	AppConfigLive,
-	AssessmentExchangeDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,
 	BetterAuthLive,
 	BetterAuthService,
@@ -26,6 +25,7 @@ import {
 	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,
 	DatabaseStack,
+	ExchangeDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
 	PortraitDrizzleRepositoryLive,
 	PortraitGeneratorMockRepositoryLive,
@@ -39,9 +39,9 @@ import {
 	ResendEmailResendRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 } from "@workspace/infrastructure";
-import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
-import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
+import { MessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/message.drizzle.repository";
 import { NerinActorMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-actor.mock.repository";
 import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
 import { NerinDirectorMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-director.mock.repository";
@@ -112,12 +112,12 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
  *
  * PaymentGateway removed — webhook handling is in Better Auth plugin, not Effect layer.
  */
-const SessionRepoLayer = AssessmentSessionDrizzleRepositoryLive.pipe(Layer.provide(RedisLayer));
+const SessionRepoLayer = ConversationDrizzleRepositoryLive.pipe(Layer.provide(RedisLayer));
 
 const RepositoryLayers = Layer.mergeAll(
 	SessionRepoLayer,
-	AssessmentMessageDrizzleRepositoryLive,
-	AssessmentExchangeDrizzleRepositoryLive,
+	MessageDrizzleRepositoryLive,
+	ExchangeDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	ConversanalyzerMockRepositoryLive,

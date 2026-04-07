@@ -7,7 +7,7 @@
  * - Context.Tag for service definition (in domain)
  * - Layer.effect for implementation with DI
  * - Dependencies resolved during layer construction
- * - Uses AssessmentSessionRepository.of({...}) for proper service implementation
+ * - Uses ConversationRepository.of({...}) for proper service implementation
  */
 
 import { randomBytes } from "node:crypto";
@@ -16,31 +16,25 @@ import {
 	DatabaseError,
 	SessionNotFound,
 } from "@workspace/contracts/errors";
-import { AssessmentSessionEntitySchema } from "@workspace/domain/entities/session.entity";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { ConversationEntitySchema } from "@workspace/domain/entities/conversation.entity";
+import { ConversationRepository } from "@workspace/domain/repositories/conversation.repository";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { RedisRepository } from "@workspace/domain/repositories/redis.repository";
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, count, eq, isNull, lt, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import {
-	assessmentMessage,
-	assessmentSession,
-	publicProfile,
-	purchaseEvents,
-	user,
-} from "../db/drizzle/schema";
+import { conversation, message, publicProfile, purchaseEvents, user } from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database, logger, and Redis through DI
  *
- * Layer type: Layer<AssessmentSessionRepository, never, Database | LoggerRepository | RedisRepository>
+ * Layer type: Layer<ConversationRepository, never, Database | LoggerRepository | RedisRepository>
  * Dependencies resolved during layer construction, not at service level.
  *
  * "Layers act as constructors for creating services" - dependencies managed at construction time.
  */
-export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
-	AssessmentSessionRepository,
+export const ConversationDrizzleRepositoryLive = Layer.effect(
+	ConversationRepository,
 	Effect.gen(function* () {
 		// Receive dependencies through DI during layer construction
 		const db = yield* Database;
@@ -48,13 +42,13 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 		const redis = yield* RedisRepository;
 
 		// Return service implementation using .of() pattern
-		return AssessmentSessionRepository.of({
+		return ConversationRepository.of({
 			getActiveSessionByUserId: (userId: string) =>
 				Effect.gen(function* () {
 					const results = yield* db
 						.select()
-						.from(assessmentSession)
-						.where(and(eq(assessmentSession.userId, userId), eq(assessmentSession.status, "active")))
+						.from(conversation)
+						.where(and(eq(conversation.userId, userId), eq(conversation.status, "active")))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -79,7 +73,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						return null;
 					}
 
-					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+					return yield* Schema.decodeUnknown(ConversationEntitySchema)(results[0]).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Database operation failed", {
@@ -101,7 +95,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			createSession: (userId?: string) =>
 				Effect.gen(function* () {
 					const [session] = yield* db
-						.insert(assessmentSession)
+						.insert(conversation)
 						.values({
 							// Omit userId entirely when absent — the Drizzle Effect adapter serializes explicit null
 							// as an empty string in query params, violating the FK constraint on user.id.
@@ -166,8 +160,8 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					// Load session
 					const sessionResults = yield* db
 						.select()
-						.from(assessmentSession)
-						.where(eq(assessmentSession.id, sessionId))
+						.from(conversation)
+						.where(eq(conversation.id, sessionId))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -217,7 +211,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					}
 
 					// Parse with SessionEntitySchema
-					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(session).pipe(
+					return yield* Schema.decodeUnknown(ConversationEntitySchema)(session).pipe(
 						Effect.mapError((error) => {
 							// Log technical details before throwing (safe - wrapped in try-catch)
 							try {
@@ -242,12 +236,12 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					// Update session
 					const [updatedSession] = yield* db
-						.update(assessmentSession)
+						.update(conversation)
 						.set({
 							...partialSession,
 							updatedAt: new Date(),
 						})
-						.where(eq(assessmentSession.id, sessionId))
+						.where(eq(conversation.id, sessionId))
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
@@ -302,7 +296,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					};
 
 					// Parse with SessionEntitySchema
-					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(sessionData).pipe(
+					return yield* Schema.decodeUnknown(ConversationEntitySchema)(sessionData).pipe(
 						Effect.mapError((error) => {
 							// Log technical details before throwing (safe - wrapped in try-catch)
 							try {
@@ -326,29 +320,29 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const messageCountSubquery = db
 						.select({
-							sessionId: assessmentMessage.sessionId,
+							sessionId: message.sessionId,
 							messageCount: count().as("message_count"),
 						})
-						.from(assessmentMessage)
-						.where(eq(assessmentMessage.role, "user"))
-						.groupBy(assessmentMessage.sessionId)
+						.from(message)
+						.where(eq(message.role, "user"))
+						.groupBy(message.sessionId)
 						.as("msg_counts");
 
 					const results = yield* db
 						.select({
-							id: assessmentSession.id,
-							createdAt: assessmentSession.createdAt,
-							updatedAt: assessmentSession.updatedAt,
-							status: assessmentSession.status,
+							id: conversation.id,
+							createdAt: conversation.createdAt,
+							updatedAt: conversation.updatedAt,
+							status: conversation.status,
 							messageCount: sql<number>`COALESCE("msg_counts"."message_count", 0)`.mapWith(Number),
 							oceanCode5: publicProfile.oceanCode5,
 							archetypeName: sql<string | null>`NULL`.as("archetype_name"),
 						})
-						.from(assessmentSession)
-						.leftJoin(messageCountSubquery, eq(assessmentSession.id, messageCountSubquery.sessionId))
-						.leftJoin(publicProfile, eq(assessmentSession.id, publicProfile.sessionId))
-						.where(eq(assessmentSession.userId, userId))
-						.orderBy(sql`${assessmentSession.createdAt} DESC`)
+						.from(conversation)
+						.leftJoin(messageCountSubquery, eq(conversation.id, messageCountSubquery.sessionId))
+						.leftJoin(publicProfile, eq(conversation.id, publicProfile.sessionId))
+						.where(eq(conversation.userId, userId))
+						.orderBy(sql`${conversation.createdAt} DESC`)
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -389,29 +383,29 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					// Only count user messages to match send-message.use-case convention
 					const messageCountSubquery = db
 						.select({
-							sessionId: assessmentMessage.sessionId,
+							sessionId: message.sessionId,
 							messageCount: count().as("message_count"),
 						})
-						.from(assessmentMessage)
-						.where(eq(assessmentMessage.role, "user"))
-						.groupBy(assessmentMessage.sessionId)
+						.from(message)
+						.where(eq(message.role, "user"))
+						.groupBy(message.sessionId)
 						.as("msg_counts");
 
 					const results = yield* db
 						.select({
-							id: assessmentSession.id,
-							createdAt: assessmentSession.createdAt,
-							updatedAt: assessmentSession.updatedAt,
-							status: assessmentSession.status,
+							id: conversation.id,
+							createdAt: conversation.createdAt,
+							updatedAt: conversation.updatedAt,
+							status: conversation.status,
 							messageCount: sql<number>`COALESCE("msg_counts"."message_count", 0)`.mapWith(Number),
 							oceanCode5: publicProfile.oceanCode5,
 							archetypeName: sql<string | null>`NULL`.as("archetype_name"),
 						})
-						.from(assessmentSession)
-						.leftJoin(messageCountSubquery, eq(assessmentSession.id, messageCountSubquery.sessionId))
-						.leftJoin(publicProfile, eq(assessmentSession.id, publicProfile.sessionId))
-						.where(eq(assessmentSession.userId, userId))
-						.orderBy(sql`${assessmentSession.createdAt} DESC`)
+						.from(conversation)
+						.leftJoin(messageCountSubquery, eq(conversation.id, messageCountSubquery.sessionId))
+						.leftJoin(publicProfile, eq(conversation.id, publicProfile.sessionId))
+						.where(eq(conversation.userId, userId))
+						.orderBy(sql`${conversation.createdAt} DESC`)
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -447,7 +441,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					const sessionToken = randomBytes(32).toString("hex");
 
 					const [session] = yield* db
-						.insert(assessmentSession)
+						.insert(conversation)
 						.values({
 							sessionToken,
 							status: "active",
@@ -484,8 +478,8 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const results = yield* db
 						.select()
-						.from(assessmentSession)
-						.where(and(eq(assessmentSession.sessionToken, token), eq(assessmentSession.status, "active")))
+						.from(conversation)
+						.where(and(eq(conversation.sessionToken, token), eq(conversation.status, "active")))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -505,7 +499,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						return null;
 					}
 
-					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+					return yield* Schema.decodeUnknown(ConversationEntitySchema)(results[0]).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Schema parse error in findByToken", { error: String(error) });
@@ -520,9 +514,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			assignUserId: (sessionId: string, userId: string) =>
 				Effect.gen(function* () {
 					const [updated] = yield* db
-						.update(assessmentSession)
+						.update(conversation)
 						.set({ userId, sessionToken: null, updatedAt: new Date() })
-						.where(eq(assessmentSession.id, sessionId))
+						.where(eq(conversation.id, sessionId))
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
@@ -544,7 +538,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						return yield* Effect.fail(new DatabaseError({ message: "Failed to assign user to session" }));
 					}
 
-					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(updated).pipe(
+					return yield* Schema.decodeUnknown(ConversationEntitySchema)(updated).pipe(
 						Effect.mapError(() => new DatabaseError({ message: "Failed to parse updated session" })),
 					);
 				}),
@@ -554,9 +548,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					const sessionToken = randomBytes(32).toString("hex");
 
 					const [updated] = yield* db
-						.update(assessmentSession)
+						.update(conversation)
 						.set({ sessionToken, updatedAt: new Date() })
-						.where(eq(assessmentSession.id, sessionId))
+						.where(eq(conversation.id, sessionId))
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
@@ -584,13 +578,13 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			incrementMessageCount: (sessionId: string) =>
 				Effect.gen(function* () {
 					const results = yield* db
-						.update(assessmentSession)
+						.update(conversation)
 						.set({
-							messageCount: sql`${assessmentSession.messageCount} + 1`,
+							messageCount: sql`${conversation.messageCount} + 1`,
 							updatedAt: new Date(),
 						})
-						.where(eq(assessmentSession.id, sessionId))
-						.returning({ messageCount: assessmentSession.messageCount })
+						.where(eq(conversation.id, sessionId))
+						.returning({ messageCount: conversation.messageCount })
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -674,19 +668,19 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 
 					const results = yield* db
 						.select({
-							sessionId: assessmentSession.id,
-							userId: assessmentSession.userId,
+							sessionId: conversation.id,
+							userId: conversation.userId,
 							userEmail: user.email,
 							userName: user.name,
-							updatedAt: assessmentSession.updatedAt,
+							updatedAt: conversation.updatedAt,
 						})
-						.from(assessmentSession)
-						.innerJoin(user, eq(assessmentSession.userId, user.id))
+						.from(conversation)
+						.innerJoin(user, eq(conversation.userId, user.id))
 						.where(
 							and(
-								eq(assessmentSession.status, "active"),
-								lt(assessmentSession.updatedAt, cutoff),
-								isNull(assessmentSession.dropOffEmailSentAt),
+								eq(conversation.status, "active"),
+								lt(conversation.updatedAt, cutoff),
+								isNull(conversation.dropOffEmailSentAt),
 							),
 						)
 						.pipe(
@@ -715,9 +709,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			markDropOffEmailSent: (sessionId: string) =>
 				Effect.gen(function* () {
 					yield* db
-						.update(assessmentSession)
+						.update(conversation)
 						.set({ dropOffEmailSentAt: new Date() })
-						.where(eq(assessmentSession.id, sessionId))
+						.where(eq(conversation.id, sessionId))
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -737,7 +731,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			createExtensionSession: (userId: string, parentSessionId: string) =>
 				Effect.gen(function* () {
 					const [session] = yield* db
-						.insert(assessmentSession)
+						.insert(conversation)
 						.values({
 							userId,
 							parentSessionId,
@@ -781,21 +775,21 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					// Find most recent completed session that has no child extension session
 					const childParentIds = db
-						.select({ parentId: assessmentSession.parentSessionId })
-						.from(assessmentSession)
-						.where(sql`${assessmentSession.parentSessionId} IS NOT NULL`);
+						.select({ parentId: conversation.parentSessionId })
+						.from(conversation)
+						.where(sql`${conversation.parentSessionId} IS NOT NULL`);
 
 					const results = yield* db
 						.select()
-						.from(assessmentSession)
+						.from(conversation)
 						.where(
 							and(
-								eq(assessmentSession.userId, userId),
-								eq(assessmentSession.status, "completed"),
-								sql`${assessmentSession.id} NOT IN (${childParentIds})`,
+								eq(conversation.userId, userId),
+								eq(conversation.status, "completed"),
+								sql`${conversation.id} NOT IN (${childParentIds})`,
 							),
 						)
-						.orderBy(sql`${assessmentSession.createdAt} DESC`)
+						.orderBy(sql`${conversation.createdAt} DESC`)
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -818,7 +812,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						return null;
 					}
 
-					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+					return yield* Schema.decodeUnknown(ConversationEntitySchema)(results[0]).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Schema parse error", {
@@ -838,9 +832,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			hasExtensionSession: (parentSessionId: string) =>
 				Effect.gen(function* () {
 					const results = yield* db
-						.select({ id: assessmentSession.id })
-						.from(assessmentSession)
-						.where(eq(assessmentSession.parentSessionId, parentSessionId))
+						.select({ id: conversation.id })
+						.from(conversation)
+						.where(eq(conversation.parentSessionId, parentSessionId))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -864,8 +858,8 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const results = yield* db
 						.select()
-						.from(assessmentSession)
-						.where(eq(assessmentSession.parentSessionId, parentSessionId))
+						.from(conversation)
+						.where(eq(conversation.parentSessionId, parentSessionId))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -886,7 +880,7 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 						return null;
 					}
 
-					return yield* Schema.decodeUnknown(AssessmentSessionEntitySchema)(results[0]).pipe(
+					return yield* Schema.decodeUnknown(ConversationEntitySchema)(results[0]).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Schema parse error", {
@@ -907,19 +901,19 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 
 					const results = yield* db
 						.select({
-							sessionId: assessmentSession.id,
-							userId: assessmentSession.userId,
+							sessionId: conversation.id,
+							userId: conversation.userId,
 							userEmail: user.email,
 							userName: user.name,
-							updatedAt: assessmentSession.updatedAt,
+							updatedAt: conversation.updatedAt,
 						})
-						.from(assessmentSession)
-						.innerJoin(user, eq(assessmentSession.userId, user.id))
+						.from(conversation)
+						.innerJoin(user, eq(conversation.userId, user.id))
 						.where(
 							and(
-								eq(assessmentSession.status, "completed"),
-								lt(assessmentSession.updatedAt, cutoff),
-								isNull(assessmentSession.checkInEmailSentAt),
+								eq(conversation.status, "completed"),
+								lt(conversation.updatedAt, cutoff),
+								isNull(conversation.checkInEmailSentAt),
 							),
 						)
 						.pipe(
@@ -948,9 +942,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			markCheckInEmailSent: (sessionId: string) =>
 				Effect.gen(function* () {
 					yield* db
-						.update(assessmentSession)
+						.update(conversation)
 						.set({ checkInEmailSentAt: new Date() })
-						.where(eq(assessmentSession.id, sessionId))
+						.where(eq(conversation.id, sessionId))
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -975,26 +969,26 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 					// where the user has NO portrait_unlocked purchase event
 					const results = yield* db
 						.select({
-							sessionId: assessmentSession.id,
-							userId: assessmentSession.userId,
+							sessionId: conversation.id,
+							userId: conversation.userId,
 							userEmail: user.email,
 							userName: user.name,
-							updatedAt: assessmentSession.updatedAt,
+							updatedAt: conversation.updatedAt,
 						})
-						.from(assessmentSession)
-						.innerJoin(user, eq(assessmentSession.userId, user.id))
+						.from(conversation)
+						.innerJoin(user, eq(conversation.userId, user.id))
 						.leftJoin(
 							purchaseEvents,
 							and(
-								eq(purchaseEvents.userId, assessmentSession.userId),
+								eq(purchaseEvents.userId, conversation.userId),
 								eq(purchaseEvents.eventType, "portrait_unlocked"),
 							),
 						)
 						.where(
 							and(
-								eq(assessmentSession.status, "completed"),
-								lt(assessmentSession.updatedAt, cutoff),
-								isNull(assessmentSession.recaptureEmailSentAt),
+								eq(conversation.status, "completed"),
+								lt(conversation.updatedAt, cutoff),
+								isNull(conversation.recaptureEmailSentAt),
 								isNull(purchaseEvents.id),
 							),
 						)
@@ -1024,9 +1018,9 @@ export const AssessmentSessionDrizzleRepositoryLive = Layer.effect(
 			markRecaptureEmailSent: (sessionId: string) =>
 				Effect.gen(function* () {
 					yield* db
-						.update(assessmentSession)
+						.update(conversation)
 						.set({ recaptureEmailSentAt: new Date() })
-						.where(eq(assessmentSession.id, sessionId))
+						.where(eq(conversation.id, sessionId))
 						.pipe(
 							Effect.mapError((error) => {
 								try {

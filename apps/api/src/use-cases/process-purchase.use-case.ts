@@ -14,14 +14,14 @@
  * Story 3.4 adds:
  * - Free credit grant on first portrait purchase (FR33)
  *
- * Dependencies: PurchaseEventRepository, AssessmentSessionRepository,
+ * Dependencies: PurchaseEventRepository, ConversationRepository,
  *               AssessmentResultRepository, PortraitRepository, AppConfig
  */
 
 import type { PurchaseEventType } from "@workspace/domain";
 import {
 	AppConfig,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	LoggerRepository,
 	PortraitRepository,
 	PurchaseEventRepository,
@@ -85,7 +85,7 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
 		const purchaseRepo = yield* PurchaseEventRepository;
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const portraitRepo = yield* PortraitRepository;
 		const logger = yield* LoggerRepository;
 

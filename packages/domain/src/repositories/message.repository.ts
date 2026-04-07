@@ -1,4 +1,4 @@
-import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
+import type { MessageEntity } from "@workspace/domain/entities/message.entity";
 import { Context, Effect } from "effect";
 import { DatabaseError } from "../errors/http.errors";
 
@@ -11,8 +11,8 @@ import { DatabaseError } from "../errors/http.errors";
  * Story 23-3: Simplified saveMessage signature — removed userId, territoryId, observedEnergyLevel
  * (these now live on assessment_exchange). Added optional exchangeId.
  */
-export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageRepository")<
-	AssessmentMessageRepository,
+export class MessageRepository extends Context.Tag("MessageRepository")<
+	MessageRepository,
 	{
 		/**
 		 * Save a message to a session
@@ -28,7 +28,7 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 			role: "user" | "assistant",
 			content: string,
 			exchangeId?: string,
-		) => Effect.Effect<AssessmentMessageEntity, DatabaseError, never>;
+		) => Effect.Effect<MessageEntity, DatabaseError, never>;
 
 		/**
 		 * Get all messages for a session
@@ -36,9 +36,7 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		 * @param sessionId - Session identifier
 		 * @returns Effect with array of messages in chronological order
 		 */
-		readonly getMessages: (
-			sessionId: string,
-		) => Effect.Effect<AssessmentMessageEntity[], DatabaseError, never>;
+		readonly getMessages: (sessionId: string) => Effect.Effect<MessageEntity[], DatabaseError, never>;
 
 		/**
 		 * Update the exchangeId on an existing message.
@@ -57,7 +55,7 @@ export class AssessmentMessageRepository extends Context.Tag("AssessmentMessageR
 		 */
 		readonly getMessagesByUserId: (
 			userId: string,
-		) => Effect.Effect<AssessmentMessageEntity[], DatabaseError, never>;
+		) => Effect.Effect<MessageEntity[], DatabaseError, never>;
 
 		/**
 		 * Get message count for a session

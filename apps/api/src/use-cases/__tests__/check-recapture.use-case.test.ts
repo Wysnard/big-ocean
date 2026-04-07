@@ -9,7 +9,7 @@
 import { vi } from "vitest";
 
 vi.mock("@workspace/domain/config/app-config");
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/resend-email.resend.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
@@ -17,10 +17,10 @@ import { describe, expect, it } from "@effect/vitest";
 import {
 	AppConfig,
 	type AppConfigService,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	ResendEmailRepository,
 } from "@workspace/domain";
-import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { ResendEmailResendRepositoryLive } from "@workspace/infrastructure/repositories/resend-email.resend.repository";
 import { Effect, Layer, Redacted } from "effect";
@@ -71,7 +71,7 @@ const TestConfigLayer = Layer.succeed(AppConfig, mockConfig);
 
 describe("checkRecapture use-case", () => {
 	const BaseTestLayer = Layer.mergeAll(
-		AssessmentSessionDrizzleRepositoryLive,
+		ConversationDrizzleRepositoryLive,
 		ResendEmailResendRepositoryLive,
 		LoggerPinoRepositoryLive,
 		TestConfigLayer,
@@ -86,7 +86,7 @@ describe("checkRecapture use-case", () => {
 
 	it.effect("sends email for completed sessions without portrait purchase", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 
 			// Create a completed session
 			const { sessionId } = yield* sessionRepo.createSession("user-789");
@@ -113,7 +113,7 @@ describe("checkRecapture use-case", () => {
 			);
 
 			const testLayer = Layer.mergeAll(
-				AssessmentSessionDrizzleRepositoryLive,
+				ConversationDrizzleRepositoryLive,
 				failingEmailLayer,
 				LoggerPinoRepositoryLive,
 				TestConfigLayer,

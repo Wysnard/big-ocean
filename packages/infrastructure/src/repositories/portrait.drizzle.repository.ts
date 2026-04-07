@@ -17,7 +17,7 @@ import {
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
-import { assessmentResults, assessmentSession, portraits } from "../db/drizzle/schema";
+import { assessmentResults, conversation, portraits } from "../db/drizzle/schema";
 
 export const PortraitDrizzleRepositoryLive = Layer.effect(
 	PortraitRepository,
@@ -129,10 +129,10 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 					.select({
 						portrait: portraits,
 					})
-					.from(assessmentSession)
-					.innerJoin(assessmentResults, eq(assessmentResults.assessmentSessionId, assessmentSession.id))
+					.from(conversation)
+					.innerJoin(assessmentResults, eq(assessmentResults.assessmentSessionId, conversation.id))
 					.innerJoin(portraits, eq(portraits.assessmentResultId, assessmentResults.id))
-					.where(and(eq(assessmentSession.id, sessionId), eq(portraits.tier, "full")))
+					.where(and(eq(conversation.id, sessionId), eq(portraits.tier, "full")))
 					.pipe(
 						Effect.map((rows) => (rows[0]?.portrait ? mapRow(rows[0].portrait) : null)),
 						Effect.mapError((error) => {

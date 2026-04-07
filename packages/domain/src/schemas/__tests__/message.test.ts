@@ -1,15 +1,15 @@
 /**
  * Assessment Message Schema Tests (Story 4.8)
  *
- * Validates the AssessmentMessageContentSchema and ASSESSMENT_MESSAGE_MAX_LENGTH constant.
+ * Validates the MessageContentSchema and ASSESSMENT_MESSAGE_MAX_LENGTH constant.
  */
 
-import { ASSESSMENT_MESSAGE_MAX_LENGTH, AssessmentMessageContentSchema } from "@workspace/domain";
+import { ASSESSMENT_MESSAGE_MAX_LENGTH, MessageContentSchema } from "@workspace/domain";
 import { Schema as S } from "effect";
 import { describe, expect, it } from "vitest";
 
-describe("AssessmentMessageContentSchema", () => {
-	const decode = S.decodeEither(AssessmentMessageContentSchema);
+describe("MessageContentSchema", () => {
+	const decode = S.decodeEither(MessageContentSchema);
 
 	it("exports ASSESSMENT_MESSAGE_MAX_LENGTH as 2000", () => {
 		expect(ASSESSMENT_MESSAGE_MAX_LENGTH).toBe(2000);

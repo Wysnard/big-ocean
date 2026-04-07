@@ -4,16 +4,16 @@
  * Returns the authenticated user's available relationship credits
  * and whether they have a completed assessment.
  *
- * Dependencies: PurchaseEventRepository, AssessmentSessionRepository
+ * Dependencies: PurchaseEventRepository, ConversationRepository
  */
 
-import { AssessmentSessionRepository, PurchaseEventRepository } from "@workspace/domain";
+import { ConversationRepository, PurchaseEventRepository } from "@workspace/domain";
 import { Effect } from "effect";
 
 export const getCredits = (userId: string) =>
 	Effect.gen(function* () {
 		const purchaseRepo = yield* PurchaseEventRepository;
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 
 		const capabilities = yield* purchaseRepo.getCapabilities(userId);
 

@@ -7,13 +7,13 @@
 import {
 	ALL_FACETS,
 	AppConfig,
-	AssessmentMessageRepository,
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
 	type BigFiveTrait,
+	ConversationRepository,
 	FacetEvidenceRepository,
 	type FacetName,
 	LoggerRepository,
+	MessageRepository,
 	PublicProfileRepository,
 	type SavedFacetEvidence,
 } from "@workspace/domain";
@@ -211,9 +211,9 @@ export const mockConfig = {
 
 export function createTestLayer() {
 	return Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
-		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(MessageRepository, mockMessageRepo),
 		Layer.succeed(PublicProfileRepository, mockProfileRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(AppConfig, mockConfig),

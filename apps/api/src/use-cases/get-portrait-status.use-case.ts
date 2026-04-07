@@ -15,7 +15,7 @@
 
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	hasPortraitForResult,
 	isLatestVersion,
 	PortraitRepository,
@@ -83,7 +83,7 @@ export const getPortraitStatus = (input: GetPortraitStatusInput) =>
 		// Story 36-3: Derive-at-read version detection (fail-open: default to latest)
 		const versionLatest = input.userId
 			? yield* Effect.gen(function* () {
-					const sessionRepo = yield* AssessmentSessionRepository;
+					const sessionRepo = yield* ConversationRepository;
 					const resultRepo = yield* AssessmentResultRepository;
 
 					const _session = yield* sessionRepo.getSession(input.sessionId);

@@ -13,13 +13,13 @@
 
 import {
 	AppConfig,
-	AssessmentMessageRepository,
 	AssessmentResultRepository,
 	ConversationEvidenceRepository,
 	computeTraitResults,
 	type FacetName,
 	type FacetScoresMap,
 	LoggerRepository,
+	MessageRepository,
 	PortraitGeneratorRepository,
 	PortraitRepository,
 } from "@workspace/domain";
@@ -43,7 +43,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		const portraitGen = yield* PortraitGeneratorRepository;
 		const resultsRepo = yield* AssessmentResultRepository;
 		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
+		const messageRepo = yield* MessageRepository;
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 

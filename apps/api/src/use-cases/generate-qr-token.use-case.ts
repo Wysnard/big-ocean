@@ -8,7 +8,7 @@
 import {
 	AppConfig,
 	AssessmentNotCompletedError,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	QrTokenRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -16,7 +16,7 @@ import { Effect } from "effect";
 export const generateQrToken = (userId: string) =>
 	Effect.gen(function* () {
 		const qrTokenRepo = yield* QrTokenRepository;
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const config = yield* AppConfig;
 
 		// 1. Check that user has completed their assessment

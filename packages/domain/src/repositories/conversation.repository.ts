@@ -1,4 +1,4 @@
-import { AssessmentSessionEntity } from "@workspace/domain/entities/session.entity";
+import { ConversationEntity } from "@workspace/domain/entities/conversation.entity";
 import { Context, Effect } from "effect";
 import { ConcurrentMessageError, DatabaseError, SessionNotFound } from "../errors/http.errors";
 
@@ -8,8 +8,8 @@ import { ConcurrentMessageError, DatabaseError, SessionNotFound } from "../error
  * Service interface has NO requirements - dependencies managed by layer.
  * Follows official Effect pattern from https://effect.website/docs/requirements-management/services/
  */
-export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionRepository")<
-	AssessmentSessionRepository,
+export class ConversationRepository extends Context.Tag("ConversationRepository")<
+	ConversationRepository,
 	{
 		/**
 		 * Create a new assessment session
@@ -29,7 +29,7 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 */
 		readonly getActiveSessionByUserId: (
 			userId: string,
-		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
+		) => Effect.Effect<ConversationEntity | null, DatabaseError, never>;
 
 		/**
 		 * Retrieve full session with message history
@@ -39,7 +39,7 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 */
 		readonly getSession: (
 			sessionId: string,
-		) => Effect.Effect<AssessmentSessionEntity, SessionNotFound | DatabaseError, never>;
+		) => Effect.Effect<ConversationEntity, SessionNotFound | DatabaseError, never>;
 
 		/**
 		 * Update session properties (precision scores, status, etc.)
@@ -50,8 +50,8 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 */
 		readonly updateSession: (
 			sessionId: string,
-			session: Partial<AssessmentSessionEntity>,
-		) => Effect.Effect<AssessmentSessionEntity, DatabaseError, never>;
+			session: Partial<ConversationEntity>,
+		) => Effect.Effect<ConversationEntity, DatabaseError, never>;
 
 		/**
 		 * Get all assessment sessions for a user, ordered by creation date descending.
@@ -115,7 +115,7 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 */
 		readonly findByToken: (
 			token: string,
-		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
+		) => Effect.Effect<ConversationEntity | null, DatabaseError, never>;
 
 		/**
 		 * Assign a user ID to an anonymous session (Story 9.4)
@@ -127,7 +127,7 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		readonly assignUserId: (
 			sessionId: string,
 			userId: string,
-		) => Effect.Effect<AssessmentSessionEntity, DatabaseError, never>;
+		) => Effect.Effect<ConversationEntity, DatabaseError, never>;
 
 		/**
 		 * Rotate the session token (for auth transition security, Story 9.4)
@@ -214,7 +214,7 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 */
 		readonly findCompletedSessionWithoutChild: (
 			userId: string,
-		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
+		) => Effect.Effect<ConversationEntity | null, DatabaseError, never>;
 
 		/**
 		 * Check if a parent session already has a child extension session (Story 36-1)
@@ -234,7 +234,7 @@ export class AssessmentSessionRepository extends Context.Tag("AssessmentSessionR
 		 */
 		readonly findExtensionSession: (
 			parentSessionId: string,
-		) => Effect.Effect<AssessmentSessionEntity | null, DatabaseError, never>;
+		) => Effect.Effect<ConversationEntity | null, DatabaseError, never>;
 
 		/**
 		 * Find sessions eligible for Nerin check-in email (Story 38-1)

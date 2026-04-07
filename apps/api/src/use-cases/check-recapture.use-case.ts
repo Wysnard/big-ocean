@@ -11,7 +11,7 @@
 
 import {
 	AppConfig,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	LoggerRepository,
 	ResendEmailRepository,
 } from "@workspace/domain";
@@ -25,7 +25,7 @@ import { Effect } from "effect";
  */
 export const checkRecapture = Effect.gen(function* () {
 	const config = yield* AppConfig;
-	const sessionRepo = yield* AssessmentSessionRepository;
+	const sessionRepo = yield* ConversationRepository;
 	const emailRepo = yield* ResendEmailRepository;
 	const logger = yield* LoggerRepository;
 

@@ -9,7 +9,7 @@ import { ProfileError } from "@workspace/contracts/errors";
 import {
 	AppConfig,
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	extract4LetterCode,
 	type FacetName,
 	type FacetScoresMap,
@@ -33,12 +33,12 @@ export interface CreateShareableProfileOutput {
 /**
  * Create Shareable Profile Use Case
  *
- * Dependencies: AssessmentSessionRepository, PublicProfileRepository,
+ * Dependencies: ConversationRepository, PublicProfileRepository,
  *               AssessmentResultRepository, LoggerRepository, AppConfig
  */
 export const createShareableProfile = (input: CreateShareableProfileInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const resultRepo = yield* AssessmentResultRepository;
 		const logger = yield* LoggerRepository;

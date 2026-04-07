@@ -10,8 +10,8 @@
 
 import {
 	AppConfig,
-	AssessmentExchangeRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
+	ExchangeRepository,
 	LoggerRepository,
 	ResendEmailRepository,
 } from "@workspace/domain";
@@ -25,8 +25,8 @@ import { Effect } from "effect";
  */
 export const checkCheckIn = Effect.gen(function* () {
 	const config = yield* AppConfig;
-	const sessionRepo = yield* AssessmentSessionRepository;
-	const exchangeRepo = yield* AssessmentExchangeRepository;
+	const sessionRepo = yield* ConversationRepository;
+	const exchangeRepo = yield* ExchangeRepository;
 	const emailRepo = yield* ResendEmailRepository;
 	const logger = yield* LoggerRepository;
 

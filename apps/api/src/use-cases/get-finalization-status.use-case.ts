@@ -5,7 +5,7 @@
  * Used by the frontend to poll during the wait screen.
  */
 
-import { AssessmentSessionRepository, SessionNotFound } from "@workspace/domain";
+import { ConversationRepository, SessionNotFound } from "@workspace/domain";
 import { Effect } from "effect";
 
 export interface GetFinalizationStatusInput {
@@ -26,7 +26,7 @@ const PROGRESS_MAP: Record<string, number> = {
 
 export const getFinalizationStatus = (input: GetFinalizationStatusInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 
 		const session = yield* sessionRepo.getSession(input.sessionId);
 

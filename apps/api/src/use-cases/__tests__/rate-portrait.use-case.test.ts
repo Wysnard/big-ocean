@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import {
-	AssessmentSessionRepository,
+	ConversationRepository,
 	PortraitRatingRepository,
 	SessionNotFound,
 	Unauthorized,
@@ -34,7 +34,7 @@ const mockRatingRepo = {
 };
 
 const TestLayer = Layer.mergeAll(
-	Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+	Layer.succeed(ConversationRepository, mockSessionRepo),
 	Layer.succeed(PortraitRatingRepository, mockRatingRepo),
 );
 

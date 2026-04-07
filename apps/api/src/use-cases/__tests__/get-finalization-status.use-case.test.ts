@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "@effect/vitest";
-import { AssessmentSessionRepository } from "@workspace/domain";
+import { ConversationRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { vi } from "vitest";
 import { getFinalizationStatus } from "../get-finalization-status.use-case";
@@ -35,7 +35,7 @@ const mockSession = {
 	finalizationProgress: null,
 };
 
-const createTestLayer = () => Layer.succeed(AssessmentSessionRepository, mockSessionRepo);
+const createTestLayer = () => Layer.succeed(ConversationRepository, mockSessionRepo);
 
 describe("getFinalizationStatus Use Case (Story 11.1)", () => {
 	beforeEach(() => {

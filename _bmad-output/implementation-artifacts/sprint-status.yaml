@@ -786,7 +786,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-45: in-progress
   45-1-schema-migration-table-renames: review
-  45-2-repository-and-domain-layer-renames: backlog
+  45-2-repository-and-domain-layer-renames: done
   45-3-handler-contract-and-frontend-renames: backlog
   45-4-assessment-turn-count-25-to-15: backlog
   45-5-dead-code-cleanup: backlog

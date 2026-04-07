@@ -10,8 +10,8 @@
 import { vi } from "vitest";
 
 vi.mock("@workspace/domain/config/app-config");
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/exchange.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/resend-email.resend.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
@@ -19,12 +19,12 @@ import { describe, expect, it } from "@effect/vitest";
 import {
 	AppConfig,
 	type AppConfigService,
-	AssessmentExchangeRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
+	ExchangeRepository,
 	ResendEmailRepository,
 } from "@workspace/domain";
-import { AssessmentExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository";
-import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
+import { ExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/exchange.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { ResendEmailResendRepositoryLive } from "@workspace/infrastructure/repositories/resend-email.resend.repository";
 import { Effect, Layer, Redacted } from "effect";
@@ -75,8 +75,8 @@ const TestConfigLayer = Layer.succeed(AppConfig, mockConfig);
 
 describe("checkCheckIn use-case", () => {
 	const BaseTestLayer = Layer.mergeAll(
-		AssessmentSessionDrizzleRepositoryLive,
-		AssessmentExchangeDrizzleRepositoryLive,
+		ConversationDrizzleRepositoryLive,
+		ExchangeDrizzleRepositoryLive,
 		ResendEmailResendRepositoryLive,
 		LoggerPinoRepositoryLive,
 		TestConfigLayer,
@@ -91,8 +91,8 @@ describe("checkCheckIn use-case", () => {
 
 	it.effect("sends email for completed sessions and marks them", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
-			const exchangeRepo = yield* AssessmentExchangeRepository;
+			const sessionRepo = yield* ConversationRepository;
+			const exchangeRepo = yield* ExchangeRepository;
 
 			// Create a completed session
 			const { sessionId } = yield* sessionRepo.createSession("user-456");
@@ -122,8 +122,8 @@ describe("checkCheckIn use-case", () => {
 			);
 
 			const testLayer = Layer.mergeAll(
-				AssessmentSessionDrizzleRepositoryLive,
-				AssessmentExchangeDrizzleRepositoryLive,
+				ConversationDrizzleRepositoryLive,
+				ExchangeDrizzleRepositoryLive,
 				failingEmailLayer,
 				LoggerPinoRepositoryLive,
 				TestConfigLayer,

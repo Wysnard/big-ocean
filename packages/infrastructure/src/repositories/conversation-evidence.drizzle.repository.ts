@@ -15,7 +15,7 @@ import { deriveDeviation } from "@workspace/domain/utils/derive-deviation";
 import { eq, sql } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
-import { assessmentSession, conversationEvidence } from "../db/drizzle/schema";
+import { conversation, conversationEvidence } from "../db/drizzle/schema";
 
 export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 	ConversationEvidenceRepository,
@@ -103,11 +103,8 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 							createdAt: conversationEvidence.createdAt,
 						})
 						.from(conversationEvidence)
-						.innerJoin(
-							assessmentSession,
-							eq(conversationEvidence.assessmentSessionId, assessmentSession.id),
-						)
-						.where(eq(assessmentSession.userId, userId))
+						.innerJoin(conversation, eq(conversationEvidence.assessmentSessionId, conversation.id))
+						.where(eq(conversation.userId, userId))
 						.pipe(
 							Effect.mapError(
 								(error) =>

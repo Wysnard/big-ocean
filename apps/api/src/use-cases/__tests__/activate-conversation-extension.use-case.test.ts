@@ -7,19 +7,15 @@
 
 import { vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/message.drizzle.repository");
 vi.mock("@workspace/domain/config/app-config");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-	AssessmentExchangeRepository,
-	AssessmentSessionRepository,
-	LoggerRepository,
-} from "@workspace/domain";
-import { _resetMockState as _resetSessionMockState } from "@workspace/infrastructure/repositories/__mocks__/assessment-session.drizzle.repository";
-import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
-import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { ConversationRepository, ExchangeRepository, LoggerRepository } from "@workspace/domain";
+import { _resetMockState as _resetSessionMockState } from "@workspace/infrastructure/repositories/__mocks__/conversation.drizzle.repository";
+import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
+import { MessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/message.drizzle.repository";
 import { Effect, Exit, Layer } from "effect";
 import { activateConversationExtension } from "../activate-conversation-extension.use-case";
 
@@ -45,9 +41,9 @@ const mockExchangeRepo = {
 };
 
 const TestLayer = Layer.mergeAll(
-	AssessmentSessionDrizzleRepositoryLive,
-	AssessmentMessageDrizzleRepositoryLive,
-	Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
+	ConversationDrizzleRepositoryLive,
+	MessageDrizzleRepositoryLive,
+	Layer.succeed(ExchangeRepository, mockExchangeRepo),
 	Layer.succeed(LoggerRepository, mockLogger),
 );
 
@@ -60,7 +56,7 @@ describe("activateConversationExtension Use Case", () => {
 	it.effect("creates extension session linked to parent", () =>
 		Effect.gen(function* () {
 			// Seed a completed session for the user
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 			const created = yield* sessionRepo.createSession("user_123");
 			yield* sessionRepo.updateSession(created.sessionId, { status: "completed" });
 
@@ -84,7 +80,7 @@ describe("activateConversationExtension Use Case", () => {
 	it.effect("returns existing extension session idempotently", () =>
 		Effect.gen(function* () {
 			// Seed a completed session with an existing child extension
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 			const parent = yield* sessionRepo.createSession("user_456");
 			yield* sessionRepo.updateSession(parent.sessionId, { status: "completed" });
 

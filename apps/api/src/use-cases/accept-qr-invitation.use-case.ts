@@ -8,7 +8,7 @@
 import {
 	AssessmentNotCompletedError,
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	DatabaseError,
 	InsufficientCreditsError,
 	PurchaseEventRepository,
@@ -23,7 +23,7 @@ export const acceptQrInvitation = (input: { token: string; acceptedByUserId: str
 		const qrTokenRepo = yield* QrTokenRepository;
 		const purchaseRepo = yield* PurchaseEventRepository;
 		const analysisRepo = yield* RelationshipAnalysisRepository;
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const resultRepo = yield* AssessmentResultRepository;
 
 		// 1. Check acceptor's credit balance

@@ -10,20 +10,20 @@
 import { vi } from "vitest";
 
 vi.mock("@workspace/domain/config/app-config");
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/exchange.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/resend-email.resend.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
-	AssessmentExchangeRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
+	ExchangeRepository,
 	ResendEmailRepository,
 } from "@workspace/domain";
 import { createTestAppConfigLayer } from "@workspace/domain/config/__mocks__/app-config";
-import { AssessmentExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository";
-import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
+import { ExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/exchange.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { ResendEmailResendRepositoryLive } from "@workspace/infrastructure/repositories/resend-email.resend.repository";
 import { Effect, Layer } from "effect";
@@ -31,8 +31,8 @@ import { checkDropOff } from "../check-drop-off.use-case";
 
 describe("checkDropOff use-case", () => {
 	const BaseTestLayer = Layer.mergeAll(
-		AssessmentSessionDrizzleRepositoryLive,
-		AssessmentExchangeDrizzleRepositoryLive,
+		ConversationDrizzleRepositoryLive,
+		ExchangeDrizzleRepositoryLive,
 		ResendEmailResendRepositoryLive,
 		LoggerPinoRepositoryLive,
 		createTestAppConfigLayer(),
@@ -48,8 +48,8 @@ describe("checkDropOff use-case", () => {
 	it.effect("sends email for drop-off sessions and marks them", () =>
 		Effect.gen(function* () {
 			// Set up a drop-off session via the mock repos
-			const sessionRepo = yield* AssessmentSessionRepository;
-			const exchangeRepo = yield* AssessmentExchangeRepository;
+			const sessionRepo = yield* ConversationRepository;
+			const exchangeRepo = yield* ExchangeRepository;
 
 			// Create a session that looks like a drop-off
 			const { sessionId } = yield* sessionRepo.createSession("user-123");
@@ -83,8 +83,8 @@ describe("checkDropOff use-case", () => {
 			);
 
 			const testLayer = Layer.mergeAll(
-				AssessmentSessionDrizzleRepositoryLive,
-				AssessmentExchangeDrizzleRepositoryLive,
+				ConversationDrizzleRepositoryLive,
+				ExchangeDrizzleRepositoryLive,
 				failingEmailLayer,
 				LoggerPinoRepositoryLive,
 				createTestAppConfigLayer(),

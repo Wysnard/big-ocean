@@ -7,11 +7,11 @@
 
 import {
 	AppConfig,
-	AssessmentMessageRepository,
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	FacetEvidenceRepository,
 	LoggerRepository,
+	MessageRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -56,8 +56,8 @@ const mockLogger = {
 
 const createTestLayer = () =>
 	Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
+		Layer.succeed(MessageRepository, mockMessageRepo),
 		Layer.succeed(FacetEvidenceRepository, mockEvidenceRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(LoggerRepository, mockLogger),

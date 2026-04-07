@@ -7,26 +7,23 @@
  */
 import { vi } from "vitest";
 
-vi.mock("../assessment-message.drizzle.repository");
+vi.mock("../message.drizzle.repository");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { AssessmentMessageRepository } from "@workspace/domain";
+import { MessageRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
-import {
-	_resetMockState,
-	AssessmentMessageDrizzleRepositoryLive,
-} from "../assessment-message.drizzle.repository";
+import { _resetMockState, MessageDrizzleRepositoryLive } from "../message.drizzle.repository";
 
-const TestLayer = Layer.mergeAll(AssessmentMessageDrizzleRepositoryLive);
+const TestLayer = Layer.mergeAll(MessageDrizzleRepositoryLive);
 
-describe("AssessmentMessageRepository — round-trip", () => {
+describe("MessageRepository — round-trip", () => {
 	beforeEach(() => {
 		_resetMockState();
 	});
 
 	it.effect("should persist and retrieve exchangeId on messages", () =>
 		Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
+			const repo = yield* MessageRepository;
 
 			yield* repo.saveMessage("session-1", "assistant", "Hello!", "exchange-1");
 
@@ -42,7 +39,7 @@ describe("AssessmentMessageRepository — round-trip", () => {
 
 	it.effect("should return null exchangeId when not provided", () =>
 		Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
+			const repo = yield* MessageRepository;
 
 			yield* repo.saveMessage("session-1", "assistant", "Hello!");
 
@@ -55,7 +52,7 @@ describe("AssessmentMessageRepository — round-trip", () => {
 
 	it.effect("should return messages in insertion order across roles", () =>
 		Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
+			const repo = yield* MessageRepository;
 
 			yield* repo.saveMessage("session-1", "user", "Hello");
 			yield* repo.saveMessage("session-1", "assistant", "Hi!", "exchange-1");

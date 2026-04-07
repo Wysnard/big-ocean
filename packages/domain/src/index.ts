@@ -147,13 +147,6 @@ export {
 	type AnalysisTarget,
 	AnalyzerRepository,
 } from "./repositories/analyzer.repository";
-// Assessment exchange repository (Story 23-3)
-export {
-	type AssessmentExchangeRecord,
-	AssessmentExchangeRepository,
-	type AssessmentExchangeUpdateInput,
-} from "./repositories/assessment-exchange.repository";
-export { AssessmentMessageRepository } from "./repositories/assessment-message.repository";
 // Assessment result repository (Story 11.2)
 export {
 	AssessmentResultError,
@@ -163,13 +156,6 @@ export {
 	type AssessmentResultUpdateInput,
 	type ResultStage,
 } from "./repositories/assessment-result.repository";
-// Repository interfaces (ports in hexagonal architecture)
-export {
-	AssessmentSessionRepository,
-	type CheckInEligibleSession,
-	type DropOffSession,
-	type RecaptureEligibleSession,
-} from "./repositories/assessment-session.repository";
 // Conversanalyzer repository (Story 10.2, Story 24-1, Story 42-2, Story 43-6)
 export {
 	ConversanalyzerError,
@@ -177,6 +163,13 @@ export {
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
 } from "./repositories/conversanalyzer.repository";
+// Repository interfaces (ports in hexagonal architecture)
+export {
+	type CheckInEligibleSession,
+	ConversationRepository,
+	type DropOffSession,
+	type RecaptureEligibleSession,
+} from "./repositories/conversation.repository";
 // Conversation evidence repository (Story 10.1)
 export {
 	ConversationEvidenceError,
@@ -185,11 +178,18 @@ export {
 	ConversationEvidenceRepository,
 } from "./repositories/conversation-evidence.repository";
 export { CostGuardRepository } from "./repositories/cost-guard.repository";
+// Assessment exchange repository (Story 23-3)
+export {
+	type ExchangeRecord,
+	ExchangeRepository,
+	type ExchangeUpdateInput,
+} from "./repositories/exchange.repository";
 export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
 export {
 	type LoggerMethods,
 	LoggerRepository,
 } from "./repositories/logger.repository";
+export { MessageRepository } from "./repositories/message.repository";
 export {
 	type NerinActorInvokeInput,
 	type NerinActorInvokeOutput,
@@ -285,11 +285,6 @@ export {
 	validateAnalyzerResponse,
 	validateNerinResponse,
 } from "./schemas/agent-schemas";
-// Assessment message schema — character limit enforcement (Story 4.8)
-export {
-	ASSESSMENT_MESSAGE_MAX_LENGTH,
-	AssessmentMessageContentSchema,
-} from "./schemas/assessment-message";
 // Big Five name schemas — typed literal schemas for TraitName and FacetName
 export { FacetNameSchema, TraitNameSchema } from "./schemas/big-five-schemas";
 // ConversAnalyzer extraction schemas (Story 24-1, Story 42-2, Story 43-6)
@@ -314,6 +309,11 @@ export {
 	EvidenceItemSchema,
 	FACET_REMAP,
 } from "./schemas/evidence-extraction";
+// Assessment message schema — character limit enforcement (Story 4.8)
+export {
+	ASSESSMENT_MESSAGE_MAX_LENGTH,
+	MessageContentSchema,
+} from "./schemas/message";
 // OCEAN code branded schemas (canonical definitions)
 export { OceanCode4Schema, OceanCode5Schema } from "./schemas/ocean-code";
 // Result schemas — canonical FacetResult and TraitResult types

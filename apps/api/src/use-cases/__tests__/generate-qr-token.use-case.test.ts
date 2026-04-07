@@ -5,14 +5,14 @@
 import { vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/qr-token.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { AppConfig, AssessmentSessionRepository, QrTokenRepository } from "@workspace/domain";
+import { AppConfig, ConversationRepository, QrTokenRepository } from "@workspace/domain";
 import {
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	_resetMockState as resetSessionMock,
-} from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+} from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import {
 	_resetMockState,
 	QrTokenDrizzleRepositoryLive,
@@ -50,7 +50,7 @@ const TestAppConfig = Layer.succeed(
 
 const TestLayer = Layer.mergeAll(
 	QrTokenDrizzleRepositoryLive,
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	TestAppConfig,
 );
 
@@ -63,7 +63,7 @@ describe("generateQrToken Use Case (Story 34-1)", () => {
 	/** Helper: seed a completed assessment session for the given user */
 	const seedCompletedSession = (userId: string) =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 			const session = yield* sessionRepo.createSession(userId);
 			yield* sessionRepo.updateSession(session.sessionId, { status: "completed" });
 		});

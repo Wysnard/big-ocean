@@ -1,9 +1,9 @@
 /**
- * Mock: assessment-session.drizzle.repository.ts
+ * Mock: conversation.drizzle.repository.ts
  * Vitest auto-resolves when tests call:
- *   vi.mock('@workspace/infrastructure/repositories/assessment-session.drizzle.repository')
+ *   vi.mock('@workspace/infrastructure/repositories/conversation.drizzle.repository')
  */
-import { AssessmentSessionRepository } from "@workspace/domain";
+import { ConversationRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 const sessions = new Map<string, Record<string, unknown>>();
@@ -11,9 +11,9 @@ const sessions = new Map<string, Record<string, unknown>>();
 /** Clear in-memory state between tests. Call in `beforeEach` or `afterEach`. */
 export const _resetMockState = () => sessions.clear();
 
-export const AssessmentSessionDrizzleRepositoryLive = Layer.succeed(
-	AssessmentSessionRepository,
-	AssessmentSessionRepository.of({
+export const ConversationDrizzleRepositoryLive = Layer.succeed(
+	ConversationRepository,
+	ConversationRepository.of({
 		getActiveSessionByUserId: (userId: string) =>
 			Effect.sync(() => {
 				for (const session of sessions.values()) {

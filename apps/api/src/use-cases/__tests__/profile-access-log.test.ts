@@ -10,7 +10,7 @@
 
 import { vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/profile-access-log.drizzle.repository");
@@ -19,7 +19,7 @@ vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.reposi
 import { it } from "@effect/vitest";
 import {
 	ALL_FACETS,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	FacetEvidenceRepository,
 	type FacetName,
 	type ProfileAccessLogInput,
@@ -38,10 +38,10 @@ import {
 	_resetMockState as resetResultState,
 } from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
 import {
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__
 	_resetMockState as resetSessionState,
-} from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+} from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import {
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports accessLogEntries
@@ -84,7 +84,7 @@ function createEvidenceLayer(evidence: SavedFacetEvidence[]) {
 }
 
 const TestLayer = Layer.mergeAll(
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
@@ -115,7 +115,7 @@ function buildFacetsAndTraits(score: number, confidence: number) {
 /** Helper: create a public profile via repo APIs */
 function createPublicProfile() {
 	return Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const { sessionId } = yield* sessionRepo.createSession("user_test");
 		const { facets, traits } = buildFacetsAndTraits(15, 85);
@@ -134,7 +134,7 @@ function createPublicProfile() {
 /** Helper: create a private profile via repo APIs */
 function createPrivateProfile() {
 	return Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const { sessionId } = yield* sessionRepo.createSession("user_private");
 		const profile = yield* profileRepo.createProfile({
@@ -209,7 +209,7 @@ describe("Profile Access Log (Story 15.1)", () => {
 			});
 
 			const FailingTestLayer = Layer.mergeAll(
-				AssessmentSessionDrizzleRepositoryLive,
+				ConversationDrizzleRepositoryLive,
 				LoggerPinoRepositoryLive,
 				PublicProfileDrizzleRepositoryLive,
 				FailingLogLayer,

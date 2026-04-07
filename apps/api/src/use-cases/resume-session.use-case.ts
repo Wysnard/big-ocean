@@ -9,9 +9,8 @@
 import {
 	ALL_FACETS,
 	AppConfig,
-	AssessmentMessageRepository,
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	calculateTraitConfidence,
 	DEFAULT_FACET_SCORE,
 	type FacetConfidenceScores,
@@ -19,9 +18,10 @@ import {
 	type FacetName,
 	initializeFacetConfidence,
 	LoggerRepository,
+	MessageRepository,
 	SessionNotFound,
 } from "@workspace/domain";
-import type { AssessmentMessageEntity } from "@workspace/domain/entities/message.entity";
+import type { MessageEntity } from "@workspace/domain/entities/message.entity";
 import { Effect } from "effect";
 
 export interface ResumeSessionInput {
@@ -37,7 +37,7 @@ export interface ResumeSessionOutput {
 		readonly agreeableness: number;
 		readonly neuroticism: number;
 	};
-	readonly messages: readonly AssessmentMessageEntity[];
+	readonly messages: readonly MessageEntity[];
 	readonly freeTierMessageThreshold: number;
 	readonly status: string;
 }
@@ -45,15 +45,15 @@ export interface ResumeSessionOutput {
 /**
  * Resume Session Use Case
  *
- * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
+ * Dependencies: ConversationRepository, MessageRepository,
  *               AssessmentResultRepository, FacetEvidenceRepository, LoggerRepository
  * Returns: Session confidence scores and message history
  */
 export const resumeSession = (input: ResumeSessionInput) =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
-		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
+		const sessionRepo = yield* ConversationRepository;
+		const messageRepo = yield* MessageRepository;
 		const resultRepo = yield* AssessmentResultRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;

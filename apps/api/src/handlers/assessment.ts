@@ -16,13 +16,13 @@ import {
 	Unauthorized,
 } from "@workspace/contracts";
 import {
-	AssessmentMessageRepository,
 	type AssessmentResultError,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	CurrentUser,
 	extract4LetterCode,
 	type FacetEvidencePersistenceError,
 	lookupArchetype,
+	MessageRepository,
 } from "@workspace/domain";
 import { DateTime, Effect, Redacted } from "effect";
 import { activateConversationExtension } from "../use-cases/activate-conversation-extension.use-case";
@@ -54,11 +54,11 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 						);
 
 						if (token) {
-							const sessionRepo = yield* AssessmentSessionRepository;
+							const sessionRepo = yield* ConversationRepository;
 							const session = yield* sessionRepo.findByToken(token);
 
 							if (session) {
-								const messageRepo = yield* AssessmentMessageRepository;
+								const messageRepo = yield* MessageRepository;
 								const messages = yield* messageRepo.getMessages(session.id);
 
 								// Refresh cookie on successful resumption
@@ -171,7 +171,7 @@ export const AssessmentGroupLive = HttpApiBuilder.group(BigOceanApi, "assessment
 
 					// For anonymous sessions, validate token belongs to the requested session
 					if (token && !authenticatedUserId) {
-						const sessionRepo = yield* AssessmentSessionRepository;
+						const sessionRepo = yield* ConversationRepository;
 						const tokenSession = yield* sessionRepo.findByToken(token);
 						if (!tokenSession || tokenSession.id !== payload.sessionId) {
 							return yield* Effect.fail(new DatabaseError({ message: "Session not found" }));

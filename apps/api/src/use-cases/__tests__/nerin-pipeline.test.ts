@@ -13,14 +13,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import {
 	AppConfig,
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
 	ConversanalyzerError,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
+	ConversationRepository,
 	CostGuardRepository,
+	ExchangeRepository,
 	LoggerRepository,
+	MessageRepository,
 	NerinActorRepository,
 	NerinDirectorError,
 	NerinDirectorRepository,
@@ -317,9 +317,9 @@ const mockConfig = {
 const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(AppConfig, mockConfig),
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
-		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
+		Layer.succeed(MessageRepository, mockMessageRepo),
+		Layer.succeed(ExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(NerinDirectorRepository, mockDirectorRepo),
 		Layer.succeed(NerinActorRepository, mockActorRepo),

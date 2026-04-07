@@ -123,18 +123,15 @@ export const BetterAuthLive = Layer.effect(
 				await plainDb.transaction(async (tx) => {
 					// Allow first-time linking and idempotent relinking by the same user only.
 					const [linkedSession] = await tx
-						.update(authSchema.assessmentSession)
+						.update(authSchema.conversation)
 						.set({ userId, sessionToken: null, updatedAt: new Date() })
 						.where(
 							and(
-								eq(authSchema.assessmentSession.id, anonymousSessionId),
-								or(
-									isNull(authSchema.assessmentSession.userId),
-									eq(authSchema.assessmentSession.userId, userId),
-								),
+								eq(authSchema.conversation.id, anonymousSessionId),
+								or(isNull(authSchema.conversation.userId), eq(authSchema.conversation.userId, userId)),
 							),
 						)
-						.returning({ id: authSchema.assessmentSession.id });
+						.returning({ id: authSchema.conversation.id });
 
 					if (!linkedSession) {
 						logger.warn(

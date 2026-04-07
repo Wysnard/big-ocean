@@ -11,12 +11,12 @@
 import { AssessmentAlreadyExists } from "@workspace/contracts";
 import {
 	AppConfig,
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	CostGuardRepository,
+	ExchangeRepository,
 	GREETING_MESSAGES,
 	LoggerRepository,
+	MessageRepository,
 	pickOpeningQuestion,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -47,9 +47,9 @@ export interface StartAnonymousAssessmentOutput extends StartAssessmentOutput {
  */
 const createSessionWithGreetings = (userId?: string) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
-		const exchangeRepo = yield* AssessmentExchangeRepository;
+		const sessionRepo = yield* ConversationRepository;
+		const messageRepo = yield* MessageRepository;
+		const exchangeRepo = yield* ExchangeRepository;
 		const logger = yield* LoggerRepository;
 
 		const result = yield* sessionRepo.createSession(userId);
@@ -103,8 +103,8 @@ const createSessionWithGreetings = (userId?: string) =>
  */
 export const startAuthenticatedAssessment = (input: { userId: string }) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
+		const sessionRepo = yield* ConversationRepository;
+		const messageRepo = yield* MessageRepository;
 		const costGuard = yield* CostGuardRepository;
 		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
@@ -190,8 +190,8 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
  */
 export const startAnonymousAssessment = () =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
+		const sessionRepo = yield* ConversationRepository;
+		const messageRepo = yield* MessageRepository;
 		const costGuard = yield* CostGuardRepository;
 		const _config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
@@ -211,7 +211,7 @@ export const startAnonymousAssessment = () =>
 		const { sessionId, sessionToken } = yield* sessionRepo.createAnonymousSession();
 
 		// Create opener exchange (turn 0) for the opening question
-		const exchangeRepo = yield* AssessmentExchangeRepository;
+		const exchangeRepo = yield* ExchangeRepository;
 		const openerExchange = yield* exchangeRepo.create(sessionId, 0);
 
 		// Build greeting messages (1 greeting bubble + 1 random opening question)

@@ -8,8 +8,8 @@
  * - verification: Email verification tokens
  *
  * Assessment tables (Two-tier architecture — Story 9.1 clean-slate):
- * - assessmentSession: Assessment conversation sessions
- * - assessmentMessage: Conversation messages in sessions
+ * - conversation: Assessment conversation sessions
+ * - message: Conversation messages in sessions
  * - conversationEvidence: Lean evidence for steering (conversanalyzer)
  * - conversationEvidence: Evidence extracted by ConversAnalyzer on every message
  * - assessmentResults: Final scored results with portrait
@@ -158,7 +158,7 @@ export const verification = pgTable(
  *
  * Tracks personality assessment conversation sessions linked to authenticated users.
  */
-export const assessmentSession = pgTable(
+export const conversation = pgTable(
 	"conversations",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -205,13 +205,13 @@ export const assessmentSession = pgTable(
  * Kept: id, session_id, turn_number, extraction_tier, created_at.
  * Added: director_output (text), coverage_targets (jsonb).
  */
-export const assessmentExchange = pgTable(
+export const exchange = pgTable(
 	"exchanges",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		sessionId: uuid("session_id")
 			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+			.references(() => conversation.id, { onDelete: "cascade" }),
 		turnNumber: smallint("turn_number").notNull(),
 
 		// Extraction
@@ -238,14 +238,14 @@ export const assessmentExchange = pgTable(
  * Story 23-3: Dropped territory_id, observed_energy_level, user_id
  * (territory/energy now live on assessment_exchange; userId derivable from session).
  */
-export const assessmentMessage = pgTable(
+export const message = pgTable(
 	"messages",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		sessionId: uuid("session_id")
 			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
-		exchangeId: uuid("exchange_id").references(() => assessmentExchange.id, {
+			.references(() => conversation.id, { onDelete: "cascade" }),
+		exchangeId: uuid("exchange_id").references(() => exchange.id, {
 			onDelete: "set null",
 		}),
 		role: text("role").notNull(),
@@ -268,11 +268,11 @@ export const conversationEvidence = pgTable(
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		assessmentSessionId: uuid("assessment_session_id")
 			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+			.references(() => conversation.id, { onDelete: "cascade" }),
 		assessmentMessageId: uuid("assessment_message_id")
 			.notNull()
-			.references(() => assessmentMessage.id, { onDelete: "cascade" }),
-		exchangeId: uuid("exchange_id").references(() => assessmentExchange.id, {
+			.references(() => message.id, { onDelete: "cascade" }),
+		exchangeId: uuid("exchange_id").references(() => exchange.id, {
 			onDelete: "set null",
 		}),
 		bigfiveFacet: bigfiveFacetNameEnum("bigfive_facet").notNull(),
@@ -299,7 +299,7 @@ export const assessmentResults = pgTable(
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		assessmentSessionId: uuid("assessment_session_id")
 			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+			.references(() => conversation.id, { onDelete: "cascade" }),
 		facets: jsonb("facets").notNull(),
 		traits: jsonb("traits").notNull(),
 		domainCoverage: jsonb("domain_coverage").notNull(),
@@ -321,7 +321,7 @@ export const publicProfile = pgTable(
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
 		sessionId: uuid("session_id")
 			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+			.references(() => conversation.id, { onDelete: "cascade" }),
 		assessmentResultId: uuid("assessment_result_id").references(() => assessmentResults.id, {
 			onDelete: "cascade",
 		}),
@@ -518,7 +518,7 @@ export const portraitRatings = pgTable(
 			.references(() => user.id, { onDelete: "cascade" }),
 		assessmentSessionId: uuid("assessment_session_id")
 			.notNull()
-			.references(() => assessmentSession.id, { onDelete: "cascade" }),
+			.references(() => conversation.id, { onDelete: "cascade" }),
 		portraitType: portraitTypeEnum("portrait_type").notNull(),
 		rating: portraitRatingEnum("rating").notNull(),
 		depthSignal: depthSignalEnum("depth_signal").notNull(),
@@ -536,9 +536,9 @@ export const relations = defineRelations(
 		session,
 		account,
 		verification,
-		assessmentSession,
-		assessmentExchange,
-		assessmentMessage,
+		conversation,
+		exchange,
+		message,
 		conversationEvidence,
 		assessmentResults,
 		publicProfile,
@@ -553,7 +553,7 @@ export const relations = defineRelations(
 		user: {
 			sessions: r.many.session(),
 			accounts: r.many.account(),
-			assessmentSession: r.many.assessmentSession(),
+			conversation: r.many.conversation(),
 			publicProfiles: r.many.publicProfile(),
 			purchaseEvents: r.many.purchaseEvents(),
 			qrTokens: r.many.relationshipQrTokens({
@@ -573,54 +573,54 @@ export const relations = defineRelations(
 				to: r.user.id,
 			}),
 		},
-		assessmentSession: {
+		conversation: {
 			user: r.one.user({
-				from: r.assessmentSession.userId,
+				from: r.conversation.userId,
 				to: r.user.id,
 			}),
-			exchanges: r.many.assessmentExchange(),
-			assessmentMessages: r.many.assessmentMessage(),
+			exchanges: r.many.exchange(),
+			messages: r.many.message(),
 			conversationEvidence: r.many.conversationEvidence(),
 			assessmentResults: r.many.assessmentResults(),
 			publicProfile: r.many.publicProfile(),
 		},
-		assessmentExchange: {
-			session: r.one.assessmentSession({
-				from: r.assessmentExchange.sessionId,
-				to: r.assessmentSession.id,
+		exchange: {
+			session: r.one.conversation({
+				from: r.exchange.sessionId,
+				to: r.conversation.id,
 			}),
-			messages: r.many.assessmentMessage(),
+			messages: r.many.message(),
 			evidence: r.many.conversationEvidence(),
 		},
-		assessmentMessage: {
-			session: r.one.assessmentSession({
-				from: r.assessmentMessage.sessionId,
-				to: r.assessmentSession.id,
+		message: {
+			session: r.one.conversation({
+				from: r.message.sessionId,
+				to: r.conversation.id,
 			}),
-			exchange: r.one.assessmentExchange({
-				from: r.assessmentMessage.exchangeId,
-				to: r.assessmentExchange.id,
+			exchange: r.one.exchange({
+				from: r.message.exchangeId,
+				to: r.exchange.id,
 			}),
 			conversationEvidence: r.many.conversationEvidence(),
 		},
 		conversationEvidence: {
-			session: r.one.assessmentSession({
+			session: r.one.conversation({
 				from: r.conversationEvidence.assessmentSessionId,
-				to: r.assessmentSession.id,
+				to: r.conversation.id,
 			}),
-			message: r.one.assessmentMessage({
+			message: r.one.message({
 				from: r.conversationEvidence.assessmentMessageId,
-				to: r.assessmentMessage.id,
+				to: r.message.id,
 			}),
-			exchange: r.one.assessmentExchange({
+			exchange: r.one.exchange({
 				from: r.conversationEvidence.exchangeId,
-				to: r.assessmentExchange.id,
+				to: r.exchange.id,
 			}),
 		},
 		assessmentResults: {
-			session: r.one.assessmentSession({
+			session: r.one.conversation({
 				from: r.assessmentResults.assessmentSessionId,
-				to: r.assessmentSession.id,
+				to: r.conversation.id,
 			}),
 			publicProfile: r.many.publicProfile(),
 			portraits: r.many.portraits(),
@@ -632,9 +632,9 @@ export const relations = defineRelations(
 			}),
 		},
 		publicProfile: {
-			session: r.one.assessmentSession({
+			session: r.one.conversation({
 				from: r.publicProfile.sessionId,
-				to: r.assessmentSession.id,
+				to: r.conversation.id,
 			}),
 			result: r.one.assessmentResults({
 				from: r.publicProfile.assessmentResultId,
@@ -690,9 +690,9 @@ export const relations = defineRelations(
 				from: r.portraitRatings.userId,
 				to: r.user.id,
 			}),
-			session: r.one.assessmentSession({
+			session: r.one.conversation({
 				from: r.portraitRatings.assessmentSessionId,
-				to: r.assessmentSession.id,
+				to: r.conversation.id,
 			}),
 		},
 	}),

@@ -6,13 +6,13 @@
 
 import {
 	AppConfig,
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
+	ConversationRepository,
 	CostGuardRepository,
+	ExchangeRepository,
 	LoggerRepository,
+	MessageRepository,
 	NerinActorRepository,
 	NerinDirectorRepository,
 } from "@workspace/domain";
@@ -280,9 +280,9 @@ export const mockExchangeRecord = {
 export const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(AppConfig, mockConfig),
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
-		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
+		Layer.succeed(MessageRepository, mockMessageRepo),
+		Layer.succeed(ExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(NerinDirectorRepository, mockDirectorRepo),
 		Layer.succeed(NerinActorRepository, mockActorRepo),

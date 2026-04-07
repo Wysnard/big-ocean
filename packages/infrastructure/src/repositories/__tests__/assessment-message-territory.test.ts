@@ -9,17 +9,17 @@
  */
 import { vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/message.drizzle.repository");
 
-import { AssessmentMessageRepository } from "@workspace/domain";
+import { MessageRepository } from "@workspace/domain";
 import {
 	_resetMockState,
-	AssessmentMessageDrizzleRepositoryLive,
-} from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
+	MessageDrizzleRepositoryLive,
+} from "@workspace/infrastructure/repositories/message.drizzle.repository";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-const TestLayer = AssessmentMessageDrizzleRepositoryLive;
+const TestLayer = MessageDrizzleRepositoryLive;
 
 describe("Assessment Message Exchange Metadata (Story 23-3)", () => {
 	beforeEach(() => {
@@ -28,7 +28,7 @@ describe("Assessment Message Exchange Metadata (Story 23-3)", () => {
 
 	it("saves message with exchange_id", async () => {
 		const program = Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
+			const repo = yield* MessageRepository;
 			const msg = yield* repo.saveMessage(
 				"session-1",
 				"assistant",
@@ -45,7 +45,7 @@ describe("Assessment Message Exchange Metadata (Story 23-3)", () => {
 
 	it("saves message without exchange_id (null)", async () => {
 		const program = Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
+			const repo = yield* MessageRepository;
 			const msg = yield* repo.saveMessage("session-1", "assistant", "Tell me more");
 			return msg;
 		});
@@ -57,7 +57,7 @@ describe("Assessment Message Exchange Metadata (Story 23-3)", () => {
 
 	it("retrieves messages with exchange metadata", async () => {
 		const program = Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
+			const repo = yield* MessageRepository;
 			yield* repo.saveMessage("session-2", "user", "I think...", "exchange-1");
 			yield* repo.saveMessage("session-2", "assistant", "Response 1", "exchange-1");
 			const messages = yield* repo.getMessages("session-2");
@@ -73,7 +73,7 @@ describe("Assessment Message Exchange Metadata (Story 23-3)", () => {
 
 	it("user messages without exchange have null exchangeId", async () => {
 		const program = Effect.gen(function* () {
-			const repo = yield* AssessmentMessageRepository;
+			const repo = yield* MessageRepository;
 			const msg = yield* repo.saveMessage("session-3", "user", "Hello");
 			return msg;
 		});

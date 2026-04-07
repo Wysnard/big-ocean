@@ -4,7 +4,7 @@
  * Verifies session listing for authenticated users.
  */
 
-import { AppConfig, AssessmentSessionRepository } from "@workspace/domain";
+import { AppConfig, ConversationRepository } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listUserSessions } from "../list-user-sessions.use-case";
@@ -21,7 +21,7 @@ const mockSessionRepo = {
 
 const createTestLayer = () =>
 	Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(AppConfig, {
 			databaseUrl: "postgres://test:test@localhost:5432/test",
 			redisUrl: "redis://localhost:6379",
@@ -112,7 +112,7 @@ describe("listUserSessions Use Case", () => {
 		mockSessionRepo.getSessionsByUserId.mockReturnValue(Effect.succeed([]));
 
 		const customLayer = Layer.mergeAll(
-			Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+			Layer.succeed(ConversationRepository, mockSessionRepo),
 			Layer.succeed(AppConfig, {
 				databaseUrl: "postgres://test:test@localhost:5432/test",
 				redisUrl: "redis://localhost:6379",

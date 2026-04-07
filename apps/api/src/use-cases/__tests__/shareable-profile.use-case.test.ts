@@ -9,7 +9,7 @@
 
 import { vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 vi.mock("@workspace/infrastructure/repositories/public-profile.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/profile-access-log.drizzle.repository");
@@ -19,7 +19,7 @@ vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.reposi
 import { it } from "@effect/vitest";
 import {
 	ALL_FACETS,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	FacetEvidenceRepository,
 	type FacetName,
 	lookupArchetype,
@@ -37,10 +37,10 @@ import {
 	_resetMockState as resetResultState,
 } from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
 import {
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
 	_resetMockState as resetSessionState,
-} from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+} from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { FacetEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/facet-evidence.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { ProfileAccessLogDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/profile-access-log.drizzle.repository";
@@ -109,7 +109,7 @@ function buildFacetsAndTraits(score: number, confidence: number) {
 
 // Base test layer with default mock evidence (low confidence from mock)
 const BaseTestLayer = Layer.mergeAll(
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
@@ -120,7 +120,7 @@ const BaseTestLayer = Layer.mergeAll(
 
 // Test layer with high confidence evidence (assessment complete)
 const HighConfidenceTestLayer = Layer.mergeAll(
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	LoggerPinoRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
@@ -139,7 +139,7 @@ describe("createShareableProfile Use Case", () => {
 	describe("Success scenarios", () => {
 		it.effect("should create a profile from a valid session with high confidence", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 				const { facets, traits } = buildFacetsAndTraits(15, 85);
 				_seedResult(sessionId, { facets, traits });
@@ -155,7 +155,7 @@ describe("createShareableProfile Use Case", () => {
 
 		it.effect("should return existing profile for same session (idempotent)", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 				const { facets, traits } = buildFacetsAndTraits(15, 85);
 				_seedResult(sessionId, { facets, traits });
@@ -171,7 +171,7 @@ describe("createShareableProfile Use Case", () => {
 
 		it.effect("should generate shareable URL with frontend base URL", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 				const { facets, traits } = buildFacetsAndTraits(15, 85);
 				_seedResult(sessionId, { facets, traits });
@@ -197,7 +197,7 @@ describe("getPublicProfile Use Case", () => {
 	describe("Success scenarios", () => {
 		it.effect("should return profile data for a public profile", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 				const { facets, traits } = buildFacetsAndTraits(15, 85);
@@ -229,7 +229,7 @@ describe("getPublicProfile Use Case", () => {
 	describe("Error scenarios", () => {
 		it.effect("should fail with ProfilePrivate for non-public profile", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 
@@ -278,7 +278,7 @@ describe("toggleProfileVisibility Use Case", () => {
 	describe("Success scenarios", () => {
 		it.effect("should toggle profile from private to public", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 
@@ -307,7 +307,7 @@ describe("toggleProfileVisibility Use Case", () => {
 	describe("Error scenarios", () => {
 		it.effect("should fail with Unauthorized for non-owner", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 

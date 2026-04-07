@@ -8,25 +8,25 @@
  */
 
 import { DatabaseError } from "@workspace/contracts/errors";
-import { AssessmentMessageEntitySchema } from "@workspace/domain/entities/message.entity";
-import { AssessmentMessageRepository } from "@workspace/domain/repositories/assessment-message.repository";
+import { MessageEntitySchema } from "@workspace/domain/entities/message.entity";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
+import { MessageRepository } from "@workspace/domain/repositories/message.repository";
 import { asc, eq, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
 import { Database } from "../context/database";
-import { assessmentMessage, assessmentSession } from "../db/drizzle/schema";
+import { conversation, message as messageTable } from "../db/drizzle/schema";
 
-export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
-	AssessmentMessageRepository,
+export const MessageDrizzleRepositoryLive = Layer.effect(
+	MessageRepository,
 	Effect.gen(function* () {
 		const db = yield* Database;
 		const logger = yield* LoggerRepository;
 
-		return AssessmentMessageRepository.of({
+		return MessageRepository.of({
 			saveMessage: (sessionId, role, content, exchangeId) =>
 				Effect.gen(function* () {
-					const [message] = yield* db
-						.insert(assessmentMessage)
+					const [savedMessage] = yield* db
+						.insert(messageTable)
 						.values({
 							sessionId,
 							role,
@@ -54,7 +54,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 							}),
 						);
 
-					if (!message) {
+					if (!savedMessage) {
 						try {
 							logger.error("Database operation failed", {
 								operation: "saveMessage",
@@ -72,7 +72,7 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 						);
 					}
 
-					return yield* Schema.decodeUnknown(AssessmentMessageEntitySchema)(message).pipe(
+					return yield* Schema.decodeUnknown(MessageEntitySchema)(savedMessage).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Database operation failed", {
@@ -95,9 +95,9 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const messages = yield* db
 						.select()
-						.from(assessmentMessage)
-						.where(eq(assessmentMessage.sessionId, sessionId))
-						.orderBy(asc(assessmentMessage.createdAt))
+						.from(messageTable)
+						.where(eq(messageTable.sessionId, sessionId))
+						.orderBy(asc(messageTable.createdAt))
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -117,9 +117,9 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 							}),
 						);
 
-					return yield* Schema.decodeUnknown(
-						Schema.mutable(Schema.Array(AssessmentMessageEntitySchema)),
-					)(messages).pipe(
+					return yield* Schema.decodeUnknown(Schema.mutable(Schema.Array(MessageEntitySchema)))(
+						messages,
+					).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Database operation failed", {
@@ -140,9 +140,9 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 
 			updateExchangeId: (messageId, exchangeId) =>
 				db
-					.update(assessmentMessage)
+					.update(messageTable)
 					.set({ exchangeId })
-					.where(eq(assessmentMessage.id, messageId))
+					.where(eq(messageTable.id, messageId))
 					.pipe(
 						Effect.map(() => undefined as undefined),
 						Effect.mapError((error) => {
@@ -163,17 +163,17 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const messages = yield* db
 						.select({
-							id: assessmentMessage.id,
-							sessionId: assessmentMessage.sessionId,
-							exchangeId: assessmentMessage.exchangeId,
-							role: assessmentMessage.role,
-							content: assessmentMessage.content,
-							createdAt: assessmentMessage.createdAt,
+							id: messageTable.id,
+							sessionId: messageTable.sessionId,
+							exchangeId: messageTable.exchangeId,
+							role: messageTable.role,
+							content: messageTable.content,
+							createdAt: messageTable.createdAt,
 						})
-						.from(assessmentMessage)
-						.innerJoin(assessmentSession, eq(assessmentMessage.sessionId, assessmentSession.id))
-						.where(eq(assessmentSession.userId, userId))
-						.orderBy(asc(assessmentMessage.createdAt))
+						.from(messageTable)
+						.innerJoin(conversation, eq(messageTable.sessionId, conversation.id))
+						.where(eq(conversation.userId, userId))
+						.orderBy(asc(messageTable.createdAt))
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -193,9 +193,9 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 							}),
 						);
 
-					return yield* Schema.decodeUnknown(
-						Schema.mutable(Schema.Array(AssessmentMessageEntitySchema)),
-					)(messages).pipe(
+					return yield* Schema.decodeUnknown(Schema.mutable(Schema.Array(MessageEntitySchema)))(
+						messages,
+					).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Database operation failed", {
@@ -218,8 +218,8 @@ export const AssessmentMessageDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const result = yield* db
 						.select({ count: sql<number>`cast(count(*) as int)` })
-						.from(assessmentMessage)
-						.where(eq(assessmentMessage.sessionId, sessionId))
+						.from(messageTable)
+						.where(eq(messageTable.sessionId, sessionId))
 						.pipe(
 							Effect.mapError((error) => {
 								try {

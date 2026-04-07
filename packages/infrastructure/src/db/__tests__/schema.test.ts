@@ -2,13 +2,13 @@ import { ALL_FACETS } from "@workspace/domain/constants/big-five";
 import { LIFE_DOMAINS } from "@workspace/domain/constants/life-domain";
 import { describe, expect, it } from "vitest";
 import {
-	assessmentMessage,
 	assessmentResults,
-	assessmentSession,
 	bigfiveFacetNameEnum,
+	conversation,
 	conversationEvidence,
 	conversationTypeEnum,
 	evidenceDomainEnum,
+	message,
 	publicProfile,
 } from "../drizzle/schema";
 
@@ -40,19 +40,19 @@ describe("pgEnum values match domain constants", () => {
 
 describe("Assessment Session Schema", () => {
 	it("should have all required columns", () => {
-		expect(assessmentSession.id).toBeDefined();
-		expect(assessmentSession.userId).toBeDefined();
-		expect(assessmentSession.sessionToken).toBeDefined();
-		expect(assessmentSession.status).toBeDefined();
-		expect(assessmentSession.finalizationProgress).toBeDefined();
-		expect(assessmentSession.messageCount).toBeDefined();
-		expect(assessmentSession.createdAt).toBeDefined();
-		expect(assessmentSession.updatedAt).toBeDefined();
+		expect(conversation.id).toBeDefined();
+		expect(conversation.userId).toBeDefined();
+		expect(conversation.sessionToken).toBeDefined();
+		expect(conversation.status).toBeDefined();
+		expect(conversation.finalizationProgress).toBeDefined();
+		expect(conversation.messageCount).toBeDefined();
+		expect(conversation.createdAt).toBeDefined();
+		expect(conversation.updatedAt).toBeDefined();
 	});
 
 	it("should have conversationType and metadata columns (Story 45-1)", () => {
-		expect(assessmentSession.conversationType).toBeDefined();
-		expect(assessmentSession.metadata).toBeDefined();
+		expect(conversation.conversationType).toBeDefined();
+		expect(conversation.metadata).toBeDefined();
 	});
 
 	it("conversation_type enum should have ADR-39 values", () => {
@@ -68,11 +68,11 @@ describe("Assessment Session Schema", () => {
 
 describe("Assessment Message Schema", () => {
 	it("should have core message columns", () => {
-		expect(assessmentMessage.id).toBeDefined();
-		expect(assessmentMessage.sessionId).toBeDefined();
-		expect(assessmentMessage.role).toBeDefined();
-		expect(assessmentMessage.content).toBeDefined();
-		expect(assessmentMessage.createdAt).toBeDefined();
+		expect(message.id).toBeDefined();
+		expect(message.sessionId).toBeDefined();
+		expect(message.role).toBeDefined();
+		expect(message.content).toBeDefined();
+		expect(message.createdAt).toBeDefined();
 	});
 });
 

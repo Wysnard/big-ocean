@@ -8,18 +8,17 @@
  * Reads persisted scores from assessment_results, generates OCEAN code,
  * looks up archetype, and computes overall confidence.
  *
- * Dependencies: AssessmentSessionRepository, AssessmentResultRepository, LoggerRepository
+ * Dependencies: ConversationRepository, AssessmentResultRepository, LoggerRepository
  */
 
 import type { EvidenceInput } from "@workspace/domain";
 import {
 	AppConfig,
-	AssessmentMessageRepository,
 	AssessmentResultError,
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
 	BIG_FIVE_TRAITS,
 	ConversationEvidenceRepository,
+	ConversationRepository,
 	calculateConfidenceFromFacetScores,
 	computeAllFacetResults,
 	computeDomainCoverage,
@@ -36,6 +35,7 @@ import {
 	isLatestVersion,
 	LoggerRepository,
 	lookupArchetype,
+	MessageRepository,
 	PublicProfileRepository,
 	SessionNotCompleted,
 	SessionNotFound,
@@ -83,7 +83,7 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
  */
 const lazyFinalize = (sessionId: string, _userId: string | null) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const logger = yield* LoggerRepository;
 		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const assessmentResultRepo = yield* AssessmentResultRepository;
@@ -175,9 +175,9 @@ const lazyFinalize = (sessionId: string, _userId: string | null) =>
  */
 export const getResults = (input: GetResultsInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const resultRepo = yield* AssessmentResultRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
+		const messageRepo = yield* MessageRepository;
 		const profileRepo = yield* PublicProfileRepository;
 		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;

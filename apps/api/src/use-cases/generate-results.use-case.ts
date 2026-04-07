@@ -14,8 +14,8 @@
 import type { EvidenceInput } from "@workspace/domain";
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
 	ConversationEvidenceRepository,
+	ConversationRepository,
 	computeAllFacetResults,
 	computeDomainCoverage,
 	computeTraitResults,
@@ -34,7 +34,7 @@ export type GenerateResultsStatus = "analyzing" | "completed";
 
 export const generateResults = (input: GenerateResultsInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const logger = yield* LoggerRepository;
 		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const assessmentResultRepo = yield* AssessmentResultRepository;

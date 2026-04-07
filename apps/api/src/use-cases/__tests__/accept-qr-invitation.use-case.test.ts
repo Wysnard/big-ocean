@@ -10,7 +10,7 @@ vi.mock("@workspace/infrastructure/repositories/relationship-analysis.drizzle.re
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	PurchaseEventRepository,
 	QrTokenRepository,
 } from "@workspace/domain";
@@ -60,7 +60,7 @@ const TestLayer = Layer.mergeAll(
 	QrTokenDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
 	Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
-	Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+	Layer.succeed(ConversationRepository, mockSessionRepo),
 	Layer.succeed(AssessmentResultRepository, mockResultRepo),
 );
 

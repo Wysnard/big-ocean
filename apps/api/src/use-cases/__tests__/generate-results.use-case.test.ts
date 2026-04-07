@@ -15,8 +15,8 @@ vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.re
 import { describe, expect, it } from "@effect/vitest";
 import {
 	ALL_FACETS,
-	AssessmentSessionRepository,
 	type ConversationEvidenceRecord,
+	ConversationRepository,
 	FORMULA_DEFAULTS,
 	LIFE_DOMAINS,
 	LoggerRepository,
@@ -72,7 +72,7 @@ const mockFinalizingSession = {
 
 const createTestLayer = () =>
 	Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,

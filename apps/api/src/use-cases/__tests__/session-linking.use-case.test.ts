@@ -14,32 +14,32 @@
 import { vi } from "vitest";
 
 // Mock repos — must be before any imports that reference them
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-message.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/message.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository");
 vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/cost-guard.redis.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/exchange.drizzle.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
 	AppConfig,
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
 	ConversanalyzerRepository,
 	ConversationEvidenceRepository,
+	ConversationRepository,
 	CostGuardRepository,
+	ExchangeRepository,
 	LoggerRepository,
+	MessageRepository,
 	NerinActorRepository,
 	NerinDirectorRepository,
 } from "@workspace/domain";
-import { AssessmentExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository";
-import { AssessmentMessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-message.drizzle.repository";
-import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
 import { ConversanalyzerAnthropicRepositoryLive } from "@workspace/infrastructure/repositories/conversanalyzer.anthropic.repository";
+import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { ConversationEvidenceDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository";
 import { CostGuardRedisRepositoryLive } from "@workspace/infrastructure/repositories/cost-guard.redis.repository";
+import { ExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/exchange.drizzle.repository";
+import { MessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/message.drizzle.repository";
 import { Effect, Exit, Layer, Redacted } from "effect";
 import { sendMessage } from "../send-message.use-case";
 
@@ -110,9 +110,9 @@ const MockConfigLive = Layer.succeed(AppConfig, {
 });
 
 type TestServices =
-	| AssessmentSessionRepository
-	| AssessmentMessageRepository
-	| AssessmentExchangeRepository
+	| ConversationRepository
+	| MessageRepository
+	| ExchangeRepository
 	| ConversanalyzerRepository
 	| ConversationEvidenceRepository
 	| CostGuardRepository
@@ -124,9 +124,9 @@ type TestServices =
 // vi.mock() swaps production layers with __mocks__/ Layer.succeed (no deps),
 // but TS still infers the production RIn types. Cast is safe here.
 const TestLayer = Layer.mergeAll(
-	AssessmentSessionDrizzleRepositoryLive,
-	AssessmentMessageDrizzleRepositoryLive,
-	AssessmentExchangeDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
+	MessageDrizzleRepositoryLive,
+	ExchangeDrizzleRepositoryLive,
 	ConversanalyzerAnthropicRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,
@@ -140,7 +140,7 @@ describe("Session Linking (Story 9.4, Task 5)", () => {
 	describe("assignUserId clears session_token (AC #2)", () => {
 		it.effect("assigns userId and clears sessionToken", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 
 				// Create anonymous session
 				const { sessionId, sessionToken } = yield* sessionRepo.createAnonymousSession();
@@ -165,7 +165,7 @@ describe("Session Linking (Story 9.4, Task 5)", () => {
 	describe("Idempotent relinking (same user)", () => {
 		it.effect("allows re-assigning the same user to a session", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 
 				const { sessionId } = yield* sessionRepo.createAnonymousSession();
 				yield* sessionRepo.assignUserId(sessionId, "user_abc");
@@ -180,8 +180,8 @@ describe("Session Linking (Story 9.4, Task 5)", () => {
 	describe("Ownership guard (sendMessage rejects mismatched user)", () => {
 		it.effect("rejects sendMessage when session is owned by a different user", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-				const messageRepo = yield* AssessmentMessageRepository;
+				const sessionRepo = yield* ConversationRepository;
+				const messageRepo = yield* MessageRepository;
 
 				// Create session and assign to user_A
 				const { sessionId } = yield* sessionRepo.createAnonymousSession();
@@ -208,8 +208,8 @@ describe("Session Linking (Story 9.4, Task 5)", () => {
 
 		it.effect("allows sendMessage for the session owner", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-				const messageRepo = yield* AssessmentMessageRepository;
+				const sessionRepo = yield* ConversationRepository;
+				const messageRepo = yield* MessageRepository;
 
 				// Create session and assign to user_A
 				const { sessionId } = yield* sessionRepo.createAnonymousSession();
@@ -232,8 +232,8 @@ describe("Session Linking (Story 9.4, Task 5)", () => {
 
 		it.effect("allows sendMessage for anonymous session (no userId)", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
-				const messageRepo = yield* AssessmentMessageRepository;
+				const sessionRepo = yield* ConversationRepository;
+				const messageRepo = yield* MessageRepository;
 
 				// Create anonymous session (no userId)
 				const { sessionId } = yield* sessionRepo.createAnonymousSession();
@@ -256,7 +256,7 @@ describe("Session Linking (Story 9.4, Task 5)", () => {
 	describe("Token invalidation after linking", () => {
 		it.effect("session_token becomes NULL after assignUserId", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 
 				const { sessionId, sessionToken } = yield* sessionRepo.createAnonymousSession();
 
@@ -277,7 +277,7 @@ describe("Session Linking (Story 9.4, Task 5)", () => {
 	describe("Invalid session ID handling", () => {
 		it.effect("assignUserId with non-existent session fails gracefully", () =>
 			Effect.gen(function* () {
-				const sessionRepo = yield* AssessmentSessionRepository;
+				const sessionRepo = yield* ConversationRepository;
 
 				const exit = yield* sessionRepo.assignUserId("non-existent-id", "user_123").pipe(Effect.exit);
 
