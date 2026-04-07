@@ -202,14 +202,14 @@ export const conversation = pgTable(
  * extraction tier, creative director brief, and coverage analysis targets.
  *
  * Story 43-1: Replaced ~18 pacing/scoring/governor columns with Director model columns.
- * Kept: id, session_id, turn_number, extraction_tier, created_at.
+ * Kept: id, conversation_id, turn_number, extraction_tier, created_at.
  * Added: director_output (text), coverage_targets (jsonb).
  */
 export const exchange = pgTable(
 	"exchanges",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		sessionId: uuid("session_id")
+		conversationId: uuid("conversation_id")
 			.notNull()
 			.references(() => conversation.id, { onDelete: "cascade" }),
 		turnNumber: smallint("turn_number").notNull(),
@@ -224,8 +224,8 @@ export const exchange = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
-		index("assessment_exchange_session_id_idx").on(table.sessionId),
-		uniqueIndex("assessment_exchange_session_turn_unique").on(table.sessionId, table.turnNumber),
+		index("exchange_conversation_id_idx").on(table.conversationId),
+		uniqueIndex("exchange_conversation_turn_unique").on(table.conversationId, table.turnNumber),
 	],
 );
 
@@ -242,7 +242,7 @@ export const message = pgTable(
 	"messages",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		sessionId: uuid("session_id")
+		conversationId: uuid("conversation_id")
 			.notNull()
 			.references(() => conversation.id, { onDelete: "cascade" }),
 		exchangeId: uuid("exchange_id").references(() => exchange.id, {
@@ -252,7 +252,7 @@ export const message = pgTable(
 		content: text("content").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => [index("assessment_message_session_created_idx").on(table.sessionId, table.createdAt)],
+	(table) => [index("message_conversation_created_idx").on(table.conversationId, table.createdAt)],
 );
 
 /**
@@ -266,10 +266,10 @@ export const conversationEvidence = pgTable(
 	"conversation_evidence",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		assessmentSessionId: uuid("assessment_session_id")
+		conversationId: uuid("conversation_id")
 			.notNull()
 			.references(() => conversation.id, { onDelete: "cascade" }),
-		assessmentMessageId: uuid("assessment_message_id")
+		messageId: uuid("message_id")
 			.notNull()
 			.references(() => message.id, { onDelete: "cascade" }),
 		exchangeId: uuid("exchange_id").references(() => exchange.id, {
@@ -283,7 +283,7 @@ export const conversationEvidence = pgTable(
 		note: text("note").notNull(),
 		createdAt: timestamp("created_at").defaultNow(),
 	},
-	(table) => [index("conversation_evidence_session_id_idx").on(table.assessmentSessionId)],
+	(table) => [index("conversation_evidence_conversation_id_idx").on(table.conversationId)],
 );
 
 /**
@@ -297,7 +297,7 @@ export const assessmentResults = pgTable(
 	"assessment_results",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		assessmentSessionId: uuid("assessment_session_id")
+		conversationId: uuid("conversation_id")
 			.notNull()
 			.references(() => conversation.id, { onDelete: "cascade" }),
 		facets: jsonb("facets").notNull(),
@@ -307,19 +307,19 @@ export const assessmentResults = pgTable(
 		stage: resultStageEnum("stage"),
 		createdAt: timestamp("created_at").defaultNow(),
 	},
-	(table) => [uniqueIndex("assessment_results_session_id_unique").on(table.assessmentSessionId)],
+	(table) => [uniqueIndex("assessment_results_conversation_id_unique").on(table.conversationId)],
 );
 
 /**
  * Public Profile (Shareable Profile Links)
  *
- * Dual FK: session_id + assessment_result_id.
+ * Dual FK: conversation_id + assessment_result_id.
  */
 export const publicProfile = pgTable(
 	"public_profile",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		sessionId: uuid("session_id")
+		conversationId: uuid("conversation_id")
 			.notNull()
 			.references(() => conversation.id, { onDelete: "cascade" }),
 		assessmentResultId: uuid("assessment_result_id").references(() => assessmentResults.id, {
@@ -337,7 +337,7 @@ export const publicProfile = pgTable(
 			.notNull(),
 	},
 	(table) => [
-		index("public_profile_session_id_idx").on(table.sessionId),
+		index("public_profile_conversation_id_idx").on(table.conversationId),
 		index("public_profile_user_id_idx").on(table.userId),
 	],
 );
@@ -516,7 +516,7 @@ export const portraitRatings = pgTable(
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		assessmentSessionId: uuid("assessment_session_id")
+		conversationId: uuid("conversation_id")
 			.notNull()
 			.references(() => conversation.id, { onDelete: "cascade" }),
 		portraitType: portraitTypeEnum("portrait_type").notNull(),
@@ -525,7 +525,7 @@ export const portraitRatings = pgTable(
 		evidenceCount: integer("evidence_count").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(table) => [index("portrait_ratings_session_id_idx").on(table.assessmentSessionId)],
+	(table) => [index("portrait_ratings_conversation_id_idx").on(table.conversationId)],
 );
 
 // ─── Relations (Drizzle v2 syntax) ───────────────────────────────────────
@@ -586,7 +586,7 @@ export const relations = defineRelations(
 		},
 		exchange: {
 			session: r.one.conversation({
-				from: r.exchange.sessionId,
+				from: r.exchange.conversationId,
 				to: r.conversation.id,
 			}),
 			messages: r.many.message(),
@@ -594,7 +594,7 @@ export const relations = defineRelations(
 		},
 		message: {
 			session: r.one.conversation({
-				from: r.message.sessionId,
+				from: r.message.conversationId,
 				to: r.conversation.id,
 			}),
 			exchange: r.one.exchange({
@@ -605,11 +605,11 @@ export const relations = defineRelations(
 		},
 		conversationEvidence: {
 			session: r.one.conversation({
-				from: r.conversationEvidence.assessmentSessionId,
+				from: r.conversationEvidence.conversationId,
 				to: r.conversation.id,
 			}),
 			message: r.one.message({
-				from: r.conversationEvidence.assessmentMessageId,
+				from: r.conversationEvidence.messageId,
 				to: r.message.id,
 			}),
 			exchange: r.one.exchange({
@@ -619,7 +619,7 @@ export const relations = defineRelations(
 		},
 		assessmentResults: {
 			session: r.one.conversation({
-				from: r.assessmentResults.assessmentSessionId,
+				from: r.assessmentResults.conversationId,
 				to: r.conversation.id,
 			}),
 			publicProfile: r.many.publicProfile(),
@@ -633,7 +633,7 @@ export const relations = defineRelations(
 		},
 		publicProfile: {
 			session: r.one.conversation({
-				from: r.publicProfile.sessionId,
+				from: r.publicProfile.conversationId,
 				to: r.conversation.id,
 			}),
 			result: r.one.assessmentResults({
@@ -691,7 +691,7 @@ export const relations = defineRelations(
 				to: r.user.id,
 			}),
 			session: r.one.conversation({
-				from: r.portraitRatings.assessmentSessionId,
+				from: r.portraitRatings.conversationId,
 				to: r.conversation.id,
 			}),
 		},
