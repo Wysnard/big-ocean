@@ -131,8 +131,8 @@ describe("LoginForm", () => {
 
 		await waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({
-				to: "/results/$assessmentSessionId",
-				params: { assessmentSessionId: "session-456" },
+				to: "/results/$conversationSessionId",
+				params: { conversationSessionId: "session-456" },
 			});
 		});
 	});

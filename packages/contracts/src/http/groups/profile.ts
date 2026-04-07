@@ -2,7 +2,7 @@
  * Profile HTTP API Group
  *
  * Defines profile sharing endpoints for personality archetypes.
- * Follows the same pattern as AssessmentGroup.
+ * Follows the same pattern as ConversationGroup.
  */
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";

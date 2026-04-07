@@ -1,20 +1,20 @@
 #!/usr/bin/env tsx
 /**
- * Seed script to create a completed assessment session for quick manual testing
+ * Seed script to create a completed conversation session for quick manual testing
  *
  * Usage:
  *   pnpm seed:test-assessment
  *
  * Creates:
  * - Test user (if doesn't exist)
- * - Completed assessment session
+ * - Completed conversation session
  * - Exchange rows with Director model data (director briefs + coverage targets)
  * - Realistic conversation messages (12 messages) linked to exchanges
  * - Assessment results (facets, traits, domain coverage)
  * - Conversation evidence linked to exchanges
  * - Public profile with OCEAN codes
  *
- * Output: Prints session ID that can be used to navigate to /assessment/{sessionId}/results
+ * Output: Prints session ID that can be used to navigate to /results/{conversationSessionId}
  *
  * Story 9.1: Updated for two-tier architecture — uses assessment_results
  * and conversation_evidence tables.
@@ -502,8 +502,8 @@ const seedProgram = Effect.gen(function* () {
 		console.log(`  Cleaned up existing session: ${existingSessionId}`);
 	}
 
-	// 2. Create completed assessment session
-	console.log("\nCreating completed assessment session...");
+	// 2. Create completed conversation session
+	console.log("\nCreating completed conversation session...");
 	const [sessionRecord] = yield* db
 		.insert(conversation)
 		.values({
@@ -513,7 +513,7 @@ const seedProgram = Effect.gen(function* () {
 			messageCount: CONVERSATION_MESSAGES.length,
 		})
 		.returning()
-		.pipe(Effect.mapError((error) => new Error(`Failed to create assessment session: ${error}`)));
+		.pipe(Effect.mapError((error) => new Error(`Failed to create conversation session: ${error}`)));
 
 	console.log(`  Created session: ${sessionRecord.id}`);
 

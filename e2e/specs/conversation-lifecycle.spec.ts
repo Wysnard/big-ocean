@@ -113,7 +113,7 @@ test.describe("Conversation Lifecycle", () => {
 			});
 			expect(signIn.ok()).toBeTruthy();
 
-			const resultsRes = await api.get(`/api/assessment/${sessionId}/results`);
+			const resultsRes = await api.get(`/api/conversation/${sessionId}/results`);
 			expect(resultsRes.ok()).toBeTruthy();
 
 			const results = await resultsRes.json();

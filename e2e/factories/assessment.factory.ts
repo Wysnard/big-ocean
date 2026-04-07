@@ -53,7 +53,7 @@ const ALL_FACETS = Object.keys(FACET_TO_TRAIT);
  * If the APIRequestContext has auth cookies, the session is owned by that user.
  */
 export async function createAssessmentSession(api: APIRequestContext): Promise<string> {
-	const res = await api.post("/api/assessment/start", { data: {} });
+	const res = await api.post("/api/conversation/start", { data: {} });
 
 	if (!res.ok()) {
 		const body = await res.text();
@@ -72,7 +72,7 @@ export async function sendAssessmentMessage(
 	sessionId: string,
 	message: string,
 ): Promise<void> {
-	const res = await api.post("/api/assessment/message", {
+	const res = await api.post("/api/conversation/message", {
 		data: { sessionId, message },
 	});
 

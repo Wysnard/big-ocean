@@ -26,7 +26,7 @@ let sendMessageMock: vi.Mock;
 
 vi.mock("@/lib/api-client", () => ({
 	makeApiClient: Effect.succeed({
-		assessment: {
+		conversation: {
 			sendMessage: (opts: { payload: { sessionId: string; message: string } }) =>
 				Effect.tryPromise({
 					try: () => sendMessageMock(opts.payload),
@@ -58,8 +58,8 @@ const { mockResumeSession } = vi.hoisted(() => ({
 	})),
 }));
 
-vi.mock("@/hooks/use-assessment", () => ({
-	AssessmentApiError: class AssessmentApiError extends Error {
+vi.mock("@/hooks/use-conversation", () => ({
+	ConversationApiError: class ConversationApiError extends Error {
 		status: number;
 		details: unknown;
 
@@ -117,7 +117,7 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 			error: null,
 			refetch: vi.fn(),
 		});
-		queryClient.setQueryData(["assessment", "session", "session-123"], resumeData);
+		queryClient.setQueryData(["conversation", "session", "session-123"], resumeData);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
@@ -142,7 +142,7 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 		// Cache should be rolled back (optimistic user message removed)
 		const cached = queryClient.getQueryData<{
 			messages: Array<{ role: string; content: string }>;
-		}>(["assessment", "session", "session-123"]);
+		}>(["conversation", "session", "session-123"]);
 		expect(cached?.messages).toHaveLength(3);
 	});
 
@@ -166,7 +166,7 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 			error: null,
 			refetch: vi.fn(),
 		});
-		queryClient.setQueryData(["assessment", "session", "session-123"], resumeData);
+		queryClient.setQueryData(["conversation", "session", "session-123"], resumeData);
 
 		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 

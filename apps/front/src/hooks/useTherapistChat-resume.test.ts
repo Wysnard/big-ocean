@@ -15,7 +15,7 @@ vi.mock("sonner", () => ({
 // Mock makeApiClient (used by the hook's internal useMutation)
 vi.mock("@/lib/api-client", () => ({
 	makeApiClient: Effect.succeed({
-		assessment: {
+		conversation: {
 			sendMessage: () => Effect.succeed({ response: "OK", isFinalTurn: false }),
 			resumeSession: () =>
 				Effect.succeed({
@@ -34,7 +34,7 @@ vi.mock("@/lib/api-client", () => ({
 	}),
 }));
 
-// Mock the assessment hooks using vi.hoisted to avoid hoisting issues
+// Mock the conversation hooks using vi.hoisted to avoid hoisting issues
 const { mockResumeSession } = vi.hoisted(() => ({
 	mockResumeSession: vi.fn(() => ({
 		data: undefined,
@@ -44,8 +44,8 @@ const { mockResumeSession } = vi.hoisted(() => ({
 	})),
 }));
 
-vi.mock("@/hooks/use-assessment", () => ({
-	AssessmentApiError: class AssessmentApiError extends Error {
+vi.mock("@/hooks/use-conversation", () => ({
+	ConversationApiError: class ConversationApiError extends Error {
 		status: number;
 		details: unknown;
 

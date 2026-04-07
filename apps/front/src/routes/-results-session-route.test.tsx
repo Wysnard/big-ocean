@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockUseParams, mockUseSearch, mockNavigate, mockUseAuth, mockUseGetResults } = vi.hoisted(
 	() => ({
-		mockUseParams: vi.fn(() => ({ assessmentSessionId: "session-123" })),
+		mockUseParams: vi.fn(() => ({ conversationSessionId: "session-123" })),
 		mockUseSearch: vi.fn(() => ({ scrollToFacet: undefined })),
 		mockNavigate: vi.fn(),
 		mockUseAuth: vi.fn(),
@@ -43,14 +43,14 @@ vi.mock("@/hooks/use-auth", () => ({
 	useAuth: () => mockUseAuth(),
 }));
 
-vi.mock("@/hooks/use-assessment", () => ({
+vi.mock("@/hooks/use-conversation", () => ({
 	useGetResults: (...args: unknown[]) => mockUseGetResults(...args),
 	getResultsQueryOptions: (sessionId: string) => ({
-		queryKey: ["assessment", "results", sessionId],
+		queryKey: ["conversation", "results", sessionId],
 		queryFn: vi.fn(),
 		staleTime: 5 * 60 * 1000,
 	}),
-	isAssessmentApiError: (error: unknown) =>
+	isConversationApiError: (error: unknown) =>
 		typeof error === "object" && error !== null && "status" in error,
 }));
 
@@ -130,11 +130,11 @@ vi.mock("@/components/results/PortraitReadingView", () => ({
 }));
 
 // Static import — all heavy deps are mocked above (vi.mock is hoisted)
-import { Route } from "./results/$assessmentSessionId";
+import { Route } from "./results/$conversationSessionId";
 
 const Component = Route.component as React.ComponentType;
 
-describe("results/$assessmentSessionId route behavior", () => {
+describe("results/$conversationSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		window.localStorage.clear();

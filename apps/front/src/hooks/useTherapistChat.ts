@@ -154,7 +154,7 @@ export function useTherapistChat(sessionId: string) {
 	// ── Send message mutation with optimistic cache updates ──────────────
 
 	const sendMessageMutation = useMutation({
-		mutationKey: ["assessment", "sendMessage"],
+		mutationKey: ["conversation", "sendMessage"],
 		mutationFn: (input: SendMessageRequest) =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
@@ -172,7 +172,7 @@ export function useTherapistChat(sessionId: string) {
 			}
 
 			// Cancel in-flight resume refetches so they can't overwrite optimistic data
-			const queryKey = ["assessment", "session", sessionId];
+			const queryKey = ["conversation", "session", sessionId];
 			await queryClient.cancelQueries({ queryKey });
 
 			// Snapshot for rollback
@@ -195,7 +195,7 @@ export function useTherapistChat(sessionId: string) {
 
 		onSuccess: (data) => {
 			// Append assistant response(s) to the query cache
-			queryClient.setQueryData<ResumeCache>(["assessment", "session", sessionId], (old) => {
+			queryClient.setQueryData<ResumeCache>(["conversation", "session", sessionId], (old) => {
 				if (!old) return old;
 				const newMessages: CacheMessage[] = [
 					{
@@ -226,7 +226,7 @@ export function useTherapistChat(sessionId: string) {
 		onError: (error, variables, context) => {
 			// Roll back to pre-mutation cache snapshot
 			if (context?.previousData) {
-				queryClient.setQueryData(["assessment", "session", sessionId], context.previousData);
+				queryClient.setQueryData(["conversation", "session", sessionId], context.previousData);
 			}
 
 			const parsed = parseApiError(error);
@@ -246,7 +246,7 @@ export function useTherapistChat(sessionId: string) {
 
 		onSettled: () => {
 			// Refetch from server to ensure cache reflects truth
-			queryClient.invalidateQueries({ queryKey: ["assessment", "session", sessionId] });
+			queryClient.invalidateQueries({ queryKey: ["conversation", "session", sessionId] });
 		},
 	});
 

@@ -10,7 +10,7 @@ let mockResultsData: unknown;
 let mockIsError = false;
 const mockRefetch = vi.fn();
 
-vi.mock("@/hooks/use-assessment", () => ({
+vi.mock("@/hooks/use-conversation", () => ({
 	useGetResults: () => ({
 		data: mockResultsData,
 		isError: mockIsError,

@@ -11,9 +11,9 @@ import {
 	ResumeSessionResponseSchema,
 	SendMessageRequestSchema,
 	SendMessageResponseSchema,
-	StartAssessmentRequestSchema,
-	StartAssessmentResponseSchema,
-} from "../http/groups/assessment";
+	StartConversationRequestSchema,
+	StartConversationResponseSchema,
+} from "../http/groups/conversation";
 import { HealthCheckResponseSchema } from "../http/groups/health";
 
 describe("Health Check Contracts", () => {
@@ -38,41 +38,41 @@ describe("Health Check Contracts", () => {
 	});
 });
 
-describe("Assessment Contracts", () => {
-	describe("StartAssessment", () => {
-		it("should validate start assessment request with userId", () => {
+describe("Conversation Contracts", () => {
+	describe("StartConversation", () => {
+		it("should validate start conversation request with userId", () => {
 			const validRequest = {
 				userId: "user_123",
 			};
 
-			const result = S.decodeUnknownSync(StartAssessmentRequestSchema)(validRequest);
+			const result = S.decodeUnknownSync(StartConversationRequestSchema)(validRequest);
 			expect(result.userId).toBe("user_123");
 		});
 
-		it("should validate start assessment request without userId", () => {
+		it("should validate start conversation request without userId", () => {
 			const validRequest = {};
 
-			const result = S.decodeUnknownSync(StartAssessmentRequestSchema)(validRequest);
+			const result = S.decodeUnknownSync(StartConversationRequestSchema)(validRequest);
 			expect(result.userId).toBeUndefined();
 		});
 
-		it("should validate start assessment response schema", () => {
+		it("should validate start conversation response schema", () => {
 			const validResponse = {
 				sessionId: "session_123",
 				createdAt: new Date().toISOString(),
 			};
 
-			const result = S.decodeUnknownSync(StartAssessmentResponseSchema)(validResponse);
+			const result = S.decodeUnknownSync(StartConversationResponseSchema)(validResponse);
 			expect(result.sessionId).toBe("session_123");
 			expect(result.createdAt).toBeDefined(); // DateTimeUtc decodes to DateTime.Utc
 		});
 
-		it("should reject start assessment response with missing sessionId", () => {
+		it("should reject start conversation response with missing sessionId", () => {
 			const invalidResponse = {
 				createdAt: new Date().toISOString(),
 			};
 
-			expect(() => S.decodeUnknownSync(StartAssessmentResponseSchema)(invalidResponse)).toThrow();
+			expect(() => S.decodeUnknownSync(StartConversationResponseSchema)(invalidResponse)).toThrow();
 		});
 	});
 

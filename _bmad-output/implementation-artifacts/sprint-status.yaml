@@ -787,7 +787,7 @@ development_status:
   epic-45: in-progress
   45-1-schema-migration-table-renames: review
   45-2-repository-and-domain-layer-renames: done
-  45-3-handler-contract-and-frontend-renames: in-progress
+  45-3-handler-contract-and-frontend-renames: done
   45-4-fk-column-migration: backlog
   45-5-fk-column-code-cascade: backlog
   45-6-assessment-turn-count-25-to-15: backlog

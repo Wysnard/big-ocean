@@ -25,7 +25,7 @@ let sendMessageMock: vi.Mock;
 
 vi.mock("@/lib/api-client", () => ({
 	makeApiClient: Effect.succeed({
-		assessment: {
+		conversation: {
 			sendMessage: (opts: { payload: { sessionId: string; message: string } }) =>
 				Effect.tryPromise({
 					try: () => sendMessageMock(opts.payload),
@@ -48,7 +48,7 @@ vi.mock("@/lib/api-client", () => ({
 	}),
 }));
 
-// We still need to mock use-assessment for useResumeSession (the hook uses it)
+// We still need to mock use-conversation for useResumeSession (the hook uses it)
 const { mockResumeSession } = vi.hoisted(() => ({
 	mockResumeSession: vi.fn(() => ({
 		data: undefined,
@@ -58,8 +58,8 @@ const { mockResumeSession } = vi.hoisted(() => ({
 	})),
 }));
 
-vi.mock("@/hooks/use-assessment", () => ({
-	AssessmentApiError: class AssessmentApiError extends Error {
+vi.mock("@/hooks/use-conversation", () => ({
+	ConversationApiError: class ConversationApiError extends Error {
 		status: number;
 		details: unknown;
 
@@ -108,7 +108,7 @@ function seedSession(sessionId: string, data: ReturnType<typeof makeDefaultResum
 		error: null,
 		refetch: vi.fn(),
 	});
-	queryClient.setQueryData(["assessment", "session", sessionId], data);
+	queryClient.setQueryData(["conversation", "session", sessionId], data);
 }
 
 function createQueryClient() {
@@ -222,7 +222,7 @@ describe("useTherapistChat", () => {
 			// The mutation writes the user message to the query cache via onMutate
 			const cached = queryClient.getQueryData<{
 				messages: Array<{ role: string; content: string }>;
-			}>(["assessment", "session", "session-123"]);
+			}>(["conversation", "session", "session-123"]);
 			expect(cached?.messages).toHaveLength(5);
 			expect(cached?.messages[4].role).toBe("user");
 			expect(cached?.messages[4].content).toBe("I love hiking");
@@ -251,7 +251,7 @@ describe("useTherapistChat", () => {
 
 			const cached = queryClient.getQueryData<{
 				messages: Array<{ role: string; content: string }>;
-			}>(["assessment", "session", "session-123"]);
+			}>(["conversation", "session", "session-123"]);
 			// 4 existing + 1 user (optimistic) + 1 assistant (onSuccess) = 6
 			expect(cached?.messages).toHaveLength(6);
 			expect(cached?.messages[5].role).toBe("assistant");
@@ -387,7 +387,7 @@ describe("useTherapistChat", () => {
 
 			const cached = queryClient.getQueryData<{
 				messages: Array<{ role: string; content: string }>;
-			}>(["assessment", "session", "session-123"]);
+			}>(["conversation", "session", "session-123"]);
 			expect(cached?.messages).toHaveLength(4);
 		});
 	});
