@@ -785,7 +785,7 @@ development_status:
   # Stories: 1.1-1.7 in epics.md (1.4-1.5 added via sprint change 2026-04-07)
   # ───────────────────────────────────────────────────────────────
   epic-45: in-progress
-  45-1-schema-migration-table-renames: review
+  45-1-schema-migration-table-renames: done
   45-2-repository-and-domain-layer-renames: done
   45-3-handler-contract-and-frontend-renames: done
   45-4-fk-column-migration: backlog
