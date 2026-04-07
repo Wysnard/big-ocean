@@ -29,6 +29,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:studio": "drizzle-kit studio",
 		"seed:test-assessment": "tsx scripts/seed-completed-assessment.ts",
+		"skills:check": "tsx scripts/check-skills.ts",
 		"test:e2e": "pnpm --filter=@workspace/e2e test:e2e",
 		"test:e2e:critical": "playwright test --grep @critical",
 		"test:e2e:smoke": "playwright test --grep @smoke",

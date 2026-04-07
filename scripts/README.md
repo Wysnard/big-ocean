@@ -66,6 +66,39 @@ Evidence Records: 42
 - Screenshot/demo preparation
 - Testing different personality profiles (modify `FACET_SCORE_MAP`)
 
+## Skill Validation
+
+### Check Skill Discovery Collisions
+
+Validate that skill discovery does not produce duplicate names across the active roots.
+
+```bash
+pnpm skills:check
+```
+
+**Default roots scanned:**
+- `.agents/skills` in this repo
+- `~/.agents/skills`
+- `~/.codex/skills`
+- `~/.codex/skills/.system`
+
+**What it catches:**
+- Exact duplicate skills exposed from multiple roots
+- Same-name skills with different `SKILL.md` contents
+- Symlinked skills that still appear as separate discovery entries
+
+**Optional override:**
+
+Use `SKILL_ROOTS` to limit the scan to a specific root set. Values are split with the OS path delimiter (`:` on macOS/Linux).
+
+```bash
+SKILL_ROOTS=".agents/skills:$HOME/.codex/skills/.system" pnpm skills:check
+```
+
+**Exit behavior:**
+- Exit `0` when every discovered skill name is unique
+- Exit `1` when duplicate discovery is ambiguous and should be cleaned up before relying on skill routing
+
 ## Future Scripts
 
 Add additional development scripts here as needed:
