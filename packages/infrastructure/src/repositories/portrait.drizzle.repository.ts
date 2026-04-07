@@ -130,7 +130,7 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 						portrait: portraits,
 					})
 					.from(conversation)
-					.innerJoin(assessmentResults, eq(assessmentResults.assessmentSessionId, conversation.id))
+					.innerJoin(assessmentResults, eq(assessmentResults.conversationId, conversation.id))
 					.innerJoin(portraits, eq(portraits.assessmentResultId, assessmentResults.id))
 					.where(and(eq(conversation.id, sessionId), eq(portraits.tier, "full")))
 					.pipe(

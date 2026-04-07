@@ -30,7 +30,7 @@ export default defineConfig({
 	timeout: 30_000,
 	reporter: "html",
 	use: {
-		baseURL: "http://localhost:3001",
+		baseURL: "http://127.0.0.1:3001",
 		trace: "on-first-retry",
 		screenshot: "only-on-failure",
 		...devices["Desktop Chrome"],
@@ -140,8 +140,8 @@ export default defineConfig({
 
 	webServer: {
 		command:
-			"cd apps/front && rm -rf .output .nitro && VITE_API_URL=http://localhost:4001 VITE_E2E=true npx vite dev --port 3001",
-		url: "http://localhost:3001/login",
+			"cd apps/front && rm -rf .output .nitro && VITE_API_URL=http://127.0.0.1:4001 VITE_E2E=true npx vite dev --host 127.0.0.1 --port 3001 --strictPort",
+		url: "http://127.0.0.1:3001/login",
 		cwd: PROJECT_ROOT,
 		reuseExistingServer: !process.env.CI,
 		timeout: 60_000,

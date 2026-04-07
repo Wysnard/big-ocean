@@ -62,8 +62,8 @@ services:
       SHARE_MIN_CONFIDENCE: "0"
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-e2e-tests"
       BETTER_AUTH_SECRET: test-secret-minimum-32-characters-long-for-security
-      BETTER_AUTH_URL: http://localhost:4001
-      FRONTEND_URL: http://localhost:3001
+      BETTER_AUTH_URL: http://127.0.0.1:4001
+      FRONTEND_URL: http://127.0.0.1:3001
       NODE_ENV: test
       PORT: 4000
       HOST: 0.0.0.0
@@ -72,7 +72,7 @@ services:
       RESEND_API_KEY: "${RESEND_API_KEY:-}"
       EMAIL_FROM_ADDRESS: "${EMAIL_FROM_ADDRESS:-onboarding@resend.dev}"
       POLAR_WEBHOOK_SECRET: "${POLAR_WEBHOOK_SECRET:-}"
-      POLAR_SUCCESS_URL: "${POLAR_SUCCESS_URL:-http://localhost:3001}"
+      POLAR_SUCCESS_URL: "${POLAR_SUCCESS_URL:-http://127.0.0.1:3001}"
       POLAR_PRODUCT_PORTRAIT_UNLOCK: "${POLAR_PRODUCT_PORTRAIT_UNLOCK:-}"
       POLAR_PRODUCT_RELATIONSHIP_SINGLE: "${POLAR_PRODUCT_RELATIONSHIP_SINGLE:-}"
       POLAR_PRODUCT_RELATIONSHIP_5PACK: "${POLAR_PRODUCT_RELATIONSHIP_5PACK:-}"

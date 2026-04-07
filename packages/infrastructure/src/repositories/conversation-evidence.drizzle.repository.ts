@@ -31,8 +31,8 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 						.insert(conversationEvidence)
 						.values(
 							records.map((r) => ({
-								assessmentSessionId: r.sessionId,
-								assessmentMessageId: r.messageId,
+								conversationId: r.sessionId,
+								messageId: r.messageId,
 								exchangeId: r.exchangeId,
 								bigfiveFacet: r.bigfiveFacet,
 								strength: r.strength,
@@ -57,7 +57,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.select()
 						.from(conversationEvidence)
-						.where(eq(conversationEvidence.assessmentSessionId, sessionId))
+						.where(eq(conversationEvidence.conversationId, sessionId))
 						.pipe(
 							Effect.mapError(
 								(error) =>
@@ -69,8 +69,8 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 
 					return rows.map((row) => ({
 						id: row.id,
-						sessionId: row.assessmentSessionId,
-						messageId: row.assessmentMessageId,
+						sessionId: row.conversationId,
+						messageId: row.messageId,
 						exchangeId: row.exchangeId as string,
 						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
 						deviation: deriveDeviation(
@@ -91,8 +91,8 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.select({
 							id: conversationEvidence.id,
-							assessmentSessionId: conversationEvidence.assessmentSessionId,
-							assessmentMessageId: conversationEvidence.assessmentMessageId,
+							conversationId: conversationEvidence.conversationId,
+							messageId: conversationEvidence.messageId,
 							exchangeId: conversationEvidence.exchangeId,
 							bigfiveFacet: conversationEvidence.bigfiveFacet,
 							strength: conversationEvidence.strength,
@@ -103,7 +103,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 							createdAt: conversationEvidence.createdAt,
 						})
 						.from(conversationEvidence)
-						.innerJoin(conversation, eq(conversationEvidence.assessmentSessionId, conversation.id))
+						.innerJoin(conversation, eq(conversationEvidence.conversationId, conversation.id))
 						.where(eq(conversation.userId, userId))
 						.pipe(
 							Effect.mapError(
@@ -116,8 +116,8 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 
 					return rows.map((row) => ({
 						id: row.id,
-						sessionId: row.assessmentSessionId,
-						messageId: row.assessmentMessageId,
+						sessionId: row.conversationId,
+						messageId: row.messageId,
 						exchangeId: row.exchangeId as string,
 						bigfiveFacet: row.bigfiveFacet as ConversationEvidenceRecord["bigfiveFacet"],
 						deviation: deriveDeviation(
@@ -138,7 +138,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 					const result = yield* db
 						.select({ count: sql<number>`cast(count(*) as int)` })
 						.from(conversationEvidence)
-						.where(eq(conversationEvidence.assessmentMessageId, messageId))
+						.where(eq(conversationEvidence.messageId, messageId))
 						.pipe(
 							Effect.mapError(
 								(error) =>

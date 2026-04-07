@@ -526,7 +526,7 @@ const seedProgram = Effect.gen(function* () {
 	const [openerExchange] = yield* db
 		.insert(exchange)
 		.values({
-			sessionId: sessionRecord.id,
+			conversationId: sessionRecord.id,
 			turnNumber: 0,
 			extractionTier: null,
 			directorOutput: null,
@@ -543,7 +543,7 @@ const seedProgram = Effect.gen(function* () {
 		const [exchangeRecord] = yield* db
 			.insert(exchange)
 			.values({
-				sessionId: sessionRecord.id,
+				conversationId: sessionRecord.id,
 				turnNumber: turn,
 				extractionTier: 1, // Successful strict extraction
 				directorOutput: exchangeData.directorOutput,
@@ -574,7 +574,7 @@ const seedProgram = Effect.gen(function* () {
 		const [msgRecord] = yield* db
 			.insert(message)
 			.values({
-				sessionId: sessionRecord.id,
+				conversationId: sessionRecord.id,
 				exchangeId: exchange?.id ?? null,
 				role: msg.role,
 				content: msg.content,
@@ -594,7 +594,7 @@ const seedProgram = Effect.gen(function* () {
 	const [resultRecord] = yield* db
 		.insert(assessmentResults)
 		.values({
-			assessmentSessionId: sessionRecord.id,
+			conversationId: sessionRecord.id,
 			facets: facetsJson,
 			traits: traitsJson,
 			domainCoverage: domainCoverageJson,
@@ -628,8 +628,8 @@ const seedProgram = Effect.gen(function* () {
 		yield* db
 			.insert(conversationEvidence)
 			.values({
-				assessmentSessionId: sessionRecord.id,
-				assessmentMessageId: message.id,
+				conversationId: sessionRecord.id,
+				messageId: message.id,
 				exchangeId: exchange?.id ?? null,
 				bigfiveFacet: facet as FacetName,
 				strength,
@@ -648,7 +648,7 @@ const seedProgram = Effect.gen(function* () {
 	const [profile] = yield* db
 		.insert(publicProfile)
 		.values({
-			sessionId: sessionRecord.id,
+			conversationId: sessionRecord.id,
 			assessmentResultId: resultRecord.id,
 			userId,
 			oceanCode5: "ODANT",

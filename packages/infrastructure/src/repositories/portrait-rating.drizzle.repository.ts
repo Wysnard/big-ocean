@@ -27,7 +27,7 @@ export const PortraitRatingDrizzleRepositoryLive = Layer.effect(
 					.insert(portraitRatings)
 					.values({
 						userId: input.userId,
-						assessmentSessionId: input.assessmentSessionId,
+						conversationId: input.assessmentSessionId,
 						portraitType: input.portraitType,
 						rating: input.rating,
 						depthSignal: input.depthSignal,
@@ -40,7 +40,7 @@ export const PortraitRatingDrizzleRepositoryLive = Layer.effect(
 							return {
 								id: row.id,
 								userId: row.userId,
-								assessmentSessionId: row.assessmentSessionId,
+								assessmentSessionId: row.conversationId,
 								portraitType: row.portraitType as PortraitType,
 								rating: row.rating as PortraitRating,
 								depthSignal: row.depthSignal as DepthSignalLevel,

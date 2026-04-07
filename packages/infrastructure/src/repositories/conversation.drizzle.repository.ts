@@ -320,12 +320,12 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const messageCountSubquery = db
 						.select({
-							sessionId: message.sessionId,
+							sessionId: message.conversationId,
 							messageCount: count().as("message_count"),
 						})
 						.from(message)
 						.where(eq(message.role, "user"))
-						.groupBy(message.sessionId)
+						.groupBy(message.conversationId)
 						.as("msg_counts");
 
 					const results = yield* db
@@ -340,7 +340,7 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 						})
 						.from(conversation)
 						.leftJoin(messageCountSubquery, eq(conversation.id, messageCountSubquery.sessionId))
-						.leftJoin(publicProfile, eq(conversation.id, publicProfile.sessionId))
+						.leftJoin(publicProfile, eq(conversation.id, publicProfile.conversationId))
 						.where(eq(conversation.userId, userId))
 						.orderBy(sql`${conversation.createdAt} DESC`)
 						.limit(1)
@@ -383,12 +383,12 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 					// Only count user messages to match send-message.use-case convention
 					const messageCountSubquery = db
 						.select({
-							sessionId: message.sessionId,
+							sessionId: message.conversationId,
 							messageCount: count().as("message_count"),
 						})
 						.from(message)
 						.where(eq(message.role, "user"))
-						.groupBy(message.sessionId)
+						.groupBy(message.conversationId)
 						.as("msg_counts");
 
 					const results = yield* db
@@ -403,7 +403,7 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 						})
 						.from(conversation)
 						.leftJoin(messageCountSubquery, eq(conversation.id, messageCountSubquery.sessionId))
-						.leftJoin(publicProfile, eq(conversation.id, publicProfile.sessionId))
+						.leftJoin(publicProfile, eq(conversation.id, publicProfile.conversationId))
 						.where(eq(conversation.userId, userId))
 						.orderBy(sql`${conversation.createdAt} DESC`)
 						.pipe(

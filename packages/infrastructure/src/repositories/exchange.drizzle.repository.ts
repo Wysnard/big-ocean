@@ -14,6 +14,16 @@ import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
 import { conversation, exchange as exchangeTable } from "../db/drizzle/schema";
 
+const mapExchangeRecord = (row: typeof exchangeTable.$inferSelect) => ({
+	id: row.id,
+	sessionId: row.conversationId,
+	turnNumber: row.turnNumber,
+	extractionTier: row.extractionTier,
+	directorOutput: row.directorOutput,
+	coverageTargets: row.coverageTargets,
+	createdAt: row.createdAt,
+});
+
 export const ExchangeDrizzleRepositoryLive = Layer.effect(
 	ExchangeRepository,
 	Effect.gen(function* () {
@@ -26,7 +36,7 @@ export const ExchangeDrizzleRepositoryLive = Layer.effect(
 					const [createdExchange] = yield* db
 						.insert(exchangeTable)
 						.values({
-							sessionId,
+							conversationId: sessionId,
 							turnNumber,
 							createdAt: new Date(),
 						})
@@ -51,7 +61,7 @@ export const ExchangeDrizzleRepositoryLive = Layer.effect(
 						return yield* Effect.fail(new DatabaseError({ message: "Failed to create exchange" }));
 					}
 
-					return createdExchange;
+					return mapExchangeRecord(createdExchange);
 				}),
 
 			update: (exchangeId, data) =>
@@ -80,15 +90,16 @@ export const ExchangeDrizzleRepositoryLive = Layer.effect(
 						return yield* Effect.fail(new DatabaseError({ message: "Failed to update exchange" }));
 					}
 
-					return updatedExchange;
+					return mapExchangeRecord(updatedExchange);
 				}),
 
 			findBySession: (sessionId) =>
 				db
 					.select()
 					.from(exchangeTable)
-					.where(eq(exchangeTable.sessionId, sessionId))
+					.where(eq(exchangeTable.conversationId, sessionId))
 					.orderBy(asc(exchangeTable.turnNumber))
+					.pipe(Effect.map((rows) => rows.map(mapExchangeRecord)))
 					.pipe(
 						Effect.mapError((error) => {
 							try {
@@ -107,7 +118,7 @@ export const ExchangeDrizzleRepositoryLive = Layer.effect(
 				db
 					.select({
 						id: exchangeTable.id,
-						sessionId: exchangeTable.sessionId,
+						sessionId: exchangeTable.conversationId,
 						turnNumber: exchangeTable.turnNumber,
 						extractionTier: exchangeTable.extractionTier,
 						directorOutput: exchangeTable.directorOutput,
@@ -115,7 +126,7 @@ export const ExchangeDrizzleRepositoryLive = Layer.effect(
 						createdAt: exchangeTable.createdAt,
 					})
 					.from(exchangeTable)
-					.innerJoin(conversation, eq(exchangeTable.sessionId, conversation.id))
+					.innerJoin(conversation, eq(exchangeTable.conversationId, conversation.id))
 					.where(eq(conversation.userId, userId))
 					.orderBy(asc(exchangeTable.createdAt))
 					.pipe(

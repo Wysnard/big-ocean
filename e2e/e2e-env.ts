@@ -21,8 +21,8 @@ function requireEnv(name: string): string {
 	return value;
 }
 
-export const API_URL = "http://localhost:4001";
-export const FRONTEND_URL = "http://localhost:3001";
+export const API_URL = "http://127.0.0.1:4001";
+export const FRONTEND_URL = "http://127.0.0.1:3001";
 
 /**
  * Polar.sh configuration for E2E tests.

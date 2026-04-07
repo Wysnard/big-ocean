@@ -23,6 +23,31 @@ import { eq, sql } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { publicProfile, user } from "../db/drizzle/schema";
 
+const mapProfileRecord = (
+	profile: Pick<
+		typeof publicProfile.$inferSelect,
+		| "id"
+		| "conversationId"
+		| "userId"
+		| "oceanCode5"
+		| "oceanCode4"
+		| "isPublic"
+		| "viewCount"
+		| "createdAt"
+	>,
+	displayName: string,
+) => ({
+	id: profile.id,
+	sessionId: profile.conversationId,
+	userId: profile.userId as string,
+	displayName,
+	oceanCode5: profile.oceanCode5,
+	oceanCode4: profile.oceanCode4,
+	isPublic: profile.isPublic,
+	viewCount: profile.viewCount,
+	createdAt: profile.createdAt,
+});
+
 /**
  * Public Profile Repository Layer
  *
@@ -40,7 +65,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					const [profile] = yield* db
 						.insert(publicProfile)
 						.values({
-							sessionId: input.sessionId,
+							conversationId: input.sessionId,
 							userId: input.userId,
 							oceanCode5: input.oceanCode5,
 							oceanCode4: input.oceanCode4,
@@ -80,17 +105,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						return yield* Effect.fail(new Unauthorized({ message: "User not found" }));
 					}
 
-					return {
-						id: profile.id,
-						sessionId: profile.sessionId,
-						userId: input.userId,
-						displayName: users[0]?.name ?? input.userId,
-						oceanCode5: profile.oceanCode5,
-						oceanCode4: profile.oceanCode4,
-						isPublic: profile.isPublic,
-						viewCount: profile.viewCount,
-						createdAt: profile.createdAt,
-					};
+					return mapProfileRecord({ ...profile, userId: input.userId }, users[0]?.name ?? input.userId);
 				}),
 
 			getProfile: (profileId: string) =>
@@ -103,7 +118,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					const results = yield* db
 						.select({
 							id: publicProfile.id,
-							sessionId: publicProfile.sessionId,
+							conversationId: publicProfile.conversationId,
 							userId: publicProfile.userId,
 							oceanCode5: publicProfile.oceanCode5,
 							oceanCode4: publicProfile.oceanCode4,
@@ -134,18 +149,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					const profile = results[0];
 					if (!profile) return null;
 
-					// userId and userName are always present — anonymous users can't create profiles
-					return {
-						id: profile.id,
-						sessionId: profile.sessionId,
-						userId: profile.userId as string,
-						displayName: (profile.userName ?? profile.userId) as string,
-						oceanCode5: profile.oceanCode5,
-						oceanCode4: profile.oceanCode4,
-						isPublic: profile.isPublic,
-						viewCount: profile.viewCount,
-						createdAt: profile.createdAt,
-					};
+					return mapProfileRecord(profile, (profile.userName ?? profile.userId) as string);
 				}),
 
 			getProfileBySessionId: (sessionId: string) =>
@@ -153,7 +157,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					const results = yield* db
 						.select({
 							id: publicProfile.id,
-							sessionId: publicProfile.sessionId,
+							conversationId: publicProfile.conversationId,
 							userId: publicProfile.userId,
 							oceanCode5: publicProfile.oceanCode5,
 							oceanCode4: publicProfile.oceanCode4,
@@ -164,7 +168,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						})
 						.from(publicProfile)
 						.leftJoin(user, eq(publicProfile.userId, user.id))
-						.where(eq(publicProfile.sessionId, sessionId))
+						.where(eq(publicProfile.conversationId, sessionId))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
@@ -184,18 +188,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 					const profile = results[0];
 					if (!profile) return null;
 
-					// userId and userName are always present — anonymous users can't create profiles
-					return {
-						id: profile.id,
-						sessionId: profile.sessionId,
-						userId: profile.userId as string,
-						displayName: (profile.userName ?? profile.userId) as string,
-						oceanCode5: profile.oceanCode5,
-						oceanCode4: profile.oceanCode4,
-						isPublic: profile.isPublic,
-						viewCount: profile.viewCount,
-						createdAt: profile.createdAt,
-					};
+					return mapProfileRecord(profile, (profile.userName ?? profile.userId) as string);
 				}),
 
 			toggleVisibility: (profileId: string, isPublic: boolean) =>

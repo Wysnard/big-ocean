@@ -16,6 +16,15 @@ import { Effect, Layer, Schema } from "effect";
 import { Database } from "../context/database";
 import { conversation, message as messageTable } from "../db/drizzle/schema";
 
+const mapMessageEntity = (row: typeof messageTable.$inferSelect) => ({
+	id: row.id,
+	sessionId: row.conversationId,
+	exchangeId: row.exchangeId,
+	role: row.role,
+	content: row.content,
+	createdAt: row.createdAt,
+});
+
 export const MessageDrizzleRepositoryLive = Layer.effect(
 	MessageRepository,
 	Effect.gen(function* () {
@@ -28,7 +37,7 @@ export const MessageDrizzleRepositoryLive = Layer.effect(
 					const [savedMessage] = yield* db
 						.insert(messageTable)
 						.values({
-							sessionId,
+							conversationId: sessionId,
 							role,
 							content,
 							exchangeId: exchangeId ?? null,
@@ -72,7 +81,7 @@ export const MessageDrizzleRepositoryLive = Layer.effect(
 						);
 					}
 
-					return yield* Schema.decodeUnknown(MessageEntitySchema)(savedMessage).pipe(
+					return yield* Schema.decodeUnknown(MessageEntitySchema)(mapMessageEntity(savedMessage)).pipe(
 						Effect.mapError((error) => {
 							try {
 								logger.error("Database operation failed", {
@@ -96,7 +105,7 @@ export const MessageDrizzleRepositoryLive = Layer.effect(
 					const messages = yield* db
 						.select()
 						.from(messageTable)
-						.where(eq(messageTable.sessionId, sessionId))
+						.where(eq(messageTable.conversationId, sessionId))
 						.orderBy(asc(messageTable.createdAt))
 						.pipe(
 							Effect.mapError((error) => {
@@ -118,7 +127,7 @@ export const MessageDrizzleRepositoryLive = Layer.effect(
 						);
 
 					return yield* Schema.decodeUnknown(Schema.mutable(Schema.Array(MessageEntitySchema)))(
-						messages,
+						messages.map(mapMessageEntity),
 					).pipe(
 						Effect.mapError((error) => {
 							try {
@@ -164,14 +173,14 @@ export const MessageDrizzleRepositoryLive = Layer.effect(
 					const messages = yield* db
 						.select({
 							id: messageTable.id,
-							sessionId: messageTable.sessionId,
+							sessionId: messageTable.conversationId,
 							exchangeId: messageTable.exchangeId,
 							role: messageTable.role,
 							content: messageTable.content,
 							createdAt: messageTable.createdAt,
 						})
 						.from(messageTable)
-						.innerJoin(conversation, eq(messageTable.sessionId, conversation.id))
+						.innerJoin(conversation, eq(messageTable.conversationId, conversation.id))
 						.where(eq(conversation.userId, userId))
 						.orderBy(asc(messageTable.createdAt))
 						.pipe(
@@ -219,7 +228,7 @@ export const MessageDrizzleRepositoryLive = Layer.effect(
 					const result = yield* db
 						.select({ count: sql<number>`cast(count(*) as int)` })
 						.from(messageTable)
-						.where(eq(messageTable.sessionId, sessionId))
+						.where(eq(messageTable.conversationId, sessionId))
 						.pipe(
 							Effect.mapError((error) => {
 								try {

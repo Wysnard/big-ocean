@@ -249,7 +249,7 @@ export const test = base.extend<{ db: DbFixture }>({
 					traitsJson[trait.traitName] = { score: trait.score, confidence: trait.confidence };
 				}
 				await client.query(
-					`INSERT INTO assessment_results (assessment_session_id, facets, traits, domain_coverage, portrait)
+					`INSERT INTO assessment_results (conversation_id, facets, traits, domain_coverage, portrait)
 					 VALUES ($1, $2, $3, $4, $5)`,
 					[
 						sessionId,
@@ -293,7 +293,7 @@ export const test = base.extend<{ db: DbFixture }>({
 
 				for (const msg of uniqueMessages) {
 					const msgResult = await client.query(
-						`INSERT INTO messages (session_id, content, role, created_at)
+						`INSERT INTO messages (conversation_id, content, role, created_at)
 						 VALUES ($1, $2, $3, NOW())
 						 RETURNING id`,
 						[sessionId, msg.content, msg.role],
@@ -316,7 +316,7 @@ export const test = base.extend<{ db: DbFixture }>({
 
 					await client.query(
 						`INSERT INTO conversation_evidence
-						 (assessment_session_id, assessment_message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
+						 (conversation_id, message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
 						 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
 						[
 							sessionId,

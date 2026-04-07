@@ -33,7 +33,7 @@ function deviationToScore(deviation: number): number {
  */
 function toSavedFacetEvidence(row: {
 	id: string;
-	assessmentMessageId: string;
+	messageId: string;
 	bigfiveFacet: string;
 	polarity: string;
 	strength: string;
@@ -48,7 +48,7 @@ function toSavedFacetEvidence(row: {
 	);
 	return {
 		id: row.id,
-		assessmentMessageId: row.assessmentMessageId,
+		assessmentMessageId: row.messageId,
 		facetName: row.bigfiveFacet as FacetName,
 		score: deviationToScore(deviation),
 		confidence: CONFIDENCE_MAP[row.confidence as keyof typeof CONFIDENCE_MAP] ?? 50,
@@ -82,7 +82,7 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.select()
 						.from(conversationEvidence)
-						.where(eq(conversationEvidence.assessmentMessageId, assessmentMessageId))
+						.where(eq(conversationEvidence.messageId, assessmentMessageId))
 						.orderBy(conversationEvidence.createdAt)
 						.pipe(Effect.mapError(mapDbError));
 
@@ -96,7 +96,7 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 						.from(conversationEvidence)
 						.where(
 							and(
-								eq(conversationEvidence.assessmentSessionId, sessionId),
+								eq(conversationEvidence.conversationId, sessionId),
 								eq(conversationEvidence.bigfiveFacet, facetName),
 							),
 						)
@@ -111,7 +111,7 @@ export const FacetEvidenceDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.select()
 						.from(conversationEvidence)
-						.where(eq(conversationEvidence.assessmentSessionId, sessionId))
+						.where(eq(conversationEvidence.conversationId, sessionId))
 						.orderBy(conversationEvidence.createdAt)
 						.pipe(Effect.mapError(mapDbError));
 

@@ -232,7 +232,7 @@ export const BetterAuthLive = Layer.effect(
 										const results = await plainDb
 											.select()
 											.from(authSchema.assessmentResults)
-											.where(eq(authSchema.assessmentResults.assessmentSessionId, sessionId))
+											.where(eq(authSchema.assessmentResults.conversationId, sessionId))
 											.limit(1);
 										assessmentResultId = results[0]?.id ?? null;
 									}
@@ -285,6 +285,7 @@ export const BetterAuthLive = Layer.effect(
 			trustedOrigins: [
 				"http://localhost:3000",
 				"http://localhost:3001",
+				"http://127.0.0.1:3001",
 				"http://localhost:4000",
 				config.frontendUrl,
 			].filter(Boolean) as string[],

@@ -138,7 +138,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 
 		// 1. Insert two conversation messages
 		const userMsgResult = await client.query(
-			`INSERT INTO messages (session_id, role, content, created_at)
+			`INSERT INTO messages (conversation_id, role, content, created_at)
 			 VALUES ($1, 'user', $2, NOW())
 			 RETURNING id`,
 			[sessionId, "I enjoy spending time with close friends and exploring new ideas."],
@@ -146,7 +146,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 		const userMsgId: string = userMsgResult.rows[0].id;
 
 		await client.query(
-			`INSERT INTO messages (session_id, role, content, created_at)
+			`INSERT INTO messages (conversation_id, role, content, created_at)
 			 VALUES ($1, 'assistant', $2, NOW())
 			 RETURNING id`,
 			[
@@ -176,7 +176,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			const polarity = deviation >= 0 ? "high" : "low";
 			await client.query(
 				`INSERT INTO conversation_evidence
-				 (assessment_session_id, assessment_message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
+				 (conversation_id, message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
 				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
 				[
 					sessionId,
@@ -210,7 +210,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			};
 		}
 		const resultRow = await client.query(
-			`INSERT INTO assessment_results (assessment_session_id, facets, traits, domain_coverage, portrait)
+			`INSERT INTO assessment_results (conversation_id, facets, traits, domain_coverage, portrait)
 			 VALUES ($1, $2, $3, $4, $5)
 			 RETURNING id`,
 			[
@@ -234,7 +234,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			const polarity = deviation >= 0 ? "high" : "low";
 			await client.query(
 				`INSERT INTO conversation_evidence
-				 (assessment_session_id, assessment_message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
+				 (conversation_id, message_id, bigfive_facet, strength, confidence, domain, polarity, note, created_at)
 				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
 				[sessionId, userMsgId, facet, strength, confEnum, domain, polarity, "Seeded evidence note"],
 			);
@@ -325,7 +325,7 @@ export async function seedFullPortrait(sessionId: string): Promise<void> {
 
 	try {
 		const resultRow = await client.query(
-			`SELECT id FROM assessment_results WHERE assessment_session_id = $1 LIMIT 1`,
+			`SELECT id FROM assessment_results WHERE conversation_id = $1 LIMIT 1`,
 			[sessionId],
 		);
 		if (resultRow.rows.length === 0) {

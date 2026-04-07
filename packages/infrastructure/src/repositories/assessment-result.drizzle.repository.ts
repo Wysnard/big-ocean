@@ -16,6 +16,17 @@ import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
 import { assessmentResults, conversation } from "../db/drizzle/schema";
 
+const mapRow = (row: typeof assessmentResults.$inferSelect): AssessmentResultRecord => ({
+	id: row.id,
+	assessmentSessionId: row.conversationId,
+	facets: row.facets as AssessmentResultRecord["facets"],
+	traits: row.traits as AssessmentResultRecord["traits"],
+	domainCoverage: row.domainCoverage as AssessmentResultRecord["domainCoverage"],
+	portrait: row.portrait,
+	stage: row.stage as AssessmentResultRecord["stage"],
+	createdAt: row.createdAt as Date,
+});
+
 export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 	AssessmentResultRepository,
 	Effect.gen(function* () {
@@ -27,7 +38,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.insert(assessmentResults)
 						.values({
-							assessmentSessionId: input.assessmentSessionId,
+							conversationId: input.assessmentSessionId,
 							facets: input.facets,
 							traits: input.traits,
 							domainCoverage: input.domainCoverage,
@@ -61,7 +72,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.select()
 						.from(assessmentResults)
-						.where(eq(assessmentResults.assessmentSessionId, sessionId))
+						.where(eq(assessmentResults.conversationId, sessionId))
 						.limit(1)
 						.pipe(
 							Effect.mapError(
@@ -111,7 +122,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.insert(assessmentResults)
 						.values({
-							assessmentSessionId: input.assessmentSessionId,
+							conversationId: input.assessmentSessionId,
 							facets: input.facets,
 							traits: input.traits,
 							domainCoverage: input.domainCoverage,
@@ -119,7 +130,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 							stage: input.stage ?? null,
 						})
 						.onConflictDoUpdate({
-							target: assessmentResults.assessmentSessionId,
+							target: assessmentResults.conversationId,
 							set: {
 								facets: input.facets,
 								traits: input.traits,
@@ -155,7 +166,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.select({
 							id: assessmentResults.id,
-							assessmentSessionId: assessmentResults.assessmentSessionId,
+							conversationId: assessmentResults.conversationId,
 							facets: assessmentResults.facets,
 							traits: assessmentResults.traits,
 							domainCoverage: assessmentResults.domainCoverage,
@@ -164,7 +175,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 							createdAt: assessmentResults.createdAt,
 						})
 						.from(assessmentResults)
-						.innerJoin(conversation, eq(assessmentResults.assessmentSessionId, conversation.id))
+						.innerJoin(conversation, eq(assessmentResults.conversationId, conversation.id))
 						.where(and(eq(conversation.userId, userId), eq(assessmentResults.stage, "completed")))
 						.orderBy(desc(assessmentResults.createdAt))
 						.limit(1)
@@ -188,7 +199,7 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 					const rows = yield* db
 						.update(assessmentResults)
 						.set({ stage })
-						.where(eq(assessmentResults.assessmentSessionId, sessionId))
+						.where(eq(assessmentResults.conversationId, sessionId))
 						.returning()
 						.pipe(
 							Effect.mapError(
@@ -213,16 +224,3 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 		});
 	}),
 );
-
-function mapRow(row: typeof assessmentResults.$inferSelect): AssessmentResultRecord {
-	return {
-		id: row.id,
-		assessmentSessionId: row.assessmentSessionId,
-		facets: row.facets as AssessmentResultRecord["facets"],
-		traits: row.traits as AssessmentResultRecord["traits"],
-		domainCoverage: row.domainCoverage as AssessmentResultRecord["domainCoverage"],
-		portrait: row.portrait,
-		stage: row.stage as AssessmentResultRecord["stage"],
-		createdAt: row.createdAt as Date,
-	};
-}
