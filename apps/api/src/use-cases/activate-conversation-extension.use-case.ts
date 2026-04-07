@@ -8,17 +8,17 @@
  * will not find an eligible session (findCompletedSessionWithoutChild excludes parents
  * with children) and will fail with SessionNotFound.
  *
- * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
- *               AssessmentExchangeRepository, LoggerRepository
+ * Dependencies: ConversationRepository, MessageRepository,
+ *               ExchangeRepository, LoggerRepository
  */
 
 import { SessionNotFound } from "@workspace/contracts";
 import {
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
+	ExchangeRepository,
 	GREETING_MESSAGES,
 	LoggerRepository,
+	MessageRepository,
 	pickOpeningQuestion,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -51,9 +51,9 @@ export interface ActivateConversationExtensionOutput {
  */
 export const activateConversationExtension = (input: ActivateConversationExtensionInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
-		const exchangeRepo = yield* AssessmentExchangeRepository;
+		const sessionRepo = yield* ConversationRepository;
+		const messageRepo = yield* MessageRepository;
+		const exchangeRepo = yield* ExchangeRepository;
 		const logger = yield* LoggerRepository;
 
 		const { userId } = input;

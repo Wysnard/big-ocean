@@ -53,7 +53,7 @@ export type FacetConfidenceEntity = Schema.Schema.Type<typeof FacetConfidenceEnt
 export const FacetPrecisionEntitySchema = FacetConfidenceEntitySchema;
 export type FacetPrecisionEntity = FacetConfidenceEntity;
 
-export const AssessmentSessionEntitySchema = Schema.Struct({
+export const ConversationEntitySchema = Schema.Struct({
 	id: Schema.UUID,
 	// Better Auth uses non-UUID string IDs by default (e.g. "On7pyu8...")
 	// so assessment session ownership must accept nullable string IDs.
@@ -68,4 +68,4 @@ export const AssessmentSessionEntitySchema = Schema.Struct({
 	parentSessionId: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 
-export type AssessmentSessionEntity = Schema.Schema.Type<typeof AssessmentSessionEntitySchema>;
+export type ConversationEntity = Schema.Schema.Type<typeof ConversationEntitySchema>;

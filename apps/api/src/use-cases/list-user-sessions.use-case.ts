@@ -5,12 +5,12 @@
  * ordered by creation date descending. Includes computed message count
  * and optional archetype data from public_profile join.
  *
- * Dependencies: AssessmentSessionRepository, AppConfig
+ * Dependencies: ConversationRepository, AppConfig
  */
 
 import { AppConfig } from "@workspace/domain/config/app-config";
 import type { DatabaseError } from "@workspace/domain/errors/http.errors";
-import { AssessmentSessionRepository } from "@workspace/domain/repositories/assessment-session.repository";
+import { ConversationRepository } from "@workspace/domain/repositories/conversation.repository";
 import { Effect } from "effect";
 
 export interface ListUserSessionsInput {
@@ -32,9 +32,9 @@ export interface ListUserSessionsOutput {
 
 export const listUserSessions = (
 	input: ListUserSessionsInput,
-): Effect.Effect<ListUserSessionsOutput, DatabaseError, AssessmentSessionRepository | AppConfig> =>
+): Effect.Effect<ListUserSessionsOutput, DatabaseError, ConversationRepository | AppConfig> =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const config = yield* AppConfig;
 		const sessions = yield* sessionRepo.getSessionsByUserId(input.userId);
 

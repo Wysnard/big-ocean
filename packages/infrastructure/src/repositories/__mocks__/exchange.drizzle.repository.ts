@@ -1,29 +1,29 @@
 /**
- * Mock: assessment-exchange.drizzle.repository.ts
+ * Mock: exchange.drizzle.repository.ts
  * Vitest auto-resolves when tests call:
- *   vi.mock('@workspace/infrastructure/repositories/assessment-exchange.drizzle.repository')
+ *   vi.mock('@workspace/infrastructure/repositories/exchange.drizzle.repository')
  *
  * Story 43-1: Updated for Director model schema (director_output, coverage_targets).
  */
-import { AssessmentExchangeRepository } from "@workspace/domain";
+import { ExchangeRepository } from "@workspace/domain";
 import type {
-	AssessmentExchangeRecord,
-	AssessmentExchangeUpdateInput,
-} from "@workspace/domain/repositories/assessment-exchange.repository";
+	ExchangeRecord,
+	ExchangeUpdateInput,
+} from "@workspace/domain/repositories/exchange.repository";
 import { Effect, Layer } from "effect";
 
-const exchanges = new Map<string, AssessmentExchangeRecord[]>();
+const exchanges = new Map<string, ExchangeRecord[]>();
 
 /** Clear in-memory state between tests. Call in `beforeEach` or `afterEach`. */
 export const _resetMockState = () => exchanges.clear();
 
-export const AssessmentExchangeDrizzleRepositoryLive = Layer.succeed(
-	AssessmentExchangeRepository,
-	AssessmentExchangeRepository.of({
+export const ExchangeDrizzleRepositoryLive = Layer.succeed(
+	ExchangeRepository,
+	ExchangeRepository.of({
 		create: (sessionId: string, turnNumber: number) =>
 			Effect.sync(() => {
 				const id = crypto.randomUUID();
-				const exchange: AssessmentExchangeRecord = {
+				const exchange: ExchangeRecord = {
 					id,
 					sessionId,
 					turnNumber,
@@ -38,14 +38,14 @@ export const AssessmentExchangeDrizzleRepositoryLive = Layer.succeed(
 				return exchange;
 			}),
 
-		update: (exchangeId: string, data: AssessmentExchangeUpdateInput) =>
+		update: (exchangeId: string, data: ExchangeUpdateInput) =>
 			Effect.sync(() => {
 				for (const [, sessionExchanges] of exchanges) {
 					const idx = sessionExchanges.findIndex((e) => e.id === exchangeId);
 					if (idx !== -1) {
 						const existing = sessionExchanges[idx];
 						if (existing) {
-							const updated: AssessmentExchangeRecord = {
+							const updated: ExchangeRecord = {
 								...existing,
 								...data,
 							};
@@ -66,7 +66,7 @@ export const AssessmentExchangeDrizzleRepositoryLive = Layer.succeed(
 
 		findByUserId: (_userId: string) =>
 			Effect.sync(() => {
-				const all: AssessmentExchangeRecord[] = [];
+				const all: ExchangeRecord[] = [];
 				for (const [, sessionExchanges] of exchanges) {
 					all.push(...sessionExchanges);
 				}

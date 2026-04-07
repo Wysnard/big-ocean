@@ -7,8 +7,8 @@
  */
 
 import {
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
+	MessageRepository,
 	SessionNotCompleted,
 	SessionNotFound,
 } from "@workspace/domain";
@@ -32,8 +32,8 @@ export interface GetTranscriptOutput {
 
 export const getTranscript = (input: GetTranscriptInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
+		const sessionRepo = yield* ConversationRepository;
+		const messageRepo = yield* MessageRepository;
 
 		const session = yield* sessionRepo.getSession(input.sessionId);
 

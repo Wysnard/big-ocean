@@ -23,25 +23,25 @@ export * as dbSchema from "./db/drizzle/schema";
 // Analyzer repository implementations
 export { AnalyzerClaudeRepositoryLive } from "./repositories/analyzer.claude.repository";
 export { AnalyzerMockRepositoryLive } from "./repositories/analyzer.mock.repository";
-// Assessment exchange repository implementation (Story 23-3)
-export { AssessmentExchangeDrizzleRepositoryLive } from "./repositories/assessment-exchange.drizzle.repository";
-// Message repository implementation
-export { AssessmentMessageDrizzleRepositoryLive } from "./repositories/assessment-message.drizzle.repository";
 // Assessment result repository implementation (Story 11.2)
 export { AssessmentResultDrizzleRepositoryLive } from "./repositories/assessment-result.drizzle.repository";
-// Session repository implementation
-export { AssessmentSessionDrizzleRepositoryLive } from "./repositories/assessment-session.drizzle.repository";
 // Conversanalyzer repository implementations (Story 10.2)
 export { ConversanalyzerAnthropicRepositoryLive } from "./repositories/conversanalyzer.anthropic.repository";
 export { ConversanalyzerMockRepositoryLive } from "./repositories/conversanalyzer.mock.repository";
+// Session repository implementation
+export { ConversationDrizzleRepositoryLive } from "./repositories/conversation.drizzle.repository";
 // Conversation evidence repository implementation (Story 10.1)
 export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conversation-evidence.drizzle.repository";
 // CostGuard repository implementation
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
+// Assessment exchange repository implementation (Story 23-3)
+export { ExchangeDrizzleRepositoryLive } from "./repositories/exchange.drizzle.repository";
 // Facet evidence repository — queries conversation_evidence, maps to SavedFacetEvidence contract
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
+// Message repository implementation
+export { MessageDrizzleRepositoryLive } from "./repositories/message.drizzle.repository";
 // Nerin Actor repository implementations (Story 43-4, ADR-DM-3)
 export { NerinActorAnthropicRepositoryLive } from "./repositories/nerin-actor.anthropic.repository";
 export { NerinActorMockRepositoryLive } from "./repositories/nerin-actor.mock.repository";

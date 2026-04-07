@@ -9,7 +9,7 @@ vi.mock("@workspace/infrastructure/repositories/qr-token.drizzle.repository");
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	PurchaseEventRepository,
 	QrTokenRepository,
 } from "@workspace/domain";
@@ -88,7 +88,7 @@ const mockResultRepo = {
 const TestLayer = Layer.mergeAll(
 	QrTokenDrizzleRepositoryLive,
 	Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
-	Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+	Layer.succeed(ConversationRepository, mockSessionRepo),
 	Layer.succeed(AssessmentResultRepository, mockResultRepo),
 );
 

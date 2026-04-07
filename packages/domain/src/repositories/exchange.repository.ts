@@ -11,7 +11,7 @@ import { DatabaseError } from "../errors/http.errors";
 import type { ExtractionTier } from "../types/pacing-pipeline.types";
 
 /** Partial update data for an exchange row */
-export interface AssessmentExchangeUpdateInput {
+export interface ExchangeUpdateInput {
 	// Extraction
 	readonly extractionTier?: ExtractionTier;
 
@@ -21,7 +21,7 @@ export interface AssessmentExchangeUpdateInput {
 }
 
 /** Full DB row returned from queries */
-export interface AssessmentExchangeRecord {
+export interface ExchangeRecord {
 	readonly id: string;
 	readonly sessionId: string;
 	readonly turnNumber: number;
@@ -36,8 +36,8 @@ export interface AssessmentExchangeRecord {
 	readonly createdAt: Date;
 }
 
-export class AssessmentExchangeRepository extends Context.Tag("AssessmentExchangeRepository")<
-	AssessmentExchangeRepository,
+export class ExchangeRepository extends Context.Tag("ExchangeRepository")<
+	ExchangeRepository,
 	{
 		/**
 		 * Create a new exchange row for a turn.
@@ -46,7 +46,7 @@ export class AssessmentExchangeRepository extends Context.Tag("AssessmentExchang
 		readonly create: (
 			sessionId: string,
 			turnNumber: number,
-		) => Effect.Effect<AssessmentExchangeRecord, DatabaseError>;
+		) => Effect.Effect<ExchangeRecord, DatabaseError>;
 
 		/**
 		 * Update an existing exchange row with pipeline results.
@@ -54,21 +54,17 @@ export class AssessmentExchangeRepository extends Context.Tag("AssessmentExchang
 		 */
 		readonly update: (
 			exchangeId: string,
-			data: AssessmentExchangeUpdateInput,
-		) => Effect.Effect<AssessmentExchangeRecord, DatabaseError>;
+			data: ExchangeUpdateInput,
+		) => Effect.Effect<ExchangeRecord, DatabaseError>;
 
 		/**
 		 * Find all exchanges for a session, ordered by turn number ascending.
 		 */
-		readonly findBySession: (
-			sessionId: string,
-		) => Effect.Effect<AssessmentExchangeRecord[], DatabaseError>;
+		readonly findBySession: (sessionId: string) => Effect.Effect<ExchangeRecord[], DatabaseError>;
 
 		/**
 		 * Find all exchanges for a user across all sessions, ordered by createdAt ascending.
 		 */
-		readonly findByUserId: (
-			userId: string,
-		) => Effect.Effect<AssessmentExchangeRecord[], DatabaseError>;
+		readonly findByUserId: (userId: string) => Effect.Effect<ExchangeRecord[], DatabaseError>;
 	}
 >() {}

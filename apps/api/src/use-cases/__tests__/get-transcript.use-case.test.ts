@@ -3,7 +3,7 @@
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { AssessmentMessageRepository, AssessmentSessionRepository } from "@workspace/domain";
+import { ConversationRepository, MessageRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { vi } from "vitest";
 import { getTranscript } from "../get-transcript.use-case";
@@ -61,8 +61,8 @@ const mockMessages = [
 
 const createTestLayer = () =>
 	Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
-		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
+		Layer.succeed(MessageRepository, mockMessageRepo),
 	);
 
 describe("getTranscript Use Case (Story 12.2)", () => {

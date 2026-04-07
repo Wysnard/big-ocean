@@ -17,11 +17,11 @@ vi.mock("../generate-full-portrait.use-case", () => ({
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
+	ExchangeRepository,
 	LoggerRepository,
+	MessageRepository,
 	PortraitRepository,
 	PurchaseEventRepository,
 } from "@workspace/domain";
@@ -106,12 +106,12 @@ const mockLogger = {
 const TestLayer = Layer.mergeAll(
 	PurchaseEventDrizzleRepositoryLive,
 	createTestAppConfigLayer(),
-	Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+	Layer.succeed(ConversationRepository, mockSessionRepo),
 	Layer.succeed(AssessmentResultRepository, mockResultsRepo),
 	Layer.succeed(PortraitRepository, mockPortraitRepo),
 	Layer.succeed(LoggerRepository, mockLogger),
-	Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
-	Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
+	Layer.succeed(MessageRepository, mockMessageRepo),
+	Layer.succeed(ExchangeRepository, mockExchangeRepo),
 );
 
 const baseInput = {

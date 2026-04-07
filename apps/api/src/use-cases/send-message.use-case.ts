@@ -12,7 +12,7 @@
  */
 
 import {
-	AssessmentSessionRepository,
+	ConversationRepository,
 	CostGuardRepository,
 	LoggerRepository,
 	SessionCompletedError,
@@ -37,7 +37,7 @@ export interface SendMessageOutput {
 /**
  * Send Message Use Case
  *
- * Dependencies: AssessmentSessionRepository, AssessmentMessageRepository,
+ * Dependencies: ConversationRepository, MessageRepository,
  *               LoggerRepository, NerinAgentRepository, AppConfig,
  *               ConversanalyzerRepository, ConversationEvidenceRepository
  *
@@ -49,7 +49,7 @@ export interface SendMessageOutput {
  */
 export const sendMessage = (input: SendMessageInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const logger = yield* LoggerRepository;
 		const costGuard = yield* CostGuardRepository;
 

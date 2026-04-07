@@ -12,10 +12,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AppConfig,
-	AssessmentMessageRepository,
 	AssessmentResultRepository,
 	ConversationEvidenceRepository,
 	LoggerRepository,
+	MessageRepository,
 	PortraitGeneratorRepository,
 	PortraitRepository,
 } from "@workspace/domain";
@@ -72,7 +72,7 @@ const createTestLayer = () =>
 		Layer.succeed(PortraitGeneratorRepository, mockPortraitGen),
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
 		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
-		Layer.succeed(AssessmentMessageRepository, mockMessageRepo),
+		Layer.succeed(MessageRepository, mockMessageRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.succeed(AppConfig, { portraitModelId: "test-model" } as any),
 	);

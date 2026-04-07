@@ -7,9 +7,9 @@
 
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import {
-	AssessmentMessageContentSchema,
 	AssessmentResultError,
 	FacetResultSchema,
+	MessageContentSchema,
 	TraitResultSchema,
 } from "@workspace/domain";
 import { Schema as S } from "effect";
@@ -61,7 +61,7 @@ export const StartAssessmentResponseSchema = S.Struct({
  */
 export const SendMessageRequestSchema = S.Struct({
 	sessionId: S.String,
-	message: AssessmentMessageContentSchema,
+	message: MessageContentSchema,
 });
 
 /**

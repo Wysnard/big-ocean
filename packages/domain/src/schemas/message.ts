@@ -16,6 +16,4 @@ export const ASSESSMENT_MESSAGE_MAX_LENGTH = 2000;
  * Constrains message text to a maximum of 2,000 characters.
  * Used by contracts for HTTP validation and frontend for UI display.
  */
-export const AssessmentMessageContentSchema = S.String.pipe(
-	S.maxLength(ASSESSMENT_MESSAGE_MAX_LENGTH),
-);
+export const MessageContentSchema = S.String.pipe(S.maxLength(ASSESSMENT_MESSAGE_MAX_LENGTH));

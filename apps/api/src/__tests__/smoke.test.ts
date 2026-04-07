@@ -9,21 +9,21 @@
  */
 
 import { it } from "@effect/vitest";
-import { AssessmentSessionRepository, LoggerRepository } from "@workspace/domain";
+import { ConversationRepository, LoggerRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 import { beforeEach, describe, expect, vi } from "vitest";
 
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/logger.pino.repository");
 
 import {
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 	// @ts-expect-error -- TS sees real module; Vitest resolves __mocks__ which exports _resetMockState
 	_resetMockState as resetSessionState,
-} from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+} from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 
-const TestLayer = Layer.mergeAll(AssessmentSessionDrizzleRepositoryLive, LoggerPinoRepositoryLive);
+const TestLayer = Layer.mergeAll(ConversationDrizzleRepositoryLive, LoggerPinoRepositoryLive);
 
 describe("@effect/vitest Setup", () => {
 	beforeEach(() => {
@@ -41,7 +41,7 @@ describe("@effect/vitest Setup", () => {
 	// ✅ Test Layer provision
 	it.effect("should provide test Layers", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 			expect(sessionRepo).toBeDefined();
 			expect(sessionRepo.createSession).toBeTypeOf("function");
 		}).pipe(Effect.provide(TestLayer)),
@@ -50,7 +50,7 @@ describe("@effect/vitest Setup", () => {
 	// ✅ Repository mock functionality
 	it.effect("should create session with test repository", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 			const _logger = yield* LoggerRepository;
 
 			const session = yield* sessionRepo.createSession("test-user-123");
@@ -77,7 +77,7 @@ describe("@effect/vitest Setup", () => {
 describe("Test Layer Examples", () => {
 	it.effect("should use multiple repositories", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 			const logger = yield* LoggerRepository;
 
 			// Create session
@@ -94,7 +94,7 @@ describe("Test Layer Examples", () => {
 
 	it.effect("should handle sequential operations", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 
 			// Create multiple sessions
 			const session1 = yield* sessionRepo.createSession("user-1");

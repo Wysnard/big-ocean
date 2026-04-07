@@ -9,7 +9,7 @@
 
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	calculateConfidenceFromFacetScores,
 	extract4LetterCode,
 	type FacetName,
@@ -43,7 +43,7 @@ export interface QrTokenDetailsOutput {
 export const getQrTokenDetails = (token: string, acceptorUserId: string) =>
 	Effect.gen(function* () {
 		const qrTokenRepo = yield* QrTokenRepository;
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const resultRepo = yield* AssessmentResultRepository;
 		const purchaseRepo = yield* PurchaseEventRepository;
 

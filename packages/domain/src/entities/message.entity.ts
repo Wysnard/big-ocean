@@ -8,7 +8,7 @@ import { Schema } from "effect";
  * Story 23-3: Removed userId, territoryId, observedEnergyLevel
  * (moved to assessment_exchange table). Added optional exchangeId FK.
  */
-export const AssessmentMessageEntitySchema = Schema.Struct({
+export const MessageEntitySchema = Schema.Struct({
 	id: Schema.UUID,
 	sessionId: Schema.UUID,
 	exchangeId: Schema.optionalWith(Schema.NullOr(Schema.UUID), { default: () => null }),
@@ -17,4 +17,4 @@ export const AssessmentMessageEntitySchema = Schema.Struct({
 	createdAt: Schema.DateFromSelf,
 });
 
-export type AssessmentMessageEntity = Schema.Schema.Type<typeof AssessmentMessageEntitySchema>;
+export type MessageEntity = Schema.Schema.Type<typeof MessageEntitySchema>;

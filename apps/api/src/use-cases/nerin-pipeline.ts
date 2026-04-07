@@ -17,25 +17,25 @@
 import {
 	AgentInvocationError,
 	AppConfig,
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
 	aggregateDomainDistribution,
 	analyzeCoverage,
 	buildActorPrompt,
 	type ConversanalyzerEvidenceOutput,
 	ConversationEvidenceRepository,
+	ConversationRepository,
 	CostGuardRepository,
 	type CoverageHistoryEntry,
 	calculateCost,
 	computeFinalWeight,
 	type DomainMessage,
+	ExchangeRepository,
 	type ExtractionTier,
 	enrichWithDefinitions,
 	extractCoverageHistoryEntry,
 	getDirectorPromptForPhase,
 	getUTCDateKey,
 	LoggerRepository,
+	MessageRepository,
 	NerinActorRepository,
 	NerinDirectorRepository,
 	pickFarewellMessage,
@@ -71,9 +71,9 @@ export interface NerinPipelineOutput {
 export const runNerinPipeline = (input: NerinPipelineInput) =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
-		const sessionRepo = yield* AssessmentSessionRepository;
-		const messageRepo = yield* AssessmentMessageRepository;
-		const exchangeRepo = yield* AssessmentExchangeRepository;
+		const sessionRepo = yield* ConversationRepository;
+		const messageRepo = yield* MessageRepository;
+		const exchangeRepo = yield* ExchangeRepository;
 		const logger = yield* LoggerRepository;
 		const director = yield* NerinDirectorRepository;
 		const actor = yield* NerinActorRepository;

@@ -7,20 +7,20 @@
 import { vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/purchase-event.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/assessment-session.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { AssessmentSessionRepository, PurchaseEventRepository } from "@workspace/domain";
-import { _resetMockState as resetSessionMock } from "@workspace/infrastructure/repositories/__mocks__/assessment-session.drizzle.repository";
+import { ConversationRepository, PurchaseEventRepository } from "@workspace/domain";
+import { _resetMockState as resetSessionMock } from "@workspace/infrastructure/repositories/__mocks__/conversation.drizzle.repository";
 import { _resetMockState as resetPurchaseMock } from "@workspace/infrastructure/repositories/__mocks__/purchase-event.drizzle.repository";
-import { AssessmentSessionDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/assessment-session.drizzle.repository";
+import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { PurchaseEventDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/purchase-event.drizzle.repository";
 import { Effect, Layer } from "effect";
 import { getCredits } from "../get-credits.use-case";
 
 const TestLayer = Layer.mergeAll(
 	PurchaseEventDrizzleRepositoryLive,
-	AssessmentSessionDrizzleRepositoryLive,
+	ConversationDrizzleRepositoryLive,
 );
 
 describe("getCredits", () => {
@@ -100,7 +100,7 @@ describe("getCredits", () => {
 
 	it.effect("detects completed assessment", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 
 			// Create a session and mark it completed
 			const { sessionId } = yield* sessionRepo.createSession("user-assessed");
@@ -113,7 +113,7 @@ describe("getCredits", () => {
 
 	it.effect("returns hasCompletedAssessment false when only active sessions exist", () =>
 		Effect.gen(function* () {
-			const sessionRepo = yield* AssessmentSessionRepository;
+			const sessionRepo = yield* ConversationRepository;
 			yield* sessionRepo.createSession("user-active");
 
 			const result = yield* getCredits("user-active");

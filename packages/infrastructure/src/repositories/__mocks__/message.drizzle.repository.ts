@@ -1,11 +1,11 @@
 /**
- * Mock: assessment-message.drizzle.repository.ts
+ * Mock: message.drizzle.repository.ts
  * Vitest auto-resolves when tests call:
- *   vi.mock('@workspace/infrastructure/repositories/assessment-message.drizzle.repository')
+ *   vi.mock('@workspace/infrastructure/repositories/message.drizzle.repository')
  *
  * Story 23-3: Simplified to match new saveMessage signature (no userId/territoryId/observedEnergyLevel).
  */
-import { AssessmentMessageRepository } from "@workspace/domain";
+import { MessageRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
 const messages = new Map<
@@ -23,9 +23,9 @@ const messages = new Map<
 /** Clear in-memory state between tests. Call in `beforeEach` or `afterEach`. */
 export const _resetMockState = () => messages.clear();
 
-export const AssessmentMessageDrizzleRepositoryLive = Layer.succeed(
-	AssessmentMessageRepository,
-	AssessmentMessageRepository.of({
+export const MessageDrizzleRepositoryLive = Layer.succeed(
+	MessageRepository,
+	MessageRepository.of({
 		saveMessage: (
 			sessionId: string,
 			role: "user" | "assistant",

@@ -14,7 +14,7 @@ import {
 import { and, desc, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
-import { assessmentResults, assessmentSession } from "../db/drizzle/schema";
+import { assessmentResults, conversation } from "../db/drizzle/schema";
 
 export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 	AssessmentResultRepository,
@@ -164,8 +164,8 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 							createdAt: assessmentResults.createdAt,
 						})
 						.from(assessmentResults)
-						.innerJoin(assessmentSession, eq(assessmentResults.assessmentSessionId, assessmentSession.id))
-						.where(and(eq(assessmentSession.userId, userId), eq(assessmentResults.stage, "completed")))
+						.innerJoin(conversation, eq(assessmentResults.assessmentSessionId, conversation.id))
+						.where(and(eq(conversation.userId, userId), eq(assessmentResults.stage, "completed")))
 						.orderBy(desc(assessmentResults.createdAt))
 						.limit(1)
 						.pipe(

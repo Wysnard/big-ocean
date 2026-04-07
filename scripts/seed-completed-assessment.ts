@@ -33,10 +33,10 @@ import { Effect, Redacted } from "effect";
 
 const {
 	account,
-	assessmentExchange,
-	assessmentMessage,
+	exchange,
+	message,
 	assessmentResults,
-	assessmentSession,
+	conversation,
 	conversationEvidence,
 	publicProfile,
 	user,
@@ -488,16 +488,16 @@ const seedProgram = Effect.gen(function* () {
 	// Clean up existing assessment data for test user (allows re-running seed)
 	const existingSessions = yield* db
 		.select()
-		.from(assessmentSession)
-		.where(eq(assessmentSession.userId, userId))
+		.from(conversation)
+		.where(eq(conversation.userId, userId))
 		.limit(1)
 		.pipe(Effect.mapError((error) => new Error(`Failed to query sessions: ${error}`)));
 
 	if (existingSessions.length > 0) {
 		const existingSessionId = existingSessions[0].id;
 		yield* db
-			.delete(assessmentSession)
-			.where(eq(assessmentSession.id, existingSessionId))
+			.delete(conversation)
+			.where(eq(conversation.id, existingSessionId))
 			.pipe(Effect.mapError((error) => new Error(`Failed to clean up existing session: ${error}`)));
 		console.log(`  Cleaned up existing session: ${existingSessionId}`);
 	}
@@ -505,7 +505,7 @@ const seedProgram = Effect.gen(function* () {
 	// 2. Create completed assessment session
 	console.log("\nCreating completed assessment session...");
 	const [sessionRecord] = yield* db
-		.insert(assessmentSession)
+		.insert(conversation)
 		.values({
 			userId,
 			status: "completed",
@@ -524,7 +524,7 @@ const seedProgram = Effect.gen(function* () {
 
 	// Turn 0: greeting exchange (no extraction, no director output)
 	const [openerExchange] = yield* db
-		.insert(assessmentExchange)
+		.insert(exchange)
 		.values({
 			sessionId: sessionRecord.id,
 			turnNumber: 0,
@@ -541,7 +541,7 @@ const seedProgram = Effect.gen(function* () {
 	for (let turn = 1; turn <= DIRECTOR_EXCHANGE_DATA.length; turn++) {
 		const exchangeData = DIRECTOR_EXCHANGE_DATA[turn - 1];
 		const [exchangeRecord] = yield* db
-			.insert(assessmentExchange)
+			.insert(exchange)
 			.values({
 				sessionId: sessionRecord.id,
 				turnNumber: turn,
@@ -572,7 +572,7 @@ const seedProgram = Effect.gen(function* () {
 		const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
 
 		const [msgRecord] = yield* db
-			.insert(assessmentMessage)
+			.insert(message)
 			.values({
 				sessionId: sessionRecord.id,
 				exchangeId: exchange?.id ?? null,

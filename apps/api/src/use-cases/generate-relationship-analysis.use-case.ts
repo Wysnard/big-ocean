@@ -9,8 +9,8 @@
 
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
 	ConversationEvidenceRepository,
+	ConversationRepository,
 	type FacetName,
 	type FacetScoresMap,
 	LoggerRepository,
@@ -37,7 +37,7 @@ export interface GenerateRelationshipAnalysisOutput {
  */
 const loadUserAssessmentData = (userId: string) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const resultsRepo = yield* AssessmentResultRepository;
 		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 

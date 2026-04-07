@@ -11,7 +11,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	LoggerRepository,
 	PortraitJobQueue,
 	PortraitRepository,
@@ -65,7 +65,7 @@ const mockLogger = {
 
 const createTestLayer = () =>
 	Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockSessionRepo),
+		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
 		Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),

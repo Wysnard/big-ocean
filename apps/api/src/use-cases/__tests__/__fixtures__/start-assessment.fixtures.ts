@@ -6,11 +6,11 @@
 
 import {
 	AppConfig,
-	AssessmentExchangeRepository,
-	AssessmentMessageRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	CostGuardRepository,
+	ExchangeRepository,
 	LoggerRepository,
+	MessageRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { vi } from "vitest";
@@ -137,9 +137,9 @@ export const mockAppConfig = {
 
 export const createTestLayer = () =>
 	Layer.mergeAll(
-		Layer.succeed(AssessmentSessionRepository, mockAssessmentSessionRepo),
-		Layer.succeed(AssessmentMessageRepository, mockAssessmentMessageRepo),
-		Layer.succeed(AssessmentExchangeRepository, mockExchangeRepo),
+		Layer.succeed(ConversationRepository, mockAssessmentSessionRepo),
+		Layer.succeed(MessageRepository, mockAssessmentMessageRepo),
+		Layer.succeed(ExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 		Layer.succeed(AppConfig, mockAppConfig),

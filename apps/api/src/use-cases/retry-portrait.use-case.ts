@@ -9,7 +9,7 @@
 
 import {
 	AssessmentResultRepository,
-	AssessmentSessionRepository,
+	ConversationRepository,
 	LoggerRepository,
 	PortraitJobQueue,
 	PortraitRepository,
@@ -30,7 +30,7 @@ export interface RetryPortraitOutput {
 
 export const retryPortrait = (input: RetryPortraitInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const resultRepo = yield* AssessmentResultRepository;
 		const portraitRepo = yield* PortraitRepository;
 		const queue = yield* PortraitJobQueue;

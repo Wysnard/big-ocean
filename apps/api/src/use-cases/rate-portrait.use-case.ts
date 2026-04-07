@@ -6,7 +6,7 @@
  */
 
 import {
-	AssessmentSessionRepository,
+	ConversationRepository,
 	type DepthSignalLevel,
 	type PortraitRating,
 	PortraitRatingRepository,
@@ -26,7 +26,7 @@ export interface RatePortraitInput {
 
 export const ratePortrait = (input: RatePortraitInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* AssessmentSessionRepository;
+		const sessionRepo = yield* ConversationRepository;
 		const ratingRepo = yield* PortraitRatingRepository;
 
 		// Validate session exists (throws SessionNotFound if not)
