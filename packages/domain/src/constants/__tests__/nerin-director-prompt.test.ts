@@ -29,17 +29,14 @@ describe("NERIN_DIRECTOR_PROMPT", () => {
 	});
 
 	it("contains three-beat brief structure", () => {
-		expect(NERIN_DIRECTOR_PROMPT).toContain("Observation beat");
-		expect(NERIN_DIRECTOR_PROMPT).toContain("Connection beat");
+		expect(NERIN_DIRECTOR_PROMPT).toContain("Acknowledge beat");
+		expect(NERIN_DIRECTOR_PROMPT).toContain("Weave beat");
 		expect(NERIN_DIRECTOR_PROMPT).toContain("Question beat");
 	});
 
-	it("contains 3 surviving instincts", () => {
-		// story-over-abstraction
-		expect(NERIN_DIRECTOR_PROMPT).toContain("concrete stories and specific moments");
-		// pushback-two-strikes
-		expect(NERIN_DIRECTOR_PROMPT).toContain("pushes back");
-		expect(NERIN_DIRECTOR_PROMPT).toContain("reject again");
+	it("contains surviving instincts", () => {
+		// scenario-over-abstraction
+		expect(NERIN_DIRECTOR_PROMPT).toContain("Put the user inside a scenario");
 		// don't-fully-reveal
 		expect(NERIN_DIRECTOR_PROMPT).toContain("Keep observations partial");
 	});
@@ -51,7 +48,7 @@ describe("NERIN_DIRECTOR_PROMPT", () => {
 	});
 
 	it("contains the critical user word requirement", () => {
-		expect(NERIN_DIRECTOR_PROMPT).toContain("Quote or paraphrase the user's specific words");
+		expect(NERIN_DIRECTOR_PROMPT).toContain("Quote the user's specific words");
 	});
 
 	it("contains steering guidance (opening phase)", () => {
@@ -68,8 +65,8 @@ describe("Phase-specific Director prompts", () => {
 			NERIN_DIRECTOR_CLOSING_PROMPT,
 		]) {
 			expect(prompt).toContain("creative director");
-			expect(prompt).toContain("Observation beat");
-			expect(prompt).toContain("Connection beat");
+			expect(prompt).toContain("Acknowledge beat");
+			expect(prompt).toContain("Weave beat");
 			expect(prompt).toContain("Question beat");
 			expect(prompt).toContain("Keep observations partial");
 		}
@@ -82,7 +79,9 @@ describe("Phase-specific Director prompts", () => {
 
 	it("exploring prompt enforces primary facet steering across candidate domains", () => {
 		expect(NERIN_DIRECTOR_EXPLORING_PROMPT).toContain("hard target");
-		expect(NERIN_DIRECTOR_EXPLORING_PROMPT).toContain("MUST surface that facet");
+		expect(NERIN_DIRECTOR_EXPLORING_PROMPT).toContain(
+			"MUST create a moment where the primary facet can surface",
+		);
 		expect(NERIN_DIRECTOR_EXPLORING_PROMPT).toContain("one of the candidate domains");
 	});
 
@@ -106,7 +105,7 @@ describe("NERIN_DIRECTOR_CLOSING_PROMPT", () => {
 
 	it("shares the base with other phase prompts", () => {
 		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("creative director");
-		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("Observation beat");
+		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("Acknowledge beat");
 	});
 
 	it("contains closing-specific instructions", () => {
@@ -115,8 +114,8 @@ describe("NERIN_DIRECTOR_CLOSING_PROMPT", () => {
 		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("core tension or pattern");
 	});
 
-	it("mandates the observation beat", () => {
-		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("observation beat is mandatory");
+	it("mandates the acknowledge beat", () => {
+		expect(NERIN_DIRECTOR_CLOSING_PROMPT).toContain("acknowledge beat is mandatory");
 	});
 });
 

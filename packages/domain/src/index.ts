@@ -294,24 +294,25 @@ export {
 export { FacetNameSchema, TraitNameSchema } from "./schemas/big-five-schemas";
 // ConversAnalyzer extraction schemas (Story 24-1, Story 42-2, Story 43-6)
 export {
+	DomainFacetMapToolOutput,
+	decodeDomainFacetMap,
 	decodeEvidenceLenient,
 	decodeEvidenceStrict,
+	decodeFacetMap,
+	domainFacetMapJsonSchema,
 	type EvidenceOnlyExtraction,
 	EvidenceOnlyToolOutput,
 	evidenceOnlyJsonSchema,
+	FacetMapToolOutput,
+	facetMapJsonSchema,
 	LenientEvidenceOnlyToolOutput,
 } from "./schemas/conversanalyzer-v2-extraction";
-// Evidence extraction schemas — ConversAnalyzer structured output with lenient filtering
+// Evidence extraction schemas — item-level schemas and facet remap
 export {
-	decodeEvidenceExtraction,
-	type EvidenceExtraction,
-	EvidenceExtractionSchema,
 	type EvidenceItem,
 	EvidenceItemJsonSchemaSource,
 	EvidenceItemSchema,
-	evidenceExtractionJsonSchema,
 	FACET_REMAP,
-	LenientEvidenceExtractionSchema,
 } from "./schemas/evidence-extraction";
 // OCEAN code branded schemas (canonical definitions)
 export { OceanCode4Schema, OceanCode5Schema } from "./schemas/ocean-code";
@@ -334,6 +335,7 @@ export {
 export {
 	type CostResult,
 	calculateCost,
+	getPricingForModel,
 	PRICING,
 } from "./services/cost-calculator.service";
 // Portrait job queue (webhook → Effect worker bridge)

@@ -1,462 +1,418 @@
 ---
-stepsCompleted: ["step-01-validate-prerequisites", "step-02-design-epics", "step-03-create-stories", "step-04-final-validation"]
+stepsCompleted: [1, 2, 3, 4]
+status: complete
 inputDocuments:
-  - "architecture.md (ADR-26, ADR-27, ADR-28)"
-  - "scoring-confidence-v2-spec.md"
-  - "prd.md (context — existing FRs referenced)"
-  - "ux-design-specification.md (context — no new UX requirements)"
+  - '_bmad-output/planning-artifacts/prd.md'
+  - '_bmad-output/planning-artifacts/architecture.md'
+  - '_bmad-output/planning-artifacts/ux-design-specification.md'
 ---
 
-# big-ocean - Epic Breakdown: Scoring & Confidence v2
+# big-ocean - Epic Breakdown
 
 ## Overview
 
-This document covers the epic and story breakdown for the **Scoring & Confidence v2** initiative — the three interconnected architecture changes added to big-ocean's architecture document (ADR-26, ADR-27, ADR-28). Scope: life domain restructure, evidence extraction redesign, and territory catalog evolution.
+This document provides the complete epic and story breakdown for big-ocean, decomposing the requirements from the PRD, UX Design, and Architecture into implementable stories.
+
+**Context:** Brownfield project — hexagonal architecture, auth, CI/CD, cloud deployment, and core infrastructure already built. The focus is on completing the MVP: 15-exchange conversation with Nerin → personality results → portrait → relationship analysis → social sharing → homepage conversion.
+
+**Post-MVP items (not epicked here):** FR10, FR23, FR25, FR49 (conversation extension — subscription), Coach/Journal/Career agents (ADR-40-41), subscription billing (ADR-42), daily check-in.
 
 ## Requirements Inventory
 
 ### Functional Requirements
 
-**Life Domain Restructure (ADR-26):**
-- FR-S1: The system supports 6 life domains: work, relationships, family, leisure, health, other (solo removed, health added)
-- FR-S2: Leisure absorbs introspective/alone-time aspects previously in solo (daydreaming, reading, solo hobbies)
-- FR-S3: Health captures exercise, diet, sleep, self-care routines, morning/evening habits, physical/mental wellness, stress management
-- FR-S4: Education maps to work domain (extraction prompt explicit about this)
-- FR-S5: Existing solo evidence in DB is migrated to leisure or health
-- FR-S6: All domain-referencing constants, enums, and schemas are updated (LIFE_DOMAINS, pgEnum, LifeDomainSchema, STEERABLE_DOMAINS)
+FR1: Users can have a 15-exchange adaptive conversation with Nerin
+FR2: Nerin responds using ocean/marine metaphors and dive master persona
+FR3: The Director model steers Nerin's territory focus, observation type, and entry pressure each turn (evidence extraction → coverage analysis → Nerin Director → Nerin Actor)
+FR4: Users can see a depth meter reflecting the conversation's progress
+FR5: Users receive progress milestone markers at 25%, 50%, and 75% of the conversation
+FR6: Nerin references patterns he is noticing about the user during the conversation to build anticipation for the portrait
+FR7: Nerin frames observations as invitations to explore — acknowledges user pushback, offers an alternative framing, and redirects to a different topic only if the user rejects the observation a second time
+FR8: Nerin includes a "this is not therapy" framing in the greeting
+FR9: Nerin never uses diagnostic language or characterizes third parties the user mentions
+FR10: *(Post-MVP — subscription)* Subscribers can extend their conversation (+15 exchanges) to continue with Nerin
+FR11: Users can resume an abandoned conversation from where they left off
+FR12: The conversation ends with a distinct closing exchange from Nerin before transitioning to results
+FR13: Nerin transitions between territories using a connecting observation or question that references the prior topic when the Director model changes territory
+FR14: The system extracts facet evidence and energy signals from each user response via the extraction pipeline
+FR15: The system computes 30 facet scores, 5 trait scores, OCEAN code, and archetype from conversation evidence (recomputed at read time)
+FR16: Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the results page
+FR17: The system assigns one of 81 hand-curated archetypes based on the user's OCEAN code
+FR18: The system presents all archetypes with positive, strength-based framing
+FR19: Users can view a dashboard of their results, portrait, relationship analyses, and a link to their public profile
+FR20: The system generates a narrative portrait written as a personal letter from Nerin using a high-capability LLM
+FR21: Users are presented with a PWYW modal showing the founder's story and example portrait after completing the assessment
+FR22: Users can view their portrait after payment
+FR22a: One portrait purchase unlocks one portrait for the user's assessment result
+FR23: *(Post-MVP — subscription)* Conversation extension produces a new assessment result with richer portrait
+FR24: The system tracks behavioral proxies for portrait emotional impact: share rate and return visits within 48 hours
+FR25: *(Post-MVP — subscription)* Conversation extension creates a new assessment session initialized from prior session's final state
+FR26: Portrait generation is asynchronous — users are notified when ready
+FR27: The system retries portrait generation on failure and informs the user if it ultimately fails
+FR28: Users can initiate a relationship analysis by opening a QR drawer; the other person scans the QR code or opens the contained URL
+FR29: The system generates a 2-person relationship analysis when both users have completed their assessments
+FR30: The QR accept screen shows the initiator's archetype card, both users' confidence rings, and available credit balance, with Accept and Refuse buttons
+FR31: Users see a ritual suggestion screen before accessing the relationship analysis
+FR32: The relationship analysis describes relational dynamics without blame language and without exposing individual vulnerability data
+FR33: Users receive one free relationship analysis credit upon completing their first portrait purchase (PWYW ≥€1). Additional credits cost €5 each
+FR34: If one user deletes their account, the shared relationship analysis is deleted
+FR35: Each relationship analysis is linked to both users' assessment results. All analyses preserved as snapshots with derive-at-read version detection
+FR36: Users receive an email notification when a relationship analysis they participated in is ready
+FR37: The QR accept screen is only accessible to logged-in users with a completed assessment
+FR38: The system tracks relationship analysis credits per user (1 free, additional purchased)
+FR39: Users have a public profile page showing their archetype, OCEAN code, trait/facet scores, and framing line
+FR40: Public profiles are default-private; users can explicitly make them public (binary visibility)
+FR41: Public profiles generate dynamic OG meta tags and archetype card images for social preview
+FR42: Public profiles are accessible without authentication
+FR43: Public profiles include a CTA to start the user's own assessment
+FR44: Users can copy a shareable link to their public profile
+FR45: Logged-in users with completed assessment see relationship analysis CTA on other users' public profiles
+FR46: The system generates archetype card images per archetype (81 cards) with geometric visual element and OCEAN code
+FR47: Users can pay for portraits via PWYW with embedded checkout (default €5, minimum €1)
+FR48: Users can purchase relationship analysis credits via embedded checkout
+FR49: *(Post-MVP — subscription)* Subscribers can access conversation extensions as part of their subscription
+FR50: Users can create an account with email and password. Email verification required before platform access
+FR50a: Verification email contains a unique link that expires after 1 week
+FR50b: Users can request a new verification email from the verify-email page
+FR51: Users can control the visibility of their public profile (binary)
+FR52: Users are informed during onboarding that conversation data is stored
+FR53: Users can delete their account, which deletes their data and shared relationship analyses
+FR54: Users are introduced to Nerin and the conversation format before the conversation begins
+FR55: The system monitors per-session LLM costs against a budget threshold
+FR56: The cost guard never blocks a user mid-session; budget protection applies at session boundaries
+FR57: When cost guard triggers, users can retry sending their message
+FR58: Users are informed when cost guard triggers and told they can retry
+FR59: The homepage communicates what Big Ocean is within 3 seconds of landing
+FR60: The homepage leads with a transformation-oriented hook
+FR61: The homepage has one primary CTA to start the assessment
+FR62: The homepage surfaces a concrete portrait excerpt within the first 40% of scroll depth
+FR63: The homepage includes a Nerin conversation preview showing character depth
+FR64: The homepage addresses three visitor fears (process anxiety, time commitment, self-exposure)
+FR65: The homepage surfaces the PWYW pricing model early as a trust signal
+FR66: The homepage content works across multiple visitor types
 
-**Evidence Extraction Redesign (ADR-27):**
-- FR-S7: ConversAnalyzer is split into two separate LLM calls: user state extraction and personality evidence extraction
-- FR-S8: User state extraction (Call 1) outputs energyBand, tellingBand, energyReason, tellingReason, withinMessageShift — no prompt changes from existing Phase 1
-- FR-S9: Evidence extraction (Call 2) uses a new dedicated prompt with per-facet conversational anchors (HIGH/LOW examples for all 30 facets)
-- FR-S10: Evidence extraction output uses polarity (high/low) instead of deviation (-3 to +3)
-- FR-S11: Deviation is derived deterministically: sign(polarity) × magnitude(strength) — high+strong→+3, low+weak→-1, etc.
-- FR-S12: A polarity column is added to the conversation_evidence table. Deviation column kept — computed from polarity × strength before insert
-- FR-S13: An adapter function converts ExtractedEvidence → EvidenceInput before entering formula.ts. Formula code unchanged
-- FR-S14: The evidence extraction prompt includes a mandatory dual-polarity check (same behavior → opposite polarity on different facet)
-- FR-S15: The evidence extraction prompt includes a mandatory polarity balance audit (<35% LOW triggers re-read for absences/avoidances)
-- FR-S16: Extraction prompt includes updated domain definitions with health domain and explicit domain assignment guidance
-- FR-S17: Existing evidence from old sessions (with deviation but no polarity) still works — backward compatible
+### Non-Functional Requirements
 
-**Territory Catalog Evolution (ADR-28):**
-- FR-S18: 12 existing territories are remapped from solo domains to new domains (health, leisure, relationships, work as specified in the remap table)
-- FR-S19: identity-and-purpose territory is replaced by inner-life (health, leisure domains; intellect, emotionality, imagination, liberalism, artistic_interests facets)
-- FR-S20: 3 new health territories added: body-and-movement, cravings-and-indulgences, stress-and-the-body
-- FR-S21: 3 new hard-to-assess coverage territories added: home-and-space, trips-and-plans, taking-care
-- FR-S22: 3 facet additions to existing territories: artistic_interests → inner-life, cautiousness → work-dynamics, liberalism → growing-up
-- FR-S23: Territory catalog grows from 25 → 31 territories. All 30 facets have ≥2 territory routes. No hard-to-assess facet stuck in a single domain pair
-- FR-S24: Each new territory has: name, description (Nerin's curiosity voice), expectedEnergy [0,1], dual-domain tags, expected facets, opener question
-- FR-S25: Scoring formula unchanged — score, confidence, signalPower per facet and trait. No changes to formula.ts
-- FR-S26: Steering formula unchanged — priority = α × max(0, C_target - confidence) + β × max(0, P_target - signalPower)
+NFR1: Nerin response time <2s P95
+NFR2: Public profile page LCP <1s
+NFR3: Results page LCP <1.5s
+NFR4: Chat page initial load <2s, subsequent interactions <200ms
+NFR5: Portrait generation completes within 60s (async)
+NFR6: Per-assessment LLM cost stays within ~€0.20 budget
+NFR7: Per-portrait LLM cost stays within ~€0.20 budget
+NFR8: All data in transit encrypted via TLS 1.3
+NFR9: Authentication requires 12+ character passwords and compromised credential checks
+NFR9a: Unverified accounts cannot access any authenticated route
+NFR9b: Verification email links expire after 1 week
+NFR10: Row-level data access control ensures users can only access their own data
+NFR11: Public profiles default to private
+NFR12: Conversation transcripts stored indefinitely; retrievable within 2s
+NFR13: Relationship analysis data does not expose raw conversation transcripts
+NFR14: Account deletion cascades to all user data and shared relationship analyses
+NFR15: Assessment completion without errors >99%
+NFR16: Portrait generation completes successfully >99%
+NFR17: Portrait generation retries automatically on failure
+NFR18: Cost guard never terminates an active session
+NFR19: Conversation sessions are resumable after browser close or connection loss
+NFR20: WCAG 2.1 AA compliance for public profile, conversation UI, results page, PWYW modal
+NFR21: Chat interface keyboard-navigable with proper ARIA labels
+NFR22: Score visualizations have text alternatives
+NFR23: Ocean theme color palette meets AA contrast ratios
+NFR24: Proper focus management in modals
+NFR25: Embedded checkout integration for PWYW and credits
+NFR26: The system can switch LLM providers without code changes
+NFR27: Transactional email delivery (3 types + relationship notifications within 5 min, >95% delivery)
+NFR28: System logs include per-session cost, completion status, and error events
+NFR29: Personality scores always recomputed from current facet evidence at read time
 
-### NonFunctional Requirements
+### Additional Requirements (Architecture)
 
-- NFR-S1: Backward compatibility — existing sessions with old evidence (deviation, no polarity) continue to work
-- NFR-S2: Per-assessment LLM cost stays within ~€0.20 budget despite split into two calls (both still Haiku)
-- NFR-S3: ConversAnalyzer latency budget: two sequential Haiku calls must complete within existing pipeline latency expectations
-- NFR-S4: Three-tier extraction fail-open behavior preserved for both calls (strict ×3 → lenient ×1 → neutral defaults)
-- NFR-S5: Migration must not break running sessions — domain enum change must be additive (add health first, then remap solo)
-- NFR-S6: All existing unit tests for scoring, formula, and steering pass after changes (formula.ts unchanged)
-- NFR-S7: Territory catalog tests updated for 31 territories
-- NFR-S8: Polarity balance improves from current ~75% positive to closer to 50/50 distribution
+- **ADR-39 (Pre-Launch):** Rename assessment_sessions → conversations, assessment_messages → messages, assessment_exchanges → exchanges. Add conversation_type enum + metadata JSONB. Rename all repos (ConversationRepository, MessageRepository, ExchangeRepository)
+- **ADR-31-38 (Director Model):** Four-step pipeline: Evidence extraction → Coverage analysis (facet-first) → Nerin Director brief → Nerin Actor response. Exchange table migration (drop pacing columns, add director_output + coverage_targets JSONB)
+- **ADR-1 (Hexagonal):** All use-cases via Effect-ts Context.Tag DI. No business logic in handlers
+- **ADR-6 (Derive-at-Read):** Trait scores, OCEAN codes, archetypes, capabilities — never stored, always computed
+- **ADR-8 (Better Auth + Polar):** Polar as Better Auth plugin. Customer creation on signup with user ID as externalId
+- **ADR-9 (Append-Only Events):** purchase_events as source of truth for all capabilities
+- **ADR-12 (Resend Email):** 3 email types + relationship notification via React Email templates
+- **ADR-24 (Email Verification):** requireEmailVerification blocks session creation for unverified users
+- **ADR-25 (E2E Sandbox):** Real Resend sandbox + Polar webhook simulation in e2e tests
+- **ADR-27 (Evidence v3):** Polarity + strength extraction model, <35% negative signals trigger re-read
+- **ADR-30 (Coverage Selector):** Facet-first coverage analyzer returns primaryFacet + candidateDomains
+- Established stack: Effect-ts, TanStack Start/Router/Query, Drizzle+PostgreSQL, Redis, Railway, Docker, GitHub Actions CI
+- Testing: Vitest + @effect/vitest, __mocks__ co-location, Docker integration tests, Playwright e2e
 
-### Additional Requirements
+### UX Design Requirements
 
-**From Architecture (technical constraints):**
-- Hexagonal architecture: domain changes in packages/domain, infrastructure changes in packages/infrastructure
-- Database migration: add polarity column (nullable for backward compat), add health to pgEnum, remap solo evidence
-- ConversAnalyzer repository interface: split analyze/analyzeLenient into separate user-state and evidence methods (or add new methods)
-- Extraction prompt: per-facet conversational anchors for all 30 facets with HIGH/LOW behavioral examples
-- Pure functions: territory catalog is a constant in domain/src/constants/territory-catalog.ts — update in place
-- Pacing pipeline orchestrator (nerin-pipeline.ts): update to call two LLM calls sequentially instead of one
-- Domain constants: life-domain.ts, band-mappings.ts updated
-- Schema updates: infrastructure/src/db/drizzle/schema.ts — pgEnum change, new column
-- Never modify existing migration files — always append new migration
+**Design Tokens (7):** UX-DR1 through UX-DR7 — Big Five trait color system (OKLCH), animation tokens, ambient visualization tokens, portrait color tokens, comparison tokens, depth zone tokens, conversation-specific tokens
 
-**From Scoring v2 Spec (migration order):**
-- Phase 1 must complete before Phase 2 (territories reference new domains)
-- Phase 1: life domains + territory catalog (can be deployed independently)
-- Phase 2: evidence extraction split + polarity model (depends on Phase 1 domains)
+**Custom Components (14):** UX-DR8 through UX-DR22 — GeometricSignature, OceanCodeStrand, PortraitSpineRenderer, PersonalityRadarChart, QRDrawer, RitualScreen, PortraitUnlockButton, PWYWCurtainModal, ConversationCTA, DepthMeterMilestones, ProfileVisibilityToggle, RelationshipCTA, EvolutionBadge, CreditBalance
+
+**Page Specifications (32):** UX-DR23 through UX-DR54 — Dashboard (merge profile, delete portrait card, reorder grid), Homepage (beat compression 14→8, hero rewrite, fear-resolving HowItWorks, archetype gallery, sticky mobile CTA, Nerin depth preview), Public Profile (framing line, CTA updates, relationship initiation, privacy redirect), Results Page (10-section grid, portrait states, trait card interaction, auth gate)
+
+**Accessibility (21):** UX-DR55 through UX-DR75 — Keyboard navigation, ARIA labels, screen reader support, contrast ratios (4.5:1 text, 3:1 UI), focus management, skip links, live regions, touch targets (44×44px), reduced motion, heading hierarchy, color independence
+
+**Responsive Design (20):** UX-DR76 through UX-DR95 — Mobile-first CSS, conversation width 640px, portrait width 65ch, page-specific layouts (results, profile, homepage, chat, dashboard), QR drawer responsive, tooltip mobile behavior, relative units throughout
+
+**Animation (26):** UX-DR96 through UX-DR121 — Conversation pacing silence, depth meter transitions, portrait reveal, breath sequence (Chat→Results 3-5s), PWYW delayed open, ritual entrance, section entrance animations, trait card cross-fade, facet cascade, GeometricSignature entrance, reduced-motion fallbacks, performance constraints
+
+**Implementation Gaps (30):** UX-DR122 through UX-DR151 — Dashboard gaps (delete portrait card, profile merge, grid reorder), Homepage gaps (hero rewrite, beat compression, fear-resolving section, archetype gallery, sticky CTA, OG meta), Public Profile gaps (framing line, CTA updates, relationship flow, privacy redirect), Results Page gaps (portrait states, generation polling, immersive read mode)
+
+**Strategic UX (32):** UX-DR152 through UX-DR183 — Satori SVG compatibility, iOS Safari testing, QR hook extraction, toast configuration, error strategy (3-tier), loading thresholds, offline behavior, auth gates, deep linking, scroll restoration, empty states, button hierarchy, form patterns, chat input, modal rules, tooltip rules, email specifications
 
 ### FR Coverage Map
 
-| FR | Epic | Description |
-|----|------|-------------|
-| FR-S1 | Epic 1 | 6 life domains (health replaces solo) |
-| FR-S2 | Epic 1 | Leisure absorbs solo's introspective aspects |
-| FR-S3 | Epic 1 | Health domain definition |
-| FR-S4 | Epic 1 | Education → work mapping |
-| FR-S5 | Epic 1 | DB migration of solo evidence |
-| FR-S6 | Epic 1 | Constants/enums/schemas updated |
-| FR-S7 | Epic 3 | ConversAnalyzer split into 2 LLM calls |
-| FR-S8 | Epic 3 | User state call (no prompt changes) |
-| FR-S9 | Epic 3 | Evidence call with per-facet anchors |
-| FR-S10 | Epic 3 | Polarity (high/low) replaces deviation |
-| FR-S11 | Epic 3 | Deterministic deviation derivation |
-| FR-S12 | Epic 3 | Polarity column in DB |
-| FR-S13 | Epic 3 | Adapter: ExtractedEvidence → EvidenceInput |
-| FR-S14 | Epic 3 | Dual-polarity check in prompt |
-| FR-S15 | Epic 3 | Polarity balance audit in prompt |
-| FR-S16 | Epic 3 | Updated domain definitions in prompt |
-| FR-S17 | Epic 3 | Backward compat for old evidence |
-| FR-S18 | Epic 2 | 12 territories remapped to new domains |
-| FR-S19 | Epic 2 | identity-and-purpose → inner-life |
-| FR-S20 | Epic 2 | 3 new health territories |
-| FR-S21 | Epic 2 | 3 new hard-to-assess coverage territories |
-| FR-S22 | Epic 2 | 3 facet additions to existing territories |
-| FR-S23 | Epic 2 | Catalog 25 → 31, all facets ≥2 routes |
-| FR-S24 | Epic 2 | New territory definitions (name, energy, domains, facets, opener) |
-| FR-S25 | Epic 2 | Scoring formula unchanged (validation) |
-| FR-S26 | Epic 2 | Steering formula unchanged (validation) |
+| FR | Epic | Status |
+|----|------|--------|
+| FR1 | Epic 1 | Turn count update (25→15) |
+| FR2 | — | Implemented |
+| FR3 | Epic 1 | Director model refs cascade with table renames |
+| FR4 | Epic 1 | Milestone turn recalculation |
+| FR5 | Epic 1 | Milestone turn recalculation |
+| FR6 | — | Implemented |
+| FR7 | — | Implemented |
+| FR8 | — | Implemented |
+| FR9 | — | Implemented |
+| FR10 | Epic 2 | Post-MVP — gate behind subscription |
+| FR11 | Epic 1 | Resume uses renamed tables |
+| FR12 | Epic 1 | Closing trigger at turn 15 |
+| FR13 | Epic 1 | Transitions use renamed repos |
+| FR14 | — | Implemented |
+| FR15 | — | Implemented |
+| FR16-FR19 | — | Implemented |
+| FR20-FR22a | — | Implemented |
+| FR23 | Epic 2 | Post-MVP — gate behind subscription |
+| FR24 | — | Implemented |
+| FR25 | Epic 2 | Post-MVP — gate behind subscription |
+| FR26-FR48 | — | Implemented |
+| FR49 | Epic 2 | Post-MVP — gate behind subscription |
+| FR50-FR54 | — | Implemented |
+| FR55-FR58 | — | Implemented |
+| FR59-FR66 | — | Homepage — deferred to redesign session |
+| NFR1-NFR19 | — | Implemented |
+| NFR20-NFR24 | Epic 3 | Accessibility pass |
+| NFR25-NFR29 | — | Implemented |
 
 ## Epic List
 
-### Epic 1: Health Domain & Evidence Migration
-The system recognizes health-related personality signals (exercise, diet, sleep, stress management) as a distinct life domain, enabling richer conversation steering and more accurate domain-diverse scoring.
-**FRs covered:** FR-S1, FR-S2, FR-S3, FR-S4, FR-S5, FR-S6
-**NFRs addressed:** NFR-S5 (safe migration), NFR-S1 (backward compat)
-**Depends on:** Nothing — this is the foundation
+### Epic 1: Conversation Calibration — 15-Turn Assessment
+Users experience the right-sized ~30-minute conversation (15 turns) with properly named data structures and clear parameter semantics. This epic combines the ADR-39 table renames with the turn count calibration to avoid double-touching 30+ files.
+**FRs covered:** FR1, FR3, FR4, FR5, FR11, FR12, FR13
+**Architecture:** ADR-39 (table renames), assessmentTurnCount parameter
+**Scope:** Schema migration, repo/use-case/handler renames, turn count constant + cascade, user-facing duration text (~30 min), depth meter milestones, prompt updates, test/mock/seed updates, delete dead DashboardPortraitCard.tsx, UX spec duration fixes
 
-### Epic 2: Territory Catalog Expansion
-Conversations explore 6 new topic areas — health routines, cravings, stress, living spaces, trip planning, and caregiving. Hard-to-assess facets (orderliness, artistic_interests, cautiousness, liberalism, altruism) get multiple territory routes, producing more comprehensive and balanced personality profiles.
-**FRs covered:** FR-S18, FR-S19, FR-S20, FR-S21, FR-S22, FR-S23, FR-S24, FR-S25, FR-S26
-**NFRs addressed:** NFR-S7 (catalog tests)
-**Depends on:** Epic 1 (new territories reference health domain)
+### Epic 2: Conversation Extension Cleanup
+The MVP product is cleanly scoped — conversation extension is dormant, not accessible, and won't confuse users or create dead-end UI paths. Extension infrastructure preserved for future subscription.
+**FRs covered:** FR10 (post-MVP), FR23 (post-MVP), FR25 (post-MVP), FR49 (post-MVP)
+**Scope:** Gate or disable extension use-case, remove extension CTAs from UI, clean up frontend references to €25 extension, preserve purchase event types for future subscription
 
-### Epic 3: Evidence Extraction v3 — Polarity Model
-Personality scores become significantly more accurate — the current positive deviation bias (75% positive, zero -3 extractions) is fixed by switching to a polarity+strength model with rich per-facet behavioral anchors. Low-scoring facets are properly captured, producing more truthful and differentiated personality profiles.
-**FRs covered:** FR-S7, FR-S8, FR-S9, FR-S10, FR-S11, FR-S12, FR-S13, FR-S14, FR-S15, FR-S16, FR-S17
-**NFRs addressed:** NFR-S1 (backward compat), NFR-S2 (cost budget), NFR-S3 (latency), NFR-S4 (fail-open), NFR-S6 (existing tests pass), NFR-S8 (polarity balance)
-**Depends on:** Epic 1 (extraction prompt uses updated domain list)
-
----
-
-## Epic 1: Health Domain & Evidence Migration
-
-The system recognizes health-related personality signals (exercise, diet, sleep, stress management) as a distinct life domain, enabling richer conversation steering and more accurate domain-diverse scoring.
-
-### Story 1.1: Add Health Life Domain to Constants, Schemas, and Database
-
-As a **system operator**,
-I want the health life domain added to all TypeScript constants, Effect schemas, and the PostgreSQL enum,
-So that the platform can classify personality evidence observed in health contexts (exercise, diet, sleep, stress management).
-
-**Acceptance Criteria:**
-
-**Given** the current LIFE_DOMAINS constant includes solo
-**When** the domain package constants are updated
-**Then** LIFE_DOMAINS includes: work, relationships, family, leisure, health, other
-**And** LifeDomainSchema (Effect Schema) validates the new domain list
-**And** STEERABLE_DOMAINS includes health
-
-**Given** the PostgreSQL evidence_domain enum does not include health
-**When** a new Drizzle migration is applied
-**Then** the evidence_domain pgEnum includes health
-**And** no existing data is altered by this migration
-**And** the migration file is appended (existing migrations untouched)
-
-**Given** the system boots after migration
-**When** new evidence is inserted with domain = "health"
-**Then** the insert succeeds and the evidence is retrievable
-
-### Story 1.2: Update Domain Definitions and Assignment Guidance
-
-As a **system operator**,
-I want the domain definitions updated so leisure absorbs solo's introspective aspects and education maps to work,
-So that the extraction pipeline assigns evidence to the correct domain without ambiguity.
-
-**Acceptance Criteria:**
-
-**Given** the current domain definitions include solo for introspective/alone-time activities
-**When** the domain definitions are updated in the domain package (life-domain.ts)
-**Then** leisure's definition includes: "alone-time hobbies, introspection, daydreaming"
-**And** health's definition includes: "Exercise, diet, sleep, self-care routines, morning/evening habits, physical/mental wellness, stress management"
-**And** work's definition explicitly includes: "education, studying"
-**And** other's definition includes guidance: "ONLY when truly doesn't fit above. Target <5%"
-**And** solo is no longer listed in domain definitions
-
-**Given** ConversAnalyzer's extraction prompt references domain definitions
-**When** the domain definitions text used in prompts is updated
-**Then** the prompt text matches the new domain list and definitions exactly
-
-### Story 1.3: Migrate Existing Solo Evidence and Remove Solo Domain
-
-As a **system operator**,
-I want existing solo evidence in the database remapped to leisure or health, and the solo domain removed from all constants,
-So that the system operates on a clean 6-domain model without legacy data.
-
-**Acceptance Criteria:**
-
-**Given** existing conversation_evidence rows have domain = "solo"
-**When** the data migration runs
-**Then** each solo evidence record is remapped to "health" or "leisure" using the following deterministic rule derived from the new health territory facet coverage: if `bigfive_facet` is in {activity_level, self_discipline, excitement_seeking, immoderation, cautiousness, vulnerability, anxiety, self_efficacy} → "health"; all other facets → "leisure"
-**And** zero rows remain with domain = "solo" after migration
-
-**Given** solo evidence has been remapped
-**When** solo is removed from TypeScript constants (LIFE_DOMAINS, STEERABLE_DOMAINS, LifeDomainSchema)
-**Then** the TypeScript compiler reports no references to "solo" in domain-related constants
-**And** the solo value is left in the PostgreSQL pgEnum for now (unused — cleanup deferred to post-implementation)
-**And** all existing unit tests pass (with updated fixtures where needed)
-
-**Given** a running session created before the migration
-**When** the session continues after the migration
-**Then** evidence retrieval works correctly for all previously-solo evidence now classified as leisure or health (NFR-S5)
+### Epic 3: Accessibility Foundations
+Users with disabilities can navigate and use the core product — conversation, results, public profile, and PWYW modal meet WCAG 2.1 AA compliance.
+**FRs covered:** NFR20, NFR21, NFR22, NFR23, NFR24
+**UX-DRs covered:** UX-DR55 through UX-DR75
+**Scope:** Skip-link, ARIA landmarks, focus management in modals, touch targets (44×44px), contrast audit, keyboard navigation for trait cards/depth meter, screen reader support for radar chart/visualizations
 
 ---
 
-## Epic 2: Territory Catalog Expansion
+## Epic 1: Conversation Calibration — 15-Turn Assessment
 
-Conversations explore 6 new topic areas — health routines, cravings, stress, living spaces, trip planning, and caregiving. Hard-to-assess facets (orderliness, artistic_interests, cautiousness, liberalism, altruism) get multiple territory routes, producing more comprehensive and balanced personality profiles.
+Users experience the right-sized ~30-minute conversation (15 turns) with properly named data structures and clear parameter semantics.
 
-### Story 2.1: Remap Existing Territory Domains and Replace identity-and-purpose
+### Story 1.1: Schema Migration — Table Renames
 
-As a **system operator**,
-I want the 12 existing territories that referenced solo remapped to their new domains, and identity-and-purpose replaced by inner-life,
-So that all territories reference valid domains from the new 6-domain model.
-
-**Acceptance Criteria:**
-
-**Given** 12 territories in the catalog reference the solo domain
-**When** territory-catalog.ts is updated
-**Then** each territory's domains match the remap table:
-- daily-routines: work, health
-- creative-pursuits: leisure, work
-- weekend-adventures: leisure, relationships
-- learning-curiosity: leisure, work
-- comfort-zones: health, relationships
-- spontaneity-and-impulse: leisure, health
-- emotional-awareness: health, relationships
-- ambition-and-goals: work, health
-- growing-up: family, relationships
-- friendship-depth: relationships, leisure
-- opinions-and-values: relationships, work
-- inner-struggles: health, relationships
-**And** no territory references the solo domain
-
-**Given** the territory identity-and-purpose exists with domains solo, work
-**When** it is replaced by inner-life
-**Then** inner-life has domains: health, leisure
-**And** inner-life has facets: intellect, emotionality, imagination, liberalism, artistic_interests
-**And** inner-life has expectedEnergy: 0.60
-**And** inner-life has a description in Nerin's curiosity voice
-**And** inner-life has an opener question
-**And** identity-and-purpose no longer exists in the catalog
-
-**Given** the catalog is updated
-**When** existing tests for territory-catalog run
-**Then** tests are updated to reflect the new domain assignments and pass
-
-### Story 2.2: Add 6 New Territories (3 Health + 3 Hard-to-Assess Coverage)
-
-As a **system operator**,
-I want 6 new territories added to the catalog covering health contexts and hard-to-assess facets,
-So that the pacing pipeline can steer conversations into health topics and ensure comprehensive facet coverage.
+As a developer,
+I want the database tables to reflect multi-conversation semantics,
+So that the schema is ready for future conversation types without a painful post-launch migration.
 
 **Acceptance Criteria:**
 
-**Given** the catalog has 25 territories (after Story 2.1 remap + replacement)
-**When** the 3 new health territories are added
-**Then** the catalog contains:
-- body-and-movement (health, leisure; activity_level, self_discipline, excitement_seeking; energy 0.25)
-- cravings-and-indulgences (health, leisure; immoderation, self_discipline, cautiousness; energy 0.40)
-- stress-and-the-body (health, work; vulnerability, anxiety, self_efficacy, self_discipline; energy 0.60)
-**And** each has a description in Nerin's curiosity voice and an opener question
+**Given** the current schema with `assessment_sessions`, `assessment_messages`, `assessment_exchanges`
+**When** the migration runs
+**Then** tables are renamed to `conversations`, `messages`, `exchanges`
+**And** `parent_session_id` is renamed to `parent_conversation_id`
+**And** a `conversation_type` enum column is added (`assessment`, `extension`, `coach`, `journal`, `career`) with default `assessment`
+**And** a nullable `metadata` JSONB column is added
+**And** all existing rows have `conversation_type = 'assessment'`
+**And** all FK references are updated
+**And** the migration is hand-written SQL following Drizzle migration format
 
-**Given** the 3 health territories are added
-**When** the 3 new hard-to-assess coverage territories are added
-**Then** the catalog contains:
-- home-and-space (family, leisure; orderliness, activity_level, cautiousness; energy 0.22)
-- trips-and-plans (leisure, relationships; orderliness, adventurousness, cooperation; energy 0.28)
-- taking-care (health, family; altruism, sympathy, dutifulness, self_discipline; energy 0.48)
-**And** each has a description in Nerin's curiosity voice and an opener question
+### Story 1.2: Repository & Domain Layer Renames
 
-**Given** all 6 territories are added
-**When** the catalog size is counted
-**Then** the catalog contains exactly 31 territories
-
-### Story 2.3: Facet Additions to Existing Territories and Catalog Validation
-
-As a **system operator**,
-I want 3 facets added to existing territories and the full catalog validated for completeness,
-So that every hard-to-assess facet has ≥2 territory routes with no single-domain-pair bottleneck, and the scoring/steering formulas remain unchanged.
+As a developer,
+I want repository interfaces and implementations to use the new table names,
+So that the codebase is consistent with the schema.
 
 **Acceptance Criteria:**
 
-**Given** inner-life already includes artistic_interests (from Story 2.1)
-**When** facets are added to existing territories
-**Then** cautiousness is added to work-dynamics' facet list
-**And** liberalism is added to growing-up's facet list
+**Given** Story 1.1 migration is applied
+**When** the rename is complete
+**Then** `AssessmentSessionRepository` → `ConversationRepository` (interface + drizzle impl + mock)
+**And** `AssessmentMessageRepository` → `MessageRepository` (interface + drizzle impl + mock)
+**And** `AssessmentExchangeRepository` → `ExchangeRepository` (interface + drizzle impl + mock)
+**And** all domain type imports updated
+**And** all use-cases referencing these repos compile and pass tests
+**And** `pnpm typecheck` passes across all packages
 
-**Given** the full 31-territory catalog
-**When** facet coverage is validated
-**Then** all 30 Big Five facets have ≥2 territory routes
-**And** no hard-to-assess facet (orderliness, artistic_interests, cautiousness, liberalism, dutifulness, altruism, immoderation, depression, modesty, adventurousness) is stuck in a single domain pair
-**And** orderliness appears in ≥3 territories across ≥4 domains
+### Story 1.3: Handler, Contract & Frontend Renames
 
-**Given** the territory catalog is updated
-**When** the territory scorer (scoreAllTerritories) runs with 31 territories
-**Then** the five-term formula produces valid scores for all territories without code changes (FR-S25)
-**And** the steering priority formula is unchanged (FR-S26)
+As a developer,
+I want handlers, API contracts, and frontend code to use the new naming,
+So that the full stack is consistent.
 
-**Given** the full catalog update
-**When** all territory catalog tests run
-**Then** tests cover 31 territories, new domain assignments, new facet lists, and all pass (NFR-S7)
+**Acceptance Criteria:**
+
+**Given** Stories 1.1 and 1.2 are complete
+**When** the rename cascade is complete
+**Then** all API handlers reference the renamed repos
+**And** all frontend hooks and components reference updated API types
+**And** all test files (unit, integration, e2e) updated and passing
+**And** seed scripts (`seed-completed-assessment.ts`) updated
+**And** `pnpm test:run` passes
+**And** `pnpm build` succeeds
+
+### Story 1.4: Assessment Turn Count — 25→15
+
+As a user,
+I want the conversation to be 15 turns (~30 minutes),
+So that the assessment is the right length for meaningful personality discovery without unnecessary length.
+
+**Acceptance Criteria:**
+
+**Given** the current `freeTierMessageThreshold: 25` in app config
+**When** the parameter is renamed and updated
+**Then** `freeTierMessageThreshold` is renamed to `assessmentTurnCount` across config, mocks, and test config
+**And** the value is changed to `15`
+**And** the Director model closing trigger fires at turn 15
+**And** the depth meter milestones map to turns ~4 (25%), ~8 (50%), ~11 (75%)
+**And** portrait context prompt says "15-turn conversation"
+**And** all frontend user-facing text says "~30 minutes" (not "25 minutes" or "15 minutes")
+**And** all test fixtures and seed scripts use `assessmentTurnCount: 15`
+**And** `pnpm test:run` passes
+
+### Story 1.5: Dead Code Cleanup
+
+As a developer,
+I want unused code removed,
+So that the codebase is clean.
+
+**Acceptance Criteria:**
+
+**Given** DashboardPortraitCard is not rendered anywhere
+**When** cleanup is complete
+**Then** `DashboardPortraitCard.tsx` is deleted
+**And** no imports reference it
+**And** `pnpm build` succeeds
 
 ---
 
-## Epic 3: Evidence Extraction v3 — Polarity Model
+## Epic 2: Conversation Extension Cleanup
 
-Personality scores become significantly more accurate — the current positive deviation bias (75% positive, zero -3 extractions) is fixed by switching to a polarity+strength model with rich per-facet behavioral anchors. Low-scoring facets are properly captured, producing more truthful and differentiated personality profiles.
+The MVP product is cleanly scoped — conversation extension is dormant, not accessible, and won't confuse users.
 
-### Story 3.1: Polarity Schema, Database Migration, and Deviation Adapter
+### Story 2.1: Gate Extension Use-Case & Remove UI Surface
 
-As a **system operator**,
-I want a polarity column added to the evidence table and a deterministic adapter that derives deviation from polarity × strength,
-So that the new extraction model can store its output while the existing scoring formula continues to work unchanged.
-
-**Acceptance Criteria:**
-
-**Given** the conversation_evidence table has no polarity column
-**When** a new Drizzle migration is applied
-**Then** a polarity column (enum: high, low) is added as nullable (existing rows have NULL — backward compat)
-**And** the deviation column is preserved unchanged
-**And** existing evidence rows with NULL polarity continue to work in all read paths (NFR-S1)
-**And** the migration file is appended (existing migrations untouched)
-
-**Given** the new ExtractedEvidence type is defined
-**When** the type is created in packages/domain/src/types/evidence.ts
-**Then** it includes: bigfiveFacet, polarity (high/low), strength, confidence, domain, note
-**And** a polarity field is added to the Evidence Effect Schema
-
-**Given** the deriveDeviation pure function is implemented
-**When** called with polarity and strength
-**Then** it returns: high+strong→+3, high+moderate→+2, high+weak→+1, low+strong→-3, low+moderate→-2, low+weak→-1
-**And** all 6 combinations are covered by unit tests
-
-**Given** an adapter function converts ExtractedEvidence → EvidenceInput
-**When** new evidence is inserted via the adapter
-**Then** the polarity column is populated
-**And** the deviation column is computed from deriveDeviation(polarity, strength)
-**And** formula.ts receives the same deviation values it always has — zero changes to scoring math (FR-S13)
-
-### Story 3.2: Split ConversAnalyzer into Two Separate LLM Calls
-
-As a **system operator**,
-I want ConversAnalyzer split from one dual-purpose LLM call into two dedicated calls (user state + evidence),
-So that each call has a focused task, reducing hallucination and freeing token budget for richer evidence extraction.
+As a user,
+I want the product to only show features I can use,
+So that I don't encounter dead-end paths or confusing purchase options.
 
 **Acceptance Criteria:**
 
-**Given** ConversAnalyzer v2 makes a single Haiku call for both user state and evidence
-**When** the repository interface is updated
-**Then** the ConversAnalyzer repository exposes two separate methods:
-- `analyzeUserState` — returns energyBand, tellingBand, energyReason, tellingReason, withinMessageShift
-- `analyzeEvidence` — returns ExtractedEvidence[] (with polarity)
-**And** the existing `analyze` and `analyzeLenient` methods are preserved for backward compatibility during transition (or removed if no longer called)
-
-**Given** the user state extraction call (Call 1)
-**When** it executes
-**Then** it uses the existing Phase 1 prompt with no content changes (FR-S8)
-**And** it returns the same user state schema as before
-
-**Given** both calls use Haiku
-**When** a full extraction runs (Call 1 + Call 2 sequential)
-**Then** total cost for both calls stays within the per-message extraction budget (NFR-S2)
-**And** total latency for both calls is acceptable for the pipeline (NFR-S3)
-
-**Given** the infrastructure repository implementations
-**When** the Anthropic repository is updated
-**Then** strict and lenient parsing modes exist for both calls independently
-**And** each call has its own three-tier fail-open behavior: strict ×3 → lenient ×1 → neutral defaults (NFR-S4)
-**And** user state neutral defaults: energy=0.5, telling=0.5
-**And** evidence neutral defaults: empty array []
-
-### Story 3.3: Evidence Extraction v3 Prompt with Per-Facet Conversational Anchors
-
-As a **system operator**,
-I want a new evidence extraction prompt with HIGH/LOW behavioral examples for all 30 facets, dual-polarity checks, and polarity balance audits,
-So that the LLM produces better-calibrated evidence with balanced polarity distribution.
-
-**Acceptance Criteria:**
-
-**Given** the evidence extraction prompt is being created
-**When** the prompt is written
-**Then** it includes conversational anchor examples (HIGH and LOW) for all 30 Big Five facets
-**And** each anchor reads as natural conversation (what a real person would say to Nerin)
-**And** the prompt instructs the LLM to output polarity (high/low) and strength (weak/moderate/strong) — not deviation
-
-**Given** the dual-polarity check instruction
-**When** the LLM extracts a signal
-**Then** the prompt mandates asking: "Does this same behavior ALSO reveal the OPPOSITE polarity on a DIFFERENT facet?" (FR-S14)
-**And** the prompt includes 5+ concrete dual-polarity examples from the spec
-
-**Given** the polarity balance audit instruction
-**When** the LLM has extracted all signals from a message
-**Then** the prompt mandates counting HIGH vs LOW: if <35% are LOW, re-read for absences, avoidances, and preferences-against (FR-S15)
-
-**Given** the domain definitions in the prompt
-**When** the extraction prompt references life domains
-**Then** it uses the updated 6-domain list with health included and solo absent (FR-S16)
-**And** domain assignment guidance matches the spec (work includes education, leisure includes introspection, other target <5%)
-
-**Given** the prompt includes the current evidence distribution context
-**When** the extraction call is made
-**Then** the prompt template accepts a `domainDist` variable showing per-domain evidence counts for the current session
-
-**Note:** Conversational anchors (HIGH/LOW examples for all 30 facets) are sourced from scoring-confidence-v2-spec.md §4 — Evidence Extraction Prompt. Do not write from scratch.
-
-### Story 3.4: Pipeline Integration — Wire Two-Call Extraction into nerin-pipeline
-
-As a **system operator**,
-I want the nerin-pipeline orchestrator updated to call user state extraction then evidence extraction sequentially, integrating the polarity adapter and fail-open behavior,
-So that the full pacing pipeline works end-to-end with the new two-call extraction model.
-
-**Acceptance Criteria:**
-
-**Given** nerin-pipeline.ts currently calls ConversAnalyzer once
-**When** the orchestrator is updated
-**Then** it calls `analyzeUserState` first, then `analyzeEvidence` second (sequential, not parallel)
-**And** user state output feeds into E_target computation (unchanged)
-**And** evidence output passes through the deriveDeviation adapter before being saved and fed to the scorer
-
-**Given** Call 1 (user state) fails after all retries
-**When** neutral defaults are applied (energy=0.5, telling=0.5)
-**Then** the pipeline continues with comfort-level pacing
-**And** Call 2 (evidence) still executes independently
-
-**Given** Call 2 (evidence) fails after all retries
-**When** neutral defaults are applied (evidence=[])
-**Then** the pipeline continues — no evidence saved for this turn, no scoring update
-**And** the conversation is not interrupted
-
-**Given** the full pipeline runs end-to-end
-**When** an integration test exercises a complete extraction cycle
-**Then** evidence is saved with both polarity and deviation columns populated
-**And** the territory scorer receives correct coverage data from the new evidence
-**And** all existing pipeline tests pass (NFR-S6)
-
-**Given** the polarity model is deployed
-**When** evidence distribution is analyzed across test conversations
-**Then** the LOW polarity percentage is measurably higher than the previous ~25% baseline (NFR-S8)
+**Given** `activate-conversation-extension.use-case.ts` currently exists and is reachable
+**When** the cleanup is complete
+**Then** the extension use-case returns a clear "feature not available" error if called (not deleted — preserved for subscription)
+**And** no extension CTA appears on the results page
+**And** no extension CTA appears on the dashboard
+**And** no €25 extension purchase option is visible anywhere in the UI
+**And** the extension-related purchase event types (`extended_conversation_unlocked`, `extended_conversation_refunded`) remain in the schema (for future subscription)
+**And** `hasExtendedConversation` capability check remains in domain (dormant)
+**And** `pnpm build` succeeds
+**And** `pnpm test:run` passes (update any tests that assert extension accessibility)
 
 ---
 
-## Post-Implementation Cleanup
+## Epic 3: Accessibility Foundations
 
-### Story C.1: Remove Solo from PostgreSQL Enum
+Users with disabilities can navigate and use the core product at WCAG 2.1 AA.
 
-As a **system operator**,
-I want the unused solo value removed from the PostgreSQL evidence_domain enum,
-So that the database schema reflects the clean 6-domain model with no legacy values.
+### Story 3.1: Skip-Link & Semantic Landmarks
+
+As a keyboard/screen reader user,
+I want to skip navigation and jump to content,
+So that I can reach the main content without tabbing through every nav link.
 
 **Acceptance Criteria:**
 
-**Given** zero conversation_evidence rows have domain = "solo" (verified by Story 1.3)
-**And** solo is already removed from all TypeScript constants
-**When** a new Drizzle migration is applied that removes solo from the evidence_domain pgEnum
-**Then** the enum contains only: work, relationships, family, leisure, health, other
-**And** all existing data is preserved (no rows reference solo)
-**And** the migration file is appended (existing migrations untouched)
-**And** the system boots and operates normally after migration
+**Given** any page in the application
+**When** the user presses Tab as the first action
+**Then** a "Skip to content" link appears (visually hidden, visible on focus)
+**And** activating it moves focus to the `<main>` element
+**And** every page uses semantic HTML landmarks (`<header>`, `<main>`, `<nav>`, `<section>`, `<aside>`)
+**And** the results page has `aria-label` on major sections ("Your traits", "Your portrait", "Your archetype")
+**And** heading hierarchy is sequential (one `h1` per page, no skipped levels)
 
-**Note:** This is a post-implementation cleanup story. Run after all 3 epics are complete and verified in production. PostgreSQL enum value removal requires creating a new type, migrating columns, and dropping the old type — schedule during a maintenance window.
+### Story 3.2: Conversation UI Accessibility
+
+As a screen reader user,
+I want to navigate the conversation with Nerin,
+So that I can participate in the assessment without vision.
+
+**Acceptance Criteria:**
+
+**Given** the chat interface at `/chat`
+**When** a screen reader is active
+**Then** the message container has `role="log"` for screen reader navigation
+**And** Nerin messages announce via `aria-live="polite"` with summary text ("Nerin sent a message")
+**And** the depth meter updates `aria-valuenow` on every exchange ("Exchange 8 of 15")
+**And** milestone reaches announce via `aria-live="polite"` ("50% depth reached")
+**And** the chat input is keyboard-accessible with Enter to send, Shift+Enter for newline
+**And** the send button has `aria-label="Send message"`
+
+### Story 3.3: Results Page & Portrait Accessibility
+
+As a user with low vision or using a screen reader,
+I want to read my results and portrait,
+So that I can access my personality insights regardless of ability.
+
+**Acceptance Criteria:**
+
+**Given** the results page at `/results/:id`
+**When** accessibility tools are active
+**Then** the radar chart has `role="img"` with `aria-label` summarizing the profile
+**And** a data table fallback exists for screen readers (trait name + score for each of 5 traits)
+**And** score visualizations (facet bars, trait bands) have text alternatives
+**And** trait cards are keyboard-navigable with Tab and `aria-expanded` state
+**And** the portrait has readable width (65ch) and supports text resize to 200% with relative units
+**And** all text meets 4.5:1 contrast ratio (non-negotiable for paid portrait content)
+
+### Story 3.4: Modal & Focus Management
+
+As a keyboard user,
+I want modals to trap focus correctly,
+So that I don't lose my place when a modal opens or closes.
+
+**Acceptance Criteria:**
+
+**Given** the PWYW modal or ritual screen opens
+**When** the modal is active
+**Then** focus moves to the modal content on open
+**And** Tab cycles within the modal (focus trap)
+**And** Escape closes the modal
+**And** focus returns to the trigger element on close
+**And** body scroll is locked while modal is open
+**And** the modal has `aria-modal="true"` and appropriate `aria-label`
+
+### Story 3.5: Touch Targets & Contrast Audit
+
+As a mobile user or user with motor impairment,
+I want all interactive elements to be easy to tap,
+So that I can use the product on any device.
+
+**Acceptance Criteria:**
+
+**Given** any interactive element in the application
+**When** measured against WCAG guidelines
+**Then** all buttons and interactive elements have minimum 44×44px touch targets (padding added for smaller elements)
+**And** the ocean theme color palette meets AA contrast ratios (4.5:1 body text, 3:1 UI components)
+**And** color is never used alone to convey information (paired with text, icons, or patterns)
+**And** `prefers-reduced-motion` fallbacks exist for all animations (verify `motion-safe:` coverage)
+**And** form fields have visible labels with `htmlFor`, errors linked via `aria-describedby`
+**And** `aria-required="true"` on required form fields

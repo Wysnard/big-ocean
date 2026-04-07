@@ -6,8 +6,8 @@ import {
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
+import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { Effect, Schema as S } from "effect";
-import { Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { NotFound } from "@/components/NotFound";
 import { TherapistChat } from "@/components/TherapistChat";
@@ -167,7 +167,7 @@ function RouteComponent() {
 		return (
 			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
 				<div className="text-center">
-					<Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+					<OceanSpinner size={48} className="mx-auto mb-4" />
 					<p className="text-muted-foreground">Creating assessment session...</p>
 				</div>
 			</div>

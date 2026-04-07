@@ -3,10 +3,10 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-04-05'
+lastUpdated: '2026-04-07'
 lastConsolidated: '2026-04-05 — unified all satellite architecture docs into this single authoritative file'
-adrsTotal: 38
-adrsAdded: ['ADR-22 through ADR-30 (post-completion)', 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)']
+adrsTotal: 42
+adrsAdded: ['ADR-22 through ADR-30 (post-completion)', 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)', 'ADR-39 through ADR-42 (Post-MVP design-now-build-later: conversations table rename, agent architecture, personality context, subscription billing)']
 satelliteDocsConsolidated:
   - 'architecture-director-model.md → ADR-31 through ADR-38'
   - 'architecture-conversation-pacing.md → Historical Appendix A'
@@ -31,6 +31,7 @@ This is a self-contained architecture document. All content from previously sepa
   - Evidence-only ConversAnalyzer → Facet-first coverage analyzer → Nerin Director → Nerin Actor
   - `coverage_targets` / `director_output` exchange persistence
 - **Platform architecture:** ADR-1 through ADR-16, ADR-22 through ADR-30
+- **Post-MVP design decisions (design now, build later):** ADR-39 through ADR-42 — conversations table rename, agent type architecture, personality context pattern, subscription billing
 - **Historical pacing pipeline:** ADR-5, 17-19, 21 (marked `[SUPERSEDED]`) + Historical Appendix A
 - **Historical conversation evolution:** Historical Appendix B
 
@@ -2513,6 +2514,211 @@ Modules deleted entirely:
 | | Old (single Nerin call) | Director Model |
 |---|---|---|
 | System prompt | ~6,000+ tokens | Director ~400-500 + Actor ~650 = **~1,050-1,150** |
+
+---
+
+---
+
+## Post-MVP Architecture Decisions (Design Now, Build Later)
+
+_ADR-39 through ADR-42 are design decisions for the subscription/agent platform (Phase 2a). They are recorded now to prevent costly migrations later. ADR-39 (table renames) should be applied pre-launch while there is no production data._
+
+### ADR-39: Conversations Table — Multi-Type Conversation Schema
+
+_Added 2026-04-07. Source: innovation-strategy-2026-04-06.md + PRD "Design Now, Build Later" list._
+
+**Decision:** Rename `assessment_sessions` → `conversations`, `assessment_messages` → `messages`, `assessment_exchanges` → `exchanges`. Add `conversation_type` enum and typed `metadata` JSONB column to `conversations`.
+
+**Rationale:** The current schema assumes one conversation type (assessment). Subscription adds Coach, Journal, Career sessions. Renaming pre-launch (zero production data) avoids a painful migration post-launch. `assessment_results` stays — only assessment/extension conversations produce scored results.
+
+**Migration:**
+```sql
+ALTER TABLE assessment_sessions RENAME TO conversations;
+ALTER TABLE assessment_messages RENAME TO messages;
+ALTER TABLE assessment_exchanges RENAME TO exchanges;
+
+CREATE TYPE conversation_type_enum AS ENUM ('assessment', 'extension', 'coach', 'journal', 'career');
+
+ALTER TABLE conversations
+  ADD COLUMN conversation_type conversation_type_enum NOT NULL DEFAULT 'assessment',
+  ADD COLUMN metadata jsonb;
+
+ALTER TABLE conversations RENAME COLUMN parent_session_id TO parent_conversation_id;
+```
+
+**Table: `conversations`** (renamed from `assessment_sessions`)
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `user_id` | uuid | FK → user |
+| `conversation_type` | conversation_type_enum | `assessment`, `extension`, `coach`, `journal`, `career` |
+| `parent_conversation_id` | uuid | Nullable FK → conversations (renamed from `parent_session_id`) |
+| `metadata` | jsonb | Nullable, typed per conversation_type (validated by Effect Schema at domain layer) |
+| `status` | enum | existing (`active`, `completed`, `abandoned`) |
+| `created_at` | timestamptz | |
+| `completed_at` | timestamptz | |
+
+**Metadata schemas per type** (Effect Schema validated at domain layer, not DB-enforced):
+
+| Type | Metadata Shape | Notes |
+|------|---------------|-------|
+| `assessment` | `{}` | No extra metadata — existing columns suffice |
+| `extension` | `{ parentFinalState: { energy, telling, comfort } }` | Init values from parent conversation |
+| `coach` | `{ trigger: string, maxExchanges: number }` | Event-driven session context |
+| `journal` | `{ entryType: "deep_session" \| "weekly_review", linkedCheckInIds?: string[] }` | Reflective session context |
+| `career` | `{ topic: string, maxExchanges: number }` | Topic-scoped guidance |
+
+**Cascading renames:**
+
+| Old | New |
+|-----|-----|
+| `assessment_sessions` (table) | `conversations` |
+| `assessment_messages` (table) | `messages` |
+| `assessment_exchanges` (table) | `exchanges` |
+| `parent_session_id` (column) | `parent_conversation_id` |
+| `AssessmentSessionRepository` | `ConversationRepository` |
+| `AssessmentMessageRepository` | `MessageRepository` |
+| `AssessmentExchangeRepository` | `ExchangeRepository` |
+| All FK references, use-cases, handlers | Updated to new names |
+
+**What stays unchanged:**
+- `assessment_results` — table name and schema unchanged (assessment-specific)
+- All existing queries add implicit `WHERE conversation_type = 'assessment'`
+- Derive-at-read patterns unchanged
+
+**Timing:** Apply table renames pre-launch (zero production data = zero migration risk). `conversation_type` and `metadata` columns can ship with the rename or be added later — both are additive.
+
+### ADR-40: Agent Type Architecture — Independent Pipelines with App Config
+
+_Added 2026-04-07. Source: innovation-strategy-2026-04-06.md._
+
+**Decision:** Each agent type (Coach, Journal, Career, future agents) has its own complete pipeline. No shared Director, no generic AgentPipeline abstraction. Agents share only the personality data layer (read-only). Each agent has its own app config defining operational parameters.
+
+**Rationale:** The Director model was designed for assessment — discovering personality from scratch via steered conversation. Post-assessment agents don't discover; they apply known personality. The steering problem is fundamentally different. A shared pipeline would become a lowest-common-denominator abstraction that constrains every agent.
+
+**Agent App Config** (per agent type, stored in domain constants):
+
+```typescript
+type AgentAppConfig = {
+  agentType: ConversationType
+  displayName: string
+  maxExchanges: number
+  model: "haiku" | "sonnet"
+  temperature: number
+  maxResponseTokens: number
+  costBudgetPerSession: number        // €
+  sessionCooldown?: Duration          // min time between sessions
+  requiresSubscription: boolean
+}
+```
+
+**Reference configs:**
+
+| Parameter | Nerin (Assessment) | Coach | Journal | Career |
+|-----------|-------------------|-------|---------|--------|
+| maxExchanges | 15 | 8 | 5 | 10 |
+| model | haiku | sonnet | haiku | sonnet |
+| temperature | 0.7 | 0.6 | 0.7 | 0.5 |
+| maxResponseTokens | 800 | 600 | 400 | 600 |
+| costBudget | €0.20 | €0.15 | €0.08 | €0.15 |
+| requiresSubscription | false | true | true | true |
+
+**What each agent owns independently:**
+- Prompt system (persona, system context, behavioral rules, guardrails)
+- Pipeline logic (situation analysis, pattern linking, structured output — varies per agent)
+- Extraction strategy (assessment extracts facet evidence; Coach extracts session insights; Journal extracts mood/events)
+- Use-cases (`send-coach-message`, `send-journal-entry`, etc.)
+- Repository adapters if needed
+
+**What agents share (read-only):**
+- `ConversationRepository` — all conversation types use the same table
+- `MessageRepository` / `ExchangeRepository` — same tables
+- Personality data layer — facet scores, evidence, archetype (existing repos, derive-at-read)
+- Cost guard pattern (session-aware, from existing ADRs)
+- Auth + subscription entitlement check
+
+**Hexagonal fit:** Each agent is a separate use-case domain. `SendCoachMessage` is not a variant of `SendAssessmentMessage` — different use-case, same personality repository. Clean ports & adapters.
+
+**No premature abstractions:** If two agents converge in behavior after building, extract a shared pattern then. Not before.
+
+### ADR-41: Personality Context — Agent-Owned, Shared Utilities
+
+_Added 2026-04-07. Source: innovation-strategy-2026-04-06.md._
+
+**Decision:** No shared personality context builder or injection service. Each agent builds its own personality context from shared read-only utilities. Agents have full freedom over what personality data they consume and how they frame it in their prompts.
+
+**Rationale:** A shared builder assumes agents want personality data formatted the same way. They won't. A Coach needs conflict patterns; a Journal needs emotional baseline; a Career agent needs openness-to-change profile. Different data, different framing, different prompt structure. A shared abstraction becomes a constraint, not a service.
+
+**Shared read utilities** (domain layer, pure functions — most already exist or are trivial wrappers):
+
+```typescript
+getFacetScores(userId): FacetScoreMap           // all 30 facets
+getTraitScores(userId): TraitScoreMap           // 5 traits (derived from facets)
+getEvidenceForFacet(userId, facet): Evidence[]  // supporting observations
+getArchetype(userId): Archetype                 // derived from OCEAN code
+getEvidenceByDomain(userId, domain): Evidence[] // e.g., "work", "relationships"
+```
+
+**Each agent owns:**
+- Which utilities to call
+- Which facets/traits/evidence to select
+- How to format them into prompt context
+- How much token budget to allocate to personality context
+- Whether to include evidence quotes, scores, narrative summaries, or nothing
+
+**Example divergence:**
+
+| Agent | What it pulls | How it frames |
+|-------|--------------|---------------|
+| Coach | Facets related to user's stated situation + top evidence | "Here's what I know about how this person handles [X]..." |
+| Journal | Trait-level summary + recent session insights | Lightweight emotional baseline for reflective prompting |
+| Career | O + C facets in detail, other traits as summary | Structured profile focused on work behavior patterns |
+
+**What's shared:** Data access (repositories, derive-at-read). **What's not shared:** Data interpretation, formatting, prompt construction.
+
+### ADR-42: Subscription Billing — Extend Purchase Events with Recurring Types
+
+_Added 2026-04-07. Source: innovation-strategy-2026-04-06.md._
+
+**Decision:** Extend the existing `purchase_events` append-only log with subscription event types. Subscription status derived at read time from events. No new tables.
+
+**Rationale:** Consistent with ADR-9 (append-only purchase events) and the derive-at-read philosophy. A `subscriptions` table would be a stored aggregation that could go stale. The event log is the source of truth.
+
+**New event types added to `purchase_events`:**
+
+| Event Type | Trigger | Key Payload Fields |
+|-----------|---------|-------------------|
+| `subscription_started` | Polar webhook: checkout.completed (recurring) | `plan_id`, `interval` (monthly/yearly), `polar_subscription_id` |
+| `subscription_renewed` | Polar webhook: subscription.renewed | `polar_subscription_id`, `period_start`, `period_end` |
+| `subscription_cancelled` | Polar webhook: subscription.cancelled | `polar_subscription_id`, `effective_end_date` |
+| `subscription_expired` | Polar webhook: subscription.expired (or cron check) | `polar_subscription_id` |
+
+**Entitlement check** (derive-at-read, pure function over events):
+
+```typescript
+getSubscriptionStatus(userId): "active" | "cancelled_active" | "expired" | "none"
+// cancelled_active = cancelled but still within paid period
+
+isEntitledTo(userId, feature: SubscriptionFeature): boolean
+// Returns true if subscription is active or cancelled_active
+
+type SubscriptionFeature =
+  | "coach_agent"
+  | "journal_agent"
+  | "career_agent"
+  | "conversation_extension"
+  | "pattern_analysis"
+  | "monthly_reflection"
+  | "unlimited_relationship"
+  | "complete_portrait"
+```
+
+**Feature gating:** Use-case level, not middleware. Each agent use-case checks `isEntitledTo` before creating a conversation. Consistent with how PWYW check works today.
+
+**No new tables.** Subscription state derived from `purchase_events`. `polar_subscription_id` on events enables correlation across the subscription lifecycle.
+
+**Performance note:** If read performance degrades with event volume, add a materialized view — not a separate table. The event log remains the source of truth.
 
 ---
 

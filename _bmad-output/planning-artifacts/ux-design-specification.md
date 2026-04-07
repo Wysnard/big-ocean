@@ -11,7 +11,7 @@ inputDocuments:
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23, email verification gate 2026-03-23, homepage redesign from brainstorming 2026-03-24)
+**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23, email verification gate 2026-03-23, homepage redesign from brainstorming 2026-03-24, innovation strategy integration 2026-04-07: 25→15 exchanges, Director model, extension→subscription, post-MVP agent platform UX)
 
 ---
 
@@ -19,7 +19,7 @@ inputDocuments:
 
 ### Project Vision
 
-Big-ocean transforms personality assessment from a static questionnaire into a guided 25-turn conversation with Nerin, an AI personality specialist. Built on the Big Five (OCEAN) framework, it extracts personality evidence through natural dialogue, scores 30 facets, and maps results to memorable archetypes via a 5-letter OCEAN code. The platform combines scientific rigor with consumer-grade shareability — turning self-discovery into a social experience.
+Big-ocean transforms personality assessment from a static questionnaire into a guided 15-turn conversation with Nerin, an AI personality specialist. Built on the Big Five (OCEAN) framework, it extracts personality evidence through natural dialogue, scores 30 facets, and maps results to memorable archetypes via a 5-letter OCEAN code. The platform combines scientific rigor with consumer-grade shareability — turning self-discovery into a social experience.
 
 The product sits at the intersection of conversational AI and personality science, differentiated by guided UX, structured insights, and social outputs that no existing personality test or general-purpose chatbot provides.
 
@@ -42,7 +42,7 @@ Users seeking actionable insights from their personality profile — how their t
 
 ### Conversation Length Philosophy
 
-The assessment is currently a 25-turn conversation lasting 30-45 minutes depending on engagement depth. Reducing to 20 turns (20-30 minutes) is under consideration as a trade-off between assessment quality and drop-off risk, but not decided — below 20 turns would degrade assessment quality and the richness of evidence available for archetype generation.
+The assessment is a 15-turn conversation lasting 30-45 minutes depending on engagement depth.
 
 The length is a deliberate differentiator and audience filter — "how can you know someone in 10 minutes?" This will exclude casual users who want quick results. That is by design. The length self-selects for users who genuinely want a meaningful self-understanding experience, and those users are the ones most likely to complete, value their results, share authentically, and convert their relationships into new users. Optimizing for breadth of adoption at the cost of depth of experience would destroy what makes big-ocean different.
 
@@ -62,7 +62,7 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 7. **Assessment integrity vs. ambient feedback** — The visual environment and progress signals must never telegraph personality dimensions or trait directions. If users can infer where the assessment is heading, they can game their responses, undermining the coherence-based methodology. All real-time feedback reflects conversational energy and engagement depth, never personality scoring.
 
-8. **Day 2+ retention beyond the initial assessment** — The core assessment is a one-time experience. Initial monetization lever is a one-time €25 conversation extension (25 additional turns with Nerin for deeper exploration). Email/notification reminders nudge users to come back and purchase another extension over time. The UX should be designed with extension and return hooks in mind even if not all are in MVP. Without a compelling return loop, the product risks the same retention cliff that plagues every personality assessment platform.
+8. **Day 2+ retention beyond the initial assessment** — The core assessment is a one-time experience. MVP retention levers are relationship analysis and archetype sharing. Post-MVP, the subscription (€10/mo or €100/yr) adds conversation extension, Coach agent, Growth Journal, and pattern analysis as ongoing engagement drivers. Email/notification reminders nudge users to explore relationships and share. The UX should be designed with return hooks in mind even if not all are in MVP. Without a compelling return loop, the product risks the same retention cliff that plagues every personality assessment platform.
 
 ### Design Opportunities
 
@@ -72,7 +72,7 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 3. **Energy-responsive ambient visualization** — The ocean/geometric system responds to conversational energy and depth (emotional texture, engagement intensity, conversational momentum) — NOT to personality dimensions. This preserves assessment integrity while creating a living, responsive environment that rewards deeper engagement visually without revealing scoring.
 
-4. **Depth progress system (existing pattern)** — The conversation sustains momentum through three complementary mechanisms: a depth meter (vertical bar showing conversation progress — how far through the 25 turns, not engagement quality), unnamed milestones that mark the journey without countdown anxiety, and Nerin's in-conversation validation when the system detects increasing depth and authenticity. This is the therapeutic alliance trust loop — vulnerability met with recognition encourages further opening.
+4. **Depth progress system (existing pattern)** — The conversation sustains momentum through three complementary mechanisms: a depth meter (vertical bar showing conversation progress — how far through the 15 turns, not engagement quality), unnamed milestones that mark the journey without countdown anxiety, and Nerin's in-conversation validation when the system detects increasing depth and authenticity. This is the therapeutic alliance trust loop — vulnerability met with recognition encourages further opening.
 
 5. **Evidence-linked results narrative** — Unlike any competitor, big-ocean can connect archetype insights back to specific things the user said during their conversation. "Your high openness showed up when you described..." transforms results from generic personality labels into deeply personal storytelling.
 
@@ -83,13 +83,14 @@ The length is a deliberate differentiator and audience filter — "how can you k
 - **Voice input as optional modality** — Could reduce mobile fatigue and produce richer, more natural responses. Parked due to cost implications (~$0.27/conversation via speech-to-text APIs vs. the $0.15/user LLM cost target). Revisit as a premium feature or when costs decrease.
 - **Community feed** — A social discovery feed where users can browse archetypes, see anonymized personality portraits, and find people with complementary or contrasting profiles. Strong candidate for Day 2+ retention. Not MVP.
 - **Reassessment over time** — "How have you changed?" periodic reassessment to track personality evolution. Planned for post-MVP.
-- **Subscription model** — Considered for post-MVP as a broader monetization layer beyond conversation extensions.
+- **Subscription model (Phase 2a)** — €10/mo or €100/yr. Includes Coach agent, conversation extension (25 additional turns), Growth Journal, pattern analysis, monthly reflection, unlimited relationship portraits, and complete portrait at 30/30. See innovation strategy for agent platform vision.
+- **Agent platform** — Coach agent as the first subscription-gated agent, with extensible agent architecture for future specialized agents (career coach, relationship advisor, etc.). Each agent leverages the personality profile as persistent context.
 
 ## Core User Experience
 
 ### Defining Experience
 
-The core experience of big-ocean is a 25-turn conversation with Nerin that transforms from "I'm here to get my personality results" into "I'm genuinely engaged in this conversation about myself." The user enters with an expectation of insight — for personal development or relationship understanding — and the conversation must deliver on that anticipation through two distinct value layers:
+The core experience of big-ocean is a 15-turn conversation with Nerin that transforms from "I'm here to get my personality results" into "I'm genuinely engaged in this conversation about myself." The user enters with an expectation of insight — for personal development or relationship understanding — and the conversation must deliver on that anticipation through two distinct value layers:
 
 **Layer 1: The Conversation (30-45 minutes)**
 Nerin's observations during the conversation — surfacing patterns, contradictions, and tensions in what the user has said — serve three purposes simultaneously: they build credibility ("this AI is actually listening"), they create the feeling of being understood ("how did she notice that?"), and they build anticipation for the portrait ("if she's catching this much now, the full results must be incredible"). The conversation is not a waiting room for results — it's the first act of a two-act experience.
@@ -106,9 +107,9 @@ The conversation is not a flat sequence of questions. It has a three-act narrati
 
 | Act | Turns | Purpose | User State |
 |-----|-------|---------|------------|
-| **Act 1: Settling In** | 1-8 | Establish trust, signal depth, move past surface answers. Nerin's tone puts the user at ease while signaling this is not small talk. | Curious but guarded → opening up |
-| **Act 2: Deep Exploration** | 8-18 | Nerin's observations surface patterns and contradictions. The user is fully engaged and moving into authentic self-reflection. The "how did you know?" moments happen here. | Opening up → genuinely reflecting |
-| **Act 3: Convergence** | 18-25 | Themes deepen and connect. The user begins forming their own hypothesis about what their portrait will say. Anticipation peaks. | Reflecting → anticipating the portrait |
+| **Act 1: Settling In** | 1-5 | Establish trust, signal depth, move past surface answers. Nerin's tone puts the user at ease while signaling this is not small talk. | Curious but guarded → opening up |
+| **Act 2: Deep Exploration** | 5-11 | Nerin's observations surface patterns and contradictions. The user is fully engaged and moving into authentic self-reflection. The "how did you know?" moments happen here. | Opening up → genuinely reflecting |
+| **Act 3: Convergence** | 11-15 | Themes deepen and connect. The user begins forming their own hypothesis about what their portrait will say. Anticipation peaks. | Reflecting → anticipating the portrait |
 
 The transition between acts should be felt, not announced. The depth meter, ambient visualization energy, and Nerin's conversational tone all shift subtly as the conversation deepens.
 
@@ -193,7 +194,7 @@ A visual identity artifact — the user's personality portrait as a shareable im
 
 5. **The viral loop is relationship-powered.** The personality card drives broad social sharing; the QR-based relationship analysis drives deep comparison. Both paths must be effortless, but they serve different motivations and lead to different experiences.
 
-6. **Assessment invisibility above all.** No UX element should remind the user they are being evaluated. The depth meter shows conversation progress (how far through the 25 turns), not scoring or engagement quality. Nerin observes, doesn't diagnose. The ambient visualization responds to energy, not traits. The assessment runs silently beneath a conversation that feels genuinely human.
+6. **Assessment invisibility above all.** No UX element should remind the user they are being evaluated. The depth meter shows conversation progress (how far through the 15 turns), not scoring or engagement quality. Nerin observes, doesn't diagnose. The ambient visualization responds to energy, not traits. The assessment runs silently beneath a conversation that feels genuinely human.
 
 7. **Pre-conversation touchpoints must sell the commitment.** Because time-to-value is big-ocean's weakest competitive dimension, every surface before the conversation (landing page, public profile, shared personality card) must work harder than competitors to justify 30-45 minutes. The quality promise must be viscerally clear before turn 1.
 
@@ -240,8 +241,8 @@ If this loop activates by turn 8, everything downstream works — Depth, Validat
 | **Landing / Public profile** | Curiosity + intrigue ("this looks different") | Skepticism ("another personality quiz") | Visual distinctiveness, quality signals, social proof from shared cards |
 | **Auth gate** | Commitment ("this is worth my time") | Hesitation ("30-45 minutes is a lot") | Minimal friction, clear value promise, no overwhelming onboarding |
 | **Act 1 (turns 1-8)** | Comfort + emerging trust ("this feels natural") | Guardedness ("am I being judged?") | Nerin's warm tone, adaptive pacing, no clinical framing. The ambient visualization signals "you've entered a different space" — a container for self-reflection. |
-| **Act 2 (turns 8-18)** | Being understood + surprise ("how did she notice that?") | Exposure anxiety ("that's too personal") | Nerin acknowledges if she touches something sensitive, draws back to comfortable ground. After vulnerable moments, a held silence — a deliberate pause communicated through pacing and ambient visualization shift, not a typing indicator — signals respect. |
-| **Act 3 (turns 18-25)** | Anticipation + self-recognition ("I'm starting to see myself") | Fatigue ("are we almost done?") | Depth meter shows momentum, conversation feels like it's converging, not dragging |
+| **Act 2 (turns 5-11)** | Being understood + surprise ("how did she notice that?") | Exposure anxiety ("that's too personal") | Nerin acknowledges if she touches something sensitive, draws back to comfortable ground. After vulnerable moments, a held silence — a deliberate pause communicated through pacing and ambient visualization shift, not a typing indicator — signals respect. |
+| **Act 3 (turns 11-15)** | Anticipation + self-recognition ("I'm starting to see myself") | Fatigue ("are we almost done?") | Depth meter shows momentum, conversation feels like it's converging, not dragging |
 | **Closing ritual** | Gratitude + readiness ("that was meaningful, I want to see my portrait") | Abruptness ("wait, it's over?") | Nerin acknowledges the conversation as a whole before the portrait transition — "You've shared a lot with me" — bridging the emotional arc rather than cutting to results. |
 | **Portrait reveal** | Awe + validation ("that's exactly me") | Disappointment ("this is generic") | Layered revelation: conversation ends → brief pause → ambient visualization transforms → archetype name appears → portrait visual materializes → opening narrative fades in. Visual first, text second. Each layer adds a beat of anticipation. |
 | **Results exploration** | Discovery + pride ("I didn't know that about myself") | Overwhelm ("too much data") | Progressive disclosure, explore-don't-dump |
@@ -310,7 +311,7 @@ When something goes wrong — Nerin misreads the user, touches a sensitive topic
 - **Environment as sanctuary:** The moment you open Headspace, you've left the noisy internet. The visual treatment, pacing, and tone all say "you're safe here." This maps directly to big-ocean's ambient visualization and immersive conversational space.
 - **Simple shapes, saturated palette:** Headspace's artistic approach — geometric forms, limited but bold color palette — aligns closely with big-ocean's existing psychedelic/saturated aesthetic and geometric shape design language. The simplicity makes complex topics (meditation, mindfulness) feel accessible rather than clinical.
 - **Content as retention layer:** Headspace's library of guided content (sleep stories, courses, focus sessions) creates reasons to return daily. big-ocean's future content layer — personality-grounded articles, psychology explainers, science-backed statistics — could serve the same role, but with a personality lens. "How your openness affects your creative process" or "The science behind your conflict style" — content that feels written for *your* archetype.
-- **Progressive depth:** Headspace starts with basics and unlocks deeper practices over time. big-ocean's conversation extension model echoes this — your first conversation is the foundation, extensions go deeper.
+- **Progressive depth:** Headspace starts with basics and unlocks deeper practices over time. big-ocean echoes this — your first conversation is the foundation, and post-MVP subscription features (conversation extension, Coach agent) go deeper.
 
 **Emotional alignment:** Headspace's core emotional promise is "calm safety." big-ocean's is "heard and understood." Both require the same design principle: the environment must communicate safety before the user is asked to be vulnerable.
 
@@ -324,7 +325,7 @@ When something goes wrong — Nerin misreads the user, touches a sensitive topic
 - **Reframing:** ChatGPT takes what you said and reflects it back with added clarity or a new angle. This is the "how did she know?" moment in embryonic form. big-ocean takes this further by adding scientific structure and evidence tracking behind the scenes.
 
 **Where big-ocean goes beyond:**
-- Structure: ChatGPT personality conversations are freeform. big-ocean's guided 25-turn format ensures coverage of all Big Five dimensions while feeling natural.
+- Structure: ChatGPT personality conversations are freeform. big-ocean's guided 15-turn format ensures coverage of all Big Five dimensions while feeling natural.
 - Persistence: ChatGPT conversations are ephemeral. big-ocean saves, scores, and generates a permanent portrait.
 - Shareability: ChatGPT produces a chat log. big-ocean produces a visual identity artifact.
 - Relationships: ChatGPT is single-player. big-ocean's comparison and relationship analysis create social value.
@@ -342,7 +343,7 @@ When something goes wrong — Nerin misreads the user, touches a sensitive topic
 - **Archetype construction:** Each type has a detailed, multi-page profile with strengths, weaknesses, relationships, career advice. The depth creates re-read value. big-ocean's evidence-linked narrative goes further (personalized, not generic) but can learn from the *structure* of how 16Personalities organizes type information.
 
 **Where big-ocean goes beyond:**
-- Depth: 60 checkbox questions → 25-turn conversation with an AI that adapts to you
+- Depth: 60 checkbox questions → 15-turn conversation with an AI that adapts to you
 - Personalization: Generic type descriptions → evidence-linked narrative referencing your specific conversation
 - Scientific grounding: MBTI (debated validity) → Big Five (gold standard in personality research)
 - Relationship depth: Generic compatibility pages → private, evidence-based comparison using both parties' real data
@@ -371,7 +372,7 @@ When something goes wrong — Nerin misreads the user, touches a sensitive topic
 | Environment as sanctuary | Visual calm, muted palette, simple shapes signal safety | Ambient visualization creates a container that says "you've left the normal internet" |
 | Geometric simplicity | Bold shapes, limited palette, accessible feel | Align with big-ocean's existing psychedelic/saturated + geometric design language |
 | Content as retention | Library of guided content drives daily returns | Future: personality-grounded articles, science explainers, archetype-specific insights |
-| Progressive depth | Basics → advanced practices over time | First conversation → extensions → deeper exploration |
+| Progressive depth | Basics → advanced practices over time | First conversation → relationship analysis → (post-MVP) subscription extensions |
 | Self-development positioning | "Improve your life" framing, not "use this tool" | big-ocean is a self-understanding experience, not a personality test |
 
 **From ChatGPT → big-ocean:**
@@ -432,7 +433,7 @@ The relationship analysis features are a social network at their core, but must 
 **3. Quiz-app disposability**
 16Personalities' format — take once, get result, share, never return — is the anti-pattern for retention. The UX must signal from the start that big-ocean is a deeper, ongoing relationship with self-understanding, not a disposable quiz.
 
-**Design implication:** The conversation length itself signals depth. The evidence-linked narrative signals personalization. The conversation extension and relationship features signal ongoing value. Every touchpoint should reinforce "this is the beginning of something, not a one-time result."
+**Design implication:** The conversation length itself signals depth. The evidence-linked narrative signals personalization. The relationship features signal ongoing value, and post-MVP the subscription (Coach agent, conversation extension, Growth Journal) signals continuous depth. Every touchpoint should reinforce "this is the beginning of something, not a one-time result."
 
 **4. Clinical/diagnostic framing**
 Any UX that makes the user feel like a patient — progress bars labeled "assessment," clinical terminology, diagnostic language in results — breaks the emotional contract. big-ocean is a conversation, not an examination.
@@ -619,7 +620,7 @@ Users will describe big-ocean as "a conversation that sees you" — not a test, 
 **Failure states:**
 1. User gives surface-level answers throughout, treating it as a quiz to finish
 2. User checks turn count repeatedly — the conversation feels like a task
-3. User completes 25 turns and the results feel generic — worse than a dropout because it generates active negative word-of-mouth
+3. User completes 15 turns and the results feel generic — worse than a dropout because it generates active negative word-of-mouth
 4. The portrait paywall breaks the emotional arc instead of extending it
 5. User can predict what their results will say before seeing them
 
@@ -643,7 +644,7 @@ The portrait IS the defining artifact of big-ocean — what no competitor offers
 - Must reference 2-3 specific things from the user's conversation — recognizably their words and situations
 - Connects patterns the user didn't connect themselves
 - Every portrait must feel unreproducible for anyone else — one generic or Barnum-effect statement converts skeptics from advocates to active detractors
-- Should identify one specific unexplored thread from the conversation — a half-open door that seeds genuine curiosity for conversation extension, without feeling like a cliffhanger or withholding tactic. The portrait must feel COMPLETE while leaving one door ajar.
+- Should identify one specific unexplored thread from the conversation — a half-open door that seeds genuine curiosity for deeper exploration, without feeling like a cliffhanger or withholding tactic. The portrait must feel COMPLETE while leaving one door ajar. In MVP, this drives relationship exploration and sharing. Post-MVP, it drives subscription conversion (conversation extension).
 
 **Portrait quality is non-negotiable.** A disappointed completer who paid is the worst possible outcome — active negative word-of-mouth from someone who invested 30-45 minutes AND money.
 
@@ -656,7 +657,7 @@ The portrait IS the defining artifact of big-ocean — what no competitor offers
 | **Free** | All completers | Archetype + description + evidence snippets + trait/facet data |
 | **Portrait** | PWYW €1 minimum | Nerin's personal letter + 1 relationship credit |
 | **Relationship credit** | €5 per additional credit | Comparison analysis with someone who matters |
-| **Conversation extension** | €25 one-time | 25 additional turns with Nerin for deeper exploration |
+| **Subscription (Post-MVP)** | €10/mo or €100/yr | Coach agent, conversation extension, Growth Journal, pattern analysis, monthly reflection, unlimited relationship portraits, complete portrait at 30/30 |
 
 **PWYW modal framing:**
 > *Nerin wrote you a portrait — a personal letter about who you are, drawn from everything you shared.*
@@ -721,7 +722,7 @@ User B shares their archetype card → User C signs up
 - Conversation highlights — user-selected moments from the conversation surfaced in results and relationship analysis
 - Founder portrait as conversion bridge — not a product demo, a personal artifact that previews emotional weight
 - Portrait passage highlighting — mark and share specific passages as visual artifacts
-- Progressive unlock results page — layers reveal as user invests (free → portrait → social → extension)
+- Progressive unlock results page — layers reveal as user invests (free → portrait → social). Post-MVP: subscription adds conversation extension
 - Paywall as commitment filter — €1 filters for users who genuinely value the experience, purifying the viral loop
 
 ### 7.10 Experience Mechanics
@@ -733,7 +734,7 @@ User B shares their archetype card → User C signs up
 - First message breaks the quiz mental model immediately
 
 **2. Interaction:**
-- 25-turn guided conversation with three-act arc (Settling In → Deep Exploration → Convergence)
+- 15-turn guided conversation with three-act arc (Settling In → Deep Exploration → Convergence)
 - Pacing system adapts to engagement depth (light vs. deep seekers)
 - Depth meter (vertical bar) and ambient visualization provide non-numeric progress
 - Nerin's observations surface patterns, build trust, and build portrait anticipation simultaneously
@@ -765,7 +766,7 @@ User B shares their archetype card → User C signs up
 - Personality card always shareable
 - 1 free relationship credit unlocked (first portrait purchase only)
 - Additional relationship credits available (€5 each)
-- Conversation extension (€25) seeded by portrait's half-open door
+- Post-MVP: conversation extension (subscription) seeded by portrait's half-open door
 
 ### 7.11 The Reverse-Engineered Chain
 
@@ -776,7 +777,7 @@ Turn 1-3: Hook breaks quiz expectation → user engages authentically
     ↓
 Turn 8-18: Nerin's observations build trust AND portrait anticipation
     ↓
-Turn 25: Nerin's final message signals "I have something to share"
+Turn 15: Nerin's final message signals "I have something to share"
     ↓
 Transition: 3-5 second breath, environment shifts, portrait already generating
     ↓
@@ -1257,12 +1258,12 @@ flowchart TD
     'not therapy' framing, duration, what you'll get"]
 
     %% Conversation loop
-    K2 --> L[Conversation loop: exchanges 1-25]
+    K2 --> L[Conversation loop: exchanges 1-15]
     L --> M["Depth meter: milestones at 25% / 50% / 75%
     (turn-based, visual only — does not influence Nerin)"]
 
-    %% Pacing pipeline — adaptive
-    L --> N{"Pacing pipeline reads energy + telling"}
+    %% Director model — adaptive
+    L --> N{"Director model reads energy + telling"}
     N -->|High energy/telling| O[Nerin follows into deeper territory]
     N -->|Low energy/telling| P[Nerin stays light, keeps door open]
     N -->|Evidence confidence high| Q["Feel-seen moment attempted
@@ -1281,12 +1282,12 @@ flowchart TD
     T --> L
 
     %% Conversation end
-    L --> U["Exchange 25: complete
+    L --> U["Exchange 15: complete
     (Nerin has been teasing portrait since 75% milestone)"]
 
     %% Results
     U --> V["Results Page: OCEAN code + archetype + trait/facet scores
-    Conversation extension visible as standing option (€25)"]
+    Relationship CTA and sharing options visible"]
 
     %% PWYW
     V --> W[PWYW modal auto-opens]
@@ -1330,11 +1331,11 @@ flowchart TD
 | Sign Up | `/signup` | Email/password | Minimal friction — one screen, redirects to verify-email page after submission |
 | Verify Email | `/verify-email` | "Check your inbox" message + resend button | Gate before platform access. Resend available if link expired or not received. Link expires after 1 week |
 | Exchange 1 | `/chat` | Nerin's scannable greeting + first question (visible without scrolling on mobile) | Start conversation, don't overwhelm |
-| Exchanges 2-3 | `/chat` | Nerin weaves in framing naturally ("not therapy", ~25 min, what you'll get) | Context spread across messages, not front-loaded |
-| Depth Meter | `/chat` sidebar | Visual milestones at 25% (~6), 50% (~12), 75% (~19) — turn-based | Progress reassurance, sunk-cost motivation |
+| Exchanges 2-3 | `/chat` | Nerin weaves in framing naturally ("not therapy", ~30 min, what you'll get) | Context spread across messages, not front-loaded |
+| Depth Meter | `/chat` sidebar | Visual milestones at 25% (~4), 50% (~8), 75% (~11) — turn-based | Progress reassurance, sunk-cost motivation |
 | Feel-seen Moments | In-conversation | Only attempted when evidence confidence is high | Mid-conversation value delivery — swing only when confident |
 | 75%+ | In-conversation | Nerin teases portrait: builds anticipation for what she's written | User finishes *wanting* to read Nerin's letter |
-| Results | `/results` | OCEAN code strand, radar chart, trait cards, archetype hero, conversation extension option | Scientific credibility + delight |
+| Results | `/results` | OCEAN code strand, radar chart, trait cards, archetype hero, relationship CTA, sharing options | Scientific credibility + delight |
 | PWYW Modal | Overlay | Dense founder story (3-4 sentences) + scrollable Vincent portrait preview | Shows what they're buying — quality, specificity, tone |
 | Portrait | Below results | Spine-format letter from Nerin (AI-generated sections) | Emotional payoff |
 | Share | Post-portrait or post-skip | Archetype card (1:1 + 9:16) + Web Share. Screenshots also valid | Growth loop — convenience layer, not gate |
@@ -1342,7 +1343,7 @@ flowchart TD
 #### Decision Points
 
 1. **Public profile scroll depth** — Quick glancers see archetype + description + code (tooltips help). Deep scrollers see scientific data. Both reach comparison-driven CTA.
-2. **Pacing pipeline adaptation** — Nerin matches user energy/telling continuously. Goes deeper when user signals readiness. Stays light and curious when user is guarded. Feel-seen moments only attempted at high evidence confidence — a missed observation is worse than none.
+2. **Director model adaptation** — Nerin matches user energy/telling continuously. Goes deeper when user signals readiness. Stays light and curious when user is guarded. Feel-seen moments only attempted at high evidence confidence — a missed observation is worse than none.
 3. **Mid-conversation drop-off** — Session auto-saves. Last conversation topic stored as simple string. Re-engagement email templates in the topic ("You and Nerin were talking about [topic]"). Logged-in prompt appears on return, including via friend's profile link. One email only — respect silence.
 4. **PWYW pay or skip** — Skip gets free results + equally prominent share prompt. Pay unlocks portrait + 1 free relationship credit (first purchase only). Founder story is dense not long. Vincent's portrait preview is scrollable — shows enough depth to demonstrate value.
 5. **Sharing** — Screenshots are valid sharing. Archetype card is a convenience layer: prettier format + profile link for conversion. Card designed for destination (Stories 9:16, link previews 1:1).
@@ -1359,18 +1360,18 @@ flowchart TD
 | Feel-seen moment doesn't land | Nerin stays curious, doesn't double down — redirects naturally |
 | PWYW payment fails | Retry, change method, or skip |
 | Portrait generation fails | Retry button, status indicator |
-| Portrait doesn't resonate | Conversation extension on results page as standing option |
+| Portrait doesn't resonate | Relationship analysis and sharing options on results page |
 
 #### Flow Optimizations
 
 1. **Zero-to-value in 3 taps** — Public profile → CTA → Sign up → verify email → conversation. The verification step adds one async gate (check inbox) but ensures email recapture reliability.
 2. **Archetype description + tooltips on public profile** — Visitor understands what they're looking at without a tutorial.
 3. **Nerin's context spread across exchanges 1-3** — First message scannable on mobile, question visible without scrolling.
-4. **Adaptive pacing, not scripted beats** — Pacing pipeline reads energy/telling, Nerin matches the user's pace. Big ocean is a self-understanding companion, not a script.
+4. **Adaptive pacing, not scripted beats** — Director model reads energy/telling, Nerin matches the user's pace. Big ocean is a self-understanding companion, not a script.
 5. **Feel-seen moments gated by confidence** — Only attempted when evidence is strong. Failed observation breaks trust — better to stay curious than swing and miss.
 6. **Depth meter milestones at 25/50/75%** — Turn-based visual markers, don't influence Nerin's behavior.
 7. **Dense PWYW modal** — Founder story in 3-4 sentences + scrollable portrait preview showing depth and specificity. Not too short (user won't see value) or too long (user skips).
-8. **Portrait → Share (no micro-survey)** — Emotional peak flows to action. Behavioral proxies (share rate, extension purchase, return visits) track resonance.
+8. **Portrait → Share (no micro-survey)** — Emotional peak flows to action. Behavioral proxies (share rate, relationship initiation, return visits) track resonance.
 9. **Screenshots are sharing** — Archetype card is convenience layer (prettier + profile link). Growth loop works either way.
 10. **Simple re-engagement** — Last topic stored as string during conversation, templated into email. No LLM call needed. One email only — respect silence.
 
@@ -1515,7 +1516,7 @@ flowchart TD
 | Paid credits | €5 each via Polar |
 | Who pays | Scanner (User B) always pays |
 | Non-payers | See relationship feature at full price (€5). No hidden feature — seeing the cost may motivate PWYW portrait purchase (€1 min → free credit worth €5) |
-| Extension cascade | **Post-MVP.** Conversation extension invalidates existing portrait + relationship analyses. User must repay for regeneration. Economics and UX to be validated with user research before implementation |
+| Extension cascade | **Post-MVP (subscription feature).** Conversation extension invalidates existing portrait + relationship analyses. Regeneration economics governed by subscription tier. UX to be validated with user research before implementation |
 
 #### Relationship Analysis as Snapshot (Archive Model)
 
@@ -1584,7 +1585,7 @@ flowchart TD
 
     %% Modal content — single scrollable narrative
     C --> D["Section 1: Bridge + Congratulations
-    'Congratulations on completing 25 turns with Nerin.
+    'Congratulations on completing 15 turns with Nerin.
     Before you read what she wrote,
     I want to tell you why this exists.'"]
     D --> E["Section 2: Founder's love letter
@@ -1652,7 +1653,7 @@ flowchart TD
     Relationship analysis section
     '€5 per analysis' (or 'You have 1 credit')
     QR drawer accessible
-    Conversation extension option (€25)"]
+    Relationship CTA and sharing options"]
 
     %% Re-entry for skippers
     J --> U["Portrait unlock button persists on results page
@@ -1672,7 +1673,7 @@ Single scrollable narrative in a modal overlay. Same treatment on mobile and des
 
 | Section | Content | Purpose |
 |---------|---------|---------|
-| 1. Bridge | Congratulations on 25 turns. "Before you read what she wrote, I want to tell you why this exists." | Validates effort, bridges from personal to founder context |
+| 1. Bridge | Congratulations on 15 turns. "Before you read what she wrote, I want to tell you why this exists." | Validates effort, bridges from personal to founder context |
 | 2. Founder's Letter | 3-4 sentences. Vincent's love letter: why he built this, what his portrait meant to him. Dense, personal, vulnerable | Emotional permission to pay. Trust through vulnerability |
 | 3. Example Portrait | Vincent's actual portrait — full length, not truncated. Complete spine format. User sees exactly the volume and quality they'll receive | Full proof. No bait-and-switch on content length |
 | 4. CTA | "Unlock your portrait" + "Includes 1 relationship analysis credit." Single button → Polar modal | Clear action. Credit mention converts relationship-motivated users |
@@ -1695,7 +1696,7 @@ Single scrollable narrative in a modal overlay. Same treatment on mobile and des
 | Element | How It Works |
 |---------|-------------|
 | Delayed auto-open | User absorbs results first → "this is accurate" validates the product before the ask |
-| Congratulations bridge | Acknowledges their 25-turn investment → they've earned the right to see what Nerin wrote |
+| Congratulations bridge | Acknowledges their 15-turn investment → they've earned the right to see what Nerin wrote |
 | Founder vulnerability | Love letter tone builds trust → paying feels like supporting a person, not a product |
 | Full-length example | No mystery about what they're buying → removes uncertainty, sets accurate expectations |
 | Relationship credit at CTA | For users who came hearing about relationship analysis: €1 PWYW → free €5 credit = obvious deal |
@@ -1711,7 +1712,7 @@ Single scrollable narrative in a modal overlay. Same treatment on mobile and des
 | All trait and facet scores | Free relationship credit |
 | Radar chart | |
 | Archetype card (download + share) | |
-| Conversation extension (€25) | |
+| Relationship CTA + sharing options | |
 | Relationship analysis (€5, no free credit) | |
 
 #### Sealed Envelope (Deferred Payers)
@@ -1752,7 +1753,7 @@ Single scrollable narrative in a modal overlay. Same treatment on mobile and des
 #### Flow Optimizations
 
 1. **Delayed auto-open** — user absorbs results first. "This is really me" feeling fuels conversion.
-2. **Bridge + congratulations** — validates 25-turn effort before transitioning to founder context.
+2. **Bridge + congratulations** — validates 15-turn effort before transitioning to founder context.
 3. **Founder letter is dense, not long** — 3-4 sentences. Love letter, not pitch.
 4. **Full-length example portrait** — no truncation. User sees exact volume they'll receive. No bait-and-switch.
 5. **Relationship credit at CTA** — converts relationship-motivated users. €1 PWYW → free €5 credit is an obvious deal.
@@ -1765,9 +1766,9 @@ Single scrollable narrative in a modal overlay. Same treatment on mobile and des
 
 ### 10.4 Journey 4: Returning User Flow (Léa Returning)
 
-**Goal:** Returning user → re-engagement → conversation extension → deeper conversation → portrait regeneration → relationship re-analysis
+**Goal:** Returning user → re-engagement → explores updated dashboard → relationship analysis → sharing → (post-MVP: subscription unlocks conversation extension and Coach agent)
 
-**Entry point:** Léa returns ~2 weeks after initial assessment, motivated by unfinished emotional resonance from Nerin's portrait
+**Entry point:** Léa returns ~2 weeks after initial assessment, motivated by re-engagement email or organic curiosity about her results
 
 #### Flow Diagram
 
@@ -1785,125 +1786,33 @@ flowchart TD
     A -->|Via friend's card| E["Sees friend's card → visits profile
     → navigates to own results"]
 
-    %% Results page — returning state
-    B --> F["Results page / dashboard"]
+    %% Dashboard — returning state
+    B --> F["Dashboard / results page"]
     C --> F
     D --> F
     E --> F
 
-    %% Extension CTA surfaces at re-engagement moments
-    F --> G["Extension visible across touchpoints:
-    Results page, portrait view,
-    relationship page, QR drawer
-    Subtle 'go deeper' — not pushy"]
+    %% MVP returning user actions
+    F --> G["Revisits portrait and trait breakdown
+    Reviews evidence-linked insights
+    Explores facet details"]
 
-    %% The real CTA: portrait's half-open door
-    G --> H["Portrait's narrative hook:
-    Nerin's letter ends with an unresolved
-    tension — an observation that hints
-    at something deeper, unexplored
-    THIS is the real extension CTA"]
+    G --> H{"Wants to explore relationships?"}
+    H -->|Yes| I["Initiates relationship analysis
+    QR scan with friend/partner (€5)
+    → Journey 2 flow"]
+    H -->|No| J["Shares archetype card
+    → viral loop: friend sees card
+    → signs up → new user"]
 
-    %% Extension decision
-    H --> I{"Léa wants more depth?"}
-    I -->|Yes| J["Taps extension CTA"]
-    I -->|No| K["Views analyses, revisits portrait,
-    shares card, initiates relationships"]
+    I --> K["Views relationship analysis
+    Shares results with partner"]
+    K --> J
 
-    %% Extension info screen
-    J --> L["Extension info screen:
-    '+25 exchanges with Nerin — €25'
-    'Nerin remembers your conversation
-    and wants to explore [tension she named]'
-    Echoes the portrait's unfinished thread
-
-    Evolution framing:
-    'Your portrait and relationship analyses
-    will evolve with deeper evidence.
-    Previous versions remain viewable.'
-
-    €25 — single purchase"]
-    L --> M{Léa confirms?}
-    M -->|Yes| N["Polar checkout (€25 fixed)
-    Apple Pay / Google Pay / card"]
-    M -->|No| F
-
-    %% Payment
-    N --> O{Payment succeeds?}
-    O -->|Yes| P["Extension unlocked → /chat"]
-    O -->|Fails| Q[Retry within Polar]
-    Q --> N
-
-    %% Continued conversation
-    P --> R["Nerin picks up with themes, not transcripts
-    References patterns and tensions,
-    not specific exchanges
-    'Last time, I noticed a tension between
-    your need for novelty and your need
-    for anchoring. I'd like to explore that.'
-    Matches how humans recall conversations"]
-    R --> S["Conversation loop: exchanges 26-50
-    Depth meter resets with new milestones
-    25% / 50% / 75% of extension"]
-
-    %% Deeper pacing
-    S --> T{"Pacing pipeline has 25 exchanges
-    of prior evidence"}
-    T --> U["Deeper territories with more precision
-    Ambition, family dynamics, inner tensions
-    Feel-seen moments more frequent +
-    more specific (higher confidence base)"]
-
-    %% Drop-off
-    S -->|Léa leaves| V["Session saved + topic stored
-    Same re-engagement as Journey 1"]
-    V --> S
-
-    %% Completion
-    U --> W["Exchange 50: extension complete"]
-    W --> X["New results generated
-    Updated scores from 50 exchanges
-    Archetype may evolve
-    OCEAN code may shift"]
-
-    %% Evolution framing
-    X --> Y{"Archetype changed?"}
-    Y -->|Yes| Z["Evolution framing:
-    'With deeper evidence, your profile
-    evolved from The Beacon to The Navigator.
-    Both reflect real parts of you.'
-    Old archetype preserved in history"]
-    Y -->|No| AA["Same archetype, refined scores
-    Confidence levels higher"]
-
-    %% Cascade — evolution not loss
-    Z --> AB["Previous portrait marked 'previous version'
-    Previous analyses marked 'previous version'
-    (FK check — newer result exists)
-    All previous versions remain viewable"]
-    AA --> AB
-
-    %% Portrait regeneration
-    AB --> AC["Portrait regeneration prompt:
-    'Nerin has 50 exchanges to draw from now.
-    Your new portrait will reveal patterns
-    that weren't visible before.'
-    Framed as NEW portrait, not a fix
-    PWYW via Polar (same flow)"]
-    AC --> AD{Pays for regeneration?}
-    AD -->|Yes| AE["New portrait generates
-    Noticeably richer — deeper patterns,
-    more specific observations"]
-    AD -->|Not now| AF["Previous portrait still viewable
-    Regeneration CTA persists
-    New results visible"]
-
-    %% Relationship re-analysis
-    AE --> AG["Previous analyses marked 'previous version'
-    Re-analyze via QR scan (€5 each)
-    → Journey 2 flow
-    New snapshot archived alongside old"]
-    AF --> AG
+    %% Post-MVP subscription path (not built in MVP)
+    J --> L["(Post-MVP) Subscription CTA surfaces:
+    Coach agent, conversation extension,
+    Growth Journal — €10/mo or €100/yr"]
 ```
 
 #### Screen States & Key Moments
@@ -1911,14 +1820,10 @@ flowchart TD
 | Step | Screen | Key UX Element | Purpose |
 |------|--------|---------------|---------|
 | Re-engagement | Email / organic | Nerin-voiced check-in referencing specific tension from portrait. One email, then silence | Emotional hook, not promotional |
-| Results (returning) | `/results` | Portrait, relationship list, extension CTA visible across touchpoints | Full history accessible |
-| Portrait's Half-Open Door | Portrait section | Nerin's letter ends with unresolved tension — narrative hook | The real extension CTA is the unfinished feeling |
-| Extension Info | Modal/screen | Echoes portrait's unfinished thread + evolution framing + €25 | Sells on emotional resonance, not features |
-| Continued Conversation | `/chat` | Nerin references themes/patterns, not transcripts. Acknowledges time gap naturally | Feels like picking up with a friend |
-| Depth Meter | `/chat` sidebar | New milestones at 25/50/75% of extension | Progress through new segment |
-| Updated Results | `/results` | New scores, possible archetype evolution. Old archetype in history | "Evolved" not "replaced" |
-| Portrait Regeneration | Results page | "Nerin has 50 exchanges now" — PWYW, same Polar flow | New portrait, not a fix |
-| Relationship Re-analysis | Relationship list | Previous versions viewable, re-analyze via QR (€5) | New snapshot, old archived |
+| Dashboard (returning) | `/dashboard` | Identity card, relationship list, credits, "View Full Results" CTA | Hub for returning users |
+| Results (returning) | `/results` | Portrait, trait breakdown, evidence-linked insights, relationship CTA, sharing options | Full history accessible |
+| Relationship initiation | QR scan | QR-based connection with friend/partner (€5) → Journey 2 | Social engagement loop |
+| Sharing | Results / dashboard | Archetype card sharing → viral loop | Growth driver |
 
 #### Re-engagement Mechanics
 
@@ -1928,20 +1833,23 @@ flowchart TD
 | Relationship notification | "Your analysis with [name] is ready" (if applicable) |
 | Organic return | User revisits results/dashboard on their own |
 | Friend's card | Sees friend's archetype → visits their profile → navigates to own results |
-| Extension CTA placement | Visible on results page, portrait view, relationship page, QR drawer. Subtle, not pushy |
 
-#### Conversation Extension Mechanics
+#### Conversation Extension Mechanics (Post-MVP — Subscription)
+
+> **Note:** Conversation extension is a post-MVP feature included in the subscription (€10/mo or €100/yr), not a standalone purchase. The design decisions below are documented for Phase 2a implementation.
 
 | Element | Details |
 |---------|---------|
-| Price | €25 fixed (not PWYW) — intentional price filters for users who genuinely want depth |
+| Access | Included in subscription (€10/mo or €100/yr) — not a standalone purchase |
 | What it unlocks | 25 additional exchanges (26-50) with Nerin |
 | Context preservation | Nerin references themes and patterns, not specific exchanges. Matches how humans recall conversations |
-| Pacing pipeline | Starts with 25 exchanges of evidence. Deeper territories, higher confidence for feel-seen moments |
+| Director model | Starts with 15 exchanges of evidence. Deeper territories, higher confidence for feel-seen moments |
 | Depth meter | Resets for extension segment. New milestones at 25/50/75% |
-| Multiple extensions | Not in MVP scope — one extension only (50 total) |
+| Multiple extensions | One extension only (50 total). Future extensions TBD based on subscription engagement data |
 
-#### Evolution Framing (Not "Outdated")
+#### Evolution Framing (Post-MVP — Not "Outdated")
+
+> **Note:** Evolution framing applies when conversation extension (subscription feature) generates updated results. Documented here for Phase 2a.
 
 | Element | Old Framing | New Framing |
 |---------|-------------|-------------|
@@ -1951,30 +1859,33 @@ flowchart TD
 | Regeneration prompt | "Regenerate" | "Nerin has 50 exchanges to draw from now. New patterns visible." |
 | Old versions | Could feel "broken" | Preserved in history as snapshots of a less complete picture |
 
-#### Regeneration Economics
+#### Regeneration Economics (Post-MVP — Subscription)
+
+> **Note:** These economics apply to subscribers only. Conversation extension is included in the subscription, not a separate purchase.
 
 | Item | Cost | Framing |
 |------|------|---------|
-| Conversation extension | €25 fixed | "Go deeper with Nerin" |
+| Conversation extension | Included in subscription (€10/mo or €100/yr) | "Go deeper with Nerin" |
 | Portrait regeneration | PWYW (default €5, min €1) | "New portrait from deeper evidence" — not a fix |
-| Relationship re-analysis | €5 per analysis | New snapshot, old archived |
-| Total (2 relationships) | €25 + PWYW + €10 | **Post-MVP.** Cascade economics to be validated with user research before implementation |
+| Relationship re-analysis | €5 per analysis (unlimited for subscribers) | New snapshot, old archived |
 
-#### Nerin's Continuity
+#### Nerin's Continuity (Post-MVP — Subscription)
+
+> **Note:** Nerin's continuity mechanics apply to conversation extension, a subscription feature. Documented here for Phase 2a.
 
 | Element | How It Works |
 |---------|-------------|
 | Time gap | Acknowledged naturally: "It's been a while..." |
 | Thread references | Themes and patterns, not specific exchanges. "I noticed a tension between X and Y" |
 | Deeper territories | Ambition, family dynamics, inner tensions — with precision from prior evidence |
-| Feel-seen moments | More frequent, more specific — higher confidence base from 25 prior exchanges |
+| Feel-seen moments | More frequent, more specific — higher confidence base from 15 prior exchanges |
 | Tone | Warmer than exchange 1 — they know each other. No re-introduction |
 
 #### Error Recovery
 
 | Failure | Recovery |
 |---------|----------|
-| Extension payment fails | Retry within Polar. No partial state |
+| Extension payment fails (post-MVP) | Retry within Polar. No partial state. Subscription-gated |
 | Conversation interrupted | Session saved, same re-engagement as Journey 1 |
 | Portrait regeneration fails | Retry. Already paid — no re-charge |
 | Archetype changes dramatically | Evolution framing + old archetype preserved in history |
@@ -1982,16 +1893,12 @@ flowchart TD
 
 #### Flow Optimizations
 
-1. **Portrait IS the extension CTA** — the half-open door in Nerin's letter creates unfinished resonance. If the portrait lands, the extension sells itself.
-2. **Extension info echoes portrait's thread** — not generic "go deeper" but "Nerin wants to explore [tension she named]."
-3. **Evolution, not "outdated"** — "previous version" language. Old versions preserved. Archetype change = growth, not error.
-4. **Nerin references themes, not transcripts** — matches how humans recall past conversations. Patterns and tensions, not specific exchanges.
-5. **One Nerin-voiced check-in email** — references specific tension from portrait. Not promotional. One email, then silence.
-6. **€25 is intentional** — filters for users who genuinely want depth. Don't discount or bundle.
-7. **Portrait regeneration framed as new** — "50 exchanges to draw from" emphasizes what's new, not what's replaced.
-8. **Extension CTA at re-engagement touchpoints** — visible on portrait view, relationship page, QR drawer. Not just results page.
-9. **Cascade cost is transparent** — extension info screen explains evolution before purchase. No surprise after.
-10. **The real competitor is inaction** — €25 needs to feel cheaper than the cost of NOT exploring the tension Nerin named.
+1. **Dashboard as returning hub** — the dashboard answers "what do I have, what can I do next?" for every returning user. No dead ends.
+2. **Portrait seeds curiosity** — the half-open door in Nerin's letter creates unfinished resonance. In MVP, this drives relationship exploration and sharing. Post-MVP, it drives subscription conversion.
+3. **One Nerin-voiced check-in email** — references specific tension from portrait. Not promotional. One email, then silence.
+4. **Relationship as core returning action** — the MVP returning flow centers on relationship analysis (QR scan) and sharing, not extension purchase.
+5. **Sharing closes the viral loop** — returning users who share their archetype card create new users, who create new relationship pairs.
+6. **Post-MVP subscription upsell** — after the user has explored their MVP results and relationships, a subtle subscription CTA introduces Coach agent, conversation extension, and Growth Journal.
 
 ### 10.5 Journey 5: Public Profile → Conversion Flow
 
@@ -2063,7 +1970,7 @@ flowchart TD
     Trait descriptions
     (no private evidence shown)
     'How it works' micro-preview:
-    1. Talk to Nerin (~25 min)
+    1. Talk to Nerin (~30 min)
     2. Get your archetype + code
     3. Compare with friends"]
     L -->|No| N["CTA repeated after trait bars"]
@@ -2143,7 +2050,7 @@ flowchart TD
 | Confidence Rings | Per trait — subtle visual | Scientific credibility signal |
 | Tooltips | On traits, facets, confidence — explain concepts on tap | Self-serve education — tooltips explain the OTHER person, CTA redirects curiosity to SELF |
 | Repeated CTA | Same CTA after trait bars section | Catches visitors who scrolled past first CTA |
-| "How it works" | 3 steps: 1. Talk to Nerin (~25 min) → 2. Get your archetype + code → 3. Compare with friends | Sets accurate expectations. Prevents quiz-expectation mismatch |
+| "How it works" | 3 steps: 1. Talk to Nerin (~30 min) → 2. Get your archetype + code → 3. Compare with friends | Sets accurate expectations. Prevents quiz-expectation mismatch |
 
 #### Archetype Card (Generic, Not Personalized)
 
@@ -2476,7 +2383,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 **Scroll:** One continuous scroll container: bridge → founder letter → Vincent's portrait (full length, pre-rendered static content) → CTA. No inner scrollable regions (iOS Safari nested scroll issue). Body scroll locked when modal open.
 
 **Sections:**
-1. "Congratulations on completing 25 turns with Nerin. Before you read what she wrote, I want to tell you why this exists."
+1. "Congratulations on completing 15 turns with Nerin. Before you read what she wrote, I want to tell you why this exists."
 2. Founder's love letter (3-4 sentences, dense)
 3. Vincent's portrait (full length, PortraitSpineRenderer with static data)
 4. "Unlock your portrait" + "Includes 1 relationship analysis credit" + button → Polar embed
@@ -2513,11 +2420,11 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 #### DepthMeterMilestones
 
-**Purpose:** Adds turn-based 25/50/75% visual milestones to the existing DepthMeter.
+**Purpose:** Adds turn-based 25/50/75% visual milestones to the existing DepthMeter for the initial 15-turn assessment.
 
 **Props:**
 - `currentTurn: number`
-- `totalTurns: number` — 25 for initial, 25 for extension
+- `totalTurns: number` — 15 for the assessment
 - `milestones?: number[]` — defaults to `[0.25, 0.5, 0.75]`
 
 **States:** Unreached (dimmed) · Reached (lights up, brief pulse) · Passed (stays lit)
@@ -2527,6 +2434,8 @@ Error boundaries are placed at the **route composition level**, not per-componen
 **Extends:** Existing `DepthMeter` in `apps/front/src/components/chat/`.
 
 **Accessibility:** `aria-valuenow` on meter. Milestones announced via `aria-live="polite"`: "25% depth reached."
+
+> **Post-MVP:** When conversation extension is available via subscription, the DepthMeterMilestones resets for the extension segment (exchanges 26-50) with new milestones.
 
 ---
 
@@ -2573,7 +2482,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 - `basedOnExchanges: number`
 - `variant: "portrait" | "relationship"`
 
-**States:** Default (subtle label) · Hover/tap (expanded: "Based on 25 exchanges. A newer version exists.")
+**States:** Default (subtle label) · Hover/tap (expanded: "Based on 15 exchanges. A newer version exists.")
 
 **Built on:** shadcn `Badge` + shadcn `Tooltip`.
 
@@ -2731,7 +2640,7 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 |-------|----------------|------|------|
 | `/` | Home page (public) | Home page | Home page |
 | `/dashboard` | → sign up | Empty state: "Start your conversation" CTA | Full dashboard with all sections |
-| `/chat` | → sign up | Start/resume conversation | Resume or extension CTA |
+| `/chat` | → sign up | Start/resume conversation | Resume conversation (extension post-MVP via subscription) |
 | `/results` | → sign up | → `/chat` | Results page |
 | `/profile/:id` | Public profile visible (or private msg) | Public profile visible | Profile + relationship CTA |
 | `/relationship/:id` | → sign up | → `/chat` | Analysis (if participant) |
@@ -2816,7 +2725,7 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 | State | Display | Action |
 |-------|---------|--------|
 | No conversation started | "Ready to dive in? Start your conversation with Nerin" | ConversationCTA |
-| Conversation in progress | "You're still underwater. Continue your conversation with Nerin" + turn X/25 | Navigate to `/chat` |
+| Conversation in progress | "You're still underwater. Continue your conversation with Nerin" + turn X/15 | Navigate to `/chat` |
 | Portrait skipped (PWYW) | PortraitUnlockButton — breathing animation | Tap → PWYW curtain |
 | Portrait generating | Skeleton sections pulsing | Auto-refreshes |
 | Portrait failed | "Generation failed" + retry inline | Retry |
@@ -2859,7 +2768,7 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 | QR accept | "Accept" | "Refuse" | — |
 | Ritual | "Start" | — | "Skip" |
 | Portrait unlock button | Envelope IS the button | — | — |
-| Results (post-skip) | PortraitUnlockButton (portrait) | Relationship QR, Extension CTA | — |
+| Results (post-skip) | PortraitUnlockButton (portrait) | Relationship QR, Share archetype | — |
 
 **Button rules:**
 
@@ -2871,7 +2780,7 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 | Full width on mobile | Primary and secondary go full-width. Ghost stays inline |
 | Loading state | Spinner + "Processing..." text. Button disabled. Fixed width (no layout shift) |
 | Disabled state | Opacity 0.5, `cursor: not-allowed`. Never hide — show disabled with reason |
-| Scroll hierarchy (results) | Portrait unlock = primary visual weight. Relationship/extension CTAs = secondary (outline). Natural reading order guides priority |
+| Scroll hierarchy (results) | Portrait unlock = primary visual weight. Relationship CTA and sharing = secondary (outline). Natural reading order guides priority |
 
 **Icon buttons (limited):**
 
@@ -2983,8 +2892,8 @@ Portrait is generated only after payment — breath is a designed emotional paus
 
 | Source | Anti-pattern | Reason |
 |--------|-------------|--------|
-| 16Personalities | Aggressive email capture modal on results | Breaks trust. PWYW modal is earned through 25 turns of conversation |
-| Spotify Wrapped | Over-animated transitions | Works for 2-min consumption. Exhausting in 25+ min experience |
+| 16Personalities | Aggressive email capture modal on results | Breaks trust. PWYW modal is earned through 15 turns of conversation |
+| Spotify Wrapped | Over-animated transitions | Works for 2-min consumption. Exhausting in 30+ min experience |
 | BetterHelp | Clinical tab-bar navigation | big-ocean is a companion, not a tool |
 
 **Brand differentiation in patterns:**
@@ -3094,7 +3003,7 @@ Portrait is generated only after payment — breath is a designed emotional paus
 | Element | Approach |
 |---------|----------|
 | Nerin's messages | `aria-live="polite"` with **summary announcement** ("Nerin sent a message"). Full content in DOM for screen reader exploration. Prevents wall-of-audio for long messages |
-| Depth meter | `aria-valuenow` updates **every exchange** (not just milestones). "Exchange 8 of 25" |
+| Depth meter | `aria-valuenow` updates **every exchange** (not just milestones). "Exchange 8 of 15" |
 | Milestones | `aria-live="polite"` announcement when reached: "25% depth reached" |
 | Enter-to-send | Keep as-is — universal chat convention. Send button is always visible as accessible alternative |
 | Message history | Chat messages use `role="log"` on the container for screen reader navigation |
@@ -3170,7 +3079,7 @@ Carries emotional weight, not just action description.
 | 1. First-Timer | Sign up form → chat keyboard nav → breath reduced motion → results landmarks → PWYW focus trap → share flow |
 | 2. Relationship | QR drawer screen reader → accept screen keyboard → ritual focus management → stacked radar data table |
 | 3. PWYW | Modal scroll iOS Safari → Polar embed → envelope button role → payment error feedback |
-| 4. Returning | Extension CTA keyboard → evolution badge tooltip → regeneration flow |
+| 4. Returning | Dashboard navigation → relationship initiation → sharing flow → (post-MVP: subscription CTA, evolution badge) |
 | 5. Public Profile | Above-the-fold on 375×667 → tooltip density mobile → OG image alt → private profile announcement |
 
 ### 13.5 Implementation Guidelines
@@ -3237,7 +3146,7 @@ Carries emotional weight, not just action description.
 - Subject: "I've been thinking about something you said"
 - Body: "Hey {firstName}, I've been thinking about {tensionFromPortrait}. There's more to explore there if you're curious."
 - CTA: "Continue with Nerin"
-- Link: `/results` (extension CTA visible on results page)
+- Link: `/results` (portrait, relationship CTA, and sharing options visible on results page)
 - Note: `{tensionFromPortrait}` is extracted from the portrait's half-open door theme and stored as a simple string at portrait generation time — not an LLM call at email send time.
 
 **Relationship analysis ready:**
@@ -3340,7 +3249,7 @@ The dashboard (`/dashboard`) and profile (`/profile`) currently exist as separat
 |---------|---------|-----------|
 | **Relationship analyses** | List of all relationship analyses — newest first, older marked "previous version" (EvolutionBadge). Each card shows: partner name, archetype, date, status | After first analysis |
 | **Relationship credits** | CreditBalance component — credits remaining + purchase CTA + QR drawer | Always (after assessment complete) |
-| **Conversation extension** | Extension CTA — "Go deeper with Nerin" (€25). Only shown if not yet purchased | After portrait purchase |
+| **Subscription upsell (Post-MVP)** | Subtle CTA for subscribers: Coach agent, conversation extension, Growth Journal. Not shown in MVP | Post-MVP |
 
 **Removed from dashboard (accessed via results page instead):**
 - ~~Portrait section~~ — portrait unlock/status lives on the results page (`/results/$sessionId?view=portrait`)
@@ -3356,7 +3265,7 @@ The dashboard adapts based on the user's assessment state:
 | No assessment started | `DashboardEmptyState`: "Start Your Conversation" CTA → `/chat` | Hidden (no data) |
 | Assessment in progress | Progress bar (`messageCount / threshold`) + "Continue your conversation" → `/chat?sessionId=...` | Credits Card (if applicable) |
 | Assessment complete | Archetype name + GeometricSignature + OCEAN code + public profile link (if shared) + "View Full Results" → `/results/$sessionId` | Credits Card + Relationships Card |
-| Extension in progress | Same as complete, plus "Continue your extension" CTA | Credits Card + Relationships Card |
+| Extension in progress (Post-MVP) | Same as complete, plus "Continue your extension" CTA (subscription feature) | Credits Card + Relationships Card |
 
 ### 15.5 Flow Diagram
 
@@ -3382,14 +3291,11 @@ flowchart TD
     G -->|Yes| I["Credits Card: balance + QR drawer
     Relationships Card: list (newest first)"]
 
-    %% Extension states
-    H --> J{Extension purchased?}
+    %% Post-MVP: subscription upsell
+    H --> J["(Post-MVP) Subscription CTA:
+    Coach agent, conversation extension,
+    Growth Journal — for subscribers only"]
     I --> J
-    J -->|Yes, in progress| K["Extension CTA replaced by:
-    'Continue your extension' Turn X/50"]
-    J -->|Yes, complete| L["'View your updated results'"]
-    J -->|No| M["Extension CTA: 'Go deeper with Nerin' (€25)
-    Only shown after portrait purchase"]
 ```
 
 ### 15.6 Relationship Analysis List
@@ -3595,8 +3501,8 @@ The following areas need design attention:
 | Element | Current | Updated | Rationale |
 |---------|---------|---------|-----------|
 | Headline | "Not a personality quiz. A conversation." | **New: transformation-oriented hook.** Must land for zero-context visitors. No test references. Leads with what the portrait *does to you*, not what the method *is*. Exact copy TBD — brainstorming direction: something about discovering a part of yourself you've never been able to articulate | FR59: no test references. FR60: transformation-oriented |
-| Subtitle | "A portrait of who you are that no test has ever given you." | **New: one-line clarity.** "A 25-minute conversation with an AI that writes you a personal letter about who you are." — concrete, specific, immediately understandable | FR59: communicate what it is in 3 seconds |
-| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~25 MIN · FREE · PAY WHAT YOU WANT" — surfaces pricing transparency immediately | FR65: PWYW as trust signal |
+| Subtitle | "A portrait of who you are that no test has ever given you." | **New: one-line clarity.** "A 15-turn conversation with an AI that writes you a personal letter about who you are (~30 minutes)." — concrete, specific, immediately understandable | FR59: communicate what it is in 3 seconds |
+| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · PAY WHAT YOU WANT" — surfaces pricing transparency immediately | FR65: PWYW as trust signal |
 | Primary CTA | "Begin Your Dive ↓" (scroll-down) | **Single CTA:** "Start your conversation" → `/chat`. No scroll-down alternative. No "See how it works." One action | FR61: single primary CTA |
 | Secondary CTA | None (proposed in previous spec) | **Removed.** No competing CTAs. Visitors who need convincing scroll; the page content converts them. The CTA reappears as sticky bar (mobile) and at page bottom | FR61 |
 | OCEAN shapes | Animated breathing shapes | Keep — aligns with GeometricSignature design language | §16.5 preserve |
@@ -3618,14 +3524,14 @@ The following areas need design attention:
 
 **Currently missing.** Add between the conversational narrative and the final CTA.
 
-**Brainstorming insight:** The homepage never addresses "Will this be awkward?" (#15), "Is 25 minutes worth it?" (#11), or "What if I don't like what it says?" (#17). These are the actual barriers to conversion, not lack of feature understanding.
+**Brainstorming insight:** The homepage never addresses "Will this be awkward?" (#15), "Is ~30 minutes worth it?" (#11), or "What if I don't like what it says?" (#17). These are the actual barriers to conversion, not lack of feature understanding.
 
 **Reframe as three fear-resolving steps:**
 
 | Step | Fear Addressed | Content |
 |------|---------------|---------|
-| 1 | "Will this be awkward?" (process anxiety) | **It feels like a conversation, not a test.** No quiz. No checkboxes. Nerin asks about your life — your routines, your relationships, what you care about. Most people are surprised by how natural it feels. ~25 minutes. |
-| 2 | "Is it worth 25 minutes?" (time commitment) | **You'll get something no test can produce.** A personal letter from Nerin about who you are — not generic descriptions, but patterns from YOUR conversation. Your OCEAN code, your archetype, your scores. Pay what you want, starting at €1. |
+| 1 | "Will this be awkward?" (process anxiety) | **It feels like a conversation, not a test.** No quiz. No checkboxes. Nerin asks about your life — your routines, your relationships, what you care about. Most people are surprised by how natural it feels. ~30 minutes. |
+| 2 | "Is it worth ~30 minutes?" (time commitment) | **You'll get something no test can produce.** A personal letter from Nerin about who you are — not generic descriptions, but patterns from YOUR conversation. Your OCEAN code, your archetype, your scores. Pay what you want, starting at €1. |
 | 3 | "What if I don't like what it says?" (self-exposure fear) | **It's a mirror, not a judgment.** Nerin describes patterns and tensions — things you'll recognize. Nothing clinical, nothing labeling. And it's private — only you see it unless you choose to share. |
 
 **Design:** Three cards or stacked sections, scannable in 5 seconds. Each addresses a real visitor question, not a product feature. Tone: warm, direct, reassuring.
@@ -3700,7 +3606,7 @@ The following areas need design attention:
 **Placement:** Integrated into Beat 6 (founder reveal) and the hero tagline.
 
 **Content direction:**
-- Hero tagline: "~25 MIN · FREE · PAY WHAT YOU WANT"
+- Hero tagline: "~30 MIN · FREE · PAY WHAT YOU WANT"
 - Beat 6 (Vincent): "Your results — OCEAN code, archetype, scores — are free. The portrait Nerin writes for you is pay-what-you-want, starting at €1. Most people pay around €5."
 - The average payment amount is social proof — it communicates value, adoption, and generosity simultaneously (brainstorming #53)
 
@@ -3772,10 +3678,10 @@ flowchart TD
 | Tag | Content |
 |-----|---------|
 | `og:title` | "big ocean — [Updated to match new hero headline, no test references]" |
-| `og:description` | "A 25-minute conversation with an AI that writes you a personal letter about who you are. Free results. Pay what you want for the portrait." |
+| `og:description` | "A 15-turn conversation (~30 minutes) with an AI that writes you a personal letter about who you are. Free results. Pay what you want for the portrait." |
 | `og:image` | Hero visual or branded card (not an archetype card — generic brand image) |
 | `<title>` | "big ocean — Personality portrait through conversation" |
-| `<meta description>` | "A 25-minute conversation with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science." |
+| `<meta description>` | "A 15-turn conversation (~30 minutes) with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science." |
 
 ### 16.10 Responsive Behavior
 
@@ -3802,8 +3708,8 @@ flowchart TD
 | Area | Current | Target | Work Required |
 |------|---------|--------|---------------|
 | **Hero headline** | "Not a personality quiz. A conversation." | Transformation-oriented hook, no test references (FR59, FR60) | Rewrite headline + subtitle in HeroSection. Copy TBD |
-| **Hero subtitle** | "A portrait of who you are that no test has ever given you." | "A 25-minute conversation with an AI that writes you a personal letter about who you are." | Text update in HeroSection |
-| **Hero tagline** | "30 MIN · NO ACCOUNT · JUST TALKING" | "~25 MIN · FREE · PAY WHAT YOU WANT" (FR65) | Text update in HeroSection |
+| **Hero subtitle** | "A portrait of who you are that no test has ever given you." | "A 15-turn conversation with an AI that writes you a personal letter about who you are (~30 minutes)." | Text update in HeroSection |
+| **Hero tagline** | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · PAY WHAT YOU WANT" (FR65) | Text update in HeroSection |
 | **Hero CTA** | "Begin Your Dive ↓" (scroll-down) | Single "Start your conversation" → `/chat` (FR61) | Replace scroll CTA with nav link |
 | **Scroll indicator** | Bouncing chevron | Remove | Delete ScrollIndicator component usage |
 | **Beat compression** | 14 beats | ~8 beats (FR62 portrait at 40%) | Reorder ConversationFlow beats, remove 5-6 beats, add 2 new beats |
@@ -4081,7 +3987,7 @@ This section consolidates all results page specifications previously distributed
 
 ### 18.1 Results Page Purpose
 
-The results page (`/results/:assessmentSessionId`) is the private, personal payoff — the surface that delivers on 30-45 minutes of conversation with Nerin. It's the emotional peak of the product and the bridge to every downstream action: portrait reveal, sharing, relationship analysis, and conversation extension.
+The results page (`/results/:assessmentSessionId`) is the private, personal payoff — the surface that delivers on 30-45 minutes of conversation with Nerin. It's the emotional peak of the product and the bridge to every downstream action: portrait reveal, sharing, and relationship analysis. Post-MVP, it also bridges to conversation extension via subscription.
 
 **Design principle:** The results page is designed for the user's personal insight experience. No conversion pressure, no sharing CTAs above the fold. The data earns the share — if results resonate, the user will want to share without being asked.
 

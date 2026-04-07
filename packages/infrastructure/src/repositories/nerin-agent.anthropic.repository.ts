@@ -21,37 +21,13 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { AgentInvocationError } from "@workspace/contracts/errors";
-import { AppConfig, LoggerRepository } from "@workspace/domain";
+import { AppConfig, calculateCost, LoggerRepository } from "@workspace/domain";
 import {
 	NerinAgentRepository,
 	type NerinInvokeInput,
 	type TokenUsage,
 } from "@workspace/domain/repositories/nerin-agent.repository";
 import { Effect, Layer } from "effect";
-
-/**
- * Pricing constants for Claude Sonnet 4.5
- * Per 1 million tokens
- */
-const INPUT_PRICE_PER_MILLION = 0.003;
-const OUTPUT_PRICE_PER_MILLION = 0.015;
-
-/**
- * Calculate cost from token usage
- */
-function calculateCost(usage: TokenUsage): {
-	inputCost: number;
-	outputCost: number;
-	totalCost: number;
-} {
-	const inputCost = (usage.input / 1_000_000) * INPUT_PRICE_PER_MILLION;
-	const outputCost = (usage.output / 1_000_000) * OUTPUT_PRICE_PER_MILLION;
-	return {
-		inputCost,
-		outputCost,
-		totalCost: inputCost + outputCost,
-	};
-}
 
 /**
  * Create the ChatAnthropic model instance (plain text output, no structured output)
@@ -128,7 +104,7 @@ export const NerinAgentAnthropicRepositoryLive = Layer.effect(
 								: ((response.content[0] as { text: string })?.text ?? "");
 
 						// Log cost
-						const cost = calculateCost(tokenCount);
+						const cost = calculateCost(tokenCount.input, tokenCount.output, config.nerinModelId);
 						logger.info("Nerin response generated", {
 							sessionId: input.sessionId,
 							responseLength: responseText.length,

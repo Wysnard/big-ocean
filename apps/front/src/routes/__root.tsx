@@ -7,6 +7,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Toaster } from "@workspace/ui/components/sonner";
 import { TooltipProvider } from "@workspace/ui/components/tooltip";
 import Header from "../components/Header";
 import { NotFound } from "../components/NotFound";
@@ -84,6 +85,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<TooltipProvider>
 						<Header />
 						{children}
+						<Toaster position="top-center" />
 					</TooltipProvider>
 				</ThemeProvider>
 				{!import.meta.env.VITE_E2E && (

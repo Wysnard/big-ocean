@@ -1,6 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AssessmentApiError, useResumeSession, useSendMessage } from "./use-assessment";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { SendMessageRequest } from "@workspace/contracts";
+import { Effect } from "effect";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { makeApiClient } from "../lib/api-client";
+import { AssessmentApiError, useResumeSession } from "./use-assessment";
 
 interface Message {
 	id: string;
@@ -15,6 +19,21 @@ interface TraitScores {
 	extraversion: number;
 	agreeableness: number;
 	neuroticism: number;
+}
+
+/** Shape of a single message inside the resume query cache */
+interface CacheMessage {
+	role: "user" | "assistant";
+	content: string;
+	timestamp: unknown; // DateTimeUtc — string or { epochMillis }
+}
+
+/** Shape of the resume query cache data */
+interface ResumeCache {
+	messages: CacheMessage[];
+	confidence: TraitScores;
+	freeTierMessageThreshold: number;
+	status: "active" | "paused" | "finalizing" | "completed";
 }
 
 /**
@@ -82,37 +101,43 @@ function parseApiError(error: unknown): {
 	return { message: "Something went wrong. Please try again.", type: "generic" };
 }
 
+/** Convert a cache message timestamp to a Date */
+function toDate(ts: unknown): Date {
+	if (ts instanceof Date) return ts;
+	if (typeof ts === "string") return new Date(ts);
+	if (ts && typeof ts === "object" && "epochMillis" in ts) {
+		return new Date((ts as { epochMillis: number }).epochMillis);
+	}
+	return new Date();
+}
+
+/** Map server messages to local Message type */
+function mapCacheMessages(cacheMessages: CacheMessage[]): Message[] {
+	return cacheMessages.map((msg, index) => ({
+		id: `msg-${index}`,
+		role: msg.role,
+		content: msg.content,
+		timestamp: toDate(msg.timestamp),
+	}));
+}
+
 /**
  * Hook for managing the therapist chat conversation with real API integration.
- * Handles session resumption, optimistic message updates, trait confidence scoring from backend,
- * and structured error handling for known API error types.
  *
- * Messages are derived from resume data (server truth) with optimistic local additions
- * during mutation. On success, invalidates the resume query to refetch server truth.
+ * Messages are derived from the React Query cache (single source of truth).
+ * Optimistic updates are applied via queryClient.setQueryData; on error the
+ * cache is rolled back to the snapshot taken in onMutate.
  */
 export function useTherapistChat(sessionId: string) {
 	const queryClient = useQueryClient();
-	const [messages, setMessages] = useState<Message[]>([]);
-	const [traits, setTraits] = useState<TraitScores>({
-		openness: 0,
-		conscientiousness: 0,
-		extraversion: 0,
-		agreeableness: 0,
-		neuroticism: 0,
-	});
-	const [isLoading, setIsLoading] = useState(false);
-	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [errorType, setErrorType] = useState<
-		"session" | "budget" | "rate-limit" | "limit-reached" | "network" | "generic" | null
-	>(null);
-	// Story 7.18: Farewell transition state
-	const [isFarewellReceived, setIsFarewellReceived] = useState(false);
-	const { mutate: sendMessageMutate } = useSendMessage();
 
-	// Pending greeting messages not yet displayed (for stagger flush on early send)
-	const pendingGreetingsRef = useRef<Message[]>([]);
-	// Track whether greeting stagger has already played for this session
+	// Story 7.18: Farewell transition state — set by mutation onSuccess or resume derivation
+	const [isFarewellReceived, setIsFarewellReceived] = useState(false);
+
+	// Greeting stagger — only for new sessions, controlled by visible count
 	const hasStaggeredRef = useRef(false);
+	const staggerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const [staggerVisibleCount, setStaggerVisibleCount] = useState<number | null>(null);
 
 	// Session resumption
 	const {
@@ -126,172 +151,190 @@ export function useTherapistChat(sessionId: string) {
 			: resumeError instanceof Error &&
 				(resumeError.message.includes("404") || resumeError.message.includes("SessionNotFound"));
 
-	// Initialize from resume data on mount
-	useEffect(() => {
-		if (!resumeData) return;
+	// ── Send message mutation with optimistic cache updates ──────────────
 
-		// Map server messages to local Message type
-		const mappedMessages = resumeData.messages.map((msg, index) => ({
-			id: `msg-resume-${index}`,
-			role: msg.role,
-			content: msg.content,
-			timestamp: new Date(
-				typeof msg.timestamp === "string" ? msg.timestamp : msg.timestamp.epochMillis,
-			),
-		}));
+	const sendMessageMutation = useMutation({
+		mutationKey: ["assessment", "sendMessage"],
+		mutationFn: (input: SendMessageRequest) =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.assessment.sendMessage({ payload: input });
+			}).pipe(Effect.runPromise),
 
-		// Load confidence scores (values are already 0-100, do NOT multiply)
-		setTraits({
+		onMutate: async ({ message }) => {
+			// Flush stagger immediately when user sends during greeting
+			if (staggerVisibleCount !== null) {
+				setStaggerVisibleCount(null);
+				if (staggerTimerRef.current) {
+					clearTimeout(staggerTimerRef.current);
+					staggerTimerRef.current = null;
+				}
+			}
+
+			// Cancel in-flight resume refetches so they can't overwrite optimistic data
+			const queryKey = ["assessment", "session", sessionId];
+			await queryClient.cancelQueries({ queryKey });
+
+			// Snapshot for rollback
+			const previousData = queryClient.getQueryData<ResumeCache>(queryKey);
+
+			// Optimistic update: append user message to the query cache
+			queryClient.setQueryData<ResumeCache>(queryKey, (old) => {
+				if (!old) return old;
+				return {
+					...old,
+					messages: [
+						...old.messages,
+						{ role: "user" as const, content: message, timestamp: new Date().toISOString() },
+					],
+				};
+			});
+
+			return { previousData };
+		},
+
+		onSuccess: (data) => {
+			// Append assistant response(s) to the query cache
+			queryClient.setQueryData<ResumeCache>(["assessment", "session", sessionId], (old) => {
+				if (!old) return old;
+				const newMessages: CacheMessage[] = [
+					{
+						role: "assistant" as const,
+						content: data.response,
+						timestamp: new Date().toISOString(),
+					},
+				];
+
+				// Beat 2: Surfacing message (only on final turn)
+				if (data.surfacingMessage) {
+					newMessages.push({
+						role: "assistant" as const,
+						content: data.surfacingMessage,
+						timestamp: new Date().toISOString(),
+					});
+				}
+
+				return { ...old, messages: [...old.messages, ...newMessages] };
+			});
+
+			// Story 7.18: Handle final turn — trigger farewell transition
+			if (data.isFinalTurn) {
+				setIsFarewellReceived(true);
+			}
+		},
+
+		onError: (error, variables, context) => {
+			// Roll back to pre-mutation cache snapshot
+			if (context?.previousData) {
+				queryClient.setQueryData(["assessment", "session", sessionId], context.previousData);
+			}
+
+			const parsed = parseApiError(error);
+			const isRetryable = parsed.type === "network" || parsed.type === "generic";
+			const isPersistent = parsed.type === "budget" || parsed.type === "rate-limit";
+
+			toast.error(parsed.message, {
+				duration: isPersistent ? Number.POSITIVE_INFINITY : 5000,
+				action: isRetryable
+					? {
+							label: "Retry",
+							onClick: () => sendMessageMutation.mutate(variables),
+						}
+					: undefined,
+			});
+		},
+
+		onSettled: () => {
+			// Refetch from server to ensure cache reflects truth
+			queryClient.invalidateQueries({ queryKey: ["assessment", "session", sessionId] });
+		},
+	});
+
+	// ── Derived state from query cache ───────────────────────────────────
+
+	const traits: TraitScores = useMemo(() => {
+		if (!resumeData) {
+			return { openness: 0, conscientiousness: 0, extraversion: 0, agreeableness: 0, neuroticism: 0 };
+		}
+		return {
 			openness: resumeData.confidence.openness,
 			conscientiousness: resumeData.confidence.conscientiousness,
 			extraversion: resumeData.confidence.extraversion,
 			agreeableness: resumeData.confidence.agreeableness,
 			neuroticism: resumeData.confidence.neuroticism,
-		});
+		};
+	}, [resumeData]);
 
-		// Re-derive farewell state from resumed data (lost on post-auth navigation re-mount)
-		const threshold = resumeData.freeTierMessageThreshold ?? 25;
-		const resumedUserCount = mappedMessages.filter((m) => m.role === "user").length;
-		if (resumedUserCount >= threshold) {
-			setIsFarewellReceived(true);
-		}
+	// Derive messages from query cache (single source of truth)
+	const allMessages: Message[] = useMemo(() => {
+		if (!resumeData) return [];
+		return mapCacheMessages(resumeData.messages as CacheMessage[]);
+	}, [resumeData]);
 
-		// Detect new session: exactly 5 assistant-only messages (4 greeting bubbles + 1 opening question)
+	// Greeting stagger for new sessions — show messages one at a time
+	useEffect(() => {
+		if (!resumeData || hasStaggeredRef.current) return;
+
 		const isNewSession =
-			mappedMessages.length === 2 && mappedMessages.every((m) => m.role === "assistant");
+			resumeData.messages.length === 2 && resumeData.messages.every((m) => m.role === "assistant");
 
-		if (!isNewSession || hasStaggeredRef.current) {
-			// Resumed session with existing conversation — show all immediately
-			setMessages(mappedMessages);
+		if (!isNewSession) {
+			setStaggerVisibleCount(null);
 			return;
 		}
 
-		// Stagger greeting bubbles: 0ms / 800ms
 		const prefersReducedMotion =
 			typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 		if (prefersReducedMotion) {
-			setMessages(mappedMessages);
+			setStaggerVisibleCount(null);
 			return;
 		}
 
-		// First message appears immediately; remaining stagger in
 		hasStaggeredRef.current = true;
-		const [first, ...rest] = mappedMessages;
-		setMessages([first]);
-		pendingGreetingsRef.current = [...rest];
+		setStaggerVisibleCount(1);
 
-		const delays = [800];
-		const timeouts: ReturnType<typeof setTimeout>[] = [];
-
-		rest.forEach((msg, i) => {
-			timeouts.push(
-				setTimeout(
-					() => {
-						pendingGreetingsRef.current = pendingGreetingsRef.current.filter((m) => m.id !== msg.id);
-						setMessages((prev) => [...prev, msg]);
-					},
-					delays[i] ?? delays[delays.length - 1],
-				),
-			);
-		});
+		staggerTimerRef.current = setTimeout(() => {
+			setStaggerVisibleCount(null);
+			staggerTimerRef.current = null;
+		}, 800);
 
 		return () => {
-			for (const t of timeouts) clearTimeout(t);
-			pendingGreetingsRef.current = [];
+			if (staggerTimerRef.current) {
+				clearTimeout(staggerTimerRef.current);
+				staggerTimerRef.current = null;
+			}
 		};
 	}, [resumeData]);
 
-	const clearError = useCallback(() => {
-		setErrorMessage(null);
-		setErrorType(null);
-	}, []);
+	// Re-derive farewell state from resumed data (lost on post-auth navigation re-mount)
+	useEffect(() => {
+		if (!resumeData) return;
+		const threshold = resumeData.freeTierMessageThreshold ?? 25;
+		const userCount = resumeData.messages.filter((m) => m.role === "user").length;
+		if (userCount >= threshold) {
+			setIsFarewellReceived(true);
+		}
+	}, [resumeData]);
+
+	// Apply stagger: limit visible messages for new session greeting
+	const messages: Message[] = useMemo(() => {
+		if (staggerVisibleCount === null) return allMessages;
+		return allMessages.slice(0, staggerVisibleCount);
+	}, [allMessages, staggerVisibleCount]);
+
+	// ── Actions ──────────────────────────────────────────────────────────
 
 	const sendMessage = useCallback(
 		async (userMessage?: string) => {
 			if (!sessionId || !userMessage) return;
-
-			// Flush any pending staggered greeting messages before user's message
-			if (pendingGreetingsRef.current.length > 0) {
-				const remaining = [...pendingGreetingsRef.current];
-				pendingGreetingsRef.current = [];
-				setMessages((prev) => [...prev, ...remaining]);
-			}
-
-			clearError();
-			setIsLoading(true);
-
-			// Optimistic update: add user message immediately
-			setMessages((prev) => [
-				...prev,
-				{
-					id: `msg-${Date.now()}`,
-					role: "user",
-					content: userMessage,
-					timestamp: new Date(),
-				},
-			]);
-
-			sendMessageMutate(
-				{ sessionId, message: userMessage },
-				{
-					onSuccess: (data) => {
-						// Add assistant response (Beat 1)
-						const newMessages: typeof messages = [
-							{
-								id: `msg-${Date.now()}-response`,
-								role: "assistant",
-								content: data.response,
-								timestamp: new Date(),
-							},
-						];
-
-						// Beat 2: Surfacing message (only on final turn)
-						if (data.surfacingMessage) {
-							newMessages.push({
-								id: `msg-${Date.now()}-surfacing`,
-								role: "assistant",
-								content: data.surfacingMessage,
-								timestamp: new Date(),
-							});
-						}
-
-						setMessages((prev) => [...prev, ...newMessages]);
-
-						// Story 7.18: Handle final turn — trigger farewell transition
-						if (data.isFinalTurn) {
-							setIsFarewellReceived(true);
-						}
-
-						setIsLoading(false);
-
-						// Invalidate resume query to keep server cache fresh for next resume
-						queryClient.invalidateQueries({
-							queryKey: ["assessment", "session", sessionId],
-						});
-					},
-					onError: (error) => {
-						const parsed = parseApiError(error);
-						setErrorMessage(parsed.message);
-						setErrorType(parsed.type);
-						setIsLoading(false);
-					},
-				},
-			);
+			sendMessageMutation.mutate({ sessionId, message: userMessage });
 		},
-		[sessionId, sendMessageMutate, clearError, queryClient],
+		[sessionId, sendMessageMutation],
 	);
 
-	const retryLastMessage = useCallback(() => {
-		const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
-		if (lastUserMessage) {
-			// Remove the last user message (will be re-added by sendMessage)
-			setMessages((prev) => prev.filter((m) => m.id !== lastUserMessage.id));
-			sendMessage(lastUserMessage.content);
-		}
-	}, [messages, sendMessage]);
+	// ── Progress tracking ────────────────────────────────────────────────
 
-	// Story 4.7: Message-count-based progress — threshold driven by backend config
 	const FREE_TIER_THRESHOLD = resumeData?.freeTierMessageThreshold ?? 25;
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
 	const progressPercent = Math.min(Math.round((userMessageCount / FREE_TIER_THRESHOLD) * 100), 100);
@@ -300,12 +343,8 @@ export function useTherapistChat(sessionId: string) {
 	return {
 		messages,
 		traits,
-		isLoading,
+		isLoading: sendMessageMutation.isPending,
 		isCompleted: resumeData?.status === "completed",
-		errorMessage,
-		errorType,
-		clearError,
-		retryLastMessage,
 		sendMessage,
 		isResuming,
 		resumeError,

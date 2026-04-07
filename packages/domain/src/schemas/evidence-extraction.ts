@@ -1,15 +1,13 @@
 /**
  * Evidence Extraction Schemas
  *
- * Effect Schema definitions for ConversAnalyzer structured output.
- * Provides both strict schemas (for JSON Schema generation sent to the LLM)
- * and a lenient schema (for resilient parsing that filters invalid items).
+ * Item-level Effect Schema definitions for ConversAnalyzer evidence extraction.
+ * Top-level extraction schemas (strict/lenient) live in conversanalyzer-v2-extraction.ts.
  *
  * Story 10.2 / Fix: hallucinated facet names
  * Story 42-3: v3 polarity-based extraction — LLM outputs polarity+strength, deviation derived
  */
 
-import { Either, JSONSchema } from "effect";
 import * as ParseResult from "effect/ParseResult";
 import * as S from "effect/Schema";
 import type { FacetName } from "../constants/big-five";
@@ -46,13 +44,6 @@ export const FACET_REMAP: Record<string, FacetName> = {
 	warmth: "friendliness",
 };
 
-/**
- * ConversAnalyzer v1 energy levels — categorical classification used by
- * the existing ConversAnalyzer output schema. Will be replaced by
- * EnergyBand (5-level) in ConversAnalyzer v2 (Story 2.1).
- */
-const OBSERVED_ENERGY_LEVELS = ["light", "medium", "heavy"] as const;
-
 // ─── Facet name schema with remap ────────────────────────────────────────────
 
 const ALL_FACETS_SET: ReadonlySet<string> = new Set(ALL_FACETS);
@@ -76,6 +67,7 @@ const FacetNameSchema = S.transformOrFail(S.String, S.Literal(...ALL_FACETS), {
 // ─── Per-item raw schema (LLM output: polarity+strength, no deviation) ────
 
 const EvidenceItemRawSchema = S.Struct({
+	reasoning: S.String,
 	bigfiveFacet: FacetNameSchema,
 	polarity: S.Literal("high", "low"),
 	strength: S.Literal("weak", "moderate", "strong"),
@@ -119,6 +111,7 @@ export const EvidenceItemSchema = S.transformOrFail(
 		},
 		encode: (typed) =>
 			ParseResult.succeed({
+				reasoning: "",
 				bigfiveFacet: typed.bigfiveFacet,
 				polarity: typed.polarity,
 				strength: typed.strength,
@@ -139,6 +132,7 @@ export type EvidenceItem = S.Schema.Type<typeof EvidenceItemDecodedSchema>;
  * Story 42-3: v3 polarity-based extraction
  */
 export const EvidenceItemJsonSchemaSource = S.Struct({
+	reasoning: S.String,
 	bigfiveFacet: S.Literal(...ALL_FACETS),
 	polarity: S.Literal("high", "low"),
 	strength: S.Literal("weak", "moderate", "strong"),
@@ -147,57 +141,49 @@ export const EvidenceItemJsonSchemaSource = S.Struct({
 	note: S.String.pipe(S.maxLength(500)),
 });
 
-// ─── Strict schema (used for JSON Schema generation → sent to LLM) ──────────
+// ─── Facet-map extraction (v4) ──────────────────────────────────────────────
 
-export const EvidenceExtractionSchema = S.Struct({
-	evidence: S.Array(EvidenceItemSchema),
-	observedEnergyLevel: S.Literal(...OBSERVED_ENERGY_LEVELS),
-});
-
-export type EvidenceExtraction = S.Schema.Type<typeof EvidenceExtractionSchema>;
-
-/** JSON Schema for Anthropic tool input_schema — uses Literal enum for bigfiveFacet */
-export const evidenceExtractionJsonSchema = JSONSchema.make(
-	S.Struct({
-		evidence: S.Array(EvidenceItemJsonSchemaSource),
-		observedEnergyLevel: S.Literal(...OBSERVED_ENERGY_LEVELS),
-	}),
-);
-
-// ─── Lenient schema (filters invalid items instead of rejecting all) ─────────
-
-const RawExtractionSchema = S.Struct({
-	evidence: S.Array(S.Unknown),
-	observedEnergyLevel: S.Literal(...OBSERVED_ENERGY_LEVELS),
+/**
+ * LLM output item WITHOUT bigfiveFacet — the facet is the record key.
+ * Used for JSON Schema generation in facet-map mode.
+ */
+export const FacetMapItemJsonSchemaSource = S.Struct({
+	reasoning: S.String,
+	polarity: S.Literal("high", "low"),
+	strength: S.Literal("weak", "moderate", "strong"),
+	confidence: S.Literal("low", "medium", "high"),
+	domain: S.Literal(...LIFE_DOMAINS),
+	note: S.String.pipe(S.maxLength(500)),
 });
 
 /**
- * Lenient schema that filters out invalid evidence items instead of rejecting
- * the entire extraction. This prevents hallucinated facet names from causing
- * total evidence loss.
+ * Raw LLM item without bigfiveFacet — for decode transforms.
+ * Facet name is injected from the record key during decode.
  */
-export const LenientEvidenceExtractionSchema = S.transformOrFail(
-	RawExtractionSchema,
-	EvidenceExtractionSchema,
-	{
-		strict: true,
-		decode: (raw) => {
-			const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
-			const validItems: Array<EvidenceItem> = [];
-			for (const item of raw.evidence) {
-				const result = decodeItem(item);
-				if (Either.isRight(result)) {
-					validItems.push(result.right);
-				}
-			}
-			return ParseResult.succeed({
-				evidence: validItems,
-				observedEnergyLevel: raw.observedEnergyLevel,
-			});
-		},
-		encode: (typed) => ParseResult.succeed(typed),
-	},
-);
+const FacetMapItemRawSchema = S.Struct({
+	reasoning: S.String,
+	polarity: S.Literal("high", "low"),
+	strength: S.Literal("weak", "moderate", "strong"),
+	confidence: S.Literal("low", "medium", "high"),
+	domain: S.Literal(...LIFE_DOMAINS),
+	note: S.String.pipe(S.maxLength(500)),
+});
 
-/** Validate LLM output with lenient evidence filtering */
-export const decodeEvidenceExtraction = S.decodeUnknownSync(LenientEvidenceExtractionSchema);
+export type FacetMapItemRaw = S.Schema.Type<typeof FacetMapItemRawSchema>;
+
+// ─── Domain-facet-map extraction (v5) ──────────────────────────────────────
+
+/**
+ * LLM output item WITHOUT bigfiveFacet or domain — both are record keys.
+ * Used for JSON Schema generation in domain-facet-map mode.
+ * Schema: Record<DomainName, Record<FacetName, Item[]>>
+ */
+export const DomainFacetMapItemJsonSchemaSource = S.Struct({
+	reasoning: S.String,
+	polarity: S.Literal("high", "low"),
+	strength: S.Literal("weak", "moderate", "strong"),
+	confidence: S.Literal("low", "medium", "high"),
+	note: S.String.pipe(S.maxLength(500)),
+});
+
+export type DomainFacetMapItemRaw = S.Schema.Type<typeof DomainFacetMapItemJsonSchemaSource>;

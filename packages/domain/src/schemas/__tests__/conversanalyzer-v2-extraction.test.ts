@@ -21,6 +21,7 @@ import {
 /** v3 polarity-based evidence (LLM outputs polarity, not deviation) */
 const validPolarityEvidence = [
 	{
+		reasoning: "User describes inventing scenarios and imagining alternatives at work",
 		bigfiveFacet: "imagination",
 		polarity: "high",
 		strength: "strong",
@@ -29,6 +30,7 @@ const validPolarityEvidence = [
 		note: "Creative thinking in professional context",
 	},
 	{
+		reasoning: "User mentions being slow to open up to new people in social settings",
 		bigfiveFacet: "trust",
 		polarity: "low",
 		strength: "moderate",
@@ -112,6 +114,7 @@ describe("Evidence strict (decodeEvidenceStrict)", () => {
 			const result = decodeEvidenceStrict({
 				evidence: [
 					{
+						reasoning: `Testing ${combo.polarity}+${combo.strength} deviation derivation`,
 						bigfiveFacet: "imagination",
 						polarity: combo.polarity,
 						strength: combo.strength,

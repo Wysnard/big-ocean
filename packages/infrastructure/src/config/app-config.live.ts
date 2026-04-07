@@ -121,7 +121,7 @@ const configSchema = Config.all({
 
 	// Nerin Director (Story 43-3)
 	nerinDirectorModelId: Config.string("NERIN_DIRECTOR_MODEL_ID").pipe(
-		Config.withDefault("claude-sonnet-4-20250514"),
+		Config.withDefault("claude-haiku-4-5-20251001"),
 	),
 	nerinDirectorMaxTokens: Config.number("NERIN_DIRECTOR_MAX_TOKENS").pipe(Config.withDefault(1024)),
 	nerinDirectorTemperature: Config.number("NERIN_DIRECTOR_TEMPERATURE").pipe(

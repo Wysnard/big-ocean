@@ -7,9 +7,9 @@ export default function Header() {
 	return (
 		<header
 			data-slot="header"
-			className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+			className="sticky top-0 z-50 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 		>
-			<div className="flex h-14 items-center px-4">
+			<div className="flex h-full items-center px-4">
 				<Logo />
 
 				{/* Desktop nav */}

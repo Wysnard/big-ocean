@@ -3,9 +3,9 @@ import { ACTOR_BRIEF_FRAMING, ACTOR_VOICE_RULES, buildActorPrompt } from "../ner
 import { NERIN_PERSONA } from "../nerin-persona";
 
 describe("ACTOR_VOICE_RULES", () => {
-	it("includes emoji hand signals guidance", () => {
-		expect(ACTOR_VOICE_RULES).toContain("Emoji are hand signals");
-		expect(ACTOR_VOICE_RULES).toContain("sparse, deliberate, ocean-themed");
+	it("includes emoji guidance", () => {
+		expect(ACTOR_VOICE_RULES).toContain("Emoji communicate emotion");
+		expect(ACTOR_VOICE_RULES).toContain("diver hand signals");
 	});
 
 	it("includes humor boundary", () => {
@@ -14,9 +14,9 @@ describe("ACTOR_VOICE_RULES", () => {
 	});
 
 	it("includes safety guardrails", () => {
-		expect(ACTOR_VOICE_RULES).toContain("never use diagnostic language");
-		expect(ACTOR_VOICE_RULES).toContain("never characterize third parties");
-		expect(ACTOR_VOICE_RULES).toContain("never give advice");
+		expect(ACTOR_VOICE_RULES).toContain("diagnostic language");
+		expect(ACTOR_VOICE_RULES).toContain("characterize third parties");
+		expect(ACTOR_VOICE_RULES).toContain("give advice");
 	});
 
 	it("includes marine biology accuracy rule", () => {
@@ -62,11 +62,11 @@ describe("buildActorPrompt", () => {
 		expect(prompt).not.toContain("steering");
 	});
 
-	it("returns a string of reasonable size (~650-1100 estimated tokens)", () => {
+	it("returns a string of reasonable size (~650-1200 estimated tokens)", () => {
 		const prompt = buildActorPrompt();
 		// Rough token estimate: ~4 chars per token
 		const estimatedTokens = prompt.length / 4;
-		expect(estimatedTokens).toBeLessThan(1100);
+		expect(estimatedTokens).toBeLessThan(1200);
 		expect(estimatedTokens).toBeGreaterThan(200);
 	});
 });

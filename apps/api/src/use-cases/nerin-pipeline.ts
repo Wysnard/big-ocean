@@ -239,10 +239,19 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const directorPhase = isFinalTurnPreCheck ? ("closing" as const) : coverageTarget.phase;
 		const directorSystemPrompt = getDirectorPromptForPhase(directorPhase);
 
+		// Truncate to last 20 messages for the Director to reduce context pressure.
+		// Coverage analysis already captures the full conversation's evidence — the
+		// Director only needs recent history for voice continuity and weave beats.
+		const DIRECTOR_MESSAGE_WINDOW = 20;
+		const directorMessages =
+			domainMessages.length > DIRECTOR_MESSAGE_WINDOW
+				? domainMessages.slice(-DIRECTOR_MESSAGE_WINDOW)
+				: domainMessages;
+
 		const directorResult = yield* director
 			.generateBrief({
 				systemPrompt: directorSystemPrompt,
-				messages: domainMessages,
+				messages: directorMessages,
 				coverageTargets: coverageTargetsEnriched,
 				sessionId: input.sessionId,
 			})
@@ -306,13 +315,22 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// ---- Cost tracking ----
 
-		const actorCost = calculateCost(actorResult.tokenCount.input, actorResult.tokenCount.output);
+		const actorCost = calculateCost(
+			actorResult.tokenCount.input,
+			actorResult.tokenCount.output,
+			config.nerinModelId,
+		);
 		const directorCost = calculateCost(
 			directorResult.tokenUsage.input,
 			directorResult.tokenUsage.output,
+			config.nerinDirectorModelId,
 		);
 		const analyzerCost = analyzerTokenUsage
-			? calculateCost(analyzerTokenUsage.input, analyzerTokenUsage.output)
+			? calculateCost(
+					analyzerTokenUsage.input,
+					analyzerTokenUsage.output,
+					config.conversanalyzerModelId,
+				)
 			: { totalCents: 0 };
 		const totalCostCents = actorCost.totalCents + directorCost.totalCents + analyzerCost.totalCents;
 

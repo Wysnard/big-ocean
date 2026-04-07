@@ -14,10 +14,11 @@
  */
 
 import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import {
 	AppConfig,
 	buildDirectorUserMessage,
+	calculateCost,
 	LoggerRepository,
 	NerinDirectorError,
 	type NerinDirectorInput,
@@ -25,19 +26,6 @@ import {
 	NerinDirectorRepository,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
-
-/**
- * Pricing constants for Claude Sonnet (default Director model)
- * Per 1 million tokens
- */
-const INPUT_PRICE_PER_MILLION = 0.003;
-const OUTPUT_PRICE_PER_MILLION = 0.015;
-
-function calculateCost(tokenUsage: { input: number; output: number }) {
-	const inputCost = (tokenUsage.input / 1_000_000) * INPUT_PRICE_PER_MILLION;
-	const outputCost = (tokenUsage.output / 1_000_000) * OUTPUT_PRICE_PER_MILLION;
-	return { inputCost, outputCost, totalCost: inputCost + outputCost };
-}
 
 function createModel(config: { modelId: string; maxTokens: number; temperature: number }) {
 	return new ChatAnthropic({
@@ -55,9 +43,14 @@ async function invokeDirector(
 	input: NerinDirectorInput,
 	userMessage: string,
 ): Promise<NerinDirectorOutput> {
+	// Assistant prefill anchors the model into the structured brief format,
+	// preventing drift into Nerin's first-person voice under context pressure.
+	const DIRECTOR_PREFILL = "BRIEF FOR NERIN:\n\nAcknowledge beat:\n";
+
 	const messages = [
 		new SystemMessage({ content: input.systemPrompt }),
 		new HumanMessage({ content: userMessage }),
+		new AIMessage({ content: DIRECTOR_PREFILL }),
 	];
 
 	const response = await model.invoke(messages);
@@ -68,10 +61,13 @@ async function invokeDirector(
 		output: usageMeta?.output_tokens ?? 0,
 	};
 
-	const brief =
+	const rawBrief =
 		typeof response.content === "string"
 			? response.content
 			: ((response.content[0] as { text: string })?.text ?? "");
+
+	// Prepend the prefill so the stored brief is complete
+	const brief = DIRECTOR_PREFILL + rawBrief;
 
 	return { brief, tokenUsage };
 }
@@ -124,7 +120,11 @@ export const NerinDirectorAnthropicRepositoryLive = Layer.effect(
 
 					if (attempt1._tag === "Right") {
 						const result = attempt1.right;
-						const cost = calculateCost(result.tokenUsage);
+						const cost = calculateCost(
+							result.tokenUsage.input,
+							result.tokenUsage.output,
+							config.nerinDirectorModelId,
+						);
 						logger.info("Nerin Director brief generated", {
 							sessionId: input.sessionId,
 							brief: result.brief,
@@ -152,7 +152,11 @@ export const NerinDirectorAnthropicRepositoryLive = Layer.effect(
 							}),
 					});
 
-					const cost = calculateCost(attempt2.tokenUsage);
+					const cost = calculateCost(
+						attempt2.tokenUsage.input,
+						attempt2.tokenUsage.output,
+						config.nerinDirectorModelId,
+					);
 					logger.info("Nerin Director brief generated (retry)", {
 						sessionId: input.sessionId,
 						brief: attempt2.brief,

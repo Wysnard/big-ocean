@@ -160,6 +160,11 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 			expect(prompt).toContain("Step 3 — Map the shadow signal.");
 		});
 
+		it("separates domain assignment into its own step", () => {
+			expect(prompt).toContain("Step 5 — Assign domain (separately from facet).");
+			expect(prompt).toContain("Re-read the USER's words");
+		});
+
 		it("instructs not to force shadow pairs", () => {
 			expect(prompt).toContain("do not force pairs");
 		});
@@ -170,10 +175,19 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 			expect(prompt).not.toContain("fewer than 35% are LOW");
 		});
 
-		it("includes no-duplicate rule", () => {
-			expect(prompt).toContain(
-				"Do NOT extract the same facet + polarity + domain combination more than once per message",
-			);
+		it("specifies reasoning field requirement", () => {
+			expect(prompt).toContain("Why you chose this specific domain");
+			expect(prompt).toContain("What behavioral choice you identified");
+		});
+	});
+
+	describe("Reasoning-First Output", () => {
+		it("instructs to fill reasoning field before other fields", () => {
+			expect(prompt).toContain("you MUST fill in the **reasoning** field FIRST");
+		});
+
+		it("specifies what reasoning should explain", () => {
+			expect(prompt).toContain("What behavioral choice you identified");
 		});
 	});
 
@@ -211,6 +225,28 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 		});
 	});
 
+	describe("Domain Disambiguation Rules", () => {
+		it("includes disambiguation rules section", () => {
+			expect(prompt).toContain("### Domain Disambiguation Rules");
+		});
+
+		it("disambiguates family from relationships", () => {
+			expect(prompt).toContain("family roles");
+			expect(prompt).toContain("→ **family**");
+		});
+
+		it("disambiguates health from leisure by function vs activity", () => {
+			expect(prompt).toContain("**leisure** is for the activity itself");
+			expect(prompt).toContain("**health** is for its function as self-care");
+		});
+
+		it("instructs domain assignment from user framing not interviewer", () => {
+			expect(prompt).toContain(
+				"based on the USER's words and framing, not the interviewer's question",
+			);
+		});
+	});
+
 	describe("Domain Distribution Context (Story 42-3, AC5)", () => {
 		it("includes current evidence distribution", () => {
 			expect(prompt).toContain("Current Evidence Distribution");
@@ -223,6 +259,12 @@ describe("Evidence Prompt v3 (buildEvidencePrompt)", () => {
 	describe("Conversation Context", () => {
 		it("includes recent messages as context", () => {
 			expect(prompt).toContain("[assistant]: Tell me about your work.");
+		});
+	});
+
+	describe("Gender-neutral notes rule", () => {
+		it("instructs to use they/them in notes", () => {
+			expect(prompt).toContain("Do NOT assume the user's gender");
 		});
 	});
 

@@ -11,7 +11,7 @@ import {
 } from "@workspace/ui/components/dropdown-menu";
 import { cn } from "@workspace/ui/lib/utils";
 import { Info, Loader2, Send } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { getPlaceholder } from "@/constants/chat-placeholders";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -19,7 +19,6 @@ import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { ChatAuthGate } from "./ChatAuthGate";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
 import { DepthMeter } from "./chat/DepthMeter";
-import { ErrorBanner } from "./ErrorBanner";
 import { GeometricOcean } from "./sea-life/GeometricOcean";
 
 interface TherapistChatProps {
@@ -188,10 +187,6 @@ export function TherapistChat({
 		messages,
 		isLoading,
 		isCompleted,
-		errorMessage,
-		errorType,
-		clearError,
-		retryLastMessage,
 		sendMessage,
 		isResuming,
 		resumeError,
@@ -206,13 +201,6 @@ export function TherapistChat({
 	const { isOnline, wasOffline } = useOnlineStatus();
 
 	// Notify parent (route) of session errors for auth-based redirect decisions
-	useEffect(() => {
-		if (!onSessionError) return;
-		if (errorType === "session") {
-			onSessionError({ type: "session", isResumeError: false });
-		}
-	}, [errorType, onSessionError]);
-
 	useEffect(() => {
 		if (!onSessionError) return;
 		if (!isResuming && isResumeSessionNotFound) {
@@ -327,10 +315,6 @@ export function TherapistChat({
 			userImage={userImage}
 			currentTurn={userMessageCount}
 			totalTurns={freeTierMessageThreshold || 27}
-			errorMessage={errorMessage}
-			errorType={errorType}
-			clearError={clearError}
-			retryLastMessage={retryLastMessage}
 			shownMilestones={shownMilestones}
 			highlightMessageId={highlightMessageId}
 			highlightStart={highlightStart}
@@ -379,20 +363,10 @@ function ChatInputBar({
 		textareaRef.current?.focus();
 	}, [isFarewellReceived, isCompleted, isResuming]);
 
-	const handleTextareaResize = useCallback(() => {
-		const textarea = textareaRef.current;
-		if (!textarea) return;
-		textarea.style.height = "auto";
-		textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
-	}, []);
-
 	const handleSendMessage = async () => {
 		if (!inputValue.trim() || isLoading) return;
 		const message = inputValue;
 		setInputValue("");
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "auto";
-		}
 		try {
 			await onSend(message);
 		} catch {
@@ -427,18 +401,14 @@ function ChatInputBar({
 					data-slot="chat-input"
 					data-testid="chat-input"
 					value={inputValue}
-					onChange={(e) => {
-						setInputValue(e.target.value);
-						handleTextareaResize();
-					}}
+					onChange={(e) => setInputValue(e.target.value)}
 					onKeyDown={handleKeyDown}
 					onFocus={onFocus}
 					placeholder={placeholder}
 					disabled={isLoading || isCompleted}
 					maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
 					rows={1}
-					className="flex-1 px-4 py-2 rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none overflow-y-auto"
-					style={{ maxHeight: "120px" }}
+					className="flex-1 px-4 py-2 max-h-[120px] rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none [field-sizing:content]"
 				/>
 				<Button
 					data-testid="chat-send-btn"
@@ -486,10 +456,6 @@ function ChatContent({
 	userImage,
 	currentTurn,
 	totalTurns,
-	errorMessage,
-	errorType,
-	clearError,
-	retryLastMessage,
 	shownMilestones,
 	highlightMessageId,
 	highlightStart,
@@ -520,10 +486,6 @@ function ChatContent({
 	userImage?: string | null;
 	currentTurn: number;
 	totalTurns: number;
-	errorMessage: string | null;
-	errorType: string | null;
-	clearError: () => void;
-	retryLastMessage: () => void;
 	shownMilestones: Map<number, number>;
 	highlightMessageId?: string;
 	highlightStart?: number;
@@ -707,16 +669,6 @@ function ChatContent({
 								Connection restored — you can continue your conversation.
 							</p>
 						</div>
-					)}
-
-					{/* Error Banner */}
-					{errorMessage && (
-						<ErrorBanner
-							message={errorMessage}
-							onRetry={errorType === "network" || errorType === "generic" ? retryLastMessage : undefined}
-							onDismiss={clearError}
-							autoDismissMs={errorType === "budget" || errorType === "rate-limit" ? 0 : 5000}
-						/>
 					)}
 				</div>
 

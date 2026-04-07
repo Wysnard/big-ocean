@@ -15,16 +15,13 @@ import {
 	ConversanalyzerError,
 	type ConversanalyzerInput,
 	ConversanalyzerRepository,
-	decodeEvidenceLenient,
 	decodeEvidenceStrict,
-	EvidenceItemSchema,
 	evidenceOnlyJsonSchema,
 	LIFE_DOMAIN_DEFINITIONS,
 	LoggerRepository,
 } from "@workspace/domain";
-import { Effect, Either, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import * as ParseResult from "effect/ParseResult";
-import * as S from "effect/Schema";
 
 // ─── Prompts ─────────────────────────────────────────────────────────────────
 
@@ -188,6 +185,15 @@ anxiety, anger, depression, self_consciousness, immoderation, vulnerability
 ### Life Domains
 ${domainDefs}
 
+### Domain Disambiguation Rules
+- When the user names family roles (parents, partner, siblings, children, "my family") → **family**, even if friends appear in the same sentence
+- **relationships** is for friends and romantic dynamics that are NOT family
+- When the user describes WHY they do something (coping, recovery, energy management, recentering, mental wellness) → **health**, even if the activity itself is a hobby
+- **leisure** is for the activity itself and the enjoyment of it; **health** is for its function as self-care or wellness
+- When the user describes physical or emotional consequences on their body or mood (forgetting to eat, sleep disruption, exhaustion, emotional flatness, energy crashes) → **health**, regardless of which domain triggered the consequence
+- When the same behavior clearly serves two domains, extract a separate evidence record for each domain
+- Assign domain based on the USER's words and framing, not the interviewer's question
+
 ### Current Evidence Distribution
 ${domainDist}
 
@@ -206,28 +212,37 @@ For each choice you identify:
 
 **Step 3 — Map the shadow signal.** The thing they're NOT choosing → which DIFFERENT facet, which polarity? This is not the opposite polarity on the same facet — it's a signal on a different facet implied by the same behavior. Not every choice has a shadow. Extract one only when genuinely implied — do not force pairs.
 
-**Step 4 — Check for cross-domain signals.** Does this behavior operate in more than one life domain? "I climb twice a week" as a hobby = leisure. "Climbing is how I take care of my mental health" = health. When the user describes the same activity serving different life functions, extract a separate record for each domain.
-
-**Step 5 — Assess each signal independently:**
-1. **bigfiveFacet**: Which facet? Match to the conversational anchors above.
-2. **polarity**: HIGH or LOW? Compare to the HIGH and LOW examples for that facet.
-3. **strength**: How diagnostic is this signal?
+**Step 4 — Assess the personality signal:**
+1. **polarity**: HIGH or LOW? Compare to the HIGH and LOW examples for that facet.
+2. **strength**: How diagnostic is this signal?
    - "strong": Concrete behavioral pattern or strong stated preference — the person described a specific, repeated action
    - "moderate": Suggestive — an opinion, tendency, or indirect signal
    - "weak": Mild hint — could be interpreted differently
-4. **confidence**: How certain is this extraction?
+3. **confidence**: How certain is this extraction?
    - "high": Facet and polarity are clear from the conversational anchors
    - "medium": Reasonable but some ambiguity
    - "low": Uncertain
-5. **domain**: Which life domain?
-6. **note**: Brief behavioral paraphrase (max 200 chars, no direct quotes)
+
+**Step 5 — Assign domain (separately from facet).**
+Re-read the USER's words — not the interviewer's question — and determine which life domain this behavior operates in. Apply the Domain Disambiguation Rules above. If the behavior has impact in multiple domains, create a separate evidence record for each domain.
+
+### Output Format
+
+Your output is a JSON object with an \`evidence\` array. Each item in the array is one evidence record. Extract everything you find — no artificial limits.
+
+For each evidence item, you MUST fill in the **reasoning** field FIRST, before any other field. In reasoning, explain:
+- What behavioral choice you identified in the user's words
+- Why you mapped it to this facet
+- Why you chose this specific domain
+
+The reasoning field forces you to commit to a line of thinking before selecting categorical values. Write 1-3 sentences.
 
 ### Rules
 1. Focus ONLY on the latest user message
-2. Return empty array [] if no personality signal (e.g., "hello", "thanks", "ok")
-3. Extract signals at moderate+ strength AND confidence
-4. Prefer specific domains over "other"
-5. Do NOT extract the same facet + polarity + domain combination more than once per message`;
+2. Extract signals at moderate+ strength AND confidence
+3. Prefer specific domains over "other"
+4. Do NOT assume the user's gender — use "they/them" in notes
+5. Absence IS signal — if the user describes a situation where a facet would typically show but doesn't, that's LOW polarity evidence`;
 }
 
 // ─── Repository Layer ─────────────────────────────────────────────────────────
@@ -266,7 +281,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							const formattedError = ParseResult.isParseError(parseError)
 								? ParseResult.TreeFormatter.formatErrorSync(parseError)
 								: String(parseError);
-							logger.warn("ConversAnalyzerevidence strict decode failed", {
+							logger.warn("ConversAnalyzer evidence strict decode failed", {
 								error: formattedError,
 								rawOutput: JSON.stringify(invokeResult.parsed).slice(0, 2000),
 							});
@@ -279,7 +294,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							output: usageMeta?.output_tokens ?? 0,
 						};
 
-						logger.info("ConversAnalyzerevidence strict extraction complete", {
+						logger.info("ConversAnalyzer evidence extraction complete", {
 							evidenceCount: parsed.evidence.length,
 							tokenUsage,
 						});
@@ -309,37 +324,7 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 						const prompt = buildEvidencePrompt(input);
 						const invokeResult = await evidenceModel.invoke([new HumanMessage(prompt)]);
 
-						const rawInput = invokeResult.parsed as { evidence?: unknown[] };
-						const rawCount = rawInput.evidence?.length ?? 0;
-
-						// Log per-item validation failures before lenient decode
-						if (rawInput.evidence) {
-							const decodeItem = S.decodeUnknownEither(EvidenceItemSchema);
-							for (let i = 0; i < rawInput.evidence.length; i++) {
-								const item = rawInput.evidence[i];
-								const result = decodeItem(item);
-								if (Either.isLeft(result)) {
-									logger.warn("Invalid evidence item from ConversAnalyzer", {
-										index: i,
-										rawItem: JSON.stringify(item).slice(0, 500),
-										error: ParseResult.TreeFormatter.formatErrorSync(
-											new ParseResult.ParseError({ issue: result.left.issue }),
-										),
-									});
-								}
-							}
-						}
-
-						const parsed = decodeEvidenceLenient(rawInput);
-
-						const discardedCount = rawCount - parsed.evidence.length;
-						if (discardedCount > 0) {
-							logger.warn("Discarded invalid evidence items (lenient)", {
-								discardedCount,
-								rawCount,
-								validCount: parsed.evidence.length,
-							});
-						}
+						const parsed = decodeEvidenceStrict(invokeResult.parsed);
 
 						const usageMeta = (invokeResult.raw as AIMessage)?.usage_metadata;
 						const tokenUsage = {
@@ -347,9 +332,8 @@ export const ConversanalyzerAnthropicRepositoryLive = Layer.effect(
 							output: usageMeta?.output_tokens ?? 0,
 						};
 
-						logger.info("ConversAnalyzerevidence lenient extraction complete", {
+						logger.info("ConversAnalyzer evidence lenient extraction complete", {
 							evidenceCount: parsed.evidence.length,
-							discardedCount,
 							tokenUsage,
 						});
 

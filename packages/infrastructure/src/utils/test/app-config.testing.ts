@@ -64,7 +64,7 @@ export const defaultTestConfig: AppConfigService = {
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: 2000,
 	// Nerin Director (Story 43-3)
-	nerinDirectorModelId: "claude-sonnet-4-20250514",
+	nerinDirectorModelId: "claude-haiku-4-5-20251001",
 	nerinDirectorMaxTokens: 1024,
 	nerinDirectorTemperature: 0.7,
 	nerinDirectorRetryTemperature: 0.9,

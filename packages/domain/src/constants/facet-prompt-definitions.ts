@@ -82,11 +82,11 @@ export const FACET_PROMPT_DEFINITIONS: Record<FacetName, string> = {
 	anger:
 		"Tendency to experience anger, frustration, and bitterness — how quickly irritation flares and how intensely it burns",
 	depression:
-		"Tendency to experience feelings of guilt, sadness, loneliness, and hopelessness — susceptibility to low mood",
+		"Tendency to experience low mood, discontent, or emotional flatness — susceptibility to sadness, guilt, hopelessness, or periods where things feel meaningless or uninteresting",
 	self_consciousness:
 		"Sensitivity to social evaluation and others' opinions — proneness to shame, embarrassment, and feeling scrutinized",
 	immoderation:
-		"Difficulty resisting cravings and urges — tendency to act on desires in the moment despite knowing better",
+		"Difficulty controlling urges and disengaging from compelling activities — tendency to overindulge, get swept up in the moment, or continue despite knowing it's time to stop",
 	vulnerability:
 		"Susceptibility to stress and difficulty coping under pressure — tendency to feel overwhelmed when demands pile up",
 } as const;

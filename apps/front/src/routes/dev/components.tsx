@@ -45,7 +45,7 @@ import {
 import { Switch } from "@workspace/ui/components/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { useState } from "react";
-import { ErrorBanner } from "../../components/ErrorBanner";
+import { toast } from "sonner";
 import { ArchetypeCard } from "../../components/results/ArchetypeCard";
 import { ConfidenceRingCard } from "../../components/results/ConfidenceRingCard";
 import { DetailZone } from "../../components/results/DetailZone";
@@ -544,13 +544,40 @@ function PrimitivesSection() {
 				</div>
 			</SubSection>
 
-			<SubSection title="Error Banner">
-				<ErrorBanner
-					message="Something went wrong. Please try again."
-					onRetry={() => {}}
-					onDismiss={() => {}}
-					autoDismissMs={0}
-				/>
+			<SubSection title="Toast (Sonner)">
+				<div className="flex flex-wrap gap-2">
+					<Button variant="outline" size="sm" onClick={() => toast("Default toast")}>
+						Default
+					</Button>
+					<Button variant="outline" size="sm" onClick={() => toast.success("Operation completed")}>
+						Success
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() =>
+							toast.error("Something went wrong", {
+								action: { label: "Retry", onClick: () => {} },
+							})
+						}
+					>
+						Error + Retry
+					</Button>
+					<Button variant="outline" size="sm" onClick={() => toast.warning("Proceed with caution")}>
+						Warning
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() =>
+							toast.error("Daily budget reached", {
+								duration: Number.POSITIVE_INFINITY,
+							})
+						}
+					>
+						Persistent
+					</Button>
+				</div>
 			</SubSection>
 		</section>
 	);
