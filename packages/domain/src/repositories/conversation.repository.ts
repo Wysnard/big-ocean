@@ -198,12 +198,12 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 		 * Create a conversation extension session linked to a parent session (Story 36-1)
 		 *
 		 * @param userId - Authenticated user ID
-		 * @param parentSessionId - ID of the completed session to extend
+		 * @param parentConversationId - ID of the completed conversation to extend
 		 * @returns Effect with new session ID
 		 */
 		readonly createExtensionSession: (
 			userId: string,
-			parentSessionId: string,
+			parentConversationId: string,
 		) => Effect.Effect<{ sessionId: string }, DatabaseError, never>;
 
 		/**
@@ -219,21 +219,21 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 		/**
 		 * Check if a parent session already has a child extension session (Story 36-1)
 		 *
-		 * @param parentSessionId - Parent session ID to check
+		 * @param parentConversationId - Parent conversation ID to check
 		 * @returns Effect with boolean — true if an extension session exists
 		 */
 		readonly hasExtensionSession: (
-			parentSessionId: string,
+			parentConversationId: string,
 		) => Effect.Effect<boolean, DatabaseError, never>;
 
 		/**
 		 * Find the active extension session for a given parent session (Story 36-1)
 		 *
-		 * @param parentSessionId - Parent session ID
+		 * @param parentConversationId - Parent conversation ID
 		 * @returns Effect with session entity or null
 		 */
 		readonly findExtensionSession: (
-			parentSessionId: string,
+			parentConversationId: string,
 		) => Effect.Effect<ConversationEntity | null, DatabaseError, never>;
 
 		/**

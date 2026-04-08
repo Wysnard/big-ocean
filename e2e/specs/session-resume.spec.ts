@@ -6,7 +6,7 @@
  * - Conversation messages persist after reload
  * - Session ID stays the same
  *
- * Note: With MESSAGE_THRESHOLD=1, the first message triggers farewell.
+ * Note: With FREE_TIER_MESSAGE_THRESHOLD=1, the first user message triggers farewell.
  * This test verifies resume BEFORE sending any user messages (mid-greeting).
  */
 

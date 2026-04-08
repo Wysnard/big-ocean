@@ -19,7 +19,7 @@ import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { ChatAuthGate } from "./ChatAuthGate";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
 import { DepthMeter } from "./chat/DepthMeter";
-import { isMilestoneReached } from "./chat/depth-milestones";
+import { ASSESSMENT_MILESTONES, isMilestoneReached } from "./chat/depth-milestones";
 import { GeometricOcean } from "./sea-life/GeometricOcean";
 
 interface TherapistChatProps {
@@ -57,21 +57,6 @@ const WARNING_THRESHOLD = 0.9;
 /** Milestone labels and their app-voiced progress messages */
 /** Session context shown in chat header */
 const SESSION_CONTEXT = "~30 minutes · A personality portrait awaits · Leave and return anytime";
-
-const MILESTONES = [
-	{
-		threshold: 25,
-		message: "🫧 Great start — your personality portrait is beginning to emerge.",
-	},
-	{
-		threshold: 50,
-		message: "🐙 Halfway down — your personality portrait is taking shape.",
-	},
-	{
-		threshold: 75,
-		message: "🪸 Almost there — just a few more exchanges to complete your portrait.",
-	},
-] as const;
 
 /** Mobile dropdown for session context info */
 function SessionContextDropdown({ className }: { className?: string }) {
@@ -242,9 +227,12 @@ export function TherapistChat({
 			// Scan new messages for milestone crossings
 			for (let i = scanFrom; i < messages.length; i++) {
 				if (messages[i].role === "user") userCount++;
-				for (const m of MILESTONES) {
-					if (isMilestoneReached(userCount, threshold, m.threshold / 100) && !next.has(m.threshold)) {
-						next.set(m.threshold, i + 1);
+				for (const milestone of ASSESSMENT_MILESTONES) {
+					if (
+						isMilestoneReached(userCount, threshold, milestone.fraction) &&
+						!next.has(milestone.label)
+					) {
+						next.set(milestone.label, i + 1);
 					}
 				}
 			}
@@ -564,7 +552,7 @@ function ChatContent({
 								style={{ background: "var(--thread-line)" }}
 								aria-hidden="true"
 							/>
-							{/* Story 9.5: Flat render verified acceptable for MESSAGE_THRESHOLD=15 (~30 messages).
+							{/* Story 9.5: Flat render verified acceptable for the 15-turn assessment (~30 messages).
 							    Reconsider @tanstack/react-virtual if threshold increases above 30 (60+ DOM nodes). */}
 							{messages.length > 0 &&
 								messages.map((msg, index) => (
@@ -622,10 +610,10 @@ function ChatContent({
 											</NerinMessage>
 										)}
 										{/* Milestone badges triggered at this message position */}
-										{MILESTONES.map((milestone) =>
-											shownMilestones.get(milestone.threshold) === index + 1 ? (
+										{ASSESSMENT_MILESTONES.map((milestone) =>
+											shownMilestones.get(milestone.label) === index + 1 ? (
 												<div
-													key={`milestone-${milestone.threshold}`}
+													key={`milestone-${milestone.label}`}
 													data-slot="milestone-badge"
 													className="border-y border-border py-3 mt-2 text-center"
 												>

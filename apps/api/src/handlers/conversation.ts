@@ -301,7 +301,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 
 					return {
 						sessionId: result.sessionId,
-						parentSessionId: result.parentSessionId,
+						parentConversationId: result.parentConversationId,
 						createdAt: DateTime.unsafeMake(result.createdAt.getTime()),
 						messages: result.messages.map((msg) => ({
 							role: msg.role,

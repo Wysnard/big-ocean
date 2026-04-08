@@ -331,7 +331,7 @@ const createTestLayer = () =>
 function setupDefaultMocks() {
 	mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(1));
 	mockSessionRepo.updateSession.mockReturnValue(Effect.succeed({}));
-	// Default: non-extension session (no parentSessionId)
+	// Default: non-extension session (no parentConversationId)
 	mockSessionRepo.getSession.mockReturnValue(
 		Effect.succeed({
 			id: "session_test_123",
@@ -502,14 +502,27 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 	describe("Closing turn", () => {
 		it.effect("uses closing Director prompt and appends farewell on final turn", () =>
 			Effect.gen(function* () {
-				// Set up final turn: messageCount returns threshold AND turnNumber >= totalTurns
+				// Set up final turn from persisted session message count.
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						id: "session_test_123",
+						userId: null,
+						sessionToken: null,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						status: "active",
+						finalizationProgress: null,
+						messageCount: 14,
+					}),
+				);
 				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(15));
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 
-				// Create 15 prior exchanges (opener + 14 pipeline turns) so turnNumber = 15
+				// Leave exchange history one turn behind to prove closing-phase logic
+				// follows the persisted 15-turn counter instead of exchange count.
 				const finalTurnExchanges = [
 					openerExchangeRecord,
-					...Array.from({ length: 14 }, (_, i) => ({
+					...Array.from({ length: 13 }, (_, i) => ({
 						...mockExchangeRecord,
 						id: `ex_${i + 1}`,
 						turnNumber: i + 1,
@@ -546,6 +559,62 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 				expect(mockSessionRepo.updateSession).toHaveBeenCalledWith("session_test_123", {
 					status: "finalizing",
 				});
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("does not enter closing phase when exchange count runs ahead of message count", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						id: "session_test_123",
+						userId: null,
+						sessionToken: null,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						status: "active",
+						finalizationProgress: null,
+						messageCount: 13,
+					}),
+				);
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(14));
+				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
+
+				const driftedExchanges = [
+					openerExchangeRecord,
+					...Array.from({ length: 14 }, (_, i) => ({
+						...mockExchangeRecord,
+						id: `ex_${i + 1}`,
+						turnNumber: i + 1,
+						extractionTier: 1,
+						directorOutput: `Brief for turn ${i + 1}`,
+						coverageTargets: {
+							primaryFacet: "imagination",
+							candidateDomains: ["work", "relationships", "leisure"],
+						},
+					})),
+				];
+				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(driftedExchanges));
+
+				const result = yield* runNerinPipeline({
+					sessionId: "session_test_123",
+					userMessage: "Not the final message",
+				});
+
+				expect(result.isFinalTurn).toBe(false);
+
+				const directorCall = mockDirectorRepo.generateBrief.mock.calls[0]?.[0];
+				expect(directorCall?.systemPrompt).not.toContain("final exchange");
+				expect(mockSessionRepo.updateSession).not.toHaveBeenCalledWith("session_test_123", {
+					status: "finalizing",
+				});
+				expect(mockLoggerRepo.warn).toHaveBeenCalledWith(
+					"Turn tracking drift detected",
+					expect.objectContaining({
+						sessionId: "session_test_123",
+						exchangeTurnNumber: 15,
+						currentTurn: 14,
+					}),
+				);
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
@@ -864,7 +933,7 @@ describe("Extension Session Pipeline (Story 36-2)", () => {
 					userId: "user_123",
 					status: "active",
 					messageCount: 0,
-					parentSessionId: "parent_session_id",
+					parentConversationId: "parent_session_id",
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				}),
@@ -922,7 +991,7 @@ describe("Extension Session Pipeline (Story 36-2)", () => {
 					userId: "user_123",
 					status: "active",
 					messageCount: 0,
-					parentSessionId: "deleted_parent_id",
+					parentConversationId: "deleted_parent_id",
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				}),
@@ -998,7 +1067,7 @@ describe("User-level context loading (Story 36-2 refactor)", () => {
 				Effect.succeed({
 					id: "extension_session",
 					userId: "user_123",
-					parentSessionId: "parent_session",
+					parentConversationId: "parent_session",
 					status: "active",
 					messageCount: 0,
 					createdAt: new Date(),

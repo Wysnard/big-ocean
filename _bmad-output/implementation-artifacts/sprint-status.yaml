@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
 generated: 2026-04-04T21:45
-last_updated: 2026-04-08T12:00
+last_updated: 2026-04-08
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -792,7 +792,9 @@ development_status:
   45-5-fk-column-code-cascade: done
   45-6-assessment-turn-count-25-to-15: done
   45-7-dead-code-cleanup: done
-  epic-45-retrospective: optional
+  45-8-deferred-cleanup: done
+  45-9-file-rename-cascade: ready-for-dev
+  epic-45-retrospective: done
 
   # ───────────────────────────────────────────────────────────────
   # EPIC 46: Conversation Extension Cleanup

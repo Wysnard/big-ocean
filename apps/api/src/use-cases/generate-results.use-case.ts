@@ -112,7 +112,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 
 				// Fetch conversation evidence (authoritative source — Story 18-4)
 				// Story 36-3: For extension sessions with authenticated users, use ALL user evidence
-				const isExtension = session.parentSessionId != null;
+				const isExtension = session.parentConversationId != null;
 				const hasAuthenticatedUser = session.userId != null;
 				const conversationEvidence =
 					isExtension && hasAuthenticatedUser

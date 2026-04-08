@@ -32,3 +32,10 @@
 - Stale `MESSAGE_THRESHOLD` references in `compose.e2e.yaml`, `compose.test.yaml`, and e2e spec comments — dead config from removed env var
 - Milestone badge insertion at `i + 1` in TherapistChat creates 1-message visual delay vs. depth-meter tick position — pre-existing
 - Resume milestone race condition: milestone tracking effect may fire before messages populate on async resume — pre-existing
+
+## Deferred from: code review of 45-8-deferred-cleanup (2026-04-08)
+
+- Concurrent final-turn requests can double-trigger farewell + finalization: two simultaneous requests for the same session can both compute `isFinalTurn=true` via `getTurnState()` and both attempt farewell message save + status transition to `finalizing`. No request-level mutex or optimistic locking guard exists. Pre-existing.
+- `getTurnState(messageCount, 0)` yields `isFinalTurn=true` always when `totalTurns=0`. No guard against zero or negative `totalTurns` in the helper. Currently mitigated by config defaults but no defensive check. Pre-existing.
+- `e2e/specs/dashboard-page.spec.ts` line 11 comment says `FREE_TIER_MESSAGE_THRESHOLD=2` but the e2e compose sets it to `1`. Pre-existing factual error in an untouched file.
+- `docker/init-db-test.sql` FK constraint still named `assessment_session_user_id_user_id_fkey` (pre-ADR-39 naming). FK constraint names were not in scope for Story 45-8 (only index names).

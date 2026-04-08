@@ -143,6 +143,12 @@ describe("sendMessage Use Case", () => {
 	describe("Finalization trigger (Story 11.1)", () => {
 		it.effect("should update session status to 'finalizing' when isFinalTurn is true", () =>
 			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						...mockActiveSession,
+						messageCount: ASSESSMENT_TURN_COUNT - 1,
+					}),
+				);
 				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(ASSESSMENT_TURN_COUNT));
 				mockSessionRepo.updateSession.mockReturnValue(
 					Effect.succeed({ ...mockActiveSession, status: "finalizing" }),
@@ -162,6 +168,12 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should NOT update session status when isFinalTurn is false", () =>
 			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						...mockActiveSession,
+						messageCount: ASSESSMENT_TURN_COUNT - 2,
+					}),
+				);
 				mockSessionRepo.incrementMessageCount.mockReturnValue(
 					Effect.succeed(ASSESSMENT_TURN_COUNT - 1),
 				);

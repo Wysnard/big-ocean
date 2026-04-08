@@ -728,13 +728,13 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 						);
 				}),
 
-			createExtensionSession: (userId: string, parentSessionId: string) =>
+			createExtensionSession: (userId: string, parentConversationId: string) =>
 				Effect.gen(function* () {
 					const [session] = yield* db
 						.insert(conversation)
 						.values({
 							userId,
-							parentSessionId,
+							parentConversationId,
 							status: "active",
 							messageCount: 0,
 							createdAt: new Date(),
@@ -747,7 +747,7 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 									logger.error("Database operation failed", {
 										operation: "createExtensionSession",
 										userId,
-										parentSessionId,
+										parentConversationId,
 										error: error instanceof Error ? error.message : String(error),
 									});
 								} catch (logError) {
@@ -765,7 +765,7 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 
 					logger.info("Extension session created", {
 						sessionId: session.id,
-						parentSessionId,
+						parentConversationId,
 						userId,
 					});
 					return { sessionId: session.id };
@@ -775,9 +775,9 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					// Find most recent completed session that has no child extension session
 					const childParentIds = db
-						.select({ parentId: conversation.parentSessionId })
+						.select({ parentId: conversation.parentConversationId })
 						.from(conversation)
-						.where(sql`${conversation.parentSessionId} IS NOT NULL`);
+						.where(sql`${conversation.parentConversationId} IS NOT NULL`);
 
 					const results = yield* db
 						.select()
@@ -829,19 +829,19 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 					);
 				}),
 
-			hasExtensionSession: (parentSessionId: string) =>
+			hasExtensionSession: (parentConversationId: string) =>
 				Effect.gen(function* () {
 					const results = yield* db
 						.select({ id: conversation.id })
 						.from(conversation)
-						.where(eq(conversation.parentSessionId, parentSessionId))
+						.where(eq(conversation.parentConversationId, parentConversationId))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
 								try {
 									logger.error("Database operation failed", {
 										operation: "hasExtensionSession",
-										parentSessionId,
+										parentConversationId,
 										error: error instanceof Error ? error.message : String(error),
 									});
 								} catch (logError) {
@@ -854,19 +854,19 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 					return results.length > 0;
 				}),
 
-			findExtensionSession: (parentSessionId: string) =>
+			findExtensionSession: (parentConversationId: string) =>
 				Effect.gen(function* () {
 					const results = yield* db
 						.select()
 						.from(conversation)
-						.where(eq(conversation.parentSessionId, parentSessionId))
+						.where(eq(conversation.parentConversationId, parentConversationId))
 						.limit(1)
 						.pipe(
 							Effect.mapError((error) => {
 								try {
 									logger.error("Database operation failed", {
 										operation: "findExtensionSession",
-										parentSessionId,
+										parentConversationId,
 										error: error instanceof Error ? error.message : String(error),
 									});
 								} catch (logError) {

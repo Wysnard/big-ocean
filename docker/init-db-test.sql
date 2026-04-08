@@ -5,7 +5,7 @@
 -- IMPORTANT: Keep in sync with Drizzle schema at
 --   packages/infrastructure/src/db/drizzle/schema.ts
 -- and migration at
---   drizzle/20260222190000_story_9_1_clean_slate/migration.sql
+--   drizzle/ (latest conversation-era migrations)
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -15,8 +15,10 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- pgEnums (Story 9.1)
 -- ============================================================================
 
-CREATE TYPE "public"."evidence_domain" AS ENUM('work', 'relationships', 'family', 'leisure', 'solo', 'other');
+CREATE TYPE "public"."evidence_domain" AS ENUM('work', 'relationships', 'family', 'leisure', 'health', 'other');
 CREATE TYPE "public"."bigfive_facet_name" AS ENUM('imagination', 'artistic_interests', 'emotionality', 'adventurousness', 'intellect', 'liberalism', 'self_efficacy', 'orderliness', 'dutifulness', 'achievement_striving', 'self_discipline', 'cautiousness', 'friendliness', 'gregariousness', 'assertiveness', 'activity_level', 'excitement_seeking', 'cheerfulness', 'trust', 'morality', 'altruism', 'cooperation', 'modesty', 'sympathy', 'anxiety', 'anger', 'depression', 'self_consciousness', 'immoderation', 'vulnerability');
+CREATE TYPE "public"."evidence_polarity" AS ENUM('high', 'low');
+CREATE TYPE "public"."result_stage" AS ENUM('scored', 'completed');
 
 -- ============================================================================
 -- Better Auth Tables
@@ -81,23 +83,32 @@ CREATE TABLE "conversations" (
 	"status" text DEFAULT 'active' NOT NULL,
 	"finalization_progress" text,
 	"message_count" integer DEFAULT 0 NOT NULL,
-	"personal_description" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"drop_off_email_sent_at" timestamp,
+	"check_in_email_sent_at" timestamp,
+	"recapture_email_sent_at" timestamp,
 	"parent_conversation_id" uuid,
 	"conversation_type" "conversation_type" NOT NULL DEFAULT 'assessment',
 	"metadata" jsonb
 );
 
+CREATE TABLE "exchanges" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"conversation_id" uuid NOT NULL,
+	"turn_number" smallint NOT NULL,
+	"extraction_tier" smallint,
+	"director_output" text,
+	"coverage_targets" jsonb,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+
 CREATE TABLE "messages" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"conversation_id" uuid NOT NULL,
-	"user_id" text,
+	"exchange_id" uuid,
 	"role" text NOT NULL,
 	"content" text NOT NULL,
-	"target_domain" "evidence_domain",
-	"target_bigfive_facet" "bigfive_facet_name",
-	"intent_type" text,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
@@ -108,6 +119,7 @@ CREATE TABLE "assessment_results" (
 	"traits" jsonb NOT NULL,
 	"domain_coverage" jsonb NOT NULL,
 	"portrait" text NOT NULL,
+	"stage" "result_stage",
 	"created_at" timestamp DEFAULT now()
 );
 
@@ -122,11 +134,13 @@ CREATE TABLE "conversation_evidence" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"conversation_id" uuid NOT NULL,
 	"message_id" uuid NOT NULL,
+	"exchange_id" uuid,
 	"bigfive_facet" "bigfive_facet_name" NOT NULL,
 	"deviation" smallint NOT NULL CHECK (deviation >= -3 AND deviation <= 3),
 	"strength" "evidence_strength" NOT NULL,
 	"confidence" "evidence_confidence" NOT NULL,
 	"domain" "evidence_domain" NOT NULL,
+	"polarity" "evidence_polarity" NOT NULL,
 	"note" text NOT NULL,
 	"created_at" timestamp DEFAULT now()
 );
@@ -167,13 +181,14 @@ CREATE TYPE "public"."purchase_event_type" AS ENUM('free_credit_granted', 'portr
 
 CREATE TABLE "purchase_events" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" text NOT NULL,
+	"user_id" text,
 	"event_type" "purchase_event_type" NOT NULL,
 	"polar_checkout_id" text,
 	"polar_product_id" text,
 	"amount_cents" integer,
 	"currency" text,
 	"metadata" jsonb,
+	"assessment_result_id" uuid,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
@@ -186,8 +201,8 @@ CREATE TABLE "portraits" (
 	"assessment_result_id" uuid NOT NULL,
 	"tier" text NOT NULL,
 	"content" text,
-	"model_used" text NOT NULL,
-	"retry_count" integer DEFAULT 0 NOT NULL,
+	"model_used" text,
+	"failed_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
@@ -234,9 +249,13 @@ CREATE INDEX "session_userId_idx" ON "session" ("user_id");
 CREATE INDEX "verification_identifier_idx" ON "verification" ("identifier");
 
 -- Assessment indexes
-CREATE INDEX "assessment_session_user_id_idx" ON "conversations" ("user_id");
-CREATE UNIQUE INDEX "assessment_session_user_id_unique" ON "conversations" ("user_id") WHERE user_id IS NOT NULL;
-CREATE UNIQUE INDEX "assessment_session_token_unique" ON "conversations" ("session_token") WHERE session_token IS NOT NULL;
+CREATE INDEX "conversation_user_id_idx" ON "conversations" ("user_id");
+CREATE UNIQUE INDEX "conversation_original_lifetime_unique" ON "conversations" ("user_id")
+	WHERE user_id IS NOT NULL AND parent_conversation_id IS NULL AND status IN ('finalizing', 'completed');
+CREATE UNIQUE INDEX "conversation_token_unique" ON "conversations" ("session_token") WHERE session_token IS NOT NULL;
+CREATE INDEX "conversation_parent_id_idx" ON "conversations" ("parent_conversation_id");
+CREATE INDEX "exchange_conversation_id_idx" ON "exchanges" ("conversation_id");
+CREATE UNIQUE INDEX "exchange_conversation_turn_unique" ON "exchanges" ("conversation_id", "turn_number");
 CREATE INDEX "message_conversation_created_idx" ON "messages" ("conversation_id", "created_at");
 CREATE UNIQUE INDEX "assessment_results_conversation_id_unique" ON "assessment_results" ("conversation_id");
 
@@ -249,6 +268,7 @@ CREATE INDEX "public_profile_user_id_idx" ON "public_profile" ("user_id");
 
 -- Purchase events indexes (Story 13.1)
 CREATE INDEX "purchase_events_user_id_idx" ON "purchase_events" ("user_id");
+CREATE INDEX "purchase_events_assessment_result_id_idx" ON "purchase_events" ("assessment_result_id");
 CREATE UNIQUE INDEX "purchase_events_polar_checkout_id_unique" ON "purchase_events" ("polar_checkout_id") WHERE polar_checkout_id IS NOT NULL;
 
 -- Portraits indexes (Story 13.3)
@@ -276,11 +296,14 @@ ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fkey"
 ALTER TABLE "conversations" ADD CONSTRAINT "assessment_session_user_id_user_id_fkey"
 	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
 
+ALTER TABLE "exchanges" ADD CONSTRAINT "exchange_conversation_id_conversations_id_fkey"
+	FOREIGN KEY ("conversation_id") REFERENCES "conversations"("id") ON DELETE CASCADE;
+
 ALTER TABLE "messages" ADD CONSTRAINT "assessment_message_session_id_assessment_session_id_fkey"
 	FOREIGN KEY ("conversation_id") REFERENCES "conversations"("id") ON DELETE CASCADE;
 
-ALTER TABLE "messages" ADD CONSTRAINT "assessment_message_user_id_user_id_fkey"
-	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
+ALTER TABLE "messages" ADD CONSTRAINT "messages_exchange_id_exchanges_id_fkey"
+	FOREIGN KEY ("exchange_id") REFERENCES "exchanges"("id") ON DELETE SET NULL;
 
 -- Assessment results constraints
 ALTER TABLE "assessment_results" ADD CONSTRAINT "assessment_results_session_id_assessment_session_id_fkey"
@@ -292,6 +315,9 @@ ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_sessio
 
 ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_message_id_assessment_message_id_fkey"
 	FOREIGN KEY ("message_id") REFERENCES "messages"("id") ON DELETE CASCADE;
+
+ALTER TABLE "conversation_evidence" ADD CONSTRAINT "conversation_evidence_exchange_id_exchanges_id_fkey"
+	FOREIGN KEY ("exchange_id") REFERENCES "exchanges"("id") ON DELETE SET NULL;
 
 -- Public profile constraints
 ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_session_id_assessment_session_id_fkey"
@@ -305,7 +331,10 @@ ALTER TABLE "public_profile" ADD CONSTRAINT "public_profile_user_id_user_id_fkey
 
 -- Purchase events constraints (Story 13.1)
 ALTER TABLE "purchase_events" ADD CONSTRAINT "purchase_events_user_id_user_id_fk"
-	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT;
+	FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL;
+
+ALTER TABLE "purchase_events" ADD CONSTRAINT "purchase_events_assessment_result_id_assessment_results_id_fk"
+	FOREIGN KEY ("assessment_result_id") REFERENCES "assessment_results"("id") ON DELETE SET NULL;
 
 -- Portraits constraints (Story 13.3)
 ALTER TABLE "portraits" ADD CONSTRAINT "portraits_assessment_result_id_assessment_results_id_fk"

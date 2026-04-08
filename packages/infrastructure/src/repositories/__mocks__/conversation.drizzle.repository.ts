@@ -238,13 +238,13 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 				}
 			}),
 
-		createExtensionSession: (userId: string, parentSessionId: string) =>
+		createExtensionSession: (userId: string, parentConversationId: string) =>
 			Effect.sync(() => {
 				const sessionId = `session_${crypto.randomUUID().slice(0, 8)}`;
 				const session = {
 					id: sessionId,
 					userId,
-					parentSessionId,
+					parentConversationId,
 					sessionToken: null,
 					createdAt: new Date(),
 					updatedAt: new Date(),
@@ -258,11 +258,11 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 
 		findCompletedSessionWithoutChild: (userId: string) =>
 			Effect.sync(() => {
-				// Collect all parent_session_ids from child sessions
+				// Collect all parentConversationId values from child sessions
 				const childParentIds = new Set<string>();
 				for (const session of sessions.values()) {
-					if (session.parentSessionId) {
-						childParentIds.add(session.parentSessionId as string);
+					if (session.parentConversationId) {
+						childParentIds.add(session.parentConversationId as string);
 					}
 				}
 
@@ -292,24 +292,24 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 					status: best.status as string,
 					finalizationProgress: (best.finalizationProgress as string) ?? null,
 					messageCount: (best.messageCount as number) ?? 0,
-					parentSessionId: (best.parentSessionId as string) ?? null,
+					parentConversationId: (best.parentConversationId as string) ?? null,
 				};
 			}),
 
-		hasExtensionSession: (parentSessionId: string) =>
+		hasExtensionSession: (parentConversationId: string) =>
 			Effect.sync(() => {
 				for (const session of sessions.values()) {
-					if (session.parentSessionId === parentSessionId) {
+					if (session.parentConversationId === parentConversationId) {
 						return true;
 					}
 				}
 				return false;
 			}),
 
-		findExtensionSession: (parentSessionId: string) =>
+		findExtensionSession: (parentConversationId: string) =>
 			Effect.sync(() => {
 				for (const session of sessions.values()) {
-					if (session.parentSessionId === parentSessionId) {
+					if (session.parentConversationId === parentConversationId) {
 						return {
 							id: session.id as string,
 							userId: session.userId as string | null,
@@ -319,7 +319,7 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 							status: session.status as string,
 							finalizationProgress: (session.finalizationProgress as string) ?? null,
 							messageCount: (session.messageCount as number) ?? 0,
-							parentSessionId: (session.parentSessionId as string) ?? null,
+							parentConversationId: (session.parentConversationId as string) ?? null,
 						};
 					}
 				}

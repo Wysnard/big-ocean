@@ -35,7 +35,7 @@ export interface ActivateConversationExtensionMessage {
 
 export interface ActivateConversationExtensionOutput {
 	readonly sessionId: string;
-	readonly parentSessionId: string;
+	readonly parentConversationId: string;
 	readonly createdAt: Date;
 	readonly messages: ActivateConversationExtensionMessage[];
 }
@@ -100,14 +100,14 @@ export const activateConversationExtension = (input: ActivateConversationExtensi
 
 		logger.info("Conversation extension activated", {
 			sessionId,
-			parentSessionId: parentSession.id,
+			parentConversationId: parentSession.id,
 			userId,
 			greetingCount: savedMessages.length,
 		});
 
 		return {
 			sessionId,
-			parentSessionId: parentSession.id,
+			parentConversationId: parentSession.id,
 			createdAt: new Date(),
 			messages: savedMessages,
 		} satisfies ActivateConversationExtensionOutput;

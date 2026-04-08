@@ -154,4 +154,25 @@ describe("TherapistChat", () => {
 		const bubbles = container.querySelectorAll("[data-slot='chat-bubble']");
 		expect(bubbles.length).toBeGreaterThan(0);
 	});
+
+	it("renders the shared 25% milestone badge after the fourth user turn", async () => {
+		mockHookReturn.messages = [
+			{ id: "msg_1", role: "assistant", content: "Q1", timestamp: new Date() },
+			{ id: "msg_2", role: "user", content: "A1", timestamp: new Date() },
+			{ id: "msg_3", role: "assistant", content: "Q2", timestamp: new Date() },
+			{ id: "msg_4", role: "user", content: "A2", timestamp: new Date() },
+			{ id: "msg_5", role: "assistant", content: "Q3", timestamp: new Date() },
+			{ id: "msg_6", role: "user", content: "A3", timestamp: new Date() },
+			{ id: "msg_7", role: "assistant", content: "Q4", timestamp: new Date() },
+			{ id: "msg_8", role: "user", content: "A4", timestamp: new Date() },
+		];
+
+		renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		await waitFor(() => {
+			expect(
+				screen.getByText("🫧 Great start — your personality portrait is beginning to emerge."),
+			).toBeInTheDocument();
+		});
+	});
 });

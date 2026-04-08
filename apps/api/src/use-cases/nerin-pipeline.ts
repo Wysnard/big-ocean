@@ -56,6 +56,15 @@ export interface NerinPipelineOutput {
 	readonly surfacingMessage?: string;
 }
 
+function getTurnState(messageCount: number, totalTurns: number) {
+	const currentTurn = messageCount + 1;
+	return {
+		currentTurn,
+		expectedMessageCountAfterTurn: currentTurn,
+		isFinalTurn: currentTurn >= totalTurns,
+	};
+}
+
 /**
  * Runs the full Nerin Director Model pipeline.
  *
@@ -86,7 +95,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// ---- Gather context ----
 
 		const session = yield* sessionRepo.getSession(input.sessionId);
-		const isExtensionSession = !!session.parentSessionId;
+		const isExtensionSession = !!session.parentConversationId;
 
 		// Load all persisted messages — for authenticated users this spans all
 		// sessions so Nerin Director sees one continuous conversation history.
@@ -123,14 +132,23 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 					.pipe(Effect.catchAll(() => evidenceRepo.findBySession(input.sessionId)))
 			: evidenceRepo.findBySession(input.sessionId);
 
-		// Current turn number (1-based, excludes opener exchange at turn 0)
-		const turnNumber = sessionExchanges.filter((e) => e.turnNumber > 0).length + 1;
 		const totalTurns = config.assessmentTurnCount;
+		const exchangeTurnNumber = sessionExchanges.filter((e) => e.turnNumber > 0).length + 1;
+		const turnState = getTurnState(session.messageCount, totalTurns);
+
+		if (exchangeTurnNumber !== turnState.currentTurn) {
+			logger.warn("Turn tracking drift detected", {
+				sessionId: input.sessionId,
+				exchangeTurnNumber,
+				sessionMessageCount: session.messageCount,
+				currentTurn: turnState.currentTurn,
+			});
+		}
 
 		if (isExtensionSession) {
 			logger.info("Extension session context loaded", {
 				sessionId: input.sessionId,
-				parentSessionId: session.parentSessionId,
+				parentConversationId: session.parentConversationId,
 				totalMessagesLoaded: savedMessages.length,
 				totalExchangesLoaded: allExchanges.length,
 				totalEvidenceLoaded: allEvidence.length,
@@ -154,7 +172,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 					.pipe(Effect.catchAll(() => Effect.succeed(0)))
 			: 0;
 
-		const shouldExtract = turnNumber >= 1 && existingEvidenceCount === 0;
+		const shouldExtract = turnState.currentTurn >= 1 && existingEvidenceCount === 0;
 
 		let pendingEvidence: ConversanalyzerEvidenceOutput["evidence"] = [];
 		let extractionTier: ExtractionTier | null = null;
@@ -235,8 +253,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// ---- Step 3: Nerin Director ----
 		// Phase-based prompt selection: opening → exploring → closing
 
-		const isFinalTurnPreCheck = turnNumber >= totalTurns;
-		const directorPhase = isFinalTurnPreCheck ? ("closing" as const) : coverageTarget.phase;
+		const directorPhase = turnState.isFinalTurn ? ("closing" as const) : coverageTarget.phase;
 		const directorSystemPrompt = getDirectorPromptForPhase(directorPhase);
 
 		// Truncate to last 20 messages for the Director to reduce context pressure.
@@ -281,11 +298,11 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		logger.info("Director pipeline computed", {
 			sessionId: input.sessionId,
-			turnNumber,
+			turnNumber: turnState.currentTurn,
 			primaryFacet: coverageTarget.primaryFacet,
 			candidateDomains: coverageTarget.candidateDomains,
 			briefLength: directorResult.brief.length,
-			isFinalTurn: isFinalTurnPreCheck,
+			isFinalTurn: turnState.isFinalTurn,
 			isExtensionSession,
 		});
 
@@ -368,7 +385,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			directorCostCents: directorCost.totalCents,
 			analyzerCostCents: analyzerCost.totalCents,
 			totalCostCents,
-			exchangeNumber: turnNumber,
+			exchangeNumber: turnState.currentTurn,
 			dateKey: getUTCDateKey(),
 		});
 
@@ -409,7 +426,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		}
 
 		// --- Phase B: Create new exchange for AI response ---
-		const exchange = yield* exchangeRepo.create(input.sessionId, turnNumber);
+		const exchange = yield* exchangeRepo.create(input.sessionId, exchangeTurnNumber);
 
 		// Populate Director model data on the new exchange
 		yield* exchangeRepo.update(exchange.id, {
@@ -423,15 +440,21 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		// Increment message_count atomically
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
 
-		// Compute isFinalTurn from message count
-		const isFinalTurnResult = messageCount >= config.assessmentTurnCount;
+		if (messageCount !== turnState.expectedMessageCountAfterTurn) {
+			logger.warn("Message count drift detected after turn save", {
+				sessionId: input.sessionId,
+				expectedMessageCount: turnState.expectedMessageCountAfterTurn,
+				actualMessageCount: messageCount,
+				currentTurn: turnState.currentTurn,
+			});
+		}
 
 		// ---- Farewell message on final turn ----
 		// Static farewell replaces the old surfacing LLM call (ADR-DM-5)
 
 		let surfacingMessage: string | undefined;
 
-		if (isFinalTurnResult) {
+		if (turnState.isFinalTurn) {
 			surfacingMessage = pickFarewellMessage();
 
 			// Save farewell message to DB (linked to closing exchange)
@@ -454,7 +477,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			actorTokenCount: actorResult.tokenCount,
 			directorTokenCount: directorResult.tokenUsage,
 			messageCount,
-			isFinalTurn: isFinalTurnResult,
+			isFinalTurn: turnState.isFinalTurn,
 			hasSurfacingMessage: !!surfacingMessage,
 			primaryFacet: coverageTarget.primaryFacet,
 			candidateDomains: coverageTarget.candidateDomains,
@@ -475,7 +498,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		return {
 			response: actorResult.response,
-			isFinalTurn: isFinalTurnResult,
+			isFinalTurn: turnState.isFinalTurn,
 			...(surfacingMessage ? { surfacingMessage } : {}),
 		} satisfies NerinPipelineOutput;
 	});

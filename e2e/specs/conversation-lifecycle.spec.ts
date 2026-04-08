@@ -6,12 +6,12 @@
  * - Final message triggers farewell / closing exchange
  * - Results page renders with OCEAN code + archetype
  *
- * Uses MESSAGE_THRESHOLD=1 (compose.e2e.yaml), so 1 user message
+ * Uses FREE_TIER_MESSAGE_THRESHOLD=1 (compose.e2e.yaml), so 1 user message
  * triggers farewell. The test verifies the full pipeline executes:
  * greeting → user message → Nerin response → farewell → results.
  *
  * Depth meter is verified via API message count (frontend component
- * renders based on messageCount / MESSAGE_THRESHOLD ratio).
+ * renders based on messageCount / assessmentTurnCount ratio).
  */
 
 import { expect, test } from "@playwright/test";
@@ -65,13 +65,13 @@ test.describe("Conversation Lifecycle", () => {
 			}
 		});
 
-		await test.step("send message → triggers farewell (MESSAGE_THRESHOLD=1)", async () => {
+		await test.step("send message → triggers farewell (assessmentTurnCount=1)", async () => {
 			const chatInput = page.locator("[data-slot='chat-input']");
 			await chatInput.waitFor({ state: "visible" });
 			await chatInput.fill("I find deep satisfaction in understanding complex systems and patterns.");
 			await page.getByTestId("chat-send-btn").click();
 
-			// With MESSAGE_THRESHOLD=1, first user message triggers farewell + View Results link
+			// With assessmentTurnCount=1, the first user message triggers farewell + View Results link
 			await page
 				.getByRole("link", { name: "View Results" })
 				.waitFor({ state: "visible", timeout: 30_000 });

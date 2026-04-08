@@ -252,8 +252,8 @@ describe("GET /api/assessment/:sessionId/results", () => {
 		const startResponse = await postJson("/api/assessment/start", {});
 		const { sessionId } = await startResponse.json();
 
-		// Send 3 messages to reach MESSAGE_THRESHOLD=3
-		// Story 9.2: The 3rd message (at threshold) returns isFinalTurn: true.
+		// Send 3 messages to reach the test-only 3-turn assessment threshold.
+		// The 3rd user turn returns isFinalTurn: true.
 		await postJson("/api/assessment/message", {
 			sessionId,
 			message: "I love exploring new creative ideas and imagining possibilities.",
@@ -266,7 +266,7 @@ describe("GET /api/assessment/:sessionId/results", () => {
 			sessionId,
 			message: "I enjoy social gatherings and meeting new people.",
 		});
-		// Story 9.2: 3rd message triggers isFinalTurn: true at MESSAGE_THRESHOLD=3
+		// The 3rd user turn triggers isFinalTurn: true.
 		expect(thirdMsgResponse.status).toBe(200);
 		const thirdMsgData = await thirdMsgResponse.json();
 		const thirdDecoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(thirdMsgData);

@@ -170,6 +170,12 @@ describe("sendMessage Use Case", () => {
 	describe("isFinalTurn threshold", () => {
 		it.effect("should return isFinalTurn: true at threshold", () =>
 			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						...mockActiveSession,
+						messageCount: ASSESSMENT_TURN_COUNT - 1,
+					}),
+				);
 				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(ASSESSMENT_TURN_COUNT));
 
 				const result = yield* sendMessage({
@@ -183,6 +189,12 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should return isFinalTurn: false below threshold", () =>
 			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						...mockActiveSession,
+						messageCount: ASSESSMENT_TURN_COUNT - 2,
+					}),
+				);
 				mockSessionRepo.incrementMessageCount.mockReturnValue(
 					Effect.succeed(ASSESSMENT_TURN_COUNT - 1),
 				);

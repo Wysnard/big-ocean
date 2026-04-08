@@ -1,10 +1,30 @@
-export const DEFAULT_MILESTONES = [0.25, 0.5, 0.75] as const;
+export const ASSESSMENT_MILESTONES = [
+	{
+		fraction: 0.25,
+		label: 25,
+		turnAt15: 4,
+		message: "🫧 Great start — your personality portrait is beginning to emerge.",
+	},
+	{
+		fraction: 0.5,
+		label: 50,
+		turnAt15: 8,
+		message: "🐙 Halfway down — your personality portrait is taking shape.",
+	},
+	{
+		fraction: 0.75,
+		label: 75,
+		turnAt15: 11,
+		message: "🪸 Almost there — just a few more exchanges to complete your portrait.",
+	},
+] as const;
 
-const FIFTEEN_TURN_MILESTONE_TURNS = new Map<number, number>([
-	[25, 4],
-	[50, 8],
-	[75, 11],
-]);
+export const DEFAULT_MILESTONES = ASSESSMENT_MILESTONES.map((milestone) => milestone.fraction);
+
+function getAssessmentMilestone(milestone: number) {
+	const label = getMilestoneLabel(milestone);
+	return ASSESSMENT_MILESTONES.find((candidate) => candidate.label === label) ?? null;
+}
 
 export function getMilestoneLabel(milestone: number): number {
 	return Math.round(milestone * 100);
@@ -15,10 +35,8 @@ export function getMilestoneTurn(totalTurns: number, milestone: number): number 
 		return null;
 	}
 
-	const label = getMilestoneLabel(milestone);
-
 	if (totalTurns === 15) {
-		return FIFTEEN_TURN_MILESTONE_TURNS.get(label) ?? null;
+		return getAssessmentMilestone(milestone)?.turnAt15 ?? null;
 	}
 
 	return Math.ceil(totalTurns * milestone);

@@ -60,6 +60,13 @@ describe("Conversation Contracts", () => {
 			const validResponse = {
 				sessionId: "session_123",
 				createdAt: new Date().toISOString(),
+				messages: [
+					{
+						role: "assistant" as const,
+						content: "Hi! I'm Nerin.",
+						timestamp: new Date().toISOString(),
+					},
+				],
 			};
 
 			const result = S.decodeUnknownSync(StartConversationResponseSchema)(validResponse);
@@ -131,14 +138,12 @@ describe("Conversation Contracts", () => {
 			const validResponse = {
 				response: "We've gone somewhere real today...",
 				isFinalTurn: true,
-				farewellMessage: "We've gone somewhere real today...",
-				portraitWaitMinMs: 10000,
+				surfacingMessage: "We've gone somewhere real today...",
 			};
 
 			const result = S.decodeUnknownSync(SendMessageResponseSchema)(validResponse);
 			expect(result.isFinalTurn).toBe(true);
-			expect(result.farewellMessage).toBe("We've gone somewhere real today...");
-			expect(result.portraitWaitMinMs).toBe(10000);
+			expect(result.surfacingMessage).toBe("We've gone somewhere real today...");
 		});
 
 		it("should reject send message response with missing isFinalTurn", () => {
@@ -156,8 +161,7 @@ describe("Conversation Contracts", () => {
 			};
 
 			const result = S.decodeUnknownSync(SendMessageResponseSchema)(minimalResponse);
-			expect(result.farewellMessage).toBeUndefined();
-			expect(result.portraitWaitMinMs).toBeUndefined();
+			expect(result.surfacingMessage).toBeUndefined();
 		});
 	});
 
@@ -177,9 +181,23 @@ describe("Conversation Contracts", () => {
 					{ name: "agreeableness", score: 90, level: "H" as const, confidence: 75 },
 					{ name: "neuroticism", score: 18, level: "L" as const, confidence: 50 },
 				],
-				facets: [{ name: "Imagination", traitName: "openness", score: 15, confidence: 85 }],
+				facets: [
+					{
+						name: "imagination",
+						traitName: "openness",
+						score: 15,
+						confidence: 85,
+						level: "OV",
+						levelLabel: "Visionary",
+						levelDescription: "Imaginative and possibility-oriented.",
+					},
+				],
 				overallConfidence: 68,
 				messageCount: 24,
+				publicProfileId: null,
+				shareableUrl: null,
+				isPublic: false,
+				isLatestVersion: true,
 			};
 
 			const result = S.decodeUnknownSync(GetResultsResponseSchema)(validResponse);
@@ -206,6 +224,10 @@ describe("Conversation Contracts", () => {
 				facets: [],
 				overallConfidence: 50,
 				messageCount: 10,
+				publicProfileId: null,
+				shareableUrl: null,
+				isPublic: null,
+				isLatestVersion: false,
 			};
 
 			expect(() => S.decodeUnknownSync(GetResultsResponseSchema)(invalidResponse)).toThrow();
@@ -234,6 +256,8 @@ describe("Conversation Contracts", () => {
 					agreeableness: 0.5,
 					neuroticism: 0.5,
 				},
+				assessmentTurnCount: 15,
+				status: "active" as const,
 			};
 
 			const result = S.decodeUnknownSync(ResumeSessionResponseSchema)(validResponse);
@@ -258,6 +282,8 @@ describe("Conversation Contracts", () => {
 					agreeableness: 0.5,
 					neuroticism: 0.5,
 				},
+				assessmentTurnCount: 15,
+				status: "active" as const,
 			};
 
 			expect(() => S.decodeUnknownSync(ResumeSessionResponseSchema)(invalidResponse)).toThrow();

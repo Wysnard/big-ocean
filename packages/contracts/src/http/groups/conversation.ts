@@ -198,7 +198,7 @@ export const GetTranscriptResponseSchema = S.Struct({
  */
 export const ActivateExtensionResponseSchema = S.Struct({
 	sessionId: S.String,
-	parentSessionId: S.String,
+	parentConversationId: S.String,
 	createdAt: S.DateTimeUtc,
 	messages: S.Array(
 		S.Struct({

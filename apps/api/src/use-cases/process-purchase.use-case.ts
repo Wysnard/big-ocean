@@ -200,7 +200,7 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 					Effect.sync(() => {
 						logger.info("Extension session created from purchase webhook", {
 							sessionId: result.sessionId,
-							parentSessionId: result.parentSessionId,
+							parentConversationId: result.parentConversationId,
 							userId: input.userId,
 						});
 					}),

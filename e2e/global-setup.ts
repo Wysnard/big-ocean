@@ -82,7 +82,7 @@ async function createAuthState(): Promise<void> {
 	console.log("[global-setup] Seeded evidence data for results");
 
 	// 5. Send a user message via the API so messageCount reaches
-	//    MESSAGE_THRESHOLD and the profile assessment card shows "completed"
+	//    the configured assessment threshold and the profile card shows "completed"
 	await sendAssessmentMessage(
 		ownerApi,
 		sessionId,

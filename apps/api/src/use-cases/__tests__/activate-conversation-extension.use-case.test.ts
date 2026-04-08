@@ -64,7 +64,7 @@ describe("activateConversationExtension Use Case", () => {
 			const result = yield* activateConversationExtension({ userId: "user_123" });
 
 			expect(result.sessionId).toBeDefined();
-			expect(result.parentSessionId).toBe(created.sessionId);
+			expect(result.parentConversationId).toBe(created.sessionId);
 			expect(result.messages.length).toBeGreaterThan(0);
 		}).pipe(Effect.provide(TestLayer)),
 	);
@@ -87,7 +87,7 @@ describe("activateConversationExtension Use Case", () => {
 			// Create extension session first time
 			const first = yield* activateConversationExtension({ userId: "user_456" });
 			expect(first.sessionId).toBeDefined();
-			expect(first.parentSessionId).toBe(parent.sessionId);
+			expect(first.parentConversationId).toBe(parent.sessionId);
 
 			// Second call should detect parent now has a child and
 			// not find an eligible session (parent has child), or find a different one

@@ -175,21 +175,21 @@ export const conversation = pgTable(
 		dropOffEmailSentAt: timestamp("drop_off_email_sent_at"),
 		checkInEmailSentAt: timestamp("check_in_email_sent_at"),
 		recaptureEmailSentAt: timestamp("recapture_email_sent_at"),
-		parentSessionId: uuid("parent_conversation_id"),
+		parentConversationId: uuid("parent_conversation_id"),
 		conversationType: conversationTypeEnum("conversation_type").notNull().default("assessment"),
 		metadata: jsonb("metadata"),
 	},
 	(table) => [
-		index("assessment_session_user_id_idx").on(table.userId),
-		uniqueIndex("assessment_session_original_lifetime_unique")
+		index("conversation_user_id_idx").on(table.userId),
+		uniqueIndex("conversation_original_lifetime_unique")
 			.on(table.userId)
 			.where(
 				sql`user_id IS NOT NULL AND parent_conversation_id IS NULL AND status IN ('finalizing', 'completed')`,
 			),
-		uniqueIndex("assessment_session_token_unique")
+		uniqueIndex("conversation_token_unique")
 			.on(table.sessionToken)
 			.where(sql`session_token IS NOT NULL`),
-		index("assessment_session_parent_session_id_idx").on(table.parentSessionId),
+		index("conversation_parent_id_idx").on(table.parentConversationId),
 	],
 );
 

@@ -66,10 +66,8 @@ services:
       DATABASE_URL: postgresql://test_user:test_password@postgres-test:5432/bigocean_test
       # Redis connection for CostGuard budget tracking (uses internal Docker network hostname)
       REDIS_URL: "redis://redis-test:6379"
-      # Low threshold so integration tests can trigger portrait generation with 3 messages
+      # Low assessment turn count so integration tests can trigger final turn with 3 user messages
       FREE_TIER_MESSAGE_THRESHOLD: "3"
-      # Story 9.2: Two-tier architecture uses MESSAGE_THRESHOLD for isFinalTurn
-      MESSAGE_THRESHOLD: "3"
       # Short wait so integration tests don't wait 10s for portrait reveal (Story 7.18)
       PORTRAIT_WAIT_MIN_MS: "2000"
       # High message rate limit so integration tests can send multiple messages quickly

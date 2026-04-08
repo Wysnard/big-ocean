@@ -64,7 +64,7 @@ test("golden path: landing → signup → chat → results → share → public 
 		await chatInput.fill("I love exploring new ideas and creative projects.");
 		await page.getByTestId("chat-send-btn").click();
 
-		// With MESSAGE_THRESHOLD=1, the 1st user message triggers farewell.
+		// With assessmentTurnCount=1, the 1st user message triggers farewell.
 		// User is authenticated, so "View Results" link appears directly (no auth gate).
 		await page.getByRole("link", { name: "View Results" }).waitFor({
 			state: "visible",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	ASSESSMENT_MILESTONES,
 	DEFAULT_MILESTONES,
 	getMilestoneLabel,
 	getMilestonePositionPercent,
@@ -11,6 +12,21 @@ describe("depth-milestones", () => {
 	describe("DEFAULT_MILESTONES", () => {
 		it("exports [0.25, 0.5, 0.75]", () => {
 			expect(DEFAULT_MILESTONES).toEqual([0.25, 0.5, 0.75]);
+		});
+	});
+
+	describe("ASSESSMENT_MILESTONES", () => {
+		it("defines the shared 15-turn milestone contract once", () => {
+			expect(
+				ASSESSMENT_MILESTONES.map((milestone) => ({
+					label: milestone.label,
+					turnAt15: milestone.turnAt15,
+				})),
+			).toEqual([
+				{ label: 25, turnAt15: 4 },
+				{ label: 50, turnAt15: 8 },
+				{ label: 75, turnAt15: 11 },
+			]);
 		});
 	});
 

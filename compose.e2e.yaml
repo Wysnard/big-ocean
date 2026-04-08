@@ -57,7 +57,6 @@ services:
       DATABASE_URL: postgresql://test_user:test_password@postgres-e2e:5432/bigocean_test
       REDIS_URL: "redis://redis-e2e:6379"
       FREE_TIER_MESSAGE_THRESHOLD: "1"
-      MESSAGE_THRESHOLD: "1"
       PORTRAIT_WAIT_MIN_MS: "500"
       SHARE_MIN_CONFIDENCE: "0"
       ANTHROPIC_API_KEY: "sk-test-dummy-key-for-e2e-tests"

@@ -120,7 +120,7 @@ const lazyFinalize = (sessionId: string, _userId: string | null) =>
 			// Fetch conversation evidence
 			// Story 36-3: For extension sessions with authenticated users, use ALL user evidence
 			const session2 = yield* sessionRepo.getSession(sessionId);
-			const isExtension = session2.parentSessionId != null;
+			const isExtension = session2.parentConversationId != null;
 			const hasAuthUser = session2.userId != null;
 			const conversationEvidence =
 				isExtension && hasAuthUser

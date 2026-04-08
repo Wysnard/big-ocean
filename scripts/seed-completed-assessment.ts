@@ -9,7 +9,7 @@
  * - Test user (if doesn't exist)
  * - Completed conversation session
  * - Exchange rows with Director model data (director briefs + coverage targets)
- * - Realistic conversation messages (12 messages) linked to exchanges
+ * - Realistic conversation messages for a completed 15-turn assessment
  * - Assessment results (facets, traits, domain coverage)
  * - Conversation evidence linked to exchanges
  * - Public profile with OCEAN codes
@@ -47,68 +47,110 @@ const TEST_USER_PASSWORD = "testpassword123";
 const TEST_USER_ID = "00000000-0000-4000-a000-000000000001";
 const TEST_ACCOUNT_ID = "00000000-0000-4000-a000-000000000002";
 
-// Sample conversation messages (12 messages total - triggers 4 scoring rounds)
-const CONVERSATION_MESSAGES: Array<{ role: "user" | "assistant"; content: string }> = [
+const SEEDED_ASSESSMENT_TURN_COUNT = 15;
+
+const OPENING_MESSAGE =
+	"Hi! I'm Nerin, your personality guide. I'd love to get to know you better. Tell me about a recent decision you made - big or small. What was going through your mind?";
+
+const SEEDED_ASSESSMENT_TURNS = [
 	{
-		role: "assistant",
-		content:
-			"Hi! I'm Nerin, your personality guide. I'd love to get to know you better. Tell me about a recent decision you made - big or small. What was going through your mind?",
-	},
-	{
-		role: "user",
-		content:
+		user:
 			"Well, I recently decided to reorganize my entire home office. I spent a whole weekend color-coding my books, labeling all my supplies, and creating a detailed filing system. Some people think I'm crazy, but I love having everything in its proper place!",
-	},
-	{
-		role: "assistant",
-		content:
+		assistant:
 			"That's fascinating! It sounds like you really value structure and organization. I'm curious - when you're working on a creative project, do you prefer to plan everything out first, or do you like to see where your inspiration takes you?",
 	},
 	{
-		role: "user",
-		content:
+		user:
 			"Oh, I definitely plan everything! Before I start any project, I create detailed outlines, timelines, and checklists. I can't stand the idea of just 'winging it' - that feels chaotic and stressful to me. Though I have a friend who's the complete opposite and somehow makes it work.",
-	},
-	{
-		role: "assistant",
-		content:
+		assistant:
 			"I appreciate how you've found a system that works for you! Let's shift gears a bit. When you're at a social gathering, do you tend to seek out new people to meet, or do you prefer catching up with close friends you already know?",
 	},
 	{
-		role: "user",
-		content:
+		user:
 			"Hmm, I'd say I prefer sticking with people I know well. Large groups can be exhausting for me. I'd much rather have a deep one-on-one conversation with a close friend than work the room meeting tons of new people. Though I can do it when needed for work.",
-	},
-	{
-		role: "assistant",
-		content:
+		assistant:
 			"That makes sense - quality over quantity in relationships! Speaking of relationships, how do you typically respond when a friend is going through a tough time? What's your natural instinct?",
 	},
 	{
-		role: "user",
-		content:
+		user:
 			"I'm usually the first person to show up with food or offer to help with practical things. If someone's stressed, I'll help them organize their tasks or create a plan to tackle the problem. I guess I'm more solution-focused than just sitting with emotions, though I'm trying to get better at that.",
-	},
-	{
-		role: "assistant",
-		content:
+		assistant:
 			"Your friends are lucky to have someone so dependable and action-oriented! I'm curious about your intellectual life. When you read or learn about something new, do you tend to accept established explanations, or do you find yourself questioning and analyzing everything?",
 	},
 	{
-		role: "user",
-		content:
+		user:
 			"Oh, I'm definitely a questioner! I love diving deep into topics, reading multiple perspectives, and forming my own opinions. I get frustrated when people just accept things at face value without thinking critically. I'm always reading books, listening to podcasts, exploring new ideas.",
-	},
-	{
-		role: "assistant",
-		content:
+		assistant:
 			"That intellectual curiosity really comes through! One more thing I'm wondering about - when you imagine the future, whether it's planning a vacation or thinking about your career, do you focus mainly on concrete goals and practical steps, or do you enjoy exploring possibilities and 'what-ifs'?",
 	},
 	{
-		role: "user",
-		content:
+		user:
 			"Definitely the possibilities and what-ifs! I love brainstorming different scenarios and imagining how things could unfold. My partner jokes that I have three backup plans for every backup plan. I guess I like being prepared for multiple futures, even the unlikely ones.",
+		assistant:
+			"When stress starts building, what helps you feel steady again? Do you reach for routine, conversation, solitude, movement - what actually works in your body?",
 	},
+	{
+		user:
+			"Routine helps most. I clean my desk, make a list, and usually go for a walk before I talk to anyone. If I can get the mess outside me sorted, the mess inside me calms down too.",
+		assistant:
+			"That pairing of order and self-regulation is really clear. How do you relate to risk when something excites you - do you jump, or do you build a landing plan first and then move?",
+	},
+	{
+		user:
+			"I almost never jump blind. I'll take a big swing if I believe in it, but only after I've mapped the failure modes. I like novelty; I just don't trust chaos to carry me through it.",
+		assistant:
+			"What happens when conflict shows up with someone you care about? Do you go straight into the conversation, take time to think, or quietly keep score until you know what you actually feel?",
+	},
+	{
+		user:
+			"I usually step back first. I need enough distance to understand what actually happened before I say anything sharp. Then I come back pretty prepared - maybe too prepared - because I want the conversation to be fair and useful.",
+		assistant:
+			"That sounds measured rather than avoidant. I'm wondering how that same part of you shows up around family or obligation - when people need you, do you feel strengthened by being dependable, or crowded by it?",
+	},
+	{
+		user:
+			"Both, honestly. I take pride in being the reliable one, especially for family, but I can start to disappear into that role if I'm not careful. If I don't protect some solo thinking time, I get resentful and then feel guilty about being resentful.",
+		assistant:
+			"There's a lot of self-awareness in that. When your body tells you something is off - low sleep, tension, burnout - do you listen early, or do you tend to notice only once the signal gets loud?",
+	},
+	{
+		user:
+			"I usually notice it late. I can power through for a while because I tell myself I'm being disciplined, and then suddenly my jaw hurts, I stop sleeping well, and I realize my version of discipline has quietly turned into overcontrol.",
+		assistant:
+			"That distinction feels important. In the parts of life that are supposed to be fun - weekends, travel, hobbies - do you want looseness, or do you secretly enjoy structuring your leisure too?",
+	},
+	{
+		user:
+			"I tell myself I want looseness, but even my spontaneity comes with tabs open. I like wandering a city or trying something new, but I also love having a map, a shortlist, and enough context that the freedom feels intentional instead of random.",
+		assistant:
+			"That sounds like you want room to explore without losing your footing. What does achievement mean to you these days - winning, mastering, being respected, building something solid, proving something to yourself?",
+	},
+	{
+		user:
+			"More than anything, I want to build something I trust. Recognition is nice, but it's secondary. The satisfying part is when I can look at a piece of work and feel that it reflects both rigor and imagination - like it could hold weight and still feel alive.",
+		assistant:
+			"When you feel misunderstood, what do you most wish people noticed about you that they usually miss on first glance?",
+	},
+	{
+		user:
+			"That the carefulness isn't fear. People sometimes read me as rigid because I plan, but most of the time I'm planning so I can be brave without being reckless. The structure is there to support the leap, not replace it.",
+		assistant:
+			"That's a sharp distinction. Last thing: if someone close to you had to describe what they rely on in you, what would they say without hesitation?",
+	},
+	{
+		user:
+			"They'd probably say I'm the person who can make the chaos workable. I can see the pattern, make the plan, and still leave room for something surprising to happen. I think that's the version of me I trust most too.",
+		assistant:
+			"There's something striking about you: your imagination isn't airy and your structure isn't rigid. They work together. You don't just dream in possibilities or live by systems - you build systems sturdy enough to carry possibility. That's a rarer kind of steadiness than you may realize.",
+	},
+] as const;
+
+const CONVERSATION_MESSAGES: Array<{ role: "user" | "assistant"; content: string }> = [
+	{ role: "assistant", content: OPENING_MESSAGE },
+	...SEEDED_ASSESSMENT_TURNS.flatMap((turn) => [
+		{ role: "user" as const, content: turn.user },
+		{ role: "assistant" as const, content: turn.assistant },
+	]),
 ];
 
 // Generate realistic facet scores (0-20 scale)
@@ -233,13 +275,13 @@ const _EVIDENCE_QUOTES: Partial<
 };
 
 /**
- * Director model exchange data — one entry per user-response turn (turns 1-5).
+ * Director model exchange templates reused across the seeded 15-turn conversation.
  * Turn 0 is the greeting exchange with no director output.
  *
  * Each brief follows the three-beat structure:
  *   Observation (when warranted) → Connection (when needed) → Question (always)
  */
-const DIRECTOR_EXCHANGE_DATA: Array<{
+const DIRECTOR_EXCHANGE_TEMPLATES: Array<{
 	directorOutput: string;
 	coverageTargets: { targetFacets: string[]; targetDomain: string };
 }> = [
@@ -302,7 +344,7 @@ QUESTION: Ask about imagining the future — concrete goals vs. what-if explorat
 		},
 	},
 	{
-		// Turn 6 (closing): After user talks about future possibilities and backup plans
+		// Closing turn template
 		directorOutput: `OBSERVATION: "I have three backup plans for every backup plan" — said with humor but it's a profound reveal. This is someone who manages anxiety through preparation, who finds peace in having mapped every contingency. The partner joke suggests they know it's excessive but can't help it. That self-awareness paired with inability to change the behavior is the tension that makes them interesting.
 
 This is the final exchange. Make your boldest observation — name the core tension you've been watching build: their deep need for order and structure coexists with a genuinely expansive imagination. They don't just plan — they dream in organized folders. That's not a contradiction; it's their superpower.
@@ -314,6 +356,25 @@ QUESTION: End with something that leaves them wanting more. Name what you see in
 		},
 	},
 ];
+
+function getDirectorExchangeData(turn: number) {
+	const closingTemplate = DIRECTOR_EXCHANGE_TEMPLATES[DIRECTOR_EXCHANGE_TEMPLATES.length - 1];
+	if (!closingTemplate) {
+		throw new Error("Missing closing director exchange template");
+	}
+
+	if (turn === SEEDED_ASSESSMENT_TURN_COUNT) {
+		return closingTemplate;
+	}
+
+	const exploratoryTemplates = DIRECTOR_EXCHANGE_TEMPLATES.slice(0, -1);
+	const template = exploratoryTemplates[(turn - 1) % exploratoryTemplates.length];
+	if (!template) {
+		throw new Error(`Missing director exchange template for turn ${turn}`);
+	}
+
+	return template;
+}
 
 // Build JSONB facets data
 const buildFacetsJson = () => {
@@ -510,7 +571,7 @@ const seedProgram = Effect.gen(function* () {
 			userId,
 			status: "completed",
 			finalizationProgress: "completed",
-			messageCount: CONVERSATION_MESSAGES.length,
+			messageCount: SEEDED_ASSESSMENT_TURN_COUNT,
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to create conversation session: ${error}`)));
@@ -518,7 +579,7 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`  Created session: ${sessionRecord.id}`);
 
 	// 3. Create exchange rows (Director model pipeline state per turn)
-	// Turn 0 = greeting (no director output), Turns 1-5 = user-response turns
+	// Turn 0 = greeting (no director output), Turns 1-15 = user-response turns
 	console.log("\nCreating exchange rows...");
 	const exchangeRecords: Array<{ id: string; turnNumber: number }> = [];
 
@@ -537,9 +598,9 @@ const seedProgram = Effect.gen(function* () {
 	exchangeRecords.push({ id: openerExchange.id, turnNumber: 0 });
 	console.log("  Turn 0: greeting exchange (no director output)");
 
-	// Turns 1-5: user-response exchanges with director briefs and coverage targets
-	for (let turn = 1; turn <= DIRECTOR_EXCHANGE_DATA.length; turn++) {
-		const exchangeData = DIRECTOR_EXCHANGE_DATA[turn - 1];
+	// Turns 1-15: user-response exchanges with director briefs and coverage targets
+	for (let turn = 1; turn <= SEEDED_ASSESSMENT_TURN_COUNT; turn++) {
+		const exchangeData = getDirectorExchangeData(turn);
 		const [exchangeRecord] = yield* db
 			.insert(exchange)
 			.values({
@@ -557,17 +618,15 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`  Created ${exchangeRecords.length} exchange rows`);
 
 	// 4. Insert conversation messages (linked to exchanges)
-	// Messages are paired: assistant(0)+user(1) = turn 0→1, assistant(2)+user(3) = turn 1→2, etc.
 	// Turn 0: greeting assistant message (index 0)
-	// Turn N (1-5): user message (index 2N-1) + assistant response (index 2N)
+	// Turn N (1-15): user message (index 2N-1) + assistant response (index 2N)
 	console.log("\nInserting conversation messages...");
 	const messageRecords = [];
 	for (const [index, msg] of CONVERSATION_MESSAGES.entries()) {
 		// Determine which exchange this message belongs to
 		// Index 0 (assistant greeting) → turn 0
 		// Index 1 (user) → turn 1, Index 2 (assistant) → turn 1
-		// Index 3 (user) → turn 2, Index 4 (assistant) → turn 2
-		// etc.
+		// Index 3 (user) → turn 2, Index 4 (assistant) → turn 2, etc.
 		const turn = index === 0 ? 0 : Math.ceil(index / 2);
 		const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
 
@@ -599,6 +658,7 @@ const seedProgram = Effect.gen(function* () {
 			traits: traitsJson,
 			domainCoverage: domainCoverageJson,
 			portrait: "",
+			stage: "completed",
 		})
 		.returning()
 		.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
@@ -606,15 +666,15 @@ const seedProgram = Effect.gen(function* () {
 
 	// 6. Insert conversation evidence (linked to messages and exchanges)
 	console.log("\nInserting conversation evidence...");
-	// User messages are at indices 1, 3, 5, 7, 9, 11 → turns 1, 2, 3, 4, 5, 6
-	// We have 6 turns (1-6), distribute 30 facets across them (5 per turn)
+	// User messages are at odd indices → turns 1-15.
+	// Distribute the 30 seeded facet signals evenly across the completed run.
 	const userMsgIndices = CONVERSATION_MESSAGES.map((m, i) => ({ role: m.role, index: i }))
 		.filter((m) => m.role === "user")
 		.map((m) => m.index);
 
 	let convEvidenceCount = 0;
 	for (const [facet, data] of Object.entries(FACET_SCORE_MAP)) {
-		// Distribute evidence across the 5 user-response turns (6 evidence per turn)
+		// Distribute evidence across the seeded user turns (2 evidence per turn)
 		const turnIndex = convEvidenceCount % userMsgIndices.length;
 		const msgIndex = userMsgIndices[turnIndex];
 		const message = messageRecords[msgIndex];
@@ -668,6 +728,7 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`Session ID: ${sessionRecord.id}`);
 	console.log(`User: ${TEST_USER_EMAIL}`);
 	console.log(`Status: ${sessionRecord.status}`);
+	console.log(`User Turns: ${SEEDED_ASSESSMENT_TURN_COUNT}`);
 	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
 	console.log(
 		`Exchanges: ${exchangeCount} (1 greeting + ${exchangeCount - 1} with director briefs)`,
