@@ -1010,7 +1010,7 @@ function ChatSection() {
 							<span className="text-lg font-heading font-semibold text-foreground">Nerin</span>
 						</div>
 						<p className="text-sm text-foreground">
-							~25 min · A personality portrait awaits · Leave and return anytime
+							~30 minutes · A personality portrait awaits · Leave and return anytime
 						</p>
 					</div>
 					{/* Mobile variant */}

@@ -29,7 +29,7 @@ export function HeroSection() {
 				</p>
 
 				<div className="mb-8 font-mono text-[.72rem] tracking-[.05em] text-muted-foreground">
-					~25 MIN &middot; FREE &middot; JUST A CONVERSATION
+					~30 MINUTES &middot; FREE &middot; JUST A CONVERSATION
 				</div>
 
 				<div className="flex flex-wrap items-center gap-3 max-[900px]:justify-center">

@@ -60,7 +60,7 @@ const mockConfig = {
 	nerinMaxTokens: 0,
 	nerinTemperature: 0,
 	dailyCostLimit: 0,
-	freeTierMessageThreshold: 0,
+	assessmentTurnCount: 0,
 	portraitWaitMinMs: 0,
 	shareMinConfidence: 0,
 	conversanalyzerModelId: "",

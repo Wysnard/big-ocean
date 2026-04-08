@@ -126,7 +126,7 @@ export const ResumeSessionResponseSchema = S.Struct({
 		agreeableness: S.Number,
 		neuroticism: S.Number,
 	}),
-	freeTierMessageThreshold: S.Number,
+	assessmentTurnCount: S.Number,
 	status: S.Literal("active", "paused", "finalizing", "completed"),
 });
 
@@ -152,7 +152,7 @@ export const SessionSummarySchema = S.Struct({
  */
 export const ListSessionsResponseSchema = S.Struct({
 	sessions: S.Array(SessionSummarySchema),
-	freeTierMessageThreshold: S.Number,
+	assessmentTurnCount: S.Number,
 });
 
 /**

@@ -27,7 +27,7 @@ vi.mock("@/lib/api-client", () => ({
 						agreeableness: 0,
 						neuroticism: 0,
 					},
-					freeTierMessageThreshold: 25,
+					assessmentTurnCount: 15,
 					status: "active",
 				}),
 		},

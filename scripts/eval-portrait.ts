@@ -52,7 +52,7 @@ const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 const SONNET_MODEL = "claude-sonnet-4-6";
 const OPUS_MODEL = "claude-opus-4-6";
 
-const USER_MESSAGE_COUNT = 25;
+const USER_MESSAGE_COUNT = 15;
 
 const USER_PERSONA = `You are roleplaying as a specific person during a personality assessment conversation.
 
@@ -99,7 +99,7 @@ const baseConfig: AppConfigService = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
-	freeTierMessageThreshold: 25,
+	assessmentTurnCount: 15,
 	shareMinConfidence: 70,
 };
 

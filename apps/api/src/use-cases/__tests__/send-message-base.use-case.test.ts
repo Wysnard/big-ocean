@@ -9,8 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest"
 import { Effect } from "effect";
 import { sendMessage } from "../send-message.use-case";
 import {
+	ASSESSMENT_TURN_COUNT,
 	createTestLayer,
-	FREE_TIER_MESSAGE_THRESHOLD,
 	mockActiveSession,
 	mockActorRepo,
 	mockActorResponse,
@@ -170,9 +170,7 @@ describe("sendMessage Use Case", () => {
 	describe("isFinalTurn threshold", () => {
 		it.effect("should return isFinalTurn: true at threshold", () =>
 			Effect.gen(function* () {
-				mockSessionRepo.incrementMessageCount.mockReturnValue(
-					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD),
-				);
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(ASSESSMENT_TURN_COUNT));
 
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
@@ -186,7 +184,7 @@ describe("sendMessage Use Case", () => {
 		it.effect("should return isFinalTurn: false below threshold", () =>
 			Effect.gen(function* () {
 				mockSessionRepo.incrementMessageCount.mockReturnValue(
-					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD - 1),
+					Effect.succeed(ASSESSMENT_TURN_COUNT - 1),
 				);
 
 				const result = yield* sendMessage({

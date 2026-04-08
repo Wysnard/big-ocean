@@ -32,7 +32,7 @@ interface CacheMessage {
 interface ResumeCache {
 	messages: CacheMessage[];
 	confidence: TraitScores;
-	freeTierMessageThreshold: number;
+	assessmentTurnCount: number;
 	status: "active" | "paused" | "finalizing" | "completed";
 }
 
@@ -310,7 +310,7 @@ export function useTherapistChat(sessionId: string) {
 	// Re-derive farewell state from resumed data (lost on post-auth navigation re-mount)
 	useEffect(() => {
 		if (!resumeData) return;
-		const threshold = resumeData.freeTierMessageThreshold ?? 25;
+		const threshold = resumeData.assessmentTurnCount ?? 15;
 		const userCount = resumeData.messages.filter((m) => m.role === "user").length;
 		if (userCount >= threshold) {
 			setIsFarewellReceived(true);
@@ -335,10 +335,10 @@ export function useTherapistChat(sessionId: string) {
 
 	// ── Progress tracking ────────────────────────────────────────────────
 
-	const FREE_TIER_THRESHOLD = resumeData?.freeTierMessageThreshold ?? 25;
+	const assessmentTurnCount = resumeData?.assessmentTurnCount ?? 15;
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
-	const progressPercent = Math.min(Math.round((userMessageCount / FREE_TIER_THRESHOLD) * 100), 100);
-	const isConfidenceReady = userMessageCount >= FREE_TIER_THRESHOLD;
+	const progressPercent = Math.min(Math.round((userMessageCount / assessmentTurnCount) * 100), 100);
+	const isConfidenceReady = userMessageCount >= assessmentTurnCount;
 
 	return {
 		messages,
@@ -351,7 +351,7 @@ export function useTherapistChat(sessionId: string) {
 		isResumeSessionNotFound,
 		isConfidenceReady,
 		progressPercent,
-		freeTierMessageThreshold: FREE_TIER_THRESHOLD,
+		assessmentTurnCount,
 		// Story 7.18: Farewell transition state
 		isFarewellReceived,
 		portraitWaitMinMs: undefined as number | undefined,

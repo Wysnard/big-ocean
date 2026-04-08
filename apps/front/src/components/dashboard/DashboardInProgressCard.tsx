@@ -19,17 +19,17 @@ import { MessageCircle } from "lucide-react";
 interface DashboardInProgressCardProps {
 	sessionId: string;
 	messageCount: number;
-	freeTierMessageThreshold: number;
+	assessmentTurnCount: number;
 }
 
 export function DashboardInProgressCard({
 	sessionId,
 	messageCount,
-	freeTierMessageThreshold,
+	assessmentTurnCount,
 }: DashboardInProgressCardProps) {
 	const progress =
-		freeTierMessageThreshold > 0
-			? Math.min(Math.round((messageCount / freeTierMessageThreshold) * 100), 100)
+		assessmentTurnCount > 0
+			? Math.min(Math.round((messageCount / assessmentTurnCount) * 100), 100)
 			: 0;
 
 	return (
@@ -47,7 +47,7 @@ export function DashboardInProgressCard({
 				<div className="space-y-1.5">
 					<div className="flex items-center justify-between text-xs text-muted-foreground">
 						<span>
-							{messageCount} / {freeTierMessageThreshold} messages
+							{messageCount} / {assessmentTurnCount} messages
 						</span>
 						<span>{progress}%</span>
 					</div>

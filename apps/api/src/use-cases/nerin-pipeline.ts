@@ -125,7 +125,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Current turn number (1-based, excludes opener exchange at turn 0)
 		const turnNumber = sessionExchanges.filter((e) => e.turnNumber > 0).length + 1;
-		const totalTurns = config.freeTierMessageThreshold;
+		const totalTurns = config.assessmentTurnCount;
 
 		if (isExtensionSession) {
 			logger.info("Extension session context loaded", {
@@ -424,7 +424,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const messageCount = yield* sessionRepo.incrementMessageCount(input.sessionId);
 
 		// Compute isFinalTurn from message count
-		const isFinalTurnResult = messageCount >= config.freeTierMessageThreshold;
+		const isFinalTurnResult = messageCount >= config.assessmentTurnCount;
 
 		// ---- Farewell message on final turn ----
 		// Static farewell replaces the old surfacing LLM call (ADR-DM-5)

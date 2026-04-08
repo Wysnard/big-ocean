@@ -27,7 +27,7 @@ export interface ListUserSessionsOutput {
 		oceanCode5: string | null;
 		archetypeName: string | null;
 	}>;
-	readonly freeTierMessageThreshold: number;
+	readonly assessmentTurnCount: number;
 }
 
 export const listUserSessions = (
@@ -40,6 +40,6 @@ export const listUserSessions = (
 
 		return {
 			sessions,
-			freeTierMessageThreshold: config.freeTierMessageThreshold,
+			assessmentTurnCount: config.assessmentTurnCount,
 		};
 	});

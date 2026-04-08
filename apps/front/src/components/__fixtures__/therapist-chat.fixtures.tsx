@@ -29,7 +29,7 @@ export let mockHookReturn = {
 	isResumeSessionNotFound: false,
 	isConfidenceReady: false,
 	progressPercent: 0,
-	freeTierMessageThreshold: 25,
+	assessmentTurnCount: 15,
 	// Story 7.18: Farewell transition state
 	isFarewellReceived: false,
 	portraitWaitMinMs: undefined as number | undefined,
@@ -60,7 +60,7 @@ export function resetMockHookReturn() {
 		isResumeSessionNotFound: false,
 		isConfidenceReady: false,
 		progressPercent: 0,
-		freeTierMessageThreshold: 25,
+		assessmentTurnCount: 15,
 		isFarewellReceived: false,
 		portraitWaitMinMs: undefined,
 	};

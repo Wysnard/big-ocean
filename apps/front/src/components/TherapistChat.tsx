@@ -19,6 +19,7 @@ import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { ChatAuthGate } from "./ChatAuthGate";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
 import { DepthMeter } from "./chat/DepthMeter";
+import { isMilestoneReached } from "./chat/depth-milestones";
 import { GeometricOcean } from "./sea-life/GeometricOcean";
 
 interface TherapistChatProps {
@@ -53,9 +54,9 @@ function getRelativeTime(date: Date): string {
 /** Character counter warning threshold (90% of max) */
 const WARNING_THRESHOLD = 0.9;
 
-/** Milestone thresholds and their app-voiced progress messages */
+/** Milestone labels and their app-voiced progress messages */
 /** Session context shown in chat header */
-const SESSION_CONTEXT = "~25 min · A personality portrait awaits · Leave and return anytime";
+const SESSION_CONTEXT = "~30 minutes · A personality portrait awaits · Leave and return anytime";
 
 const MILESTONES = [
 	{
@@ -191,7 +192,7 @@ export function TherapistChat({
 		isResuming,
 		resumeError,
 		isResumeSessionNotFound,
-		freeTierMessageThreshold,
+		assessmentTurnCount,
 		// Story 7.18: Farewell transition state
 		isFarewellReceived,
 		portraitWaitMinMs: _portraitWaitMinMs,
@@ -223,9 +224,9 @@ export function TherapistChat({
 	// Unified milestone tracking — handles both resume (historical) and live messages
 	// Uses a single effect to avoid race conditions between init and live tracking.
 	useEffect(() => {
-		if (messages.length === 0 || !freeTierMessageThreshold) return;
+		if (messages.length === 0 || !assessmentTurnCount) return;
 
-		const threshold = freeTierMessageThreshold;
+		const threshold = assessmentTurnCount;
 		const isFirstComputation = milestonesComputedForRef.current === 0;
 		const scanFrom = isFirstComputation ? 0 : milestonesComputedForRef.current;
 
@@ -241,9 +242,8 @@ export function TherapistChat({
 			// Scan new messages for milestone crossings
 			for (let i = scanFrom; i < messages.length; i++) {
 				if (messages[i].role === "user") userCount++;
-				const pct = Math.min(Math.round((userCount / threshold) * 100), 100);
 				for (const m of MILESTONES) {
-					if (pct >= m.threshold && !next.has(m.threshold)) {
+					if (isMilestoneReached(userCount, threshold, m.threshold / 100) && !next.has(m.threshold)) {
 						next.set(m.threshold, i + 1);
 					}
 				}
@@ -255,7 +255,7 @@ export function TherapistChat({
 			if (next.size === prev.size) return prev;
 			return next;
 		});
-	}, [messages, freeTierMessageThreshold]);
+	}, [messages, assessmentTurnCount]);
 
 	// Ocean pulse — fires when a new assistant message arrives
 	const [oceanPulse, setOceanPulse] = useState(false);
@@ -274,8 +274,8 @@ export function TherapistChat({
 		[messages],
 	);
 	const placeholder = useMemo(
-		() => getPlaceholder(userMessageCount, freeTierMessageThreshold),
-		[userMessageCount, freeTierMessageThreshold],
+		() => getPlaceholder(userMessageCount, assessmentTurnCount),
+		[userMessageCount, assessmentTurnCount],
 	);
 
 	// Auto-scroll to the latest message when message count changes
@@ -314,7 +314,7 @@ export function TherapistChat({
 			userName={userName}
 			userImage={userImage}
 			currentTurn={userMessageCount}
-			totalTurns={freeTierMessageThreshold || 27}
+			totalTurns={assessmentTurnCount ?? 15}
 			shownMilestones={shownMilestones}
 			highlightMessageId={highlightMessageId}
 			highlightStart={highlightStart}
@@ -564,7 +564,7 @@ function ChatContent({
 								style={{ background: "var(--thread-line)" }}
 								aria-hidden="true"
 							/>
-							{/* Story 9.5: Flat render verified acceptable for MESSAGE_THRESHOLD=25 (~50 messages).
+							{/* Story 9.5: Flat render verified acceptable for MESSAGE_THRESHOLD=15 (~30 messages).
 							    Reconsider @tanstack/react-virtual if threshold increases above 30 (60+ DOM nodes). */}
 							{messages.length > 0 &&
 								messages.map((msg, index) => (

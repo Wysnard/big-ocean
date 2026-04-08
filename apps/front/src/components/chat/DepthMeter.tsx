@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-
-const DEFAULT_MILESTONES = [0.25, 0.5, 0.75];
+import {
+	DEFAULT_MILESTONES,
+	getMilestoneLabel,
+	getMilestonePositionPercent,
+	isMilestoneReached,
+} from "./depth-milestones";
 
 interface DepthMeterProps {
 	currentTurn: number;
 	totalTurns: number;
-	milestones?: number[];
+	milestones?: readonly number[];
 }
 
 export function DepthMeter({
@@ -25,8 +29,8 @@ export function DepthMeter({
 		const newlyReached: number[] = [];
 
 		for (const m of milestones) {
-			const pct = Math.round(m * 100);
-			if (progress >= m && !prevReached.has(pct)) {
+			const pct = getMilestoneLabel(m);
+			if (isMilestoneReached(currentTurn, totalTurns, m) && !prevReached.has(pct)) {
 				newlyReached.push(pct);
 				prevReached.add(pct);
 			}
@@ -50,7 +54,7 @@ export function DepthMeter({
 				clearTimeout(announceTimer);
 			};
 		}
-	}, [progress, milestones]);
+	}, [currentTurn, totalTurns, milestones]);
 
 	return (
 		<nav
@@ -77,8 +81,8 @@ export function DepthMeter({
 
 				{/* Milestone ticks */}
 				{milestones.map((m) => {
-					const pct = Math.round(m * 100);
-					const reached = progress >= m;
+					const pct = getMilestoneLabel(m);
+					const reached = isMilestoneReached(currentTurn, totalTurns, m);
 					const isPulsing = pulsing.has(pct);
 
 					return (
@@ -87,7 +91,7 @@ export function DepthMeter({
 							data-testid={`milestone-tick-${pct}`}
 							data-reached={reached ? "true" : "false"}
 							className="absolute left-1/2 -translate-x-1/2"
-							style={{ top: `${pct}%` }}
+							style={{ top: `${getMilestonePositionPercent(totalTurns, m)}%` }}
 						>
 							{/* Glow ring (behind the tick) — only during pulse */}
 							{isPulsing && (

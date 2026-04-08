@@ -42,7 +42,7 @@ vi.mock("@/lib/api-client", () => ({
 						agreeableness: 0,
 						neuroticism: 0,
 					},
-					freeTierMessageThreshold: 25,
+					assessmentTurnCount: 15,
 					status: "active",
 				}),
 		},
@@ -107,7 +107,7 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 				agreeableness: 50,
 				neuroticism: 50,
 			},
-			freeTierMessageThreshold: 25,
+			assessmentTurnCount: 15,
 			status: "active",
 		};
 
@@ -156,7 +156,7 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 				agreeableness: 50,
 				neuroticism: 50,
 			},
-			freeTierMessageThreshold: 25,
+			assessmentTurnCount: 15,
 			status: "active",
 		};
 
@@ -220,7 +220,7 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 					agreeableness: 45,
 					neuroticism: 40,
 				},
-				freeTierMessageThreshold: 25,
+				assessmentTurnCount: 15,
 			},
 			isLoading: false,
 			error: null,
@@ -229,8 +229,8 @@ describe("useTherapistChat — Network error retry (Story 31-5)", () => {
 
 		const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
-		// 5 user messages out of 25 = 20%
-		expect(result.current.progressPercent).toBe(20);
-		expect(result.current.freeTierMessageThreshold).toBe(25);
+		// 5 user messages out of 15 = 33%
+		expect(result.current.progressPercent).toBe(33);
+		expect(result.current.assessmentTurnCount).toBe(15);
 	});
 });

@@ -20,7 +20,7 @@ export function DashboardEmptyState() {
 				<h2 className="text-xl font-heading font-bold text-foreground mb-2">Your ocean awaits</h2>
 				<p className="text-sm text-muted-foreground leading-relaxed">
 					Have a conversation with Nerin, our dive master, and discover what lies beneath the surface. In
-					25 minutes, you'll receive your personality portrait, archetype, and OCEAN code.
+					~30 minutes, you'll receive your personality portrait, archetype, and OCEAN code.
 				</p>
 			</div>
 

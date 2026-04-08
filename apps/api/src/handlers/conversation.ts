@@ -152,7 +152,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 								archetypeName,
 							};
 						}),
-						freeTierMessageThreshold: result.freeTierMessageThreshold,
+						assessmentTurnCount: result.assessmentTurnCount,
 					};
 				}),
 			)
@@ -343,7 +343,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 							}),
 						),
 						confidence: result.confidence,
-						freeTierMessageThreshold: result.freeTierMessageThreshold,
+						assessmentTurnCount: result.assessmentTurnCount,
 						status: result.status as "active" | "paused" | "finalizing" | "completed",
 					};
 				}),

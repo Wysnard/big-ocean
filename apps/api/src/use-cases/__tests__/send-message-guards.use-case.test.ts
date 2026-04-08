@@ -11,8 +11,8 @@ import { AgentInvocationError, ConcurrentMessageError } from "@workspace/domain"
 import { Effect } from "effect";
 import { sendMessage } from "../send-message.use-case";
 import {
+	ASSESSMENT_TURN_COUNT,
 	createTestLayer,
-	FREE_TIER_MESSAGE_THRESHOLD,
 	mockActiveSession,
 	mockActorRepo,
 	mockMessageRepo,
@@ -143,9 +143,7 @@ describe("sendMessage Use Case", () => {
 	describe("Finalization trigger (Story 11.1)", () => {
 		it.effect("should update session status to 'finalizing' when isFinalTurn is true", () =>
 			Effect.gen(function* () {
-				mockSessionRepo.incrementMessageCount.mockReturnValue(
-					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD),
-				);
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(ASSESSMENT_TURN_COUNT));
 				mockSessionRepo.updateSession.mockReturnValue(
 					Effect.succeed({ ...mockActiveSession, status: "finalizing" }),
 				);
@@ -165,7 +163,7 @@ describe("sendMessage Use Case", () => {
 		it.effect("should NOT update session status when isFinalTurn is false", () =>
 			Effect.gen(function* () {
 				mockSessionRepo.incrementMessageCount.mockReturnValue(
-					Effect.succeed(FREE_TIER_MESSAGE_THRESHOLD - 1),
+					Effect.succeed(ASSESSMENT_TURN_COUNT - 1),
 				);
 
 				yield* sendMessage({

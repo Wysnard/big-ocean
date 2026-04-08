@@ -296,7 +296,7 @@ const mockConfig = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
-	freeTierMessageThreshold: 25,
+	assessmentTurnCount: 15,
 	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
 	conversanalyzerModelId: "claude-haiku-4-5-20251001",
@@ -503,13 +503,13 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 		it.effect("uses closing Director prompt and appends farewell on final turn", () =>
 			Effect.gen(function* () {
 				// Set up final turn: messageCount returns threshold AND turnNumber >= totalTurns
-				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(25));
+				mockSessionRepo.incrementMessageCount.mockReturnValue(Effect.succeed(15));
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
 
-				// Create 25 prior exchanges (opener + 24 pipeline turns) so turnNumber = 25
+				// Create 15 prior exchanges (opener + 14 pipeline turns) so turnNumber = 15
 				const finalTurnExchanges = [
 					openerExchangeRecord,
-					...Array.from({ length: 24 }, (_, i) => ({
+					...Array.from({ length: 14 }, (_, i) => ({
 						...mockExchangeRecord,
 						id: `ex_${i + 1}`,
 						turnNumber: i + 1,

@@ -11,7 +11,7 @@ export function FinalCta() {
 				What&rsquo;s YOUR code?
 			</h2>
 			<p className="mx-auto mb-8 max-w-[480px] text-[1.05rem] leading-relaxed text-muted-foreground">
-				Discover it in a conversation with Nerin. ~25 minutes. Free. No wrong answers.
+				Discover it in a conversation with Nerin. ~30 minutes. Free. No wrong answers.
 			</p>
 			<Link
 				to="/chat"

@@ -95,7 +95,7 @@ function DashboardPage() {
 						<DashboardInProgressCard
 							sessionId={inProgressSession.id}
 							messageCount={inProgressSession.messageCount}
-							freeTierMessageThreshold={conversationData?.freeTierMessageThreshold ?? 0}
+							assessmentTurnCount={conversationData?.assessmentTurnCount ?? 15}
 						/>
 
 						{/* Credits card */}

@@ -91,7 +91,7 @@ const MockConfigLive = Layer.succeed(AppConfig, {
 	portraitModelId: "mock",
 	portraitMaxTokens: 4096,
 	portraitTemperature: 0.5,
-	freeTierMessageThreshold: 25,
+	assessmentTurnCount: 15,
 	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
 	conversanalyzerModelId: "mock",

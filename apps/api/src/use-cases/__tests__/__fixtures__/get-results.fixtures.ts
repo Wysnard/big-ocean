@@ -188,7 +188,7 @@ export const mockConfig = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
-	freeTierMessageThreshold: 12,
+	assessmentTurnCount: 12,
 	shareMinConfidence: 30,
 	portraitModelId: "claude-sonnet-4-20250514",
 	portraitMaxTokens: 4096,

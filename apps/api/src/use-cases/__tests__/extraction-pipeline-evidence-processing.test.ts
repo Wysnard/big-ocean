@@ -197,7 +197,7 @@ const mockConfig = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
-	freeTierMessageThreshold: 25,
+	assessmentTurnCount: 15,
 	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
 	conversanalyzerModelId: "claude-haiku-4-5-20251001",

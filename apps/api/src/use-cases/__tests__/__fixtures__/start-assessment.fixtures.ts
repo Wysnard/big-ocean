@@ -77,7 +77,7 @@ export const mockAppConfig = {
 	sessionCostLimitCents: 2000,
 	messageRateLimit: 2,
 	globalDailyAssessmentLimit: 100,
-	freeTierMessageThreshold: 25,
+	assessmentTurnCount: 15,
 	databaseUrl: "postgresql://test:test@localhost:5432/test",
 	redisUrl: "redis://localhost:6379",
 	anthropicApiKey: Redacted.make("test-api-key"),

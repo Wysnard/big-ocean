@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 			{
 				name: "description",
 				content:
-					"A 25-minute conversation with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science.",
+					"A conversation with Nerin over ~30 minutes reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science.",
 			},
 			{
 				property: "og:title",
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/")({
 			{
 				property: "og:description",
 				content:
-					"Talk to Nerin for 25 minutes. Get a portrait of who you are that no test has ever given you.",
+					"Talk to Nerin for ~30 minutes. Get a portrait of who you are that no test has ever given you.",
 			},
 		],
 	}),

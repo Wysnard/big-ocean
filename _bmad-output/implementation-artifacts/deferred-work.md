@@ -22,3 +22,13 @@
 ## Deferred from: code review of 45-5-fk-column-code-cascade (2026-04-08)
 
 - `exchanges` table definition is missing from `docker/init-db-test.sql` — the table was renamed from `assessment_exchange` to `exchanges` in a prior story but the manual init SQL was not updated to include it
+
+## Deferred from: code review of 45-6-assessment-turn-count-25-to-15 (2026-04-08)
+
+- Dual milestone coordinate systems: `TherapistChat` uses integer percentages (25/50/75) while `DepthMeter` uses decimals (0.25/0.5/0.75) — fragile coupling, not a current bug
+- Two divergent "is final turn" checks in `nerin-pipeline.ts` — exchange count vs. atomic `incrementMessageCount` counter could disagree in retry scenarios
+- `eval-portrait.ts` variable still named `USER_MESSAGE_COUNT` instead of turn terminology — minor naming inconsistency in script
+- Seed script `seed-completed-assessment.ts` produces 6 user turns vs. `assessmentTurnCount=15` — "completed" assessment shows 40% progress in certain views
+- Stale `MESSAGE_THRESHOLD` references in `compose.e2e.yaml`, `compose.test.yaml`, and e2e spec comments — dead config from removed env var
+- Milestone badge insertion at `i + 1` in TherapistChat creates 1-message visual delay vs. depth-meter tick position — pre-existing
+- Resume milestone race condition: milestone tracking effect may fire before messages populate on async resume — pre-existing

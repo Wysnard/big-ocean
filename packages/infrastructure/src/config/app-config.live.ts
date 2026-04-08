@@ -66,10 +66,8 @@ const configSchema = Config.all({
 	// Cost management (Story 2.5)
 	dailyCostLimit: Config.number("DAILY_COST_LIMIT").pipe(Config.withDefault(75)),
 
-	// Free tier message limit (Story 4.7)
-	freeTierMessageThreshold: Config.number("FREE_TIER_MESSAGE_THRESHOLD").pipe(
-		Config.withDefault(25),
-	),
+	// Assessment turn count (env var kept stable for backwards compatibility)
+	assessmentTurnCount: Config.number("FREE_TIER_MESSAGE_THRESHOLD").pipe(Config.withDefault(15)),
 
 	// Portrait wait screen minimum duration in ms (Story 7.18)
 	portraitWaitMinMs: Config.number("PORTRAIT_WAIT_MIN_MS").pipe(Config.withDefault(10000)),

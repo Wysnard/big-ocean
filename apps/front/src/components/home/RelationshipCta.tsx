@@ -30,7 +30,7 @@ export function RelationshipCta() {
 					{
 						icon: Users,
 						label: "Each take the dive",
-						detail: "25 minutes with Nerin, separately",
+						detail: "~30 minutes with Nerin, separately",
 					},
 					{
 						icon: QrCode,

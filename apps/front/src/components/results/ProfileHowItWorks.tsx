@@ -4,7 +4,7 @@ const steps = [
 	{
 		icon: MessageCircle,
 		title: "Talk to Nerin",
-		description: "A 25-minute conversation about you. No quiz, no checkboxes.",
+		description: "A conversation about you over ~30 minutes. No quiz, no checkboxes.",
 	},
 	{
 		icon: Sparkles,

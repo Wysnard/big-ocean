@@ -41,7 +41,7 @@ vi.mock("@/lib/api-client", () => ({
 						agreeableness: 0,
 						neuroticism: 0,
 					},
-					freeTierMessageThreshold: 25,
+					assessmentTurnCount: 15,
 					status: "active",
 				}),
 		},
@@ -82,7 +82,7 @@ function makeDefaultResumeData(
 	overrides: {
 		messages?: Array<{ role: "user" | "assistant"; content: string; timestamp: string }>;
 		confidence?: Record<string, number>;
-		freeTierMessageThreshold?: number;
+		assessmentTurnCount?: number;
 		status?: string;
 	} = {},
 ) {
@@ -95,7 +95,7 @@ function makeDefaultResumeData(
 			agreeableness: 0,
 			neuroticism: 0,
 		},
-		freeTierMessageThreshold: overrides.freeTierMessageThreshold ?? 25,
+		assessmentTurnCount: overrides.assessmentTurnCount ?? 15,
 		status: overrides.status ?? "active",
 	};
 }
@@ -402,12 +402,12 @@ describe("useTherapistChat", () => {
 				createElement(QueryClientProvider, { client: queryClient }, children);
 		});
 
-		it("sets isConfidenceReady when user message count reaches threshold (25)", () => {
-			// Simulate a resumed session with 25 user messages + 25 assistant messages = 50
-			const existingMessages = Array.from({ length: 50 }, (_, i) => ({
+		it("sets isConfidenceReady when user message count reaches threshold (15)", () => {
+			// Simulate a resumed session with 15 user messages + 15 assistant messages = 30
+			const existingMessages = Array.from({ length: 30 }, (_, i) => ({
 				role: i % 2 === 0 ? ("user" as const) : ("assistant" as const),
 				content: `Message ${i + 1}`,
-				timestamp: new Date(Date.now() - (50 - i) * 60000).toISOString(),
+				timestamp: new Date(Date.now() - (30 - i) * 60000).toISOString(),
 			}));
 
 			seedSession("session-123", makeDefaultResumeData({ messages: existingMessages }));
@@ -422,7 +422,7 @@ describe("useTherapistChat", () => {
 
 			const { result } = renderHook(() => useTherapistChat("session-123"), { wrapper });
 
-			// Only greeting messages (0 user messages) — well below threshold of 25
+			// Only greeting messages (0 user messages) — well below threshold of 15
 			expect(result.current.isConfidenceReady).toBe(false);
 		});
 

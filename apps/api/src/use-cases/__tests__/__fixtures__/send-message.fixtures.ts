@@ -217,7 +217,7 @@ export const mockConversanalyzerOutput = {
 };
 
 /** Matches production default in app-config.live.ts */
-export const FREE_TIER_MESSAGE_THRESHOLD = 25;
+export const ASSESSMENT_TURN_COUNT = 15;
 
 export const mockConfig = {
 	databaseUrl: "postgres://test:test@localhost:5432/test",
@@ -238,7 +238,7 @@ export const mockConfig = {
 	nerinMaxTokens: 1024,
 	nerinTemperature: 0.7,
 	dailyCostLimit: 75,
-	freeTierMessageThreshold: 25,
+	assessmentTurnCount: 15,
 	portraitWaitMinMs: 2000,
 	shareMinConfidence: 70,
 	conversanalyzerModelId: "claude-haiku-4-5-20251001",

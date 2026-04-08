@@ -77,8 +77,8 @@ export interface AppConfigService {
 	/** Daily LLM cost limit in dollars (Story 2.5) */
 	readonly dailyCostLimit: number;
 
-	/** Number of user messages allowed in the free tier before chat is blocked (Story 4.7) */
-	readonly freeTierMessageThreshold: number;
+	/** Number of user turns in the initial assessment before closing begins */
+	readonly assessmentTurnCount: number;
 
 	/** Minimum wait time (ms) before portrait reveal on frontend (Story 7.18) */
 	readonly portraitWaitMinMs: number;

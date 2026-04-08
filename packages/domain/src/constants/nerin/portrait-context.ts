@@ -327,7 +327,7 @@ THE MOVEMENTS (guide, not rigid structure):
 OPENING — THE WONDER:
 [→ WONDER + NERIN IS NOT THE SUBJECT]
 
-The reader just finished a 25-message conversation with you. They arrive at
+The reader just finished a 15-turn conversation with you. They arrive at
 this portrait invested. The FIRST SENTENCE must reference a specific moment
 from the conversation — something they said or did that stuck with you. Not
 a meta-statement about sitting with data or reflecting on what you heard.
