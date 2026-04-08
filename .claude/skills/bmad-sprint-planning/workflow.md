@@ -28,6 +28,7 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
 - `epics_location` = `{planning_artifacts}`
 - `epics_pattern` = `*epic*.md`
 - `status_file` = `{implementation_artifacts}/sprint-status.yaml`
+- `parallelism_plan` = `{implementation_artifacts}/sprint-parallelism-plan.md`
 
 ### Input Files
 
@@ -181,7 +182,66 @@ development_status:
 <action>Ensure all items are ordered: epic, its stories, its retrospective, next epic...</action>
 </step>
 
-<step n="5" goal="Validate and report">
+<step n="5" goal="Update sprint parallelism plan">
+<action>Check if `{implementation_artifacts}/sprint-parallelism-plan.md` exists</action>
+<action>If it exists, update it to reflect the current sprint status:</action>
+
+**Parallelism Plan Update Rules:**
+
+1. **Read the current parallelism plan** to understand its structure and phase context
+2. **Identify the active phase** — the lowest-numbered phase that still has non-done epics
+3. **Remove completed work** — epics/stories already `done` in sprint-status.yaml should not appear as pending steps in the parallelism plan
+4. **Rebuild the dependency graph** for remaining work only:
+   - Parse epic files for dependency notes (e.g., "Depends on: Epic N")
+   - Identify sequential chains (stories within an epic that depend on prior stories)
+   - Identify parallel opportunities (independent epics/stories)
+5. **Rebuild step tables** showing only remaining stories with their dependencies and parallelism opportunities
+6. **Update the summary section** with accurate counts:
+   - Remaining stories across remaining epics
+   - Total epics complete (and deferred count)
+   - Critical path identification
+   - Blockers (if any)
+7. **Update the header dates** — set `Updated:` to current date
+8. **Preserve deferred work section** — do not remove or modify deferred items unless their status changed in sprint-status.yaml
+
+**Structure template for the parallelism plan:**
+
+```markdown
+# Sprint Parallelism Plan
+Generated: {original_date}
+Updated: {date}
+
+## Phase N: {phase_name}
+
+### Dependency Graph
+(ASCII diagram of remaining epic/story dependencies)
+
+### Step N — {step_name}
+| Story | Epic | Depends On / Parallel With |
+|-------|------|---------------------------|
+
+### Epic X — {epic_name} (context notes)
+| Story | Depends On |
+|-------|------------|
+
+### Maximum Parallelism
+(How many concurrent streams are possible)
+
+## Deferred Work (not scheduled)
+| Item | Reason |
+|------|--------|
+
+## Summary
+- **N stories** remaining across M epics
+- **X epics complete** (Y deferred)
+- **Critical path:** ...
+- **Blocker:** ...
+```
+
+<action>Write the updated parallelism plan to `{implementation_artifacts}/sprint-parallelism-plan.md`</action>
+</step>
+
+<step n="6" goal="Validate and report">
 <action>Perform validation checks:</action>
 
 - [ ] Every epic in epic files appears in {status_file}
@@ -203,6 +263,7 @@ development_status:
 **Sprint Status Generated Successfully**
 
 - **File Location:** {status_file}
+- **Parallelism Plan:** {implementation_artifacts}/sprint-parallelism-plan.md (updated if exists)
 - **Total Epics:** {{epic_count}}
 - **Total Stories:** {{story_count}}
 - **Epics In Progress:** {{in_progress_count}}
