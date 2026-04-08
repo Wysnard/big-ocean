@@ -107,6 +107,7 @@ export {
 	CostLimitExceeded,
 	DatabaseError,
 	DuplicateCheckoutError,
+	FeatureUnavailable,
 	FinalizationInProgressError,
 	FreeTierLimitReached,
 	GlobalAssessmentLimitReached,

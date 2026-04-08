@@ -1,8 +1,8 @@
 /**
  * Activate Conversation Extension Use Case (Story 36-1)
  *
- * Creates a new extension session linked to the user's most recent completed session.
- * Persists greeting messages for the new session.
+ * Story 46.1 gates the feature in MVP while preserving the implementation seam
+ * for post-MVP re-enable work.
  *
  * Idempotency: if the parent session already has a child extension, this use-case
  * will not find an eligible session (findCompletedSessionWithoutChild excludes parents
@@ -12,7 +12,7 @@
  *               ExchangeRepository, LoggerRepository
  */
 
-import { SessionNotFound } from "@workspace/contracts";
+import { DatabaseError, FeatureUnavailable, SessionNotFound } from "@workspace/contracts";
 import {
 	ConversationRepository,
 	ExchangeRepository,
@@ -40,16 +40,38 @@ export interface ActivateConversationExtensionOutput {
 	readonly messages: ActivateConversationExtensionMessage[];
 }
 
+export const activateConversationExtension = (
+	input: ActivateConversationExtensionInput,
+): Effect.Effect<
+	ActivateConversationExtensionOutput,
+	DatabaseError | FeatureUnavailable | SessionNotFound,
+	ConversationRepository | ExchangeRepository | LoggerRepository | MessageRepository
+> =>
+	Effect.gen(function* () {
+		const logger = yield* LoggerRepository;
+
+		logger.info("Conversation extension requested while feature is disabled in MVP", {
+			userId: input.userId,
+		});
+
+		return yield* Effect.fail(
+			new FeatureUnavailable({
+				feature: "conversation_extension",
+				message: "Conversation extension is not available in MVP",
+			}),
+		);
+	});
+
 /**
- * Activate Conversation Extension
- *
- * 1. Find the user's most recent completed session without a child extension.
- * 2. If none found, fail with SessionNotFound.
- * 3. Create a new extension session linked to the parent.
- * 4. Persist greeting messages to the new session.
- * 5. Return the new session data.
+ * Dormant implementation seam retained for post-MVP subscription work.
  */
-export const activateConversationExtension = (input: ActivateConversationExtensionInput) =>
+const activateConversationExtensionWhenEnabled = (
+	input: ActivateConversationExtensionInput,
+): Effect.Effect<
+	ActivateConversationExtensionOutput,
+	DatabaseError | SessionNotFound,
+	ConversationRepository | ExchangeRepository | LoggerRepository | MessageRepository
+> =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* ConversationRepository;
 		const messageRepo = yield* MessageRepository;
@@ -57,8 +79,6 @@ export const activateConversationExtension = (input: ActivateConversationExtensi
 		const logger = yield* LoggerRepository;
 
 		const { userId } = input;
-
-		// Find eligible parent session
 		const parentSession = yield* sessionRepo.findCompletedSessionWithoutChild(userId);
 
 		if (!parentSession) {
@@ -71,17 +91,11 @@ export const activateConversationExtension = (input: ActivateConversationExtensi
 			);
 		}
 
-		// Create extension session
 		const { sessionId } = yield* sessionRepo.createExtensionSession(userId, parentSession.id);
-
-		// Create opener exchange (turn 0) for the opening question
 		const openerExchange = yield* exchangeRepo.create(sessionId, 0);
-
-		// Build greeting messages (1 greeting bubble + 1 random opening question)
 		const openingQuestion = pickOpeningQuestion();
 		const greetingContents = [...GREETING_MESSAGES, openingQuestion];
 
-		// Persist greeting messages to DB
 		const savedMessages: ActivateConversationExtensionMessage[] = [];
 		for (const [i, content] of greetingContents.entries()) {
 			const isOpeningQuestion = i === greetingContents.length - 1;
@@ -112,3 +126,5 @@ export const activateConversationExtension = (input: ActivateConversationExtensi
 			messages: savedMessages,
 		} satisfies ActivateConversationExtensionOutput;
 	});
+
+void activateConversationExtensionWhenEnabled;

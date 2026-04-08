@@ -440,14 +440,9 @@ function ResultsSessionPage() {
 						</>
 					)
 				}
-				quickActions={
-					<QuickActionsCard
-						sessionId={conversationSessionId}
-						publicProfileId={shareState?.publicProfileId}
-					/>
-				}
+				quickActions={<QuickActionsCard publicProfileId={shareState?.publicProfileId} />}
 			>
-				{/* Grid children: Share + Continue Chat */}
+				{/* Grid children: share, relationships, and portrait revisit */}
 				<div className="mx-auto max-w-[1120px] px-5 pb-10">
 					<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
 						<ShareProfileSection
@@ -473,10 +468,8 @@ function ResultsSessionPage() {
 							/>
 						)}
 
-						{/* Action CTAs — full-width */}
-						<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
-							{/* Show "Read portrait" button if full portrait content is available */}
-							{portraitStatusData?.portrait?.content && (
+						{portraitStatusData?.portrait?.content && (
+							<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
 								<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 									<Link
 										to="/results/$conversationSessionId"
@@ -487,14 +480,8 @@ function ResultsSessionPage() {
 										Read your portrait again
 									</Link>
 								</Button>
-							)}
-							<Button data-testid="results-continue-chat" asChild variant="outline" className="min-h-11">
-								<Link to="/chat" search={{ sessionId: conversationSessionId }}>
-									<MessageCircle className="w-4 h-4 mr-2" />
-									Continue Chat
-								</Link>
-							</Button>
-						</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</ProfileView>

@@ -256,17 +256,24 @@ export const BetterAuthLive = Layer.effect(
 										})
 										.onConflictDoNothing();
 
-									// For portrait-triggering purchases, queue background generation
-									if (
-										(eventType === "portrait_unlocked" || eventType === "extended_conversation_unlocked") &&
-										sessionId
-									) {
+									// Only portrait purchases queue full portrait generation in MVP.
+									if (eventType === "portrait_unlocked" && sessionId) {
 										await offerPortraitJob({ sessionId, userId });
 										logger.info("Polar webhook: queued portrait generation", {
 											sessionId,
 											userId,
 											assessmentResultId,
 										});
+									}
+
+									if (eventType === "extended_conversation_unlocked") {
+										logger.info(
+											"Polar webhook: recorded extension purchase while extension remains disabled in MVP",
+											{
+												userId,
+												assessmentResultId,
+											},
+										);
 									}
 
 									logger.info("Polar webhook: purchase event recorded", {

@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
 generated: 2026-04-04T21:45
-last_updated: 2026-04-08T21:00
+last_updated: 2026-04-08T17:18
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -802,8 +802,8 @@ development_status:
   # preserve purchase event types for future subscription
   # Stories: 2.1 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-46: backlog
-  46-1-gate-extension-use-case-and-remove-ui-surface: backlog
+  epic-46: in-progress
+  46-1-gate-extension-use-case-and-remove-ui-surface: done
   epic-46-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
