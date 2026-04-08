@@ -12,11 +12,14 @@ export default function Header() {
 			<div className="flex h-full items-center px-4">
 				<Logo />
 
-				{/* Desktop nav */}
-				<div data-slot="header-nav" className="ml-auto hidden items-center gap-2 md:flex">
+				<div className="ml-auto hidden items-center gap-2 md:flex">
 					<ThemeToggle />
-					<UserNav />
 				</div>
+
+				{/* Desktop nav */}
+				<nav data-slot="header-nav" aria-label="Primary" className="hidden items-center gap-2 md:flex">
+					<UserNav />
+				</nav>
 
 				{/* Mobile nav */}
 				<div className="ml-auto flex items-center md:hidden">

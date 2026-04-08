@@ -7,6 +7,7 @@
 
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SignupForm } from "../components/auth";
+import { PageMain } from "../components/PageMain";
 import { getServerSession } from "../lib/auth.server";
 
 export const Route = createFileRoute("/signup")({
@@ -27,10 +28,13 @@ function SignupPage() {
 	const { sessionId, redirectTo } = Route.useSearch();
 
 	return (
-		<div className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background">
+		<PageMain
+			title="Create your account"
+			className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background"
+		>
 			<div className="w-full max-w-md">
 				<SignupForm anonymousSessionId={sessionId} redirectTo={redirectTo} />
 			</div>
-		</div>
+		</PageMain>
 	);
 }

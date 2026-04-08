@@ -7,6 +7,7 @@ import { BookOpen, Loader2, MessageCircle } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
 import { NotFound } from "@/components/NotFound";
+import { PageMain } from "@/components/PageMain";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
 import { RelationshipAnalysesList } from "@/components/relationship/RelationshipAnalysesList";
 import { RelationshipCard } from "@/components/relationship/RelationshipCard";
@@ -68,16 +69,22 @@ export const Route = createFileRoute("/results/$conversationSessionId")({
 });
 
 function ResultsLoading() {
-	return <FinalizationWaitScreen status="analyzing" progress={20} />;
+	return (
+		<PageMain title="Loading your results" className="bg-background">
+			<FinalizationWaitScreen status="analyzing" progress={20} />
+		</PageMain>
+	);
 }
 
 function ResultsNotFound() {
 	const { conversationSessionId } = Route.useParams();
 	return (
-		<NotFound
-			title="Assessment not found"
-			description={`The assessment session ${conversationSessionId} doesn't exist or you don't have access to it.`}
-		/>
+		<PageMain className="bg-background">
+			<NotFound
+				title="Assessment not found"
+				description={`The assessment session ${conversationSessionId} doesn't exist or you don't have access to it.`}
+			/>
+		</PageMain>
 	);
 }
 
@@ -103,7 +110,9 @@ function ResultsSessionPage() {
 	// Story 13.3: Poll portrait status when authenticated
 	const { data: portraitStatusData, refetch: refetchPortraitStatus } = usePortraitStatus(
 		canLoadResults ? conversationSessionId : "",
-		{ waitingForUnlock },
+		{
+			waitingForUnlock,
+		},
 	);
 
 	// Stop waiting once full portrait is ready
@@ -330,23 +339,28 @@ function ResultsSessionPage() {
 
 	if (isAuthPending) {
 		return (
-			<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6">
+			<PageMain
+				title="Checking your session"
+				className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6"
+			>
 				<div className="text-center">
 					<Loader2 className="h-10 w-10 motion-safe:animate-spin text-primary mx-auto mb-3" />
 					<p className="text-sm text-muted-foreground">Checking your session...</p>
 				</div>
-			</div>
+			</PageMain>
 		);
 	}
 
 	if (!isAuthenticated) {
 		return (
-			<ResultsAuthGate
-				sessionId={conversationSessionId}
-				expired={isGateExpired}
-				onAuthSuccess={handleAuthSuccess}
-				onStartFresh={handleStartFresh}
-			/>
+			<PageMain className="bg-background">
+				<ResultsAuthGate
+					sessionId={conversationSessionId}
+					expired={isGateExpired}
+					onAuthSuccess={handleAuthSuccess}
+					onStartFresh={handleStartFresh}
+				/>
+			</PageMain>
 		);
 	}
 
@@ -356,16 +370,18 @@ function ResultsSessionPage() {
 
 	if (error && isConversationApiError(error) && error.status === 404) {
 		return (
-			<NotFound
-				title="Assessment not found"
-				description={`The assessment session ${conversationSessionId} doesn't exist or you don't have access to it.`}
-			/>
+			<PageMain className="bg-background">
+				<NotFound
+					title="Assessment not found"
+					description={`The assessment session ${conversationSessionId} doesn't exist or you don't have access to it.`}
+				/>
+			</PageMain>
 		);
 	}
 
 	if (error || !results) {
 		return (
-			<div className="min-h-screen bg-background flex items-center justify-center px-6">
+			<PageMain className="min-h-screen bg-background flex items-center justify-center px-6">
 				<div className="text-center">
 					<h1 className="text-2xl font-bold text-foreground mb-4">Could Not Load Results</h1>
 					<p className="text-muted-foreground mb-6">
@@ -378,7 +394,7 @@ function ResultsSessionPage() {
 						</Link>
 					</Button>
 				</div>
-			</div>
+			</PageMain>
 		);
 	}
 
@@ -391,100 +407,106 @@ function ResultsSessionPage() {
 		// Full portrait available → full reading view
 		const fullContent = portraitStatusData?.portrait?.content;
 		if (fullContent) {
-			return <PortraitReadingView content={fullContent} onViewFullProfile={handleBackToProfile} />;
+			return (
+				<PageMain className="bg-background">
+					<PortraitReadingView content={fullContent} onViewFullProfile={handleBackToProfile} />
+				</PageMain>
+			);
 		}
 	}
 
 	return (
 		<>
-			<ProfileView
-				archetypeName={results.archetypeName}
-				oceanCode5={results.oceanCode5}
-				description={results.archetypeDescription}
-				dominantTrait={dominantTrait}
-				traits={results.traits}
-				facets={results.facets}
-				onToggleTrait={handleToggleTrait}
-				overallConfidence={results.overallConfidence}
-				isCurated={results.isCurated}
-				fullPortraitContent={portraitStatusData?.portrait?.content}
-				fullPortraitStatus={effectivePortraitStatus}
-				onRetryPortrait={() => void refetchPortraitStatus()}
-				onUnlockPortrait={
-					effectivePortraitStatus !== "ready" &&
-					effectivePortraitStatus !== "generating" &&
-					effectivePortraitStatus !== "failed"
-						? handleUnlockPortrait
-						: undefined
-				}
-				selectedTrait={selectedTrait}
-				messageCount={results.messageCount}
-				detailZone={
-					selectedTraitData && (
-						<>
-							<DetailZone
-								trait={selectedTraitData}
-								facetDetails={facetDetails ?? []}
-								isOpen={!!selectedTrait}
-								onClose={handleCloseDetailZone}
-								isLoading={evidenceLoading}
-								onFacetClick={handleFacetClick}
+			<PageMain className="bg-depth-surface">
+				<ProfileView
+					archetypeName={results.archetypeName}
+					oceanCode5={results.oceanCode5}
+					description={results.archetypeDescription}
+					dominantTrait={dominantTrait}
+					traits={results.traits}
+					facets={results.facets}
+					onToggleTrait={handleToggleTrait}
+					overallConfidence={results.overallConfidence}
+					isCurated={results.isCurated}
+					fullPortraitContent={portraitStatusData?.portrait?.content}
+					fullPortraitStatus={effectivePortraitStatus}
+					onRetryPortrait={() => void refetchPortraitStatus()}
+					onUnlockPortrait={
+						effectivePortraitStatus !== "ready" &&
+						effectivePortraitStatus !== "generating" &&
+						effectivePortraitStatus !== "failed"
+							? handleUnlockPortrait
+							: undefined
+					}
+					selectedTrait={selectedTrait}
+					messageCount={results.messageCount}
+					detailZone={
+						selectedTraitData && (
+							<>
+								<DetailZone
+									trait={selectedTraitData}
+									facetDetails={facetDetails ?? []}
+									isOpen={!!selectedTrait}
+									onClose={handleCloseDetailZone}
+									isLoading={evidenceLoading}
+									onFacetClick={handleFacetClick}
+								/>
+								{selectedFacet && selectedFacetEvidence && (
+									<EvidencePanel
+										facetName={selectedFacet}
+										evidence={selectedFacetEvidence}
+										onClose={handleCloseEvidencePanel}
+									/>
+								)}
+							</>
+						)
+					}
+					quickActions={<QuickActionsCard publicProfileId={shareState?.publicProfileId} />}
+				>
+					{/* Grid children: share, relationships, and portrait revisit */}
+					<div className="mx-auto max-w-[1120px] px-5 pb-10">
+						<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+							<ShareProfileSection
+								shareState={shareState}
+								copied={shareFlow.copied}
+								isTogglePending={toggleVisibility.isPending}
+								onToggleVisibility={handleToggleVisibility}
+								onShareAction={() => void shareFlow.initiateShare()}
+								promptNeeded={shareFlow.promptNeeded}
+								onAcceptPrompt={() => void shareFlow.acceptAndShare()}
+								onDeclinePrompt={shareFlow.declineShare}
+								isShareToggling={shareFlow.isToggling}
 							/>
-							{selectedFacet && selectedFacetEvidence && (
-								<EvidencePanel
-									facetName={selectedFacet}
-									evidence={selectedFacetEvidence}
-									onClose={handleCloseEvidencePanel}
+
+							<RelationshipCard />
+							<RelationshipAnalysesList />
+							<RelationshipCreditsSection />
+
+							{shareState?.publicProfileId && (
+								<ArchetypeShareCard
+									publicProfileId={shareState.publicProfileId}
+									archetypeName={results.archetypeName}
 								/>
 							)}
-						</>
-					)
-				}
-				quickActions={<QuickActionsCard publicProfileId={shareState?.publicProfileId} />}
-			>
-				{/* Grid children: share, relationships, and portrait revisit */}
-				<div className="mx-auto max-w-[1120px] px-5 pb-10">
-					<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-						<ShareProfileSection
-							shareState={shareState}
-							copied={shareFlow.copied}
-							isTogglePending={toggleVisibility.isPending}
-							onToggleVisibility={handleToggleVisibility}
-							onShareAction={() => void shareFlow.initiateShare()}
-							promptNeeded={shareFlow.promptNeeded}
-							onAcceptPrompt={() => void shareFlow.acceptAndShare()}
-							onDeclinePrompt={shareFlow.declineShare}
-							isShareToggling={shareFlow.isToggling}
-						/>
 
-						<RelationshipCard />
-						<RelationshipAnalysesList />
-						<RelationshipCreditsSection />
-
-						{shareState?.publicProfileId && (
-							<ArchetypeShareCard
-								publicProfileId={shareState.publicProfileId}
-								archetypeName={results.archetypeName}
-							/>
-						)}
-
-						{portraitStatusData?.portrait?.content && (
-							<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
-								<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
-									<Link
-										to="/results/$conversationSessionId"
-										params={{ conversationSessionId }}
-										search={{ view: "portrait" }}
-									>
-										<BookOpen className="w-4 h-4 mr-2" />
-										Read your portrait again
-									</Link>
-								</Button>
-							</div>
-						)}
+							{portraitStatusData?.portrait?.content && (
+								<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
+									<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
+										<Link
+											to="/results/$conversationSessionId"
+											params={{ conversationSessionId }}
+											search={{ view: "portrait" }}
+										>
+											<BookOpen className="w-4 h-4 mr-2" />
+											Read your portrait again
+										</Link>
+									</Button>
+								</div>
+							)}
+						</div>
 					</div>
-				</div>
-			</ProfileView>
+				</ProfileView>
+			</PageMain>
 
 			{/* Story 3.4: PWYW Modal */}
 			<PwywModal

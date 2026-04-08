@@ -14,6 +14,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import type { RelationshipAnalysisResponse } from "@workspace/contracts/http/groups/relationship";
 import { Effect } from "effect";
 import { useCallback } from "react";
+import { PageMain } from "@/components/PageMain";
 import { RitualScreen } from "@/components/relationship/RitualScreen";
 import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
@@ -41,7 +42,9 @@ function RitualRoute() {
 		queryFn: () =>
 			Effect.gen(function* () {
 				const client = yield* makeApiClient;
-				return yield* client.relationship.getRelationshipAnalysis({ path: { analysisId } });
+				return yield* client.relationship.getRelationshipAnalysis({
+					path: { analysisId },
+				});
 			}).pipe(Effect.runPromise),
 		staleTime: 5 * 60 * 1000,
 	});
@@ -54,6 +57,8 @@ function RitualRoute() {
 	}, [navigate, analysisId]);
 
 	return (
-		<RitualScreen userAName={data?.userAName} userBName={data?.userBName} onStart={handleStart} />
+		<PageMain className="min-h-screen bg-background">
+			<RitualScreen userAName={data?.userAName} userBName={data?.userBName} onStart={handleStart} />
+		</PageMain>
 	);
 }

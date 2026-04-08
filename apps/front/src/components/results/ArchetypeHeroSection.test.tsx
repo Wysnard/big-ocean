@@ -89,4 +89,11 @@ describe("ArchetypeHeroSection", () => {
 		renderWithTooltipProvider(<ArchetypeHeroSection {...defaultProps} />);
 		expect(screen.queryByTestId("framing-line")).not.toBeInTheDocument();
 	});
+
+	it("labels the hero section when a landmark label is provided", () => {
+		renderWithTooltipProvider(
+			<ArchetypeHeroSection {...defaultProps} sectionLabel="Your archetype" />,
+		);
+		expect(screen.getByRole("region", { name: "Your archetype" })).toBeInTheDocument();
+	});
 });

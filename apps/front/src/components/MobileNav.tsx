@@ -97,7 +97,7 @@ export function MobileNav() {
 					</SheetTitle>
 				</SheetHeader>
 
-				<nav className="flex flex-col gap-1 px-4">
+				<nav aria-label="Primary" className="flex flex-col gap-1 px-4">
 					<SheetClose asChild>
 						<Link
 							to="/"

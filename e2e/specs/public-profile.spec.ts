@@ -84,6 +84,18 @@ test("anonymous user views public profile with traits and facets", async ({ page
 		await page.goto(profilePath);
 	});
 
+	await test.step("verify keyboard users can skip to main content", async () => {
+		const skipLink = page.getByTestId("skip-to-content");
+		const main = page.locator("main#main-content");
+
+		await page.keyboard.press("Tab");
+		await expect(skipLink).toBeVisible();
+		await expect(skipLink).toBeFocused();
+
+		await page.keyboard.press("Enter");
+		await expect(main).toBeFocused();
+	});
+
 	await test.step("verify archetype hero section is visible", async () => {
 		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",

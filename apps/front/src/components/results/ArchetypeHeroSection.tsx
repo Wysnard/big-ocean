@@ -31,6 +31,8 @@ interface ArchetypeHeroSectionProps {
 	showScrollIndicator?: boolean;
 	/** Framing line displayed above the subtitle (e.g. "[Name] dove deep with Nerin — here's what surfaced") */
 	framingLine?: string;
+	/** Accessible label for the hero landmark when this section should be navigable as a region. */
+	sectionLabel?: string;
 }
 
 function ScrollIndicator() {
@@ -64,6 +66,7 @@ export function ArchetypeHeroSection({
 	subtitle,
 	showScrollIndicator,
 	framingLine,
+	sectionLabel,
 }: ArchetypeHeroSectionProps) {
 	const tooltipBaseId = useId();
 
@@ -74,6 +77,7 @@ export function ArchetypeHeroSection({
 	return (
 		<section
 			data-testid="archetype-hero-section"
+			aria-label={sectionLabel}
 			className={`relative overflow-hidden px-6 py-16 md:py-24 ${showScrollIndicator ? "min-h-[70vh] flex items-center justify-center" : ""}`}
 		>
 			{/* Color block composition — decorative geometric shapes */}
@@ -81,7 +85,10 @@ export function ArchetypeHeroSection({
 				{/* Dominant: large circle in trait color */}
 				<div
 					className="absolute -top-[20%] -right-[10%] z-0 aspect-square w-[60vmin] rounded-full"
-					style={{ backgroundColor: `var(--trait-${dominantTrait})`, opacity: 0.85 }}
+					style={{
+						backgroundColor: `var(--trait-${dominantTrait})`,
+						opacity: 0.85,
+					}}
 				/>
 				{/* Secondary: triangle in complementary position */}
 				<div
@@ -95,7 +102,10 @@ export function ArchetypeHeroSection({
 				{/* Tertiary: small rectangle */}
 				<div
 					className="absolute top-[15%] left-[8%] z-10 w-[18vmin] aspect-square rounded-xl"
-					style={{ backgroundColor: `var(--trait-${dominantTrait})`, opacity: 0.2 }}
+					style={{
+						backgroundColor: `var(--trait-${dominantTrait})`,
+						opacity: 0.2,
+					}}
 				/>
 			</div>
 

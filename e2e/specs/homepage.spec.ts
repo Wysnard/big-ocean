@@ -9,6 +9,22 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Homepage & Acquisition Funnel", () => {
+	test("keyboard users can skip repeated navigation to main content @smoke", async ({ page }) => {
+		await page.goto("/");
+
+		const skipLink = page.getByTestId("skip-to-content");
+		const main = page.locator("main#main-content");
+
+		await page.keyboard.press("Tab");
+
+		await expect(skipLink).toBeVisible();
+		await expect(skipLink).toBeFocused();
+
+		await page.keyboard.press("Enter");
+
+		await expect(main).toBeFocused();
+	});
+
 	test("hero CTA navigates to /login when unauthenticated @smoke", async ({ page }) => {
 		await test.step("load homepage and verify hero section", async () => {
 			await page.goto("/");

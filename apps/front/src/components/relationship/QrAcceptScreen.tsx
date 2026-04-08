@@ -57,6 +57,7 @@ export function QrAcceptScreen({
 				data-testid="qr-accept-loading"
 				className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6"
 			>
+				<h1 className="sr-only">Loading relationship invitation</h1>
 				<Loader2 className="h-8 w-8 text-muted-foreground motion-safe:animate-spin" />
 			</div>
 		);

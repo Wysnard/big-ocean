@@ -10,6 +10,7 @@ import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { Effect, Schema as S } from "effect";
 import { useCallback, useState } from "react";
 import { NotFound } from "@/components/NotFound";
+import { PageMain } from "@/components/PageMain";
 import { TherapistChat } from "@/components/TherapistChat";
 import { WaitlistForm } from "@/components/waitlist/waitlist-form";
 import { useAuth } from "@/hooks/use-auth";
@@ -39,10 +40,12 @@ export const Route = createFileRoute("/chat/")({
 	ssr: false,
 	validateSearch: (search) => S.decodeUnknownSync(ChatSearchParams)(search),
 	notFoundComponent: () => (
-		<NotFound
-			title="Session not found"
-			description="This conversation doesn't exist or doesn't belong to your account."
-		/>
+		<PageMain className="bg-background">
+			<NotFound
+				title="Session not found"
+				description="This conversation doesn't exist or doesn't belong to your account."
+			/>
+		</PageMain>
 	),
 	beforeLoad: async (context) => {
 		const { search } = context;
@@ -151,42 +154,53 @@ function RouteComponent() {
 
 	if (sessionNotFound) {
 		return (
-			<NotFound
-				title="Assessment not found"
-				description={`The assessment session ${sessionId} doesn't exist or you don't have access to it.`}
-			/>
+			<PageMain className="bg-background">
+				<NotFound
+					title="Assessment not found"
+					description={`The assessment session ${sessionId} doesn't exist or you don't have access to it.`}
+				/>
+			</PageMain>
 		);
 	}
 
 	// Story 15.3: Circuit breaker active — show waitlist form
 	if (waitlist) {
-		return <WaitlistForm />;
+		return (
+			<PageMain title="Assessment waitlist" className="bg-background">
+				<WaitlistForm />
+			</PageMain>
+		);
 	}
 
 	if (!sessionId) {
 		return (
-			<div className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background">
+			<PageMain
+				title="Creating assessment conversation"
+				className="h-[calc(100dvh-3.5rem)] flex items-center justify-center bg-background"
+			>
 				<div className="text-center">
 					<OceanSpinner size={48} className="mx-auto mb-4" />
 					<p className="text-muted-foreground">Creating assessment session...</p>
 				</div>
-			</div>
+			</PageMain>
 		);
 	}
 
 	return (
-		<TherapistChat
-			sessionId={sessionId}
-			onSessionError={handleSessionError}
-			userName={user?.name}
-			userImage={user?.image}
-			isAuthenticated={isAuthenticated}
-			onPortraitReveal={handlePortraitReveal}
-			highlightMessageId={highlightMessageId}
-			highlightQuote={highlightQuote}
-			highlightStart={highlightStart}
-			highlightEnd={highlightEnd}
-			highlightScore={highlightScore}
-		/>
+		<PageMain title="Conversation with Nerin" className="bg-background">
+			<TherapistChat
+				sessionId={sessionId}
+				onSessionError={handleSessionError}
+				userName={user?.name}
+				userImage={user?.image}
+				isAuthenticated={isAuthenticated}
+				onPortraitReveal={handlePortraitReveal}
+				highlightMessageId={highlightMessageId}
+				highlightQuote={highlightQuote}
+				highlightStart={highlightStart}
+				highlightEnd={highlightEnd}
+				highlightScore={highlightScore}
+			/>
+		</PageMain>
 	);
 }

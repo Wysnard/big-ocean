@@ -13,6 +13,7 @@ import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { PageMain } from "../components/PageMain";
 import { authClient } from "../lib/auth-client";
 
 export const Route = createFileRoute("/reset-password")({
@@ -71,7 +72,10 @@ function ResetPasswordPage() {
 				} else {
 					setIsSuccess(true);
 					setTimeout(() => {
-						void navigate({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+						void navigate({
+							to: "/login",
+							search: { sessionId: undefined, redirectTo: undefined },
+						});
 					}, 2000);
 				}
 			} catch {
@@ -85,7 +89,10 @@ function ResetPasswordPage() {
 	const hasValidToken = !!token && urlError !== "INVALID_TOKEN";
 
 	return (
-		<div className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background">
+		<PageMain
+			title="Reset your password"
+			className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background"
+		>
 			<div className="w-full max-w-md">
 				<div className="relative mx-auto max-w-md overflow-hidden rounded-3xl bg-card p-8 shadow-lg sm:p-10">
 					{/* Corner geometric decorations */}
@@ -185,7 +192,11 @@ function ResetPasswordPage() {
 												Minimum 12 characters
 											</p>
 											{isInvalid && (
-												<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+												<FieldError
+													errors={field.state.meta.errors.map((e) => ({
+														message: String(e),
+													}))}
+												/>
 											)}
 										</Field>
 									);
@@ -211,7 +222,11 @@ function ResetPasswordPage() {
 												className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 											/>
 											{isInvalid && (
-												<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+												<FieldError
+													errors={field.state.meta.errors.map((e) => ({
+														message: String(e),
+													}))}
+												/>
 											)}
 										</Field>
 									);
@@ -230,6 +245,6 @@ function ResetPasswordPage() {
 					)}
 				</div>
 			</div>
-		</div>
+		</PageMain>
 	);
 }

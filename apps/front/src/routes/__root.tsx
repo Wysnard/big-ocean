@@ -11,6 +11,7 @@ import { Toaster } from "@workspace/ui/components/sonner";
 import { TooltipProvider } from "@workspace/ui/components/tooltip";
 import Header from "../components/Header";
 import { NotFound } from "../components/NotFound";
+import { PageMain, SkipToContentLink } from "../components/PageMain";
 import { ThemeProvider } from "../components/ThemeProvider";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import appCss from "../styles.css?url";
@@ -70,7 +71,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 	}),
 
 	errorComponent: ErrorComponent,
-	notFoundComponent: () => <NotFound />,
+	notFoundComponent: () => (
+		<PageMain className="bg-background">
+			<NotFound />
+		</PageMain>
+	),
 	shellComponent: RootDocument,
 });
 
@@ -83,6 +88,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<body>
 				<ThemeProvider>
 					<TooltipProvider>
+						<SkipToContentLink />
 						<Header />
 						{children}
 						<Toaster position="top-center" />

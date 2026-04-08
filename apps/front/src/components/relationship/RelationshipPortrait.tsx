@@ -77,9 +77,9 @@ export const RelationshipPortrait = memo(function RelationshipPortrait({
 					sections.map((section, i) => (
 						<div key={section.header} className="space-y-2">
 							{section.level === 1 ? (
-								<h3 className="text-base font-semibold text-foreground">{section.header}</h3>
+								<h2 className="text-base font-semibold text-foreground">{section.header}</h2>
 							) : (
-								<h4 className="text-sm font-semibold text-foreground">{renderHeader(section.header)}</h4>
+								<h3 className="text-sm font-semibold text-foreground">{renderHeader(section.header)}</h3>
 							)}
 							{section.body && (
 								<div className="text-sm leading-relaxed text-foreground/80">
