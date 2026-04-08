@@ -12,11 +12,16 @@ vi.mock("@workspace/infrastructure/repositories/message.drizzle.repository");
 vi.mock("@workspace/domain/config/app-config");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { ConversationRepository, ExchangeRepository, LoggerRepository } from "@workspace/domain";
+import {
+	ConversationRepository,
+	ExchangeRepository,
+	LoggerRepository,
+	MessageRepository,
+} from "@workspace/domain";
 import { _resetMockState as _resetSessionMockState } from "@workspace/infrastructure/repositories/__mocks__/conversation.drizzle.repository";
 import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { MessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/message.drizzle.repository";
-import { Effect, Exit, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import { activateConversationExtension } from "../activate-conversation-extension.use-case";
 
 const mockLogger = {
@@ -53,49 +58,55 @@ describe("activateConversationExtension Use Case", () => {
 		vi.clearAllMocks();
 	});
 
-	it.effect("creates extension session linked to parent", () =>
+	it.effect("fails with FeatureUnavailable even when a completed parent conversation exists", () =>
 		Effect.gen(function* () {
 			// Seed a completed session for the user
 			const sessionRepo = yield* ConversationRepository;
 			const created = yield* sessionRepo.createSession("user_123");
 			yield* sessionRepo.updateSession(created.sessionId, { status: "completed" });
 
-			// Activate extension
-			const result = yield* activateConversationExtension({ userId: "user_123" });
+			const error = yield* activateConversationExtension({ userId: "user_123" }).pipe(Effect.flip);
+			const sessions = yield* sessionRepo.getSessionsByUserId("user_123");
+			const messageRepo = yield* MessageRepository;
+			const messages = yield* messageRepo.getMessages(created.sessionId);
 
-			expect(result.sessionId).toBeDefined();
-			expect(result.parentConversationId).toBe(created.sessionId);
-			expect(result.messages.length).toBeGreaterThan(0);
+			expect(error._tag).toBe("FeatureUnavailable");
+			expect(sessions).toHaveLength(1);
+			expect(messages).toHaveLength(0);
+			expect(mockExchangeRepo.create).not.toHaveBeenCalled();
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
-	it.effect("fails with SessionNotFound when no completed session exists", () =>
-		Effect.gen(function* () {
-			const exit = yield* Effect.exit(activateConversationExtension({ userId: "user_no_session" }));
+	it.effect(
+		"fails with FeatureUnavailable when called without any eligible parent conversation",
+		() =>
+			Effect.gen(function* () {
+				const error = yield* activateConversationExtension({ userId: "user_no_session" }).pipe(
+					Effect.flip,
+				);
 
-			expect(Exit.isFailure(exit)).toBe(true);
-		}).pipe(Effect.provide(TestLayer)),
+				expect(error._tag).toBe("FeatureUnavailable");
+				expect(mockExchangeRepo.create).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(TestLayer)),
 	);
 
-	it.effect("returns existing extension session idempotently", () =>
-		Effect.gen(function* () {
-			// Seed a completed session with an existing child extension
-			const sessionRepo = yield* ConversationRepository;
-			const parent = yield* sessionRepo.createSession("user_456");
-			yield* sessionRepo.updateSession(parent.sessionId, { status: "completed" });
+	it.effect(
+		"does not create greeting messages or child conversations while the feature is gated",
+		() =>
+			Effect.gen(function* () {
+				const sessionRepo = yield* ConversationRepository;
+				const messageRepo = yield* MessageRepository;
+				const parent = yield* sessionRepo.createSession("user_blocked");
+				yield* sessionRepo.updateSession(parent.sessionId, { status: "completed" });
 
-			// Create extension session first time
-			const first = yield* activateConversationExtension({ userId: "user_456" });
-			expect(first.sessionId).toBeDefined();
-			expect(first.parentConversationId).toBe(parent.sessionId);
+				yield* activateConversationExtension({ userId: "user_blocked" }).pipe(Effect.flip);
 
-			// Second call should detect parent now has a child and
-			// not find an eligible session (parent has child), or find a different one
-			// Since our mock findCompletedSessionWithoutChild filters out parents with children,
-			// a second activation should fail (no more eligible sessions)
-			const exit = yield* Effect.exit(activateConversationExtension({ userId: "user_456" }));
+				const sessions = yield* sessionRepo.getSessionsByUserId("user_blocked");
+				const parentMessages = yield* messageRepo.getMessages(parent.sessionId);
 
-			expect(Exit.isFailure(exit)).toBe(true);
-		}).pipe(Effect.provide(TestLayer)),
+				expect(sessions).toHaveLength(1);
+				expect(parentMessages).toHaveLength(0);
+				expect(mockExchangeRepo.create).not.toHaveBeenCalled();
+			}).pipe(Effect.provide(TestLayer)),
 	);
 });

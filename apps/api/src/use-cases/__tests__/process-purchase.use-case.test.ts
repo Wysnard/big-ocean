@@ -297,7 +297,7 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
-	it.effect("should trigger portrait generation for extended_conversation_unlocked", () =>
+	it.effect("should keep extended_conversation_unlocked dormant in MVP", () =>
 		Effect.gen(function* () {
 			mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(mockCompletedSession));
 			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
@@ -307,11 +307,12 @@ describe("processPurchase Portrait Generation (Story 13.3)", () => {
 				productId: mockAppConfig.polarProductExtendedConversation,
 			});
 
-			// Verify portrait generation daemon was spawned
-			expect(mockLogger.info).toHaveBeenCalledWith(
+			expect(mockLogger.info).not.toHaveBeenCalledWith(
 				"Spawning portrait generation daemon",
-				expect.objectContaining({ sessionId: "session_456" }),
+				expect.anything(),
 			);
+			expect(mockSessionRepo.findCompletedSessionWithoutChild).not.toHaveBeenCalled();
+			expect(mockSessionRepo.createExtensionSession).not.toHaveBeenCalled();
 		}).pipe(Effect.provide(TestLayer)),
 	);
 

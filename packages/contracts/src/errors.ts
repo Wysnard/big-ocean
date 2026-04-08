@@ -15,6 +15,7 @@ export {
 	ConversationEvidenceError,
 	CostLimitExceeded,
 	DatabaseError,
+	FeatureUnavailable,
 	FinalizationInProgressError,
 	FreeTierLimitReached,
 	GlobalAssessmentLimitReached,

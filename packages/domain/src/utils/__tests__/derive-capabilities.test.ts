@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PurchaseEvent } from "../../types/purchase.types";
 import { parseMetadata } from "../../types/purchase.types";
-import { deriveCapabilities } from "../derive-capabilities";
+import { deriveCapabilities, hasPortraitForResult } from "../derive-capabilities";
 
 const makeEvent = (
 	overrides: Partial<PurchaseEvent> & Pick<PurchaseEvent, "eventType">,
@@ -87,9 +87,9 @@ describe("deriveCapabilities", () => {
 		expect(result.hasFullPortrait).toBe(false);
 	});
 
-	it("grants portrait access via extended_conversation_unlocked (bundle)", () => {
+	it("keeps portrait access separate from extended_conversation_unlocked", () => {
 		const result = deriveCapabilities([makeEvent({ eventType: "extended_conversation_unlocked" })]);
-		expect(result.hasFullPortrait).toBe(true);
+		expect(result.hasFullPortrait).toBe(false);
 		expect(result.hasExtendedConversation).toBe(true);
 	});
 
@@ -108,9 +108,42 @@ describe("deriveCapabilities", () => {
 			makeEvent({ eventType: "extended_conversation_unlocked" }),
 			makeEvent({ eventType: "extended_conversation_refunded" }),
 		]);
-		// standalone portrait_unlocked survives bundle refund (per Task 7 test case)
 		expect(result.hasFullPortrait).toBe(true);
 		expect(result.hasExtendedConversation).toBe(false);
+	});
+});
+
+describe("hasPortraitForResult", () => {
+	it("returns true for portrait_unlocked on the matching result", () => {
+		const result = hasPortraitForResult(
+			[makeEvent({ eventType: "portrait_unlocked", assessmentResultId: "result-1" })],
+			"result-1",
+		);
+		expect(result).toBe(true);
+	});
+
+	it("returns false for extended_conversation_unlocked on the matching result", () => {
+		const result = hasPortraitForResult(
+			[
+				makeEvent({
+					eventType: "extended_conversation_unlocked",
+					assessmentResultId: "result-1",
+				}),
+			],
+			"result-1",
+		);
+		expect(result).toBe(false);
+	});
+
+	it("returns false when a portrait purchase was refunded for the matching result", () => {
+		const result = hasPortraitForResult(
+			[
+				makeEvent({ eventType: "portrait_unlocked", assessmentResultId: "result-1" }),
+				makeEvent({ eventType: "portrait_refunded", assessmentResultId: "result-1" }),
+			],
+			"result-1",
+		);
+		expect(result).toBe(false);
 	});
 });
 
