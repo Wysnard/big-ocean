@@ -66,6 +66,10 @@ export function ProfileView({
 	quickActions,
 	children,
 }: ProfileViewProps) {
+	const archetypeSectionLabel = displayName ? `${displayName}\u2019s archetype` : "Your archetype";
+	const portraitSectionLabel = displayName ? `${displayName}\u2019s portrait` : "Your portrait";
+	const traitsSectionLabel = displayName ? `${displayName}\u2019s traits` : "Your traits";
+
 	const renderTraitCards = (traitNames: TraitName[]) =>
 		traitNames.map((traitName) => {
 			const traitData = traits.find((t) => t.name === traitName);
@@ -93,6 +97,7 @@ export function ProfileView({
 				dominantTrait={dominantTrait}
 				description={description}
 				displayName={displayName}
+				sectionLabel={archetypeSectionLabel}
 			/>
 
 			{/* Single CSS Grid container */}
@@ -102,41 +107,63 @@ export function ProfileView({
 					{fullPortraitContent ||
 					fullPortraitStatus === "generating" ||
 					fullPortraitStatus === "failed" ? (
-						<PersonalPortrait
-							displayName={displayName}
-							fullPortraitContent={fullPortraitContent}
-							fullPortraitStatus={fullPortraitStatus}
-							onRetryPortrait={onRetryPortrait}
-						/>
+						<section aria-labelledby="results-portrait-heading" className="col-span-full">
+							<h2 id="results-portrait-heading" className="sr-only">
+								{portraitSectionLabel}
+							</h2>
+							<PersonalPortrait
+								displayName={displayName}
+								fullPortraitContent={fullPortraitContent}
+								fullPortraitStatus={fullPortraitStatus}
+								onRetryPortrait={onRetryPortrait}
+							/>
+						</section>
 					) : onUnlockPortrait ? (
-						<PortraitUnlockCta onUnlock={onUnlockPortrait} />
+						<section aria-labelledby="results-portrait-heading" className="col-span-full">
+							<h2 id="results-portrait-heading" className="sr-only">
+								{portraitSectionLabel}
+							</h2>
+							<PortraitUnlockCta onUnlock={onUnlockPortrait} />
+						</section>
 					) : null}
 
-					{/* Ocean Code Strand — full width */}
-					<OceanCodeStrand oceanCode5={oceanCode5} displayName={displayName} description={description} />
+					<section aria-labelledby="results-traits-heading" className="col-span-full space-y-5">
+						<h2 id="results-traits-heading" className="sr-only">
+							{traitsSectionLabel}
+						</h2>
 
-					{/* Radar + Confidence side-by-side (AC #4, #5) */}
-					<div className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-5">
-						<PersonalityRadarChart traits={traits} />
-						{overallConfidence != null && (
-							<ConfidenceRingCard confidence={overallConfidence} messageCount={messageCount ?? 0} />
-						)}
-					</div>
+						{/* Ocean Code Strand — full width */}
+						<OceanCodeStrand
+							oceanCode5={oceanCode5}
+							displayName={displayName}
+							description={description}
+						/>
 
-					{/* Trait Cards Row 1: O, C, E (AC #6) */}
-					{renderTraitCards(ROW_1_TRAITS)}
+						{/* Radar + Confidence side-by-side (AC #4, #5) */}
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+							<PersonalityRadarChart traits={traits} />
+							{overallConfidence != null && (
+								<ConfidenceRingCard confidence={overallConfidence} messageCount={messageCount ?? 0} />
+							)}
+						</div>
 
-					{/* Detail Zone for Row 1 — inserted after 3rd card (AC #7) */}
-					{selectedTrait && ROW_1_TRAITS.includes(selectedTrait) && detailZone}
+						<div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+							{/* Trait Cards Row 1: O, C, E (AC #6) */}
+							{renderTraitCards(ROW_1_TRAITS)}
 
-					{/* Trait Cards Row 2: A, N (AC #6) */}
-					{renderTraitCards(ROW_2_TRAITS)}
+							{/* Detail Zone for Row 1 — inserted after 3rd card (AC #7) */}
+							{selectedTrait && ROW_1_TRAITS.includes(selectedTrait) && detailZone}
 
-					{/* Detail Zone for Row 2 — inserted after 5th card (AC #7) */}
-					{selectedTrait && ROW_2_TRAITS.includes(selectedTrait) && detailZone}
+							{/* Trait Cards Row 2: A, N (AC #6) */}
+							{renderTraitCards(ROW_2_TRAITS)}
 
-					{/* Quick Actions (AC #8) */}
-					{quickActions && <div className="col-span-full">{quickActions}</div>}
+							{/* Detail Zone for Row 2 — inserted after 5th card (AC #7) */}
+							{selectedTrait && ROW_2_TRAITS.includes(selectedTrait) && detailZone}
+
+							{/* Quick Actions (AC #8) */}
+							{quickActions && <div className="col-span-full">{quickActions}</div>}
+						</div>
+					</section>
 				</div>
 			</div>
 

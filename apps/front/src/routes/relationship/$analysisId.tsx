@@ -13,6 +13,7 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { Button } from "@workspace/ui/components/button";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { PageMain } from "@/components/PageMain";
 import { RelationshipPortrait } from "@/components/relationship/RelationshipPortrait";
 import {
 	useRelationshipAnalysis,
@@ -53,9 +54,10 @@ function RelationshipAnalysisPage() {
 	// Loading state (initial fetch) — skeleton pulse per AC-1
 	if (isLoading) {
 		return (
-			<div
+			<PageMain
 				data-testid="relationship-analysis-page"
 				data-testid-state="loading"
+				title="Loading relationship analysis"
 				className="min-h-screen bg-background"
 			>
 				<output
@@ -71,7 +73,7 @@ function RelationshipAnalysisPage() {
 						<div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
 					</div>
 				</output>
-			</div>
+			</PageMain>
 		);
 	}
 
@@ -81,7 +83,7 @@ function RelationshipAnalysisPage() {
 			(error as unknown as Record<string, unknown> | null)?._tag ===
 			"RelationshipAnalysisUnauthorizedError";
 		return (
-			<div
+			<PageMain
 				data-testid="relationship-analysis-page"
 				data-testid-state="error"
 				className="min-h-screen bg-background flex items-center justify-center px-6"
@@ -98,7 +100,7 @@ function RelationshipAnalysisPage() {
 						<Link to="/">Go Home</Link>
 					</Button>
 				</div>
-			</div>
+			</PageMain>
 		);
 	}
 
@@ -107,9 +109,10 @@ function RelationshipAnalysisPage() {
 	if (data.content === null) {
 		const hasPolledEnough = pollCountRef.current > 3;
 		return (
-			<div
+			<PageMain
 				data-testid="relationship-analysis-page"
 				data-testid-state="generating"
+				title="Generating relationship analysis"
 				className="min-h-screen bg-background"
 			>
 				<div className="mx-auto max-w-2xl px-5 py-8 space-y-6">
@@ -150,15 +153,16 @@ function RelationshipAnalysisPage() {
 						</Button>
 					</div>
 				</div>
-			</div>
+			</PageMain>
 		);
 	}
 
 	// Ready state — display analysis content
 	return (
-		<div
+		<PageMain
 			data-testid="relationship-analysis-page"
 			data-testid-state="ready"
+			title={`Relationship analysis: ${data.userAName} and ${data.userBName}`}
 			className="min-h-screen bg-background"
 		>
 			<div className="mx-auto max-w-2xl px-5 py-8">
@@ -179,6 +183,6 @@ function RelationshipAnalysisPage() {
 					isLatestVersion={data.isLatestVersion}
 				/>
 			</div>
-		</div>
+		</PageMain>
 	);
 }

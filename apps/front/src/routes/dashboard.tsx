@@ -14,6 +14,7 @@ import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState"
 import { DashboardIdentityCard } from "@/components/dashboard/DashboardIdentityCard";
 import { DashboardInProgressCard } from "@/components/dashboard/DashboardInProgressCard";
 import { DashboardRelationshipsCard } from "@/components/dashboard/DashboardRelationshipsCard";
+import { PageMain } from "@/components/PageMain";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetResults, useListConversations } from "@/hooks/use-conversation";
 import { useCredits } from "@/hooks/useCredits";
@@ -25,7 +26,10 @@ export const Route = createFileRoute("/dashboard")({
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (!session?.user) {
-			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+			throw redirect({
+				to: "/login",
+				search: { sessionId: undefined, redirectTo: undefined },
+			});
 		}
 	},
 	component: DashboardPage,
@@ -67,19 +71,22 @@ function DashboardPage() {
 
 	if (isAuthPending || isConversationsLoading) {
 		return (
-			<div className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6">
+			<PageMain
+				title="Loading your dashboard"
+				className="min-h-[calc(100dvh-3.5rem)] bg-background flex items-center justify-center px-6"
+			>
 				<div className="text-center">
 					<Loader2 className="h-10 w-10 motion-safe:animate-spin text-primary mx-auto mb-3" />
 					<p className="text-sm text-muted-foreground">Loading your dashboard...</p>
 				</div>
-			</div>
+			</PageMain>
 		);
 	}
 
 	const hasCompletedAssessment = !!latestSession;
 
 	return (
-		<div data-testid="dashboard-page" className="min-h-[calc(100dvh-3.5rem)] bg-background">
+		<PageMain data-testid="dashboard-page" className="min-h-[calc(100dvh-3.5rem)] bg-background">
 			<div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 				{/* Page header */}
 				<div className="mb-8">
@@ -124,6 +131,6 @@ function DashboardPage() {
 					</div>
 				)}
 			</div>
-		</div>
+		</PageMain>
 	);
 }

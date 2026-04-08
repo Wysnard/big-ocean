@@ -8,6 +8,7 @@
  */
 
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { PageMain } from "@/components/PageMain";
 import { QrAcceptScreen } from "@/components/relationship/QrAcceptScreen";
 import { useQrAccept } from "@/hooks/useQrAccept";
 import { getSession } from "@/lib/auth-client";
@@ -34,15 +35,17 @@ function QrAcceptRoute() {
 	const qrAccept = useQrAccept(token);
 
 	return (
-		<QrAcceptScreen
-			details={qrAccept.details}
-			isLoading={qrAccept.isLoading}
-			error={qrAccept.error}
-			onAccept={qrAccept.handleAccept}
-			onRefuse={qrAccept.handleRefuse}
-			isAccepting={qrAccept.isAccepting}
-			isRefusing={qrAccept.isRefusing}
-			acceptError={qrAccept.acceptError}
-		/>
+		<PageMain className="min-h-screen bg-background">
+			<QrAcceptScreen
+				details={qrAccept.details}
+				isLoading={qrAccept.isLoading}
+				error={qrAccept.error}
+				onAccept={qrAccept.handleAccept}
+				onRefuse={qrAccept.handleRefuse}
+				isAccepting={qrAccept.isAccepting}
+				isRefusing={qrAccept.isRefusing}
+				acceptError={qrAccept.acceptError}
+			/>
+		</PageMain>
 	);
 }

@@ -21,6 +21,7 @@ import {
 } from "@workspace/domain";
 import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { Loader2, Lock, ShieldAlert } from "lucide-react";
+import { PageMain } from "@/components/PageMain";
 import { ArchetypeDescriptionSection } from "@/components/results/ArchetypeDescriptionSection";
 import { ArchetypeHeroSection } from "@/components/results/ArchetypeHeroSection";
 import { PersonalityRadarChart } from "@/components/results/PersonalityRadarChart";
@@ -71,7 +72,10 @@ export const Route = createFileRoute("/public-profile/$publicProfileId")({
 		return {
 			meta: generateOgMetaTags({
 				profile: profile
-					? { archetypeName: profile.archetypeName, description: profile.description }
+					? {
+							archetypeName: profile.archetypeName,
+							description: profile.description,
+						}
 					: null,
 				publicProfileId: params.publicProfileId,
 				origin,
@@ -182,15 +186,16 @@ function TraitLegendRow() {
 
 function ProfileLoading() {
 	return (
-		<div
+		<PageMain
 			data-slot="profile-loading"
+			title="Loading public profile"
 			className="min-h-screen bg-background flex items-center justify-center"
 		>
 			<div className="text-center">
 				<Loader2 className="h-12 w-12 motion-safe:animate-spin text-primary mx-auto mb-4" />
 				<p className="text-muted-foreground">Loading profile...</p>
 			</div>
-		</div>
+		</PageMain>
 	);
 }
 
@@ -200,7 +205,7 @@ function ProfileErrorState({ error }: { error?: Error }) {
 	const isNotFound = errorMessage.includes("not found") || errorMessage.includes("404");
 
 	return (
-		<div
+		<PageMain
 			data-slot="profile-error"
 			className="min-h-screen bg-background flex items-center justify-center px-6"
 		>
@@ -233,7 +238,7 @@ function ProfileErrorState({ error }: { error?: Error }) {
 					</>
 				)}
 			</div>
-		</div>
+		</PageMain>
 	);
 }
 
@@ -277,7 +282,7 @@ function ProfilePage() {
 	const displayName = profile.displayName ?? "This person";
 
 	return (
-		<div data-slot="public-profile" className="min-h-screen bg-depth-surface">
+		<PageMain data-slot="public-profile" className="min-h-screen bg-depth-surface">
 			{/* Section 1: Archetype Hero */}
 			<ArchetypeHeroSection
 				archetypeName={profile.archetypeName}
@@ -286,6 +291,7 @@ function ProfilePage() {
 				displayName={displayName}
 				subtitle={`${displayName}\u2019s Personality`}
 				framingLine={`${displayName} dove deep with Nerin \u2014 here\u2019s what surfaced`}
+				sectionLabel={`${displayName}\u2019s archetype`}
 				showScrollIndicator
 			/>
 
@@ -343,6 +349,6 @@ function ProfilePage() {
 				authState={authState}
 				isOwnProfile={isOwnProfile}
 			/>
-		</div>
+		</PageMain>
 	);
 }

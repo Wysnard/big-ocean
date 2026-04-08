@@ -7,6 +7,7 @@
 
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { PageMain } from "../components/PageMain";
 import { AccountDeletionSection } from "../components/settings/AccountDeletionSection";
 import { ProfileVisibilitySection } from "../components/settings/ProfileVisibilitySection";
 import { useDeleteAccount } from "../hooks/use-account";
@@ -76,7 +77,7 @@ function SettingsPage() {
 	}
 
 	return (
-		<div data-slot="settings-page" className="min-h-[calc(100dvh-3.5rem)] bg-background">
+		<PageMain data-slot="settings-page" className="min-h-[calc(100dvh-3.5rem)] bg-background">
 			<div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
 				{/* Page header */}
 				<div className="mb-8">
@@ -110,6 +111,6 @@ function SettingsPage() {
 					/>
 				</div>
 			</div>
-		</div>
+		</PageMain>
 	);
 }
