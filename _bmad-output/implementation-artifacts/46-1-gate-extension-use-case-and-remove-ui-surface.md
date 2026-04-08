@@ -1,6 +1,6 @@
 # Story 46.1: Gate Extension Use-Case & Remove UI Surface
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -66,35 +66,35 @@ so that I don't encounter dead-end paths or confusing purchase options.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Gate extension activation at the API boundary without deleting future scaffolding (AC: 1, 7, 8)
-  - [ ] 1.1 Update `apps/api/src/use-cases/activate-conversation-extension.use-case.ts` to short-circuit with an explicit MVP-disabled outcome before any session creation, exchange creation, or greeting persistence occurs.
-  - [ ] 1.2 Align `packages/contracts/src/http/groups/conversation.ts` and `apps/api/src/handlers/conversation.ts` with that gated behavior so the endpoint no longer returns a misleading success payload.
-  - [ ] 1.3 Update focused tests in `apps/api/src/use-cases/__tests__/activate-conversation-extension.use-case.test.ts` and any affected handler/integration coverage to prove direct calls fail cleanly and do not create extension sessions.
+- [x] Task 1: Gate extension activation at the API boundary without deleting future scaffolding (AC: 1, 7, 8)
+  - [x] 1.1 Update `apps/api/src/use-cases/activate-conversation-extension.use-case.ts` to short-circuit with an explicit MVP-disabled outcome before any session creation, exchange creation, or greeting persistence occurs.
+  - [x] 1.2 Align `packages/contracts/src/http/groups/conversation.ts` and `apps/api/src/handlers/conversation.ts` with that gated behavior so the endpoint no longer returns a misleading success payload.
+  - [x] 1.3 Update focused tests in `apps/api/src/use-cases/__tests__/activate-conversation-extension.use-case.test.ts` and any affected handler/integration coverage to prove direct calls fail cleanly and do not create extension sessions.
 
-- [ ] Task 2: Remove live extension fulfillment side effects while preserving future event vocabulary (AC: 1, 5, 6, 7)
-  - [ ] 2.1 Update `apps/api/src/use-cases/process-purchase.use-case.ts` so `extended_conversation_unlocked` no longer triggers portrait generation or extension-session creation while MVP gating is in effect.
-  - [ ] 2.2 Mirror that same behavior in the real Polar webhook flow in `packages/infrastructure/src/context/better-auth.ts`; a stale extension checkout must not queue portrait generation or silently reanimate extension behavior.
-  - [ ] 2.3 Preserve `PURCHASE_EVENT_TYPES`, `polarProductExtendedConversation`, and extension-related repository/schema helpers unless removal is explicitly proven safe for Phase 2a.
-  - [ ] 2.4 Update `apps/api/src/use-cases/__tests__/process-purchase.use-case.test.ts` and any affected purchase/webhook fixtures so event recording can remain test-covered without live extension side effects.
+- [x] Task 2: Remove live extension fulfillment side effects while preserving future event vocabulary (AC: 1, 5, 6, 7)
+  - [x] 2.1 Update `apps/api/src/use-cases/process-purchase.use-case.ts` so `extended_conversation_unlocked` no longer triggers portrait generation or extension-session creation while MVP gating is in effect.
+  - [x] 2.2 Mirror that same behavior in the real Polar webhook flow in `packages/infrastructure/src/context/better-auth.ts`; a stale extension checkout must not queue portrait generation or silently reanimate extension behavior.
+  - [x] 2.3 Preserve `PURCHASE_EVENT_TYPES`, `polarProductExtendedConversation`, and extension-related repository/schema helpers unless removal is explicitly proven safe for Phase 2a.
+  - [x] 2.4 Update `apps/api/src/use-cases/__tests__/process-purchase.use-case.test.ts` and any affected purchase/webhook fixtures so event recording can remain test-covered without live extension side effects.
 
-- [ ] Task 3: Decouple dormant extension capability from portrait access (AC: 5, 6, 8)
-  - [ ] 3.1 Update `packages/domain/src/utils/derive-capabilities.ts` so `hasExtendedConversation` remains derived, but `extended_conversation_unlocked` no longer implies `hasFullPortrait`.
-  - [ ] 3.2 Update `hasPortraitForResult` in the same module so portrait access is scoped to portrait unlock/refund events only, consistent with the rewritten PRD.
-  - [ ] 3.3 Refresh `packages/domain/src/utils/__tests__/derive-capabilities.test.ts` and any affected portrait-status tests that currently assume extension unlock is a portrait bundle.
+- [x] Task 3: Decouple dormant extension capability from portrait access (AC: 5, 6, 8)
+  - [x] 3.1 Update `packages/domain/src/utils/derive-capabilities.ts` so `hasExtendedConversation` remains derived, but `extended_conversation_unlocked` no longer implies `hasFullPortrait`.
+  - [x] 3.2 Update `hasPortraitForResult` in the same module so portrait access is scoped to portrait unlock/refund events only, consistent with the rewritten PRD.
+  - [x] 3.3 Refresh `packages/domain/src/utils/__tests__/derive-capabilities.test.ts` and any affected portrait-status tests that currently assume extension unlock is a portrait bundle.
 
-- [ ] Task 4: Remove or repurpose dead-end completed-session affordances on results and dashboard surfaces (AC: 2, 3, 4, 8)
-  - [ ] 4.1 Audit `apps/front/src/routes/results/$conversationSessionId.tsx` and `apps/front/src/components/results/QuickActionsCard.tsx`; remove or replace any completed-session CTA that routes the user back into chat as if extension were available.
-  - [ ] 4.2 Confirm `/dashboard` exposes only MVP actions. If no visible dashboard extension CTA exists, satisfy AC with a targeted audit and keep `DashboardInProgressCard` limited to genuinely in-progress conversations.
-  - [ ] 4.3 Update route/component tests such as `apps/front/src/routes/-results-session-route.test.tsx` and `apps/front/src/components/results/QuickActionsCard.test.tsx` to lock the MVP surface: no extension copy, no completed-session "continue chat" affordance, and no `EUR 25` purchase messaging.
+- [x] Task 4: Remove or repurpose dead-end completed-session affordances on results and dashboard surfaces (AC: 2, 3, 4, 8)
+  - [x] 4.1 Audit `apps/front/src/routes/results/$conversationSessionId.tsx` and `apps/front/src/components/results/QuickActionsCard.tsx`; remove or replace any completed-session CTA that routes the user back into chat as if extension were available.
+  - [x] 4.2 Confirm `/dashboard` exposes only MVP actions. If no visible dashboard extension CTA exists, satisfy AC with a targeted audit and keep `DashboardInProgressCard` limited to genuinely in-progress conversations.
+  - [x] 4.3 Update route/component tests such as `apps/front/src/routes/-results-session-route.test.tsx` and `apps/front/src/components/results/QuickActionsCard.test.tsx` to lock the MVP surface: no extension copy, no completed-session "continue chat" affordance, and no `EUR 25` purchase messaging.
 
-- [ ] Task 5: Verify the MVP surface is clean and future scaffolding remains dormant (AC: 5, 8)
-  - [ ] 5.1 Run targeted sweeps, at minimum:
+- [x] Task 5: Verify the MVP surface is clean and future scaffolding remains dormant (AC: 5, 8)
+  - [x] 5.1 Run targeted sweeps, at minimum:
     - `rg -n -i "extension|extend conversation|continue chat|EUR 25|25 euro" apps/front apps/api packages --glob '!**/node_modules/**'`
     - `rg -n "extended_conversation_unlocked|extended_conversation_refunded|hasExtendedConversation" apps/api packages/domain packages/infrastructure`
     - Review remaining hits individually; comments in planning artifacts and post-MVP architecture docs are expected and should not drive code churn.
-  - [ ] 5.2 Run `pnpm typecheck`.
-  - [ ] 5.3 Run `pnpm test:run`.
-  - [ ] 5.4 Run `pnpm build`.
+  - [x] 5.2 Run `pnpm typecheck`.
+  - [x] 5.3 Run `pnpm test:run`.
+  - [x] 5.4 Run `pnpm build`.
 
 ## Dev Notes
 
@@ -199,14 +199,41 @@ GPT-5 Codex
 - `2026-04-08T15:57+0200` - Loaded the BMAD create-story workflow, resolved BMM planning/implementation artifact paths, and parsed requested story `46-1`.
 - `2026-04-08T15:57+0200` - Audited epic, PRD, UX, architecture, recent Epic 45 artifacts, and active code paths for extension activation, purchase fulfillment, domain capability derivation, and completed-session UI affordances.
 - `2026-04-08T15:57+0200` - Created `_bmad-output/implementation-artifacts/46-1-gate-extension-use-case-and-remove-ui-surface.md` and updated sprint tracking to mark Epic 46 in progress with Story 46.1 ready for development.
+- `2026-04-08T16:10+0200` - Added failing focused tests for gated extension activation, dormant purchase/webhook fulfillment, portrait capability derivation, portrait status polling, and completed-session results actions.
+- `2026-04-08T16:33+0200` - Implemented a typed `FeatureUnavailable` MVP gate, preserved the dormant extension implementation seam, removed extension-triggered portrait/session side effects from both the Effect purchase flow and Better Auth webhook, and decoupled extension purchases from portrait access.
+- `2026-04-08T16:40+0200` - Replaced completed-session results affordances with dashboard navigation, confirmed the dashboard already exposed only MVP actions, and refreshed focused results-page tests.
+- `2026-04-08T16:56+0200` - Ran extension/UI sweeps plus `pnpm typecheck`, `pnpm test:run`, and `pnpm build`; increased `apps/front/vitest.config.ts` test timeout to stabilize the existing full front suite under turbo concurrency.
 
 ### Completion Notes List
 
-- Story context explicitly covers both the pure Effect extension use-case and the real Better Auth Polar webhook path so implementation cannot accidentally gate only the test helper.
-- Story context flags the current `extended_conversation_unlocked` -> `hasFullPortrait` coupling as product-inaccurate relative to the updated PRD.
-- Story context identifies the results-page `Continue Chat` button and `QuickActionsCard` resume action as dead-end completed-session affordances that should be treated as latent extension UI.
+- Added a typed `FeatureUnavailable` error to the domain/contracts seam and gated `activateConversationExtension` before any child session, exchange, or greeting writes while keeping the dormant implementation helper in place for post-MVP work.
+- Stopped `extended_conversation_unlocked` from triggering portrait generation or extension-session creation in both `apps/api/src/use-cases/process-purchase.use-case.ts` and `packages/infrastructure/src/context/better-auth.ts`; extension event vocabulary and repository/schema scaffolding remain intact.
+- Updated `deriveCapabilities` and `hasPortraitForResult` so portrait access is governed only by portrait unlock/refund events while `hasExtendedConversation` continues to derive from extension events.
+- Removed the completed-session chat return path from results UI by replacing `QuickActionsCard`'s resume affordance with dashboard navigation and deleting the bottom-of-page `Continue Chat` CTA; dashboard audit confirmed no extension CTA was live there.
+- Verification passed with targeted sweeps plus focused package tests and the full required gates: `pnpm typecheck`, `pnpm test:run`, and `pnpm build`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/46-1-gate-extension-use-case-and-remove-ui-surface.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `apps/api/src/use-cases/__tests__/activate-conversation-extension.use-case.test.ts`
+- `apps/api/src/use-cases/__tests__/get-portrait-status.use-case.test.ts`
+- `apps/api/src/use-cases/__tests__/process-purchase.use-case.test.ts`
+- `apps/api/src/use-cases/activate-conversation-extension.use-case.ts`
+- `apps/api/src/use-cases/process-purchase.use-case.ts`
+- `apps/front/src/components/results/QuickActionsCard.test.tsx`
+- `apps/front/src/components/results/QuickActionsCard.tsx`
+- `apps/front/src/routes/-results-session-route.test.tsx`
+- `apps/front/src/routes/results/$conversationSessionId.tsx`
+- `apps/front/vitest.config.ts`
+- `packages/contracts/src/errors.ts`
+- `packages/contracts/src/http/groups/conversation.ts`
+- `packages/domain/src/errors/http.errors.ts`
+- `packages/domain/src/index.ts`
+- `packages/domain/src/utils/__tests__/derive-capabilities.test.ts`
+- `packages/domain/src/utils/derive-capabilities.ts`
+- `packages/infrastructure/src/context/better-auth.ts`
+
+### Change Log
+
+- `2026-04-08` - Gated MVP extension activation with a typed unavailable error, removed extension-triggered portrait/session side effects from purchase fulfillment, decoupled extension purchases from portrait access, cleaned completed-session results affordances, and stabilized the full front Vitest run with a 15s timeout.

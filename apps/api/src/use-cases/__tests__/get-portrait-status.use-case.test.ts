@@ -159,4 +159,27 @@ describe("getPortraitStatus Use Case (queue-based, read-only)", () => {
 			expect(result.status).toBe("none");
 		}).pipe(Effect.provide(createTestLayer())),
 	);
+
+	it.effect("returns 'none' when only extension purchase events exist for this result", () =>
+		Effect.gen(function* () {
+			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
+			mockPurchaseRepo.getEventsByUserId.mockReturnValue(
+				Effect.succeed([
+					{
+						eventType: "extended_conversation_unlocked",
+						assessmentResultId: "result_456",
+						createdAt: new Date(),
+					},
+				]),
+			);
+
+			const result = yield* getPortraitStatus({
+				sessionId: "session_123",
+				userId: "user_789",
+			});
+
+			expect(result.status).toBe("none");
+		}).pipe(Effect.provide(createTestLayer())),
+	);
 });

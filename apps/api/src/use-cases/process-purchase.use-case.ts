@@ -28,7 +28,6 @@ import {
 	UnknownProductError,
 } from "@workspace/domain";
 import { Effect } from "effect";
-import { activateConversationExtension } from "./activate-conversation-extension.use-case";
 import { generateFullPortrait } from "./generate-full-portrait.use-case";
 
 export interface ProcessPurchaseInput {
@@ -64,7 +63,7 @@ const mapProductToEventType = (
  * Check if event type should trigger portrait generation
  */
 const shouldTriggerPortrait = (eventType: PurchaseEventType): boolean =>
-	eventType === "portrait_unlocked" || eventType === "extended_conversation_unlocked";
+	eventType === "portrait_unlocked";
 
 /**
  * Process Purchase Use Case
@@ -192,28 +191,11 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 		}
 
 		// ───────────────────────────────────────────────────────────────
-		// Phase 4: Extension session creation (Story 36-1)
-		// ───────────────────────────────────────────────────────────────
 		if (eventType === "extended_conversation_unlocked") {
-			yield* activateConversationExtension({ userId: input.userId }).pipe(
-				Effect.tap((result) =>
-					Effect.sync(() => {
-						logger.info("Extension session created from purchase webhook", {
-							sessionId: result.sessionId,
-							parentConversationId: result.parentConversationId,
-							userId: input.userId,
-						});
-					}),
-				),
-				Effect.catchAll((error) =>
-					Effect.sync(() => {
-						logger.warn("Failed to create extension session from webhook, user can activate via API", {
-							userId: input.userId,
-							error: String(error),
-						});
-					}),
-				),
-			);
+			logger.info("Recorded extension purchase while extension remains disabled in MVP", {
+				userId: input.userId,
+				checkoutId: input.checkoutId,
+			});
 		}
 
 		return insertResult;

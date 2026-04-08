@@ -150,7 +150,7 @@ describe("results/$conversationSessionId route behavior", () => {
 
 		render(<Component />);
 
-		expect(screen.getByTestId("mock-auth-gate")).toBeInTheDocument();
+		expect(screen.getByTestId("mock-auth-gate")).toBeTruthy();
 		expect(mockUseGetResults).toHaveBeenCalledWith("session-123", false);
 	});
 
@@ -175,9 +175,10 @@ describe("results/$conversationSessionId route behavior", () => {
 
 		render(<Component />);
 
-		expect(screen.queryByTestId("mock-auth-gate")).not.toBeInTheDocument();
-		expect(screen.getByTestId("results-content")).toBeInTheDocument();
+		expect(screen.queryByTestId("mock-auth-gate")).toBeNull();
+		expect(screen.getByTestId("results-content")).toBeTruthy();
 		expect(mockUseGetResults).toHaveBeenCalledWith("session-123", true);
+		expect(screen.queryByTestId("results-continue-chat")).toBeNull();
 	});
 
 	it("does not render results content on 404 error", async () => {
@@ -190,6 +191,6 @@ describe("results/$conversationSessionId route behavior", () => {
 
 		render(<Component />);
 
-		expect(screen.queryByText("Continue Assessment")).not.toBeInTheDocument();
+		expect(screen.queryByText("Continue Assessment")).toBeNull();
 	});
 });

@@ -20,6 +20,7 @@ import {
 	ConversationEvidenceError,
 	CostLimitExceeded,
 	DatabaseError,
+	FeatureUnavailable,
 	GlobalAssessmentLimitReached,
 	MessageRateLimitError,
 	RateLimitExceeded,
@@ -298,6 +299,7 @@ export const ConversationGroup = HttpApiGroup.make("conversation")
 	.add(
 		HttpApiEndpoint.post("activateExtension", "/activate-extension")
 			.addSuccess(ActivateExtensionResponseSchema)
+			.addError(FeatureUnavailable, { status: 409 })
 			.addError(SessionNotFound, { status: 404 })
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),

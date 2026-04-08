@@ -37,6 +37,15 @@ export class SessionExpired extends S.TaggedError<SessionExpired>()("SessionExpi
 }) {}
 
 /**
+ * Feature unavailable error (409)
+ * Deliberate product gate for dormant post-MVP capabilities.
+ */
+export class FeatureUnavailable extends S.TaggedError<FeatureUnavailable>()("FeatureUnavailable", {
+	feature: S.String,
+	message: S.String,
+}) {}
+
+/**
  * Database error (500)
  * Generic error for database operations that don't expose internal details
  */

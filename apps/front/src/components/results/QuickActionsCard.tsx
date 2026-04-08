@@ -1,19 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { ChevronRight, Download, MessageCircle, User } from "lucide-react";
+import { ChevronRight, Download, LayoutDashboard, User } from "lucide-react";
 
 interface QuickActionsCardProps {
-	sessionId: string;
 	publicProfileId?: string;
 }
 
 const actions = [
 	{
-		key: "resume",
-		icon: MessageCircle,
-		title: "Resume Conversation",
-		description: "Continue exploring your personality with Nerin",
+		key: "dashboard",
+		icon: LayoutDashboard,
+		title: "View Dashboard",
+		description: "Return to your active conversations and credits",
 		iconBg: "bg-primary/10 text-primary",
 	},
 	{
@@ -32,7 +31,7 @@ const actions = [
 	},
 ] as const;
 
-export function QuickActionsCard({ sessionId, publicProfileId }: QuickActionsCardProps) {
+export function QuickActionsCard({ publicProfileId }: QuickActionsCardProps) {
 	return (
 		<Card data-slot="quick-actions-card">
 			<CardHeader>
@@ -56,12 +55,10 @@ export function QuickActionsCard({ sessionId, publicProfileId }: QuickActionsCar
 						</>
 					);
 
-					if (action.key === "resume") {
+					if (action.key === "dashboard") {
 						return (
 							<Button key={action.key} variant="action" size="action" asChild>
-								<Link to="/chat" search={{ sessionId }}>
-									{content}
-								</Link>
+								<Link to="/dashboard">{content}</Link>
 							</Button>
 						);
 					}
