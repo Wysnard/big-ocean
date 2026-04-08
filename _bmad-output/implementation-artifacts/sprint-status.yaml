@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
 generated: 2026-04-04T21:45
-last_updated: 2026-04-08
+last_updated: 2026-04-08T12:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -784,14 +784,14 @@ development_status:
   # FK column renames, turn count 25→15, duration text updates, dead code cleanup
   # Stories: 1.1-1.7 in epics.md (1.4-1.5 added via sprint change 2026-04-07)
   # ───────────────────────────────────────────────────────────────
-  epic-45: in-progress
+  epic-45: done
   45-1-schema-migration-table-renames: done
   45-2-repository-and-domain-layer-renames: done
   45-3-handler-contract-and-frontend-renames: done
   45-4-fk-column-migration: done
   45-5-fk-column-code-cascade: done
   45-6-assessment-turn-count-25-to-15: done
-  45-7-dead-code-cleanup: backlog
+  45-7-dead-code-cleanup: done
   epic-45-retrospective: optional
 
   # ───────────────────────────────────────────────────────────────
