@@ -1,5 +1,6 @@
 # Sprint Status Tracking - big-ocean
 # Generated: 2026-04-01
+# Last Updated: 2026-04-08T17:48+0200
 # Project: big-ocean
 # Project Key: NOKEY
 # Tracking System: file-system
@@ -35,7 +36,7 @@
 # - Dev moves story to 'review', then Dev runs code-review (fresh context, ideally different LLM)
 
 generated: 2026-04-04T21:45
-last_updated: 2026-04-08T17:20
+last_updated: 2026-04-08T17:48+0200
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -802,7 +803,7 @@ development_status:
   # preserve purchase event types for future subscription
   # Stories: 2.1 in epics.md
   # ───────────────────────────────────────────────────────────────
-  epic-46: in-progress
+  epic-46: done
   46-1-gate-extension-use-case-and-remove-ui-surface: done
   epic-46-retrospective: optional
 
