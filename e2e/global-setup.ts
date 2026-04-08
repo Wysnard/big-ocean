@@ -17,7 +17,7 @@ import {
 	linkSessionToUser,
 	seedSessionForResults,
 	sendAssessmentMessage,
-} from "./factories/assessment.factory.js";
+} from "./factories/conversation.factory.js";
 import { createUser } from "./factories/user.factory.js";
 import { createApiContext } from "./utils/api-client.js";
 

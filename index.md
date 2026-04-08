@@ -83,7 +83,7 @@ Shared React component library based on shadcn/ui.
 - **[dev.sh](./scripts/dev.sh)** - Start Docker Compose development environment
 - **[dev-reset.sh](./scripts/dev-reset.sh)** - Reset dev environment (deletes all data)
 - **[dev-stop.sh](./scripts/dev-stop.sh)** - Stop dev environment (preserves data)
-- **[seed-completed-assessment.ts](./scripts/seed-completed-assessment.ts)** - Seed database with test assessment data
+- **[seed-completed-conversation.ts](./scripts/seed-completed-conversation.ts)** - Seed database with test conversation data
 
 ### docker/
 

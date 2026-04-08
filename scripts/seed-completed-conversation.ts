@@ -3,7 +3,7 @@
  * Seed script to create a completed conversation session for quick manual testing
  *
  * Usage:
- *   pnpm seed:test-assessment
+ *   pnpm seed:test-conversation
  *
  * Creates:
  * - Test user (if doesn't exist)
@@ -452,7 +452,7 @@ const buildDomainCoverage = () => {
 const seedProgram = Effect.gen(function* () {
 	const db = yield* Database;
 
-	console.log("Starting seed script for completed assessment...\n");
+	console.log("Starting seed script for completed conversation...\n");
 
 	// 1. Create or get test user
 	console.log("Creating test user...");
@@ -744,7 +744,7 @@ const seedProgram = Effect.gen(function* () {
 	console.log(`   Profile Page: http://localhost:3000/profile`);
 	console.log(`   Results Page: http://localhost:3000/results/${sessionRecord.id}`);
 	console.log(`   Chat Page:    http://localhost:3000/chat?sessionId=${sessionRecord.id}`);
-	console.log("\nTip: Log in as test@bigocean.dev to see the assessment on /profile\n");
+	console.log("\nTip: Log in as test@bigocean.dev to see the conversation on /profile\n");
 
 	return sessionRecord.id;
 });

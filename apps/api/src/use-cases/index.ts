@@ -64,12 +64,12 @@ export {
 	sendMessage,
 } from "./send-message.use-case";
 export {
-	type StartAssessmentInput,
-	type StartAssessmentOutput,
-	startAnonymousAssessment,
-	startAssessment,
-	startAuthenticatedAssessment,
-} from "./start-assessment.use-case";
+	type StartConversationInput,
+	type StartConversationOutput,
+	startAnonymousConversation,
+	startAuthenticatedConversation,
+	startConversation,
+} from "./start-conversation.use-case";
 export {
 	type ToggleProfileVisibilityInput,
 	type ToggleProfileVisibilityOutput,

@@ -18,7 +18,7 @@ import {
 	grantCredits,
 	linkSessionToUser,
 	seedSessionForResults,
-} from "../../factories/assessment.factory.js";
+} from "../../factories/conversation.factory.js";
 import { createUser, signInUser } from "../../factories/user.factory.js";
 import { expect, test } from "../../fixtures/base.fixture.js";
 

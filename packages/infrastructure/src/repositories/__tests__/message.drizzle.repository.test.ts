@@ -1,5 +1,5 @@
 /**
- * Assessment Message Repository Tests
+ * Message Repository Tests
  *
  * Verifies saveMessage -> getMessages round-trip using the in-memory mock.
  *

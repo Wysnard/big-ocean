@@ -34,8 +34,8 @@ import {
 	listUserSessions,
 	resumeSession,
 	sendMessage,
-	startAnonymousAssessment,
-	startAuthenticatedAssessment,
+	startAnonymousConversation,
+	startAuthenticatedConversation,
 } from "../use-cases/index";
 
 export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversation", (handlers) =>
@@ -89,8 +89,8 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 
 					// Call use case - dispatch to authenticated or anonymous path
 					const result = userId
-						? yield* startAuthenticatedAssessment({ userId })
-						: yield* startAnonymousAssessment();
+						? yield* startAuthenticatedConversation({ userId })
+						: yield* startAnonymousConversation();
 
 					// Set httpOnly cookie for anonymous sessions (Story 9.1)
 					const sessionToken =

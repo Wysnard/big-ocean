@@ -4,9 +4,9 @@ Quick reference for development and testing scripts.
 
 ## Database Seeding
 
-### Seed Completed Assessment
+### Seed Completed Conversation
 
-Quickly populate your database with a realistic completed assessment for manual testing of the results page.
+Quickly populate your database with a realistic completed conversation for manual testing of the results page.
 
 **Prerequisites:**
 - Database must be running (start with `pnpm dev` or `docker compose up -d postgres`)
@@ -16,12 +16,12 @@ Quickly populate your database with a realistic completed assessment for manual 
 pnpm dev
 
 # In another terminal, run the seed script
-pnpm seed:test-assessment
+pnpm seed:test-conversation
 ```
 
 **What it creates:**
-- Test user (see credentials in `scripts/seed-completed-assessment.ts`)
-- Completed assessment session with realistic personality profile
+- Test user (see credentials in `scripts/seed-completed-conversation.ts`)
+- Completed conversation session with realistic personality profile
 - 12-message conversation (Nerin + User)
 - 30 facet scores with high confidence (85%)
 - 5 trait scores derived from facets
@@ -61,7 +61,7 @@ Evidence Records: 42
 ```
 
 **Use cases:**
-- Manual UI testing of results page without running full conversations
+- Manual UI testing of the results page without running full conversations
 - Frontend development iteration speed
 - Screenshot/demo preparation
 - Testing different personality profiles (modify `FACET_SCORE_MAP`)

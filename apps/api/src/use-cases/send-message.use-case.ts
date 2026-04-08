@@ -91,7 +91,7 @@ export const sendMessage = (input: SendMessageInput) =>
 
 				// 4b. Budget check removed from send-message (Story 31-6)
 				// Per FR56/NFR18, cost guard never blocks mid-session.
-				// Budget enforcement now happens at session boundaries only (start-assessment).
+				// Budget enforcement now happens at session boundaries only (start-conversation).
 
 				// 4c. Message rate limit — fail-open if Redis is down
 				yield* costGuard.checkMessageRateLimit(costKey).pipe(

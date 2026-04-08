@@ -170,13 +170,13 @@ pnpm lint
 - Backend API: http://localhost:4000
 - Health check: http://localhost:4000/health
 
-### Test Assessment
+### Test Conversation
 
 ```bash
-# Seed database with completed assessment for testing
-pnpm seed:test-assessment
+# Seed database with completed conversation for testing
+pnpm seed:test-conversation
 
-# Test user: see credentials in scripts/seed-completed-assessment.ts
+# Test user: see credentials in scripts/seed-completed-conversation.ts
 ```
 
 ---

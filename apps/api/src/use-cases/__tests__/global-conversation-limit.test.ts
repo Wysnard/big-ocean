@@ -1,9 +1,9 @@
 /**
- * Global Assessment Limit & Waitlist Tests (Story 15.3)
+ * Global Conversation Limit & Waitlist Tests (Story 15.3)
  *
  * Tests for:
  * - checkAndRecordGlobalAssessmentStart (AC #1, #4, #5)
- * - GlobalAssessmentLimitReached propagation through start-assessment (AC #1)
+ * - GlobalAssessmentLimitReached propagation through start-conversation (AC #1)
  * - join-waitlist use-case (AC #3)
  */
 
@@ -13,19 +13,19 @@ import { DateTime, Effect, Exit, Layer } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { joinWaitlist } from "../join-waitlist.use-case";
 import {
-	startAnonymousAssessment,
-	startAuthenticatedAssessment,
-} from "../start-assessment.use-case";
+	startAnonymousConversation,
+	startAuthenticatedConversation,
+} from "../start-conversation.use-case";
 import {
 	createTestLayer,
-	mockAssessmentMessageRepo,
-	mockAssessmentSessionRepo,
+	mockConversationRepo,
 	mockCostGuardRepo,
+	mockMessageRepo,
 	setupDefaultMocks,
-} from "./__fixtures__/start-assessment.fixtures";
+} from "./__fixtures__/start-conversation.fixtures";
 
-describe("Global Assessment Limit (Story 15.3)", () => {
-	describe("startAuthenticatedAssessment — global limit propagation", () => {
+describe("Global Conversation Limit (Story 15.3)", () => {
+	describe("startAuthenticatedConversation — global limit propagation", () => {
 		it("should propagate GlobalAssessmentLimitReached error unchanged", async () => {
 			setupDefaultMocks();
 			mockCostGuardRepo.checkAndRecordGlobalAssessmentStart.mockReturnValue(
@@ -39,7 +39,7 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 
 			const testLayer = createTestLayer();
 			const exit = await Effect.runPromiseExit(
-				startAuthenticatedAssessment({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
+				startAuthenticatedConversation({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
 			);
 
 			expect(Exit.isFailure(exit)).toBe(true);
@@ -58,7 +58,7 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 
 			const testLayer = createTestLayer();
 			const result = await Effect.runPromise(
-				startAuthenticatedAssessment({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
+				startAuthenticatedConversation({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
 			);
 
 			// Should succeed despite Redis failure (fail-open)
@@ -66,7 +66,7 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 		});
 	});
 
-	describe("startAnonymousAssessment — global limit propagation", () => {
+	describe("startAnonymousConversation — global limit propagation", () => {
 		it("should propagate GlobalAssessmentLimitReached error unchanged", async () => {
 			setupDefaultMocks();
 			mockCostGuardRepo.checkAndRecordGlobalAssessmentStart.mockReturnValue(
@@ -80,7 +80,7 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 
 			const testLayer = createTestLayer();
 			const exit = await Effect.runPromiseExit(
-				startAnonymousAssessment().pipe(Effect.provide(testLayer)),
+				startAnonymousConversation().pipe(Effect.provide(testLayer)),
 			);
 
 			expect(Exit.isFailure(exit)).toBe(true);
@@ -94,7 +94,7 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 
 			const testLayer = createTestLayer();
 			const result = await Effect.runPromise(
-				startAnonymousAssessment().pipe(Effect.provide(testLayer)),
+				startAnonymousConversation().pipe(Effect.provide(testLayer)),
 			);
 
 			expect(result.sessionId).toBeDefined();
@@ -119,7 +119,7 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 
 			const testLayer = createTestLayer();
 			const exit = await Effect.runPromiseExit(
-				startAuthenticatedAssessment({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
+				startAuthenticatedConversation({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
 			);
 
 			expect(Exit.isFailure(exit)).toBe(true);
@@ -148,14 +148,14 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 			);
 
 			// But an existing active session should still be returned (not blocked)
-			mockAssessmentSessionRepo.findSessionByUserId.mockReturnValue(
+			mockConversationRepo.findSessionByUserId.mockReturnValue(
 				Effect.succeed({
 					id: "session_existing_456",
 					status: "active",
 					createdAt: new Date("2026-02-25T08:00:00Z"),
 				}),
 			);
-			mockAssessmentMessageRepo.getMessages.mockReturnValue(
+			mockMessageRepo.getMessages.mockReturnValue(
 				Effect.succeed([
 					{
 						id: "msg-1",
@@ -169,7 +169,7 @@ describe("Global Assessment Limit (Story 15.3)", () => {
 
 			const testLayer = createTestLayer();
 			const result = await Effect.runPromise(
-				startAuthenticatedAssessment({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
+				startAuthenticatedConversation({ userId: "user_test" }).pipe(Effect.provide(testLayer)),
 			);
 
 			// Existing session is returned — circuit breaker check never reached

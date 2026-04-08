@@ -1,12 +1,12 @@
 /**
- * Assessment Endpoints Integration Tests
+ * Conversation Flow Integration Tests
  *
- * Validates assessment endpoints (start, message) against the Dockerized API.
+ * Validates conversation start, message, and resume endpoints against the Dockerized API.
  * Uses real HTTP requests and validates responses against contract schemas.
  *
  * Key validations:
- * - POST /api/assessment/start creates session
- * - POST /api/assessment/message processes message and returns response
+ * - POST /api/assessment/start creates a conversation session
+ * - POST /api/assessment/message processes a conversation message and returns a response
  * - Responses match @workspace/contracts schemas exactly
  * - Database persistence works (sessions and messages saved)
  *
@@ -16,7 +16,7 @@
 import {
 	GetResultsResponseSchema,
 	SendMessageResponseSchema,
-	StartAssessmentResponseSchema,
+	StartConversationResponseSchema,
 } from "@workspace/contracts";
 import { TRAIT_LETTER_MAP } from "@workspace/domain";
 import { Schema } from "effect";
@@ -62,7 +62,7 @@ async function postJson(path: string, body: unknown): Promise<Response> {
 
 describe("POST /api/assessment/start", () => {
 	test("creates session with valid response schema", async () => {
-		// Start assessment (anonymous - no userId to avoid UUID type issues)
+		// Start conversation (anonymous - no userId to avoid UUID type issues)
 		// In production, userId would come from authenticated session with valid UUID
 		const response = await postJson("/api/assessment/start", {});
 
@@ -74,7 +74,7 @@ describe("POST /api/assessment/start", () => {
 		const data = await response.json();
 
 		// Validate against contract schema (throws if invalid)
-		const decoded = Schema.decodeUnknownSync(StartAssessmentResponseSchema)(data);
+		const decoded = Schema.decodeUnknownSync(StartConversationResponseSchema)(data);
 
 		// Assert sessionId format (generated UUID pattern)
 		expect(decoded.sessionId).toBeDefined();
@@ -90,13 +90,13 @@ describe("POST /api/assessment/start", () => {
 	});
 
 	test("creates session without userId (anonymous)", async () => {
-		// Start assessment without userId
+		// Start conversation without userId
 		const response = await postJson("/api/assessment/start", {});
 
 		expect(response.status).toBe(200);
 
 		const data = await response.json();
-		const decoded = Schema.decodeUnknownSync(StartAssessmentResponseSchema)(data);
+		const decoded = Schema.decodeUnknownSync(StartConversationResponseSchema)(data);
 
 		expect(decoded.sessionId).toBeDefined();
 	});

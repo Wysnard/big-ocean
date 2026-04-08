@@ -256,7 +256,7 @@ export const mockConfig = {
 	sessionCostLimitCents: 2000,
 };
 
-/** Opener exchange (turn 0) — created by start-assessment */
+/** Opener exchange (turn 0) — created by start-conversation */
 export const openerExchangeRecord = {
 	id: "exchange_opener",
 	sessionId: "session_test_123",
@@ -316,7 +316,7 @@ export function setupDefaultMocks() {
 
 	mockExchangeRepo.create.mockReturnValue(Effect.succeed(mockExchangeRecord));
 	mockExchangeRepo.update.mockReturnValue(Effect.succeed(mockExchangeRecord));
-	// Default: opener exchange exists (created by start-assessment)
+	// Default: opener exchange exists (created by start-conversation)
 	mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed([openerExchangeRecord]));
 	mockExchangeRepo.findByUserId.mockReturnValue(Effect.succeed([openerExchangeRecord]));
 

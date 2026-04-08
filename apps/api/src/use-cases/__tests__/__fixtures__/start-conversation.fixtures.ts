@@ -1,7 +1,7 @@
 /**
- * Shared fixtures for start-assessment use-case tests.
+ * Shared fixtures for start-conversation use-case tests.
  *
- * Extracted from start-assessment.use-case.test.ts — no logic changes.
+ * Extracted from start-conversation-auth.use-case.test.ts — no logic changes.
  */
 
 import {
@@ -16,7 +16,7 @@ import { Effect, Layer, Redacted } from "effect";
 import { vi } from "vitest";
 
 // Define mock repo objects locally with vi.fn() for spy access
-export const mockAssessmentSessionRepo = {
+export const mockConversationRepo = {
 	createSession: vi.fn(),
 	getActiveSessionByUserId: vi.fn(),
 	getSession: vi.fn(),
@@ -32,7 +32,7 @@ export const mockAssessmentSessionRepo = {
 	releaseSessionLock: vi.fn(),
 };
 
-export const mockAssessmentMessageRepo = {
+export const mockMessageRepo = {
 	saveMessage: vi.fn(),
 	getMessages: vi.fn(),
 	getMessageCount: vi.fn(),
@@ -137,8 +137,8 @@ export const mockAppConfig = {
 
 export const createTestLayer = () =>
 	Layer.mergeAll(
-		Layer.succeed(ConversationRepository, mockAssessmentSessionRepo),
-		Layer.succeed(MessageRepository, mockAssessmentMessageRepo),
+		Layer.succeed(ConversationRepository, mockConversationRepo),
+		Layer.succeed(MessageRepository, mockMessageRepo),
 		Layer.succeed(ExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
@@ -151,32 +151,32 @@ export const createTestLayer = () =>
 export function setupDefaultMocks() {
 	saveMessageCallCount = 0;
 
-	mockAssessmentSessionRepo.createSession.mockImplementation((userId?: string) =>
+	mockConversationRepo.createSession.mockImplementation((userId?: string) =>
 		Effect.succeed({
 			sessionId: "session_new_789",
 			userId,
 			createdAt: new Date("2026-02-01T10:00:00Z"),
 		}),
 	);
-	mockAssessmentSessionRepo.getActiveSessionByUserId.mockImplementation(() => Effect.succeed(null));
-	mockAssessmentSessionRepo.getSessionsByUserId.mockImplementation(() => Effect.succeed([]));
-	mockAssessmentSessionRepo.findSessionByUserId.mockImplementation(() => Effect.succeed(null));
-	mockAssessmentSessionRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
-	mockAssessmentSessionRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
-	mockAssessmentSessionRepo.createAnonymousSession.mockImplementation(() =>
+	mockConversationRepo.getActiveSessionByUserId.mockImplementation(() => Effect.succeed(null));
+	mockConversationRepo.getSessionsByUserId.mockImplementation(() => Effect.succeed([]));
+	mockConversationRepo.findSessionByUserId.mockImplementation(() => Effect.succeed(null));
+	mockConversationRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
+	mockConversationRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
+	mockConversationRepo.createAnonymousSession.mockImplementation(() =>
 		Effect.succeed({
 			sessionId: "session_anon_123",
 			sessionToken: "mock_token_abc123def456",
 		}),
 	);
-	mockAssessmentSessionRepo.findByToken.mockImplementation(() => Effect.succeed(null));
-	mockAssessmentSessionRepo.assignUserId.mockImplementation(() => Effect.succeed(undefined));
-	mockAssessmentSessionRepo.rotateToken.mockImplementation(() =>
+	mockConversationRepo.findByToken.mockImplementation(() => Effect.succeed(null));
+	mockConversationRepo.assignUserId.mockImplementation(() => Effect.succeed(undefined));
+	mockConversationRepo.rotateToken.mockImplementation(() =>
 		Effect.succeed({ sessionToken: "new_token" }),
 	);
-	mockAssessmentSessionRepo.incrementMessageCount.mockImplementation(() => Effect.succeed(1));
-	mockAssessmentSessionRepo.acquireSessionLock.mockImplementation(() => Effect.succeed(undefined));
-	mockAssessmentSessionRepo.releaseSessionLock.mockImplementation(() => Effect.succeed(undefined));
+	mockConversationRepo.incrementMessageCount.mockImplementation(() => Effect.succeed(1));
+	mockConversationRepo.acquireSessionLock.mockImplementation(() => Effect.succeed(undefined));
+	mockConversationRepo.releaseSessionLock.mockImplementation(() => Effect.succeed(undefined));
 
 	mockExchangeRepo.create.mockImplementation((_sessionId: string, _turnNumber: number) =>
 		Effect.succeed({
@@ -192,7 +192,7 @@ export function setupDefaultMocks() {
 	mockExchangeRepo.update.mockImplementation(() => Effect.succeed({}));
 	mockExchangeRepo.findBySession.mockImplementation(() => Effect.succeed([]));
 
-	mockAssessmentMessageRepo.saveMessage.mockImplementation(
+	mockMessageRepo.saveMessage.mockImplementation(
 		(sessionId: string, role: string, content: string) => {
 			saveMessageCallCount++;
 			return Effect.succeed({
@@ -204,8 +204,8 @@ export function setupDefaultMocks() {
 			});
 		},
 	);
-	mockAssessmentMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
-	mockAssessmentMessageRepo.getMessageCount.mockImplementation(() => Effect.succeed(0));
+	mockMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));
+	mockMessageRepo.getMessageCount.mockImplementation(() => Effect.succeed(0));
 
 	mockLoggerRepo.info.mockImplementation(() => {});
 	mockLoggerRepo.error.mockImplementation(() => {});

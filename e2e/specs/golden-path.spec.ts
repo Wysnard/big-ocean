@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { POLAR_CONFIG } from "../e2e-env.js";
-import { getUserByEmail, seedFullPortrait } from "../factories/assessment.factory.js";
+import { getUserByEmail, seedFullPortrait } from "../factories/conversation.factory.js";
 import { expect, test } from "../fixtures/base.fixture.js";
 import { sendPolarWebhook } from "../helpers/webhook.helper.js";
 import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";

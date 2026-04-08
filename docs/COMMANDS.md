@@ -38,24 +38,24 @@ pnpm test:integration:watch    # Run integration tests in watch mode
 pnpm db:migrate                # Apply migrations to database
 pnpm db:push                   # Push schema changes to database (no migration)
 pnpm db:generate               # Generate migration from schema changes
-pnpm seed:test-assessment      # Seed database with test assessment data
+pnpm seed:test-conversation    # Seed database with test conversation data
 ```
 
 ### Database Seeding
 
-Populate your database with a completed assessment session for quick manual testing:
+Populate your database with a completed conversation session for quick manual testing:
 
 ```bash
 # Manual seeding
-pnpm seed:test-assessment
+pnpm seed:test-conversation
 
 # Automatic seeding (when using pnpm dev)
 pnpm dev  # Includes --profile seed flag
 ```
 
 **What gets seeded:**
-- Test user: see credentials in `scripts/seed-completed-assessment.ts`
-- Completed assessment session (12 messages)
+- Test user: see credentials in `scripts/seed-completed-conversation.ts`
+- Completed conversation session (12 messages)
 - 30 facet scores + 5 trait scores (realistic personality profile)
 - ~40 facet evidence records with text highlights
 

@@ -16,7 +16,7 @@ import {
 	getUserByEmail,
 	linkSessionToUser,
 	seedSessionForResults,
-} from "../../factories/assessment.factory.js";
+} from "../../factories/conversation.factory.js";
 import { createUser } from "../../factories/user.factory.js";
 import { expect, test } from "../../fixtures/base.fixture.js";
 

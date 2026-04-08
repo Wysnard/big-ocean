@@ -26,7 +26,7 @@ Integration tests run on the **HOST machine** and make real HTTP requests to a *
 │   (Vitest tests)    │   localhost:4001 │                                 │
 │                     │                  │  ┌─────────────┐                │
 │  • health.test.ts   │                  │  │  api-test   │ port 4000      │
-│  • assessment.test  │                  │  │ (production │────────────────┤
+│  • conversation.test│                  │  │ (production │────────────────┤
 │                     │                  │  │  Dockerfile)│                │
 └─────────────────────┘                  │  └──────┬──────┘                │
                                          │         │                       │
@@ -78,7 +78,7 @@ Integration tests run on the **HOST machine** and make real HTTP requests to a *
 tests/integration/
 ├── README.md           # This file
 ├── health.test.ts      # GET /health - simplest test, validates Docker setup
-└── assessment.test.ts  # Assessment endpoints - start, message, resume
+└── conversation.test.ts # Conversation endpoints - start, message, resume
 ```
 
 ### What Each Test Validates
@@ -90,7 +90,7 @@ tests/integration/
 - Effect HTTP server starts
 - `/health` endpoint returns correct schema
 
-#### `assessment.test.ts`
+#### `conversation.test.ts`
 - `POST /api/assessment/start` creates session
 - `POST /api/assessment/message` processes message
 - Response schemas match contracts exactly

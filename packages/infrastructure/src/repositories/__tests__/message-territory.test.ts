@@ -1,11 +1,11 @@
 /**
- * Assessment Message Exchange Metadata Tests (Story 23-3)
+ * Message Exchange Metadata Tests (Story 23-3)
  *
  * Verifies that saveMessage handles exchangeId parameter correctly,
  * both with and without the optional exchange link.
  *
  * Replaces old territory/energy metadata tests (Story 21-6) —
- * territory and energy now live on assessment_exchange.
+ * territory and energy now live on the exchange table.
  */
 import { vi } from "vitest";
 
@@ -21,7 +21,7 @@ import { describe, expect, it } from "vitest";
 
 const TestLayer = MessageDrizzleRepositoryLive;
 
-describe("Assessment Message Exchange Metadata (Story 23-3)", () => {
+describe("Message Exchange Metadata (Story 23-3)", () => {
 	beforeEach(() => {
 		_resetMockState();
 	});

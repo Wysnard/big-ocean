@@ -15,8 +15,8 @@ import {
 import { Schema as S } from "effect";
 import {
 	AgentInvocationError,
-	AssessmentAlreadyExists,
 	ConcurrentMessageError,
+	ConversationAlreadyExists,
 	ConversationEvidenceError,
 	CostLimitExceeded,
 	DatabaseError,
@@ -226,7 +226,7 @@ export const ConversationGroup = HttpApiGroup.make("conversation")
 		HttpApiEndpoint.post("start", "/start")
 			.addSuccess(StartConversationResponseSchema)
 			.setPayload(StartConversationRequestSchema)
-			.addError(AssessmentAlreadyExists, { status: 409 })
+			.addError(ConversationAlreadyExists, { status: 409 })
 			.addError(RateLimitExceeded, { status: 429 })
 			.addError(DatabaseError, { status: 500 })
 			.addError(GlobalAssessmentLimitReached, { status: 503 })

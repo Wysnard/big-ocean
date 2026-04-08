@@ -1,14 +1,14 @@
 /**
- * Start Assessment Use Case
+ * Start Conversation Use Case
  *
- * Business logic for starting a new assessment session.
+ * Business logic for starting a new conversation session.
  * Split into authenticated vs anonymous paths:
- * - startAuthenticatedAssessment: existing session check, rate limiting, cost guard
- * - startAnonymousAssessment: direct session creation, no guards
- * - startAssessment: backward-compat wrapper that dispatches based on userId
+ * - startAuthenticatedConversation: existing session check, rate limiting, cost guard
+ * - startAnonymousConversation: direct session creation, no guards
+ * - startConversation: backward-compat wrapper that dispatches based on userId
  */
 
-import { AssessmentAlreadyExists } from "@workspace/contracts";
+import { ConversationAlreadyExists } from "@workspace/contracts";
 import {
 	AppConfig,
 	ConversationRepository,
@@ -21,23 +21,23 @@ import {
 } from "@workspace/domain";
 import { Effect } from "effect";
 
-export interface StartAssessmentInput {
+export interface StartConversationInput {
 	readonly userId?: string;
 }
 
-export interface StartAssessmentMessage {
+export interface StartConversationMessage {
 	readonly role: "user" | "assistant";
 	readonly content: string;
 	readonly createdAt: Date;
 }
 
-export interface StartAssessmentOutput {
+export interface StartConversationOutput {
 	readonly sessionId: string;
 	readonly createdAt: Date;
-	readonly messages: StartAssessmentMessage[];
+	readonly messages: StartConversationMessage[];
 }
 
-export interface StartAnonymousAssessmentOutput extends StartAssessmentOutput {
+export interface StartAnonymousConversationOutput extends StartConversationOutput {
 	readonly sessionToken: string;
 }
 
@@ -64,7 +64,7 @@ const createSessionWithGreetings = (userId?: string) =>
 		// Persist greeting messages to DB so Nerin has full conversation context
 		// Greeting bubble: exchangeId = null (pure greeting, not a question)
 		// Opening question: exchangeId = opener exchange (this is the AI question)
-		const savedMessages: StartAssessmentMessage[] = [];
+		const savedMessages: StartConversationMessage[] = [];
 		for (const [i, content] of greetingContents.entries()) {
 			const isOpeningQuestion = i === greetingContents.length - 1;
 			const saved = yield* messageRepo.saveMessage(
@@ -80,7 +80,7 @@ const createSessionWithGreetings = (userId?: string) =>
 			});
 		}
 
-		logger.info("Assessment session started", {
+		logger.info("Conversation session started", {
 			sessionId: result.sessionId,
 			userId,
 			greetingCount: savedMessages.length,
@@ -94,14 +94,14 @@ const createSessionWithGreetings = (userId?: string) =>
 	});
 
 /**
- * Start Authenticated Assessment
+ * Start Authenticated Conversation
  *
  * For logged-in users: checks for existing session, enforces rate limits,
- * records assessment start, then creates session with greetings.
+ * records conversation start, then creates session with greetings.
  *
- * Errors: AssessmentAlreadyExists, CostLimitExceeded, GlobalAssessmentLimitReached, DatabaseError
+ * Errors: ConversationAlreadyExists, CostLimitExceeded, GlobalAssessmentLimitReached, DatabaseError
  */
-export const startAuthenticatedAssessment = (input: { userId: string }) =>
+export const startAuthenticatedConversation = (input: { userId: string }) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* ConversationRepository;
 		const messageRepo = yield* MessageRepository;
@@ -135,18 +135,18 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
 				};
 			}
 
-			// If a completed/paused session exists, block new assessment creation
-			logger.warn("User already has an assessment", {
+			// If a completed/paused session exists, block new conversation creation
+			logger.warn("User already has a conversation", {
 				userId,
 				existingSessionId: existing.id,
 				status: existing.status,
 			});
 
 			return yield* Effect.fail(
-				new AssessmentAlreadyExists({
+				new ConversationAlreadyExists({
 					userId,
 					existingSessionId: existing.id,
-					message: "You already have an assessment. Only one assessment per account is allowed.",
+					message: "You already have a conversation. Only one conversation per account is allowed.",
 				}),
 			);
 		}
@@ -182,13 +182,13 @@ export const startAuthenticatedAssessment = (input: { userId: string }) =>
 	});
 
 /**
- * Start Anonymous Assessment (Story 9.1)
+ * Start Anonymous Conversation (Story 9.1)
  *
  * Creates an anonymous session with a cryptographic token for cookie-based auth.
  * Persists greeting messages and returns sessionId + sessionToken.
  * No existing-session check, no rate limiting, no cost guard.
  */
-export const startAnonymousAssessment = () =>
+export const startAnonymousConversation = () =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* ConversationRepository;
 		const messageRepo = yield* MessageRepository;
@@ -221,7 +221,7 @@ export const startAnonymousAssessment = () =>
 		// Persist greeting messages
 		// Greeting bubbles: exchangeId = null (pure greeting, not a question)
 		// Opening question: exchangeId = opener exchange (this is the AI question)
-		const savedMessages: StartAssessmentMessage[] = [];
+		const savedMessages: StartConversationMessage[] = [];
 		for (const [i, content] of greetingContents.entries()) {
 			const isOpeningQuestion = i === greetingContents.length - 1;
 			const saved = yield* messageRepo.saveMessage(
@@ -237,7 +237,7 @@ export const startAnonymousAssessment = () =>
 			});
 		}
 
-		logger.info("Anonymous assessment started", {
+		logger.info("Anonymous conversation started", {
 			sessionId,
 			greetingCount: savedMessages.length,
 		});
@@ -247,13 +247,15 @@ export const startAnonymousAssessment = () =>
 			sessionToken,
 			createdAt: new Date(),
 			messages: savedMessages,
-		} satisfies StartAnonymousAssessmentOutput;
+		} satisfies StartAnonymousConversationOutput;
 	});
 
 /**
- * Start Assessment (backward-compat wrapper)
+ * Start Conversation (backward-compat wrapper)
  *
  * Dispatches to authenticated or anonymous path based on userId presence.
  */
-export const startAssessment = (input: StartAssessmentInput) =>
-	input.userId ? startAuthenticatedAssessment({ userId: input.userId }) : startAnonymousAssessment();
+export const startConversation = (input: StartConversationInput) =>
+	input.userId
+		? startAuthenticatedConversation({ userId: input.userId })
+		: startAnonymousConversation();

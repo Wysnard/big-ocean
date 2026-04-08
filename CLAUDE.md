@@ -59,7 +59,7 @@ pnpm lint:fix               # Auto-fix lint issues
 pnpm format                 # Format all code
 pnpm db:migrate             # Apply Drizzle migrations
 pnpm db:generate            # Generate migration from schema changes
-pnpm seed:test-assessment   # Seed test assessment data
+pnpm seed:test-conversation # Seed test conversation data
 ```
 
 For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
@@ -67,11 +67,11 @@ For complete command reference, see [COMMANDS.md](./docs/COMMANDS.md).
 ### Quick Testing
 
 ```bash
-pnpm dev                    # Auto-seeds database with test assessment
-pnpm seed:test-assessment   # Or seed manually
+pnpm dev                    # Auto-seeds database with test conversation
+pnpm seed:test-conversation # Or seed manually
 ```
 
-**What gets seeded:** Test user (see credentials in `scripts/seed-completed-assessment.ts`), completed assessment with 12 messages, 30 facet scores, 5 trait scores, ~40 evidence records.
+**What gets seeded:** Test user (see credentials in `scripts/seed-completed-conversation.ts`), completed conversation with 12 messages, 30 facet scores, 5 trait scores, ~40 evidence records.
 
 ### Integration Testing
 
@@ -245,4 +245,3 @@ pnpm dlx shadcn@latest add [component-name] -c apps/front
 ```
 
 Import as: `import { Button } from "@workspace/ui/components/button";`
-

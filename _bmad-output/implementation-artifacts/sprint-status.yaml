@@ -793,7 +793,7 @@ development_status:
   45-6-assessment-turn-count-25-to-15: done
   45-7-dead-code-cleanup: done
   45-8-deferred-cleanup: done
-  45-9-file-rename-cascade: ready-for-dev
+  45-9-file-rename-cascade: done
   epic-45-retrospective: done
 
   # ───────────────────────────────────────────────────────────────

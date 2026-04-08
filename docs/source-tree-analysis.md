@@ -25,13 +25,13 @@ big-ocean/
 │   │   │   │   └── health.ts             # Health check endpoint (/health)
 │   │   │   ├── use-cases/                # Pure business logic (main unit test target)
 │   │   │   │   ├── __tests__/            # Use-case unit tests with mock layers
-│   │   │   │   │   ├── start-assessment.use-case.test.ts
+│   │   │   │   │   ├── start-conversation-auth.use-case.test.ts
 │   │   │   │   │   ├── send-message.use-case.test.ts
 │   │   │   │   │   ├── get-results.use-case.test.ts
 │   │   │   │   │   ├── shareable-profile.use-case.test.ts
 │   │   │   │   │   ├── evidence.use-case.test.ts
 │   │   │   │   │   └── ...               # Additional integration tests
-│   │   │   │   ├── start-assessment.use-case.ts      # Create new assessment session
+│   │   │   │   ├── start-conversation.use-case.ts    # Create new conversation session
 │   │   │   │   ├── send-message.use-case.ts          # Process user message through orchestrator
 │   │   │   │   ├── get-results.use-case.ts           # Retrieve assessment results with scores
 │   │   │   │   ├── resume-session.use-case.ts        # Resume existing session
@@ -54,7 +54,7 @@ big-ocean/
 │   │   │   └── index.ts                  # Server entry point (port 4000)
 │   │   ├── tests/integration/            # Tier 2 Docker-based integration tests
 │   │   │   ├── health.test.ts            # Health endpoint integration test
-│   │   │   ├── assessment.test.ts        # Assessment flow integration test
+│   │   │   ├── conversation.test.ts      # Conversation flow integration test
 │   │   │   └── README.md                 # Integration testing documentation
 │   │   ├── scripts/                      # API-specific scripts
 │   │   │   ├── integration-setup.ts      # Integration test setup
@@ -374,7 +374,7 @@ big-ocean/
 │   ├── dev.sh                            # Development startup script
 │   ├── dev-reset.sh                      # Reset development environment
 │   ├── dev-stop.sh                       # Stop development services
-│   ├── seed-completed-assessment.ts      # Seed test assessment data
+│   ├── seed-completed-conversation.ts    # Seed test conversation data
 │   └── README.md                         # Scripts documentation
 │
 ├── docs/                                 # Documentation
@@ -492,7 +492,7 @@ pnpm dev --filter=front     # Start frontend only (port 3000)
 pnpm db:migrate             # Apply Drizzle migrations
 pnpm db:generate            # Generate migration from schema changes
 pnpm db:studio              # Open Drizzle Studio
-pnpm seed:test-assessment   # Seed test assessment data
+pnpm seed:test-conversation # Seed test conversation data
 ```
 
 **Testing:**

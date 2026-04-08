@@ -1,5 +1,5 @@
 /**
- * Assessment Factory — session creation + message sending via Playwright APIRequestContext,
+ * Conversation Factory — session creation + message sending via Playwright APIRequestContext,
  * DB seeding for evidence data (no API endpoint for bulk evidence).
  */
 
@@ -49,7 +49,7 @@ const ALL_FACETS = Object.keys(FACET_TO_TRAIT);
 // ── API helpers ─────────────────────────────────────────────────────────
 
 /**
- * Start a new assessment session via the API.
+ * Start a new conversation session via the API.
  * If the APIRequestContext has auth cookies, the session is owned by that user.
  */
 export async function createAssessmentSession(api: APIRequestContext): Promise<string> {
@@ -65,7 +65,7 @@ export async function createAssessmentSession(api: APIRequestContext): Promise<s
 }
 
 /**
- * Send a user message to an existing assessment session via the API.
+ * Send a user message to an existing conversation session via the API.
  */
 export async function sendAssessmentMessage(
 	api: APIRequestContext,
@@ -78,7 +78,7 @@ export async function sendAssessmentMessage(
 
 	if (!res.ok()) {
 		const body = await res.text();
-		console.warn(`[assessment.factory] send-message returned ${res.status()}: ${body}`);
+		console.warn(`[conversation.factory] send-message returned ${res.status()}: ${body}`);
 	}
 }
 

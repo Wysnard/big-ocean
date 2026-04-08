@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
 /**
- * Simulates the 2 greeting messages that the backend persists during startAssessment.
+ * Simulates the 2 greeting messages that the backend persists during startConversation.
  * These are returned by the resume endpoint for new sessions.
  * (1 greeting bubble + 1 opening question)
  */

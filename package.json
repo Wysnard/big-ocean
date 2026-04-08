@@ -28,7 +28,7 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:studio": "drizzle-kit studio",
-		"seed:test-assessment": "tsx scripts/seed-completed-assessment.ts",
+		"seed:test-conversation": "tsx scripts/seed-completed-conversation.ts",
 		"skills:check": "tsx scripts/check-skills.ts",
 		"test:e2e": "pnpm --filter=@workspace/e2e test:e2e",
 		"test:e2e:critical": "playwright test --grep @critical",

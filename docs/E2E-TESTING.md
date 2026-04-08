@@ -90,7 +90,7 @@ e2e/
 │   └── db.ts               # DB seeding helpers
 ├── factories/              # Data setup via API & DB
 │   ├── user.factory.ts
-│   └── assessment.factory.ts
+│   └── conversation.factory.ts
 ├── utils/                  # Shared browser/API helpers
 │   ├── api-client.ts
 │   └── browser-auth.ts

@@ -63,7 +63,7 @@ export const Route = createFileRoute("/chat/")({
 				),
 				Effect.catchTag("RateLimitExceeded", () => Effect.succeed({ _tag: "waitlist" as const })),
 				Effect.catchTag("CostLimitExceeded", () => Effect.succeed({ _tag: "waitlist" as const })),
-				Effect.catchTag("AssessmentAlreadyExists", (e) =>
+				Effect.catchTag("ConversationAlreadyExists", (e) =>
 					// Story 31-5: The listSessions check below will redirect completed sessions to results
 					Effect.succeed({ _tag: "existing" as const, sessionId: e.existingSessionId }),
 				),
