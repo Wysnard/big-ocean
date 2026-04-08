@@ -79,6 +79,7 @@ describe("DepthMeter", () => {
 			expect(meter).toHaveAttribute("aria-valuenow", "5");
 			expect(meter).toHaveAttribute("aria-valuemin", "0");
 			expect(meter).toHaveAttribute("aria-valuemax", "15");
+			expect(meter).toHaveAttribute("aria-valuetext", "Exchange 5 of 15");
 			expect(meter).toHaveAttribute("aria-label", "Conversation depth");
 		});
 
@@ -86,10 +87,12 @@ describe("DepthMeter", () => {
 			const { rerender } = render(<DepthMeter currentTurn={3} totalTurns={15} />);
 
 			expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "3");
+			expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuetext", "Exchange 3 of 15");
 
 			rerender(<DepthMeter currentTurn={10} totalTurns={15} />);
 
 			expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "10");
+			expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuetext", "Exchange 10 of 15");
 		});
 	});
 

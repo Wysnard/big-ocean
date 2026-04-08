@@ -815,7 +815,7 @@ development_status:
   # ───────────────────────────────────────────────────────────────
   epic-47: in-progress
   47-1-skip-link-and-semantic-landmarks: done
-  47-2-conversation-ui-accessibility: backlog
+  47-2-conversation-ui-accessibility: in-progress
   47-3-results-page-and-portrait-accessibility: backlog
   47-4-modal-and-focus-management: backlog
   47-5-touch-targets-and-contrast-audit: backlog

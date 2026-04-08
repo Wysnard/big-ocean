@@ -57,6 +57,8 @@ const WARNING_THRESHOLD = 0.9;
 /** Milestone labels and their app-voiced progress messages */
 /** Session context shown in chat header */
 const SESSION_CONTEXT = "~30 minutes · A personality portrait awaits · Leave and return anytime";
+const ASSISTANT_MESSAGE_ANNOUNCEMENT = "Nerin sent a message";
+const CHAT_INPUT_SHORTCUTS_ID = "chat-input-shortcuts";
 
 /** Mobile dropdown for session context info */
 function SessionContextDropdown({ className }: { className?: string }) {
@@ -256,6 +258,52 @@ export function TherapistChat({
 		prevAssistantCountRef.current = assistantCount;
 	}, [messages]);
 
+	const [assistantAnnouncement, setAssistantAnnouncement] = useState("");
+	const assistantAnnouncementTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const previousAssistantMessageIdsRef = useRef<string[] | null>(null);
+	useEffect(() => {
+		const assistantMessageIds = messages
+			.filter((message) => message.role === "assistant")
+			.map((message) => message.id);
+
+		if (assistantAnnouncementTimerRef.current) {
+			clearTimeout(assistantAnnouncementTimerRef.current);
+			assistantAnnouncementTimerRef.current = null;
+		}
+
+		if (isResuming) {
+			previousAssistantMessageIdsRef.current = assistantMessageIds;
+			setAssistantAnnouncement("");
+			return;
+		}
+
+		const previousAssistantMessageIds = previousAssistantMessageIdsRef.current;
+		previousAssistantMessageIdsRef.current = assistantMessageIds;
+
+		if (previousAssistantMessageIds === null) {
+			return;
+		}
+
+		if (assistantMessageIds.length > previousAssistantMessageIds.length) {
+			setAssistantAnnouncement(ASSISTANT_MESSAGE_ANNOUNCEMENT);
+			assistantAnnouncementTimerRef.current = setTimeout(() => {
+				setAssistantAnnouncement("");
+				assistantAnnouncementTimerRef.current = null;
+			}, 3000);
+			return;
+		}
+
+		setAssistantAnnouncement("");
+	}, [isResuming, messages]);
+
+	useEffect(() => {
+		return () => {
+			if (assistantAnnouncementTimerRef.current) {
+				clearTimeout(assistantAnnouncementTimerRef.current);
+			}
+		};
+	}, []);
+
 	// Placeholder rotation based on user message count
 	const userMessageCount = useMemo(
 		() => messages.filter((m) => m.role === "user").length,
@@ -309,6 +357,7 @@ export function TherapistChat({
 			highlightEnd={highlightEnd}
 			highlightScore={highlightScore}
 			inputPlaceholder={inputPlaceholder}
+			assistantAnnouncement={assistantAnnouncement}
 			messagesEndRef={messagesEndRef}
 			onSend={sendMessage}
 			oceanPulse={oceanPulse}
@@ -388,6 +437,8 @@ function ChatInputBar({
 					ref={textareaRef}
 					data-slot="chat-input"
 					data-testid="chat-input"
+					aria-label="Message Nerin"
+					aria-describedby={CHAT_INPUT_SHORTCUTS_ID}
 					value={inputValue}
 					onChange={(e) => setInputValue(e.target.value)}
 					onKeyDown={handleKeyDown}
@@ -400,6 +451,7 @@ function ChatInputBar({
 				/>
 				<Button
 					data-testid="chat-send-btn"
+					aria-label="Send message"
 					onClick={handleSendMessage}
 					disabled={!inputValue.trim() || isLoading || isCompleted}
 					size="sm"
@@ -408,6 +460,9 @@ function ChatInputBar({
 					{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
 				</Button>
 			</div>
+			<span id={CHAT_INPUT_SHORTCUTS_ID} className="sr-only">
+				Press Enter to send your message. Press Shift plus Enter to add a new line.
+			</span>
 			{!isCompleted && (
 				<span
 					data-slot="char-counter"
@@ -450,6 +505,7 @@ function ChatContent({
 	highlightEnd,
 	highlightScore,
 	inputPlaceholder,
+	assistantAnnouncement,
 	messagesEndRef,
 	onSend,
 	oceanPulse,
@@ -480,6 +536,7 @@ function ChatContent({
 	highlightEnd?: number;
 	highlightScore?: number;
 	inputPlaceholder: string;
+	assistantAnnouncement: string;
 	messagesEndRef: React.RefObject<HTMLDivElement | null>;
 	onSend: (message: string) => Promise<void>;
 	oceanPulse: boolean;
@@ -493,6 +550,10 @@ function ChatContent({
 			<DepthMeter currentTurn={currentTurn} totalTurns={totalTurns} />
 
 			<div className="h-[calc(100dvh-3.5rem)] flex flex-col overflow-hidden overscroll-none bg-background text-foreground relative">
+				<span data-testid="chat-announcer" aria-live="polite" className="sr-only">
+					{assistantAnnouncement}
+				</span>
+
 				{/* Geometric Ocean — ambient sea life layer behind chat */}
 				<GeometricOcean
 					depthProgress={totalTurns > 0 ? Math.min(currentTurn / totalTurns, 1) : 0}
@@ -554,83 +615,85 @@ function ChatContent({
 							/>
 							{/* Story 9.5: Flat render verified acceptable for the 15-turn assessment (~30 messages).
 							    Reconsider @tanstack/react-virtual if threshold increases above 30 (60+ DOM nodes). */}
-							{messages.length > 0 &&
-								messages.map((msg, index) => (
-									<div key={msg.id} className="relative z-[1] mb-9 motion-safe:animate-fade-in-up">
-										{msg.role === "user" ? (
-											<div className="flex flex-row-reverse gap-[11px]">
-												{/* User avatar */}
-												<Avatar
-													className="bg-gradient-to-br from-[var(--user-avatar-from)] to-[var(--user-avatar-to)] transition-[background,color] duration-[350ms]"
-													aria-hidden="true"
-												>
-													{userImage && <AvatarImage src={userImage} alt={userName || "User"} />}
-													<AvatarFallback className="bg-gradient-to-br from-[var(--user-avatar-from)] to-[var(--user-avatar-to)] font-heading text-[.75rem] font-bold text-[var(--user-avatar-fg)]">
-														{userName ? userName.charAt(0).toUpperCase() : "A"}
-													</AvatarFallback>
-												</Avatar>
-												<div
-													data-slot="chat-bubble"
-													data-testid="chat-bubble"
-													data-message-id={msg.id}
-													className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary to-secondary px-[22px] py-4 text-left text-white min-[1200px]:max-w-[92%]"
-												>
-													<p className="text-[.92rem] leading-[1.65] whitespace-pre-line">
-														{renderMessageContent(
-															msg.content,
-															msg.id,
-															highlightMessageId,
-															highlightStart,
-															highlightEnd,
-															highlightScore,
-														)}
-													</p>
-													<p className="text-xs mt-1 text-white/70">{getRelativeTime(msg.timestamp)}</p>
+							<div role="log" aria-label="Conversation history" aria-live="off" aria-relevant="additions">
+								{messages.length > 0 &&
+									messages.map((msg, index) => (
+										<div key={msg.id} className="relative z-[1] mb-9 motion-safe:animate-fade-in-up">
+											{msg.role === "user" ? (
+												<div className="flex flex-row-reverse gap-[11px]">
+													{/* User avatar */}
+													<Avatar
+														className="bg-gradient-to-br from-[var(--user-avatar-from)] to-[var(--user-avatar-to)] transition-[background,color] duration-[350ms]"
+														aria-hidden="true"
+													>
+														{userImage && <AvatarImage src={userImage} alt={userName || "User"} />}
+														<AvatarFallback className="bg-gradient-to-br from-[var(--user-avatar-from)] to-[var(--user-avatar-to)] font-heading text-[.75rem] font-bold text-[var(--user-avatar-fg)]">
+															{userName ? userName.charAt(0).toUpperCase() : "A"}
+														</AvatarFallback>
+													</Avatar>
+													<div
+														data-slot="chat-bubble"
+														data-testid="chat-bubble"
+														data-message-id={msg.id}
+														className="max-w-[88%] rounded-[18px] rounded-br-[5px] bg-gradient-to-br from-primary to-secondary px-[22px] py-4 text-left text-white min-[1200px]:max-w-[92%]"
+													>
+														<p className="text-[.92rem] leading-[1.65] whitespace-pre-line">
+															{renderMessageContent(
+																msg.content,
+																msg.id,
+																highlightMessageId,
+																highlightStart,
+																highlightEnd,
+																highlightScore,
+															)}
+														</p>
+														<p className="text-xs mt-1 text-white/70">{getRelativeTime(msg.timestamp)}</p>
+													</div>
 												</div>
-											</div>
-										) : (
-											<NerinMessage messageId={msg.id}>
-												{msg.id === highlightMessageId ? (
-													<p className="whitespace-pre-line">
-														{renderMessageContent(
-															msg.content,
-															msg.id,
-															highlightMessageId,
-															highlightStart,
-															highlightEnd,
-															highlightScore,
-														)}
+											) : (
+												<NerinMessage messageId={msg.id}>
+													{msg.id === highlightMessageId ? (
+														<p className="whitespace-pre-line">
+															{renderMessageContent(
+																msg.content,
+																msg.id,
+																highlightMessageId,
+																highlightStart,
+																highlightEnd,
+																highlightScore,
+															)}
+														</p>
+													) : (
+														<Markdown>{msg.content}</Markdown>
+													)}
+													<p className="text-xs mt-1 text-[var(--muted-dynamic)]">
+														{getRelativeTime(msg.timestamp)}
 													</p>
-												) : (
-													<Markdown>{msg.content}</Markdown>
-												)}
-												<p className="text-xs mt-1 text-[var(--muted-dynamic)]">
-													{getRelativeTime(msg.timestamp)}
-												</p>
-											</NerinMessage>
-										)}
-										{/* Milestone badges triggered at this message position */}
-										{ASSESSMENT_MILESTONES.map((milestone) =>
-											shownMilestones.get(milestone.label) === index + 1 ? (
-												<div
-													key={`milestone-${milestone.label}`}
-													data-slot="milestone-badge"
-													className="border-y border-border py-3 mt-2 text-center"
-												>
-													<p className="text-sm text-muted-foreground">{milestone.message}</p>
-												</div>
-											) : null,
-										)}
-									</div>
-								))}
+												</NerinMessage>
+											)}
+											{/* Milestone badges triggered at this message position */}
+											{ASSESSMENT_MILESTONES.map((milestone) =>
+												shownMilestones.get(milestone.label) === index + 1 ? (
+													<div
+														key={`milestone-${milestone.label}`}
+														data-slot="milestone-badge"
+														className="border-y border-border py-3 mt-2 text-center"
+													>
+														<p className="text-sm text-muted-foreground">{milestone.message}</p>
+													</div>
+												) : null,
+											)}
+										</div>
+									))}
 
-							{/* Typing indicator while loading */}
-							{isLoading && <TypingIndicator />}
+								{/* Typing indicator while loading */}
+								{isLoading && <TypingIndicator />}
 
-							{/* Story 7.18: Auth gate for anonymous users after farewell */}
-							{isFarewellReceived && !isAuthenticated && <ChatAuthGate sessionId={sessionId} />}
+								{/* Story 7.18: Auth gate for anonymous users after farewell */}
+								{isFarewellReceived && !isAuthenticated && <ChatAuthGate sessionId={sessionId} />}
 
-							<div ref={messagesEndRef} />
+								<div ref={messagesEndRef} />
+							</div>
 						</div>
 					)}
 

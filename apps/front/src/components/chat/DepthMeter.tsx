@@ -63,6 +63,7 @@ export function DepthMeter({
 			aria-valuenow={currentTurn}
 			aria-valuemin={0}
 			aria-valuemax={totalTurns}
+			aria-valuetext={totalTurns > 0 ? `Exchange ${currentTurn} of ${totalTurns}` : "No exchanges yet"}
 			aria-label="Conversation depth"
 			className="fixed left-5 top-1/2 z-[90] flex -translate-y-1/2 flex-col items-center transition-opacity duration-500 max-[900px]:hidden"
 			style={{

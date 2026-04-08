@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 
+import { QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	mockHookReturn,
 	mockSendMessage,
+	queryClient,
 	renderWithProviders,
 	resetMockHookReturn,
 	setupMatchMedia,
@@ -58,10 +60,7 @@ describe("TherapistChat", () => {
 		const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
 		fireEvent.change(textarea, { target: { value: "I love hiking" } });
 
-		const sendButton = screen.getAllByRole("button").find((btn) => !btn.getAttribute("aria-label"));
-		if (sendButton) {
-			fireEvent.click(sendButton);
-		}
+		fireEvent.click(screen.getByRole("button", { name: "Send message" }));
 
 		await waitFor(() => {
 			expect(mockSendMessage).toHaveBeenCalledWith("I love hiking");
@@ -78,6 +77,19 @@ describe("TherapistChat", () => {
 		await waitFor(() => {
 			expect(mockSendMessage).toHaveBeenCalledWith("I love reading");
 		});
+	});
+
+	it("does not send on Shift+Enter and preserves multiline composition", () => {
+		renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
+		fireEvent.change(textarea, { target: { value: "I love reading" } });
+		fireEvent.keyDown(textarea, { key: "Enter", shiftKey: true });
+
+		expect(mockSendMessage).not.toHaveBeenCalled();
+
+		fireEvent.change(textarea, { target: { value: "I love reading\nmore details" } });
+		expect(textarea.value).toBe("I love reading\nmore details");
 	});
 
 	it("shows typing indicator when loading", () => {
@@ -122,6 +134,80 @@ describe("TherapistChat", () => {
 		expect(messageEl).toBeTruthy();
 	});
 
+	it("exposes the transcript as a navigable log region", () => {
+		renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		expect(screen.getByRole("log", { name: "Conversation history" })).toBeInTheDocument();
+	});
+
+	it("renders a polite live region for assistant summary announcements", () => {
+		renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		const announcer = screen.getByTestId("chat-announcer");
+		expect(announcer).toHaveAttribute("aria-live", "polite");
+		expect(announcer).toHaveTextContent("");
+	});
+
+	it("announces a short summary when a new assistant message arrives", async () => {
+		const { rerender } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		mockHookReturn.messages = [
+			{
+				id: "msg_1",
+				role: "assistant",
+				content: "Hi! I'm Nerin, your AI therapist. What are you currently passionate about?",
+				timestamp: new Date(),
+			},
+			{
+				id: "msg_2",
+				role: "assistant",
+				content: "Tell me more about that.",
+				timestamp: new Date(),
+			},
+		];
+
+		rerender(
+			<QueryClientProvider client={queryClient}>
+				<TherapistChat sessionId="session-123" />
+			</QueryClientProvider>,
+		);
+
+		await waitFor(() => {
+			expect(screen.getByTestId("chat-announcer")).toHaveTextContent("Nerin sent a message");
+		});
+
+		expect(screen.getByTestId("chat-announcer")).not.toHaveTextContent("Tell me more about that.");
+	});
+
+	it("does not announce when only a user message is appended", async () => {
+		const { rerender } = renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		mockHookReturn.messages = [
+			{
+				id: "msg_1",
+				role: "assistant",
+				content: "Hi! I'm Nerin, your AI therapist. What are you currently passionate about?",
+				timestamp: new Date(),
+			},
+			{
+				id: "msg_2",
+				role: "user",
+				content: "I like hiking.",
+				timestamp: new Date(),
+			},
+		];
+
+		rerender(
+			<QueryClientProvider client={queryClient}>
+				<TherapistChat sessionId="session-123" />
+			</QueryClientProvider>,
+		);
+
+		await waitFor(() => {
+			expect(screen.getByTestId("chat-announcer")).toHaveTextContent("");
+		});
+	});
+
 	it("user messages render as non-interactive div elements", () => {
 		mockHookReturn.messages = [
 			{
@@ -145,6 +231,12 @@ describe("TherapistChat", () => {
 
 		const textarea = screen.getByPlaceholderText("What comes to mind first?") as HTMLTextAreaElement;
 		expect(textarea.disabled).toBe(true);
+	});
+
+	it("gives the send button an explicit accessible name", () => {
+		renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		expect(screen.getByRole("button", { name: "Send message" })).toBeInTheDocument();
 	});
 
 	it("renders NerinMessage with avatar next to assistant messages", () => {
