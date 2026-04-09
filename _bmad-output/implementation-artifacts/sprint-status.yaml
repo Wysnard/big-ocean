@@ -1,5 +1,5 @@
 # generated: 2026-04-09T20:09:46+0200
-# last_updated: 2026-04-09T20:09:46+0200
+# last_updated: 2026-04-10T12:00:00+0200
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,29 +35,36 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-09T20:09:46+0200
-last_updated: 2026-04-09T20:09:46+0200
+last_updated: 2026-04-10T12:00:00+0200
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  epic-1: backlog
-  1-1-schema-migration-table-renames: backlog
-  1-2-repository-and-domain-layer-renames: backlog
-  1-3-handler-contract-and-frontend-renames: backlog
-  1-4-fk-column-migration: backlog
-  1-5-fk-column-code-cascade: backlog
-  1-6-assessment-turn-count-25-to-15: backlog
-  1-7-dead-code-cleanup: backlog
-  epic-1-retrospective: optional
-  epic-2: backlog
-  2-1-gate-extension-use-case-and-remove-ui-surface: backlog
+  # Epic 1: Conversation Calibration — 15-Turn Assessment (= historical Epic 45)
+  epic-1: done
+  1-1-schema-migration-table-renames: done
+  1-2-repository-and-domain-layer-renames: done
+  1-3-handler-contract-and-frontend-renames: done
+  1-4-fk-column-migration: done
+  1-5-fk-column-code-cascade: done
+  1-6-assessment-turn-count-25-to-15: done
+  1-7-dead-code-cleanup: done
+  1-8-deferred-cleanup: done
+  1-9-file-rename-cascade: done
+  epic-1-retrospective: done
+
+  # Epic 2: Conversation Extension Cleanup (= historical Epic 46)
+  epic-2: done
+  2-1-gate-extension-use-case-and-remove-ui-surface: done
   epic-2-retrospective: optional
-  epic-3: backlog
-  3-1-skip-link-and-semantic-landmarks: backlog
-  3-2-conversation-ui-accessibility: backlog
-  3-3-results-page-and-portrait-accessibility: backlog
-  3-4-modal-and-focus-management: backlog
-  3-5-touch-targets-and-contrast-audit: backlog
+
+  # Epic 3: Accessibility Foundations (= historical Epic 47)
+  epic-3: done
+  3-1-skip-link-and-semantic-landmarks: done
+  3-2-conversation-ui-accessibility: done
+  3-3-results-page-and-portrait-accessibility: done
+  3-4-modal-and-focus-management: done
+  3-5-touch-targets-and-contrast-audit: done
   epic-3-retrospective: optional
