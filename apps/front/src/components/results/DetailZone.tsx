@@ -91,7 +91,7 @@ interface DetailZoneProps {
 	isOpen: boolean;
 	onClose: () => void;
 	isLoading: boolean;
-	onFacetClick?: (facetName: FacetName) => void;
+	onFacetClick?: (facetName: FacetName, triggerElement?: HTMLElement | null) => void;
 }
 
 export function DetailZone({
@@ -112,7 +112,7 @@ export function DetailZone({
 		if (!onFacetClick) return;
 		if (event.key !== "Enter" && event.key !== " ") return;
 		event.preventDefault();
-		onFacetClick(facetName);
+		onFacetClick(facetName, event.currentTarget);
 	};
 
 	return (
@@ -181,7 +181,9 @@ export function DetailZone({
 									data-slot="facet-detail-card"
 									data-facet={facet.name}
 									className={`flex-row${onFacetClick ? " cursor-pointer hover:ring-1 hover:ring-primary/30 motion-safe:transition-shadow" : ""}`}
-									onClick={onFacetClick ? () => onFacetClick(facet.name) : undefined}
+									onClick={
+										onFacetClick ? (event) => onFacetClick(facet.name, event.currentTarget) : undefined
+									}
 									role={onFacetClick ? "button" : undefined}
 									tabIndex={onFacetClick ? 0 : undefined}
 									aria-label={

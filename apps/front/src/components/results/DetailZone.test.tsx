@@ -178,6 +178,6 @@ describe("DetailZone", () => {
 
 		const facetButton = screen.getByRole("button", { name: /open evidence for imagination/i });
 		fireEvent.keyDown(facetButton, { key: "Enter" });
-		expect(onFacetClick).toHaveBeenCalledWith("imagination");
+		expect(onFacetClick).toHaveBeenCalledWith("imagination", facetButton);
 	});
 });

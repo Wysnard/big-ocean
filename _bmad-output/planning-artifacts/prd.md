@@ -1,7 +1,9 @@
 ---
 stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
-lastEdited: '2026-04-06'
+lastEdited: '2026-04-09'
 editHistory:
+  - date: '2026-04-09'
+    changes: 'Innovation strategy v2 integration. Source: innovation-strategy-2026-04-08.md. (1) Revenue model overhaul: killed PWYW + credits, portrait now free, relationship analysis fully free, single revenue stream = subscription at €9.99/mo. Three-layer flywheel: Discovery (free) → Relationship (free, growth engine) → Daily practice (subscription). (2) Repositioning: personality front door + self-care engine. (3) Realistic revenue expectations: €10-30K year 1, €50-150K year 2. (4) Updated success metrics, market analysis, competitive benchmarking. (5) Added therapist B2B wedge, acquisition strategy, pre-mortem. (6) New features: mood diary/check-in, mood calendar, portrait gallery. (7) FR overhaul: FR21/FR33 updated, removed credit FRs, added mood diary FRs (FR67-FR72), portrait evolution FRs (FR73-FR75). (11) Validation fixes: wrote Journey 7 (mood diary) and Journey 8 (portrait evolution) for FR67-75 traceability. Tightened homepage FRs (FR59, FR60, FR64, FR66) with testable acceptance criteria. Unbundled FR47 with FR cross-references. Fixed NFR7 implementation leakage. Improved FR24, FR27, FR55, FR57, FR75 measurability. Added FR76-FR77 (transactional emails). Fixed stale credit references in Journey 2.'
   - date: '2026-04-06'
     changes: 'Innovation strategy integration + MVP updates. Source: innovation-strategy-2026-04-06.md. (1) Strategic repositioning: assessment=onboarding, personality-aware life companion=product. Added JTBD table, "don''t have to explain yourself" differentiator, subscription vision (€10/mo). (2) MVP changes: 25→15 exchanges, 6-layer pacing pipeline→Director model (evidence extraction→coverage analysis→Director→Actor), conversation extension moved from MVP to subscription. (3) Added: phase transition triggers, Phase 2 success criteria, A→B staged strategy, free vs paid tiers, detailed post-MVP phases (1b→2c, no Phase 3), design-now-build-later list, 4 disruption vectors, ERRC grid, expanded competitive landscape, decision gates, key hypotheses/kill criteria, backup plans. (4) Removed Journey 3 (extension-based), replaced with illustrative post-MVP Journey 3 (returning subscriber with Coach). (5) FR updates: FR1 (15 exchanges), FR3 (Director model), FR10/FR23/FR25/FR49 marked post-MVP, FR46 GeometricSignature fixed, FR47 simplified. (6) Updated all journeys, risk tables, scope tables for consistency.'
   - date: '2026-04-01'
@@ -13,6 +15,7 @@ editHistory:
   - date: '2026-03-23'
     changes: 'Dashboard/profile merge: removed "profile" as separate page type in Web App Requirements, updated FR19 to include public profile link on dashboard'
 inputDocuments:
+  - "innovation-strategy-2026-04-08.md (revenue model overhaul, three-layer flywheel, market analysis, therapist B2B, realistic projections)"
   - "innovation-strategy-2026-04-06.md (strategic repositioning, subscription model, agent platform, disruption vectors)"
   - "architecture.md (consolidated, 2026-03-15)"
   - "problem-solution-2026-03-13.md"
@@ -54,7 +57,7 @@ classification:
     - "vs conversational AI (ChatGPT/Claude): guided UX, social outputs, structured insights, doesn't start from zero"
     - "vs therapists: more accessible, affordable, scalable — personality-aware companion at €0.30/conversation"
     - "vs coaching (BetterUp): consumer-accessible at €10/mo vs enterprise thousands/seat"
-  strategicFrame: "Assessment is the onboarding, personality-aware companion is the product, experience quality is the competitive advantage"
+  strategicFrame: "Assessment is the onboarding, personality-aware companion is the product, experience quality is the competitive advantage. Personality front door for acquisition, self-care engine for retention"
   platformVsApplication:
     platform: "Adaptive conversation engine + personality data model + extraction pipeline"
     applications: "Portrait, relationship analysis, personal development, B2B team insights"
@@ -72,25 +75,25 @@ classification:
   credibilityChain:
     - "Nerin conversation quality builds initial trust"
     - "Free results (scores + archetype) create self-recognition"
-    - "PWYW portrait deepens self-recognition, proves AI capability"
+    - "Free portrait deepens self-recognition, proves AI capability"
     - "Portrait quality drives trust in relationship analysis"
     - "Satisfied user becomes ambassador, recruits their people"
   monetization:
-    free: "15-exchange assessment + OCEAN code + archetype + trait/facet scores + shareable public profile"
-    portrait: "PWYW (€1+ minimum) — Sonnet-generated narrative portrait"
-    relationshipAnalysis: "€5/credit for additional relationship analyses"
-    subscription: "€10/mo or €100/yr — Coach agent, conversation extension, Growth Journal, pattern analysis, monthly reflection, complete portrait at 30/30, annual portrait, unlimited relationship portraits"
+    free: "15-exchange assessment + portrait + OCEAN code + archetype + trait/facet scores + shareable public profile + relationship analysis (unlimited) + mood diary + mood calendar"
+    subscription: "€9.99/mo — unlimited conversations, specialized agents, coaching, portrait regeneration, growth insights, weekly/monthly focus, confidence milestone notifications"
+    philosophy: "Data INPUT is free. AI INTELLIGENCE on that data is paid. Relationship analysis is free because every analysis = potential new user acquisition"
   growthHorizons:
-    Phase1a_MVP: "Assessment → portrait → relationship analysis (2-person) → social sharing"
-    Phase1b: "Daily check-in (optional, free), mood timeline, mobile wrapper, retention validation"
+    Phase1a_MVP: "Assessment → portrait → relationship analysis (free, unlimited) → social sharing → subscription paywall"
+    Phase1b: "Mood diary/check-in (free), mood calendar, portrait gallery, mobile wrapper, retention validation"
     Phase2a: "Coach agent + subscription launch, pattern detection, monthly reflection"
     Phase2b: "Agent expansion (Relationship, Career), cross-agent intelligence, smart nudges"
     Phase2c: "Annual portrait ritual (Personality Wrapped)"
   growthModel:
-    acquisition: "Relationship analysis recruits users, archetype sharing creates impressions"
-    conversion: "Portrait self-recognition proves quality, drives PWYW + relationship credits"
-    retention: "Subscription — specialized agents sharing personality architecture (post-MVP)"
-    ambassador: "Satisfied users recruit their people for relationship analysis"
+    acquisition: "Relationship analysis invites (primary, free = zero friction), archetype card sharing, SEO knowledge library (archetypes, traits, facets, Big Five science, relationship/career guides — 175-235 pages), launch blitz (Product Hunt, HN, Reddit)"
+    conversion: "Portrait self-recognition proves quality → subscription CTA for ongoing value. Personality front door for acquisition, self-care engine for retention"
+    retention: "Subscription — specialized agents, mood diary coaching, portrait regeneration, confidence growth, weekly/monthly focus"
+    ambassador: "Satisfied users recruit their people for free relationship analysis"
+    viral: "Combined K ≈ 0.20-0.25 (archetype sharing + relationship invite loop). Negative-CAC: users invite new users for free"
   b2bOptionality: "Team management, group dynamics, therapist pre-screening tool"
   domainConcerns:
     - "LLM reliability and prompt compliance"
@@ -116,14 +119,15 @@ big-ocean is a personality-aware life companion platform built on the Big Five f
 
 | # | Job | MVP | Monetized? | Retention? |
 |---|-----|-----|-----------|-----------|
-| 1 | "Help me understand why I am the way I am" | Assessment + Portrait | PWYW | One-time |
+| 1 | "Help me understand why I am the way I am" | Assessment + Portrait (free) | Free (acquisition) | One-time |
 | 2 | "Help me navigate a specific situation" | NOT SERVED (post-MVP: Coach agent) | Subscription | Event-based return |
-| 3 | "Help me understand my relationship" | Relationship analysis | €5/credit | Occasional |
+| 3 | "Help me understand my relationship" | Relationship analysis (free) | Free (growth engine) | Occasional |
 | 4 | "Help me grow over time" | NOT SERVED (post-MVP: Growth Journal) | Subscription | Habitual return |
+| 5 | "Help me process what I'm feeling today" | NOT SERVED (Phase 1b: Mood diary) | Free recognition / Paid coaching | Daily return |
 
-Jobs 1 and 3 are served at MVP. Jobs 2 and 4 are where retention lives — the subscription layer that transforms big-ocean from a one-time assessment into a platform people return to.
+Jobs 1 and 3 are served at MVP (both free — acquisition + growth). Job 5 arrives in Phase 1b (free recognition, paid coaching). Jobs 2 and 4 are where subscription revenue lives — the self-care companion layer that transforms big-ocean from a one-time assessment into a platform people return to. Positioning: personality front door for acquisition, self-care engine for retention.
 
-**Business model:** Free assessment (OCEAN code + archetype + scores + public profile) → PWYW portrait (€1+ minimum, grants 1 free relationship analysis credit) → relationship analysis credits (€5/additional). Target: 100 completed assessments in 3 months, break-even on LLM costs (~€0.20/assessment, ~€0.20/portrait). LTV is generated by the subscription (€10/mo or €100/yr, post-MVP) — specialized agents (Coach, Relationship, Growth Journal, Career) sharing the user's personality architecture. See [Product Scope](#product-scope) for the staged A→B strategy and phase triggers.
+**Business model:** Free assessment + portrait + relationship analysis (unlimited, free) as acquisition engine. Portrait is free — it's the "feel seen" moment that drives subscription conversion. Relationship analysis is free — every analysis = potential new user acquisition (zero friction growth). Revenue comes from subscription (€9.99/mo): unlimited conversations, specialized agents, coaching, portrait regeneration, growth insights. Three-layer flywheel: Discovery (free, acquisition) → Relationship (free, growth engine) → Daily practice (subscription, retention). See [Product Scope](#product-scope) for the staged A→B strategy and phase triggers. Realistic revenue expectations: €10-30K year 1, €50-150K year 2 — the patient flywheel, not a moonshot.
 
 **Current state:** Brownfield — hexagonal architecture, auth, CI/CD, cloud deployment, and infrastructure already built. Primary gaps: Nerin character quality (~40% → launch-ready) and homepage conversion (the homepage must communicate what the product is and why it's worth ~30 minutes to visitors with zero context — the product consistently exceeds expectations, but the homepage undersells the experience). The credibility chain (conversation → self-recognition → portrait revelation → trust → ambassador) requires every link to work at launch.
 
@@ -138,7 +142,7 @@ Jobs 1 and 3 are served at MVP. Jobs 2 and 4 are where retention lives — the s
 - Users feel the conversation was with a distinct character (Nerin as ocean dive master with marine metaphors), not a generic AI *(delivered by: FR2 persona, FR8 greeting)*
 
 **Portrait Payoff (the "worth it" metric):**
-- Users experience **self-revelation** when reading their portrait — not just "that's me" (recognition) but "I never articulated it that way but that's exactly what's happening" (revelation) *(delivered by: FR20 portrait generation, FR21 PWYW modal)*
+- Users experience **self-revelation** when reading their portrait — not just "that's me" (recognition) but "I never articulated it that way but that's exactly what's happening" (revelation) *(delivered by: FR20 portrait generation, FR21 free portrait + subscription CTA)*
 - Emotional impact measured via behavioral proxies: share rate, return visits within 48 hours, and time spent on portrait page as proxy for emotional engagement
 - Portrait quality drives sharing behavior: users share archetype card or tell someone about the experience within 48 hours
 - Portrait quality is high enough that users trust relationship analysis will be equally good
@@ -171,9 +175,9 @@ Jobs 1 and 3 are served at MVP. Jobs 2 and 4 are where retention lives — the s
 **Ambassador quality:** What ambassadors say when recommending matters more than invitation mechanics. Track qualitative signal: are users describing the experience as transformative ("this thing understood me better than anything") or transactional ("try this personality test")?
 
 **Revenue signal (validation, not target):**
-- PWYW portrait conversion rate >20% of completed assessments
-- Average PWYW amount >€3 (signals perceived value)
-- Relationship analysis credit purchases (signals willingness to pay for social features)
+- Free→subscription conversion rate >3% of completed assessments
+- Month-2 subscriber retention >70%
+- MRR growth >10% month-over-month sustained for 3+ months
 
 ### Technical Success
 
@@ -188,25 +192,33 @@ Jobs 1 and 3 are served at MVP. Jobs 2 and 4 are where retention lives — the s
 - Portrait generation completes successfully >99%
 
 **Cost:**
-- Per-assessment cost (all LLM calls) stays within ~€0.20 budget for Haiku conversation + extraction
-- Per-portrait cost (Sonnet) stays within ~€0.20
+- Per-assessment cost (all LLM calls) stays within ~€0.30 budget for Haiku conversation + extraction
+- Per-portrait cost (Sonnet) stays within ~€0.20-0.40 (optimizable via spine+arc)
+- Free-tier ongoing cost per user approaches $0/month (template-based mood responses)
+- Subscriber ongoing cost: $0.35-0.60/month (96-98% gross margin at €9.99/mo)
 
 ### Measurable Outcomes
 
 | Metric | Target | Timeframe | Why it matters |
 |--------|--------|-----------|----------------|
 | Completed assessments | 100 | 3 months | Primary success signal |
-| Completion rate | >70% | Ongoing | Conversation quality proxy |
+| Completion rate | >50% | Ongoing | Conversation quality proxy |
 | Mid-conversation dropout | Monitor exchanges 7-12 | Ongoing | Identifies engagement valley |
-| Relationship analyses initiated (QR accepted) | >30 | 3 months | Growth engine validation |
-| QR-accept→completion rate | >40% | Ongoing | Ambassador quality signal |
-| PWYW conversion | >20% | Ongoing | Portrait value validation |
+| Archetype card share rate | >10% | Ongoing | Viral loop validation |
+| Relationship analyses initiated | >30 | 3 months | Growth engine validation |
+| Invite-accept→completion rate | >20% | Ongoing | Invite loop quality |
+| Free→subscription conversion | >3% | Ongoing | Subscription value validation |
 | Portrait emotional impact | Share rate >30%, return visit within 48h >40% | Ongoing | Self-revelation behavioral proxies |
 | Territory compliance | >70% | Ongoing | Director model effectiveness |
 | Nerin character distinctiveness | Qualitative | Pre-launch | Assessed via test sessions |
-| Homepage bounce rate | <60% | Ongoing | Cold visitors stay long enough to understand the product |
+| Homepage bounce rate | <60% | Ongoing | Cold visitors stay long enough |
 | Homepage → sign-up conversion | >5% | Ongoing | Homepage messaging drives assessment starts |
-| Time to CTA click | <90s median | Ongoing | Messaging clarity — visitors understand fast enough to act |
+| Time to CTA click | <90s median | Ongoing | Messaging clarity |
+| MRR | €300-800 | Month 6 | Revenue trajectory |
+| MRR | €1,500-3,000 | Month 12 | Revenue sustainability |
+| MRR | €5,000-10,000 | Month 18 | Quit-job readiness |
+| Subscribers | 30-80 | Month 6 | Subscription validation |
+| Subscribers | 150-300 | Month 12 | Growth confirmation |
 
 ### Phase Transition Triggers (MVP → Subscription)
 
@@ -215,7 +227,7 @@ The trigger to launch the subscription (Coach agent) is metric-based, not time-b
 | Trigger | Threshold |
 |---------|-----------|
 | Completed assessments | >1,000 |
-| Portrait PWYW conversion | >15% |
+| Free→subscription conversion | >3% |
 | Viral coefficient | >0.5 |
 | NPS on portrait | >50 |
 | "Would talk to Nerin again?" | >40% yes |
@@ -224,13 +236,29 @@ The trigger to launch the subscription (Coach agent) is metric-based, not time-b
 
 | Metric | Target | Why it matters |
 |--------|--------|----------------|
-| Subscription conversion | >2% of completed assessments | Validates willingness to pay for ongoing value |
+| Subscription conversion | >3% of completed assessments | Validates willingness to pay for ongoing value |
 | Subscriber M1 retention | >70% | Coach agent delivers enough value to retain |
 | Coach NPS | >50 | Personalized coaching feels different from generic AI |
 | "Felt generic" feedback | <30% | The personality architecture is producing meaningfully better advice |
 | Monthly reflection engagement | >60% of subscribers | Subscribers find the AI intelligence layer valuable |
+| MRR | €1,500-3,000 | Month 12 revenue target |
+| Subscriber churn | <6%/month | Sustainable business signal |
 
-**If "Would talk to Nerin again?" <30%, the subscription model collapses.** big-ocean becomes a profitable transactional business at €75K-300K/year. Honest outcome — not every business needs to be a platform.
+**If "Would talk to Nerin again?" <30%, the subscription model collapses.** big-ocean becomes a free personality assessment tool that generates value through relationship analysis virality — a sustainable free product, but not a business. Honest outcome — not every business needs to be a platform.
+
+### Quit-Job Composite Signal
+
+ALL five must be true before leaving the day job:
+
+| Signal | Threshold |
+|--------|-----------|
+| MRR | ≥€5,000 |
+| MRR growth | ≥15% MoM for 3+ consecutive months |
+| Subscriber churn | ≤6%/month |
+| Savings runway | ≥6 months |
+| Acquisition channels | ≥2 working channels |
+
+Alternative: negotiate part-time (4-day week) at month 3 if finances allow — lowest-risk capacity multiplier. Don't wait for funding.
 
 ## Product Scope
 
@@ -240,7 +268,7 @@ The full journey (conversation → results → portrait → relationship analysi
 
 **Platform:** 15-exchange adaptive conversation with Nerin (dive master persona), Director model (evidence extraction → coverage analysis → Nerin Director → Nerin Actor), ConversAnalyzer v2 dual extraction, derive-at-read scoring (30 facets → 5 traits → OCEAN code → archetype).
 
-**Application:** Free results (OCEAN code, archetype, scores, public profile) + portrait (PWYW €1+, grants 1 free relationship analysis credit) + relationship analysis (2-person) + Polar.sh payments.
+**Application:** Free results (OCEAN code, archetype, scores, public profile) + free portrait (Nerin's letter — acquisition conversion moment) + free relationship analysis (unlimited, 2-person — growth engine) + subscription paywall (€9.99/mo for ongoing value).
 
 **Critical gap:** Nerin character quality (~40% → launch-ready). Dive master persona, encouragement system, "feel seen" moment accent, distinct memorable voice. Infrastructure already built (auth, hexagonal architecture, Railway, CI/CD).
 
@@ -257,42 +285,46 @@ The MVP focuses entirely on the first-time user experience — getting someone i
 
 ### Free vs Paid Tiers
 
-| Layer | Free | PWYW | Subscription (€10/mo or €100/yr) |
-|-------|------|------|----------------------------------|
-| Assessment (15 exchanges) | Yes | — | — |
-| OCEAN code + archetype + scores | Yes | — | — |
-| Public profile + sharing | Yes | — | — |
-| Data comparison (relationship) | Yes | — | — |
-| First relationship portrait | Yes (1 free credit with portrait purchase) | — | — |
-| Personal portrait | — | €1+ minimum | — |
-| Additional relationship analyses | — | — | Included |
-| Conversation extension | — | — | Included |
-| Coach agent | — | — | Included |
-| Growth Journal (deep sessions) | — | — | Included |
-| AI pattern analysis + monthly reflection | — | — | Included |
-| Complete portrait at 30/30 facets | — | — | Included |
-| Annual portrait regeneration | — | — | Included |
+| Layer | Free | Subscription (€9.99/mo) |
+|-------|------|------------------------|
+| Assessment (15 exchanges) | Yes | — |
+| Portrait (Nerin's letter) | Yes | — |
+| OCEAN code + archetype + scores | Yes | — |
+| Public profile + sharing | Yes | — |
+| Relationship analysis (unlimited) | Yes | — |
+| Mood diary + mood calendar | Yes (recognition) | + coaching + weekly/monthly focus |
+| Archetype card sharing | Yes | — |
+| Conversation extension | — | Included |
+| Coach agent | — | Included |
+| Growth Journal (deep sessions) | — | Included |
+| AI pattern analysis + monthly reflection | — | Included |
+| Portrait regeneration | — | Included |
+| Confidence milestone notifications | — | Included |
+| Complete portrait at 30/30 facets | — | Included |
 
-**Principle:** Data INPUT is free. AI INTELLIGENCE on that data is paid. The assessment generates the data that makes the subscription valuable — gating it behind payment limits data accumulation and weakens the conversion funnel.
+**Principle:** Data INPUT is free. AI INTELLIGENCE on that data is paid. Portrait and relationship analysis are free because they are the acquisition and growth engines — the "feel seen" moment that converts users to subscribers. Every relationship analysis is a potential new user at zero cost. Revenue comes exclusively from subscription.
 
 ### Post-MVP Phases
 
 **Phase 1b — Validate Retention (1,000 → 10,000 users)**
-- Daily check-in (optional, free) + mood timeline on dashboard
+- Mood diary/check-in: BeReal-inspired daily prompt ("How are you feeling?") + mood select + optional text. Free: personality-informed recognition ("Your high Conscientiousness means unfinished tasks eat at you — that's your wiring, not weakness"). Paid: recognition + coaching + weekly/monthly focus
+- Mood calendar visualization (free) — shows patterns over time
+- Portrait gallery/timeline: each portrait stored as snapshot with confidence level. Progression visible through depth and accuracy
+- Confidence milestone notifications: dynamic thresholds (5-8% in 50-70% range, 10-15% above 80%). Delta insight hook: "The most surprising thing we learned since last time"
 - Post-assessment survey ("Would you talk to Nerin again?")
 - Mobile wrapper with push notifications
 - Viral loop optimization
-- Exit criteria (5 of 6): >3,000 assessments, viral coeff >0.5, check-in opt-in >25%, check-in Day 30 retention >40%, "talk to Nerin again" >40%, PWYW >15% sustained
+- Exit criteria (5 of 6): >3,000 assessments, viral coeff >0.5, check-in opt-in >25%, check-in Day 30 retention >40%, "talk to Nerin again" >40%, free→subscription conversion >3% sustained
 
 **Phase 2a — Coach Agent + Subscription Launch**
 - Coach agent (beta 50-100 users first) — event-driven ("I have a situation")
-- Subscription (€10/mo, €100/yr)
+- Subscription (€9.99/mo)
 - Conversation extension (included in subscription)
 - Pattern detection + monthly reflection
 - Growth Journal deep sessions
 - Life Events + Patterns dashboard sections
 - Crisis detection guardrails
-- Exit criteria: >200 subscribers, conversion >2%, M1 retention >70%, Coach NPS >50, reflection engagement >60%
+- Exit criteria: >200 subscribers, conversion >3%, M1 retention >70%, Coach NPS >50, reflection engagement >60%, MRR >€1,500
 
 **Phase 2b — Agent Expansion**
 - Relationship agent (interpersonal dynamics)
@@ -308,7 +340,7 @@ The MVP focuses entirely on the first-time user experience — getting someone i
 
 ### Design Now, Build Later
 
-During Phase 1, design (don't build): conversation schema for multiple session types, agent type field on conversations, personality context injection pattern, per-agent session memory, subscription billing flow, crisis detection guardrails, daily check-in data model.
+During Phase 1, design (don't build): conversation schema for multiple session types, agent type field on conversations, personality context injection pattern, per-agent session memory, subscription billing flow, crisis detection guardrails, daily check-in data model, mood diary data model, portrait versioning schema, confidence milestone notification system.
 
 ## User Journeys
 
@@ -324,27 +356,27 @@ Around exchange 9, she hits a natural lull — novelty has worn off. (Note: the 
 
 **Climax:** Exchange 13. Nerin makes an observation about how Léa handles conflict at work vs with her partner — she avoids in one domain, confronts in the other. The pattern lands with emotional weight. During the conversation, Nerin has been teasing: he's seen things about her, and he wants to show her. The 75% milestone passes. She finishes the 15 exchanges genuinely curious about what Nerin has written.
 
-**Resolution:** Léa sees her OCEAN code, her archetype ("The Beacon"), her trait and facet scores. The scores feel right. Then the PWYW modal opens automatically. It's not a paywall — it's personal. Vincent, the founder, congratulates her for completing the journey. He shares why he built big-ocean: the portrait Nerin wrote for *him* changed how he sees himself — like Nerin held up a mirror. She reads Vincent's actual portrait — his struggles, his vulnerabilities, why this product exists. She can see exactly what a portrait looks like and judge: *is this worth it to me?* She pays €5. Nerin's letter to her arrives — not a report, but a personal letter naming her core tension: creative ambition held in check by a need for external validation. She screenshots her archetype card and sends it to three friends: "You have to try this."
+**Resolution:** Léa sees her OCEAN code, her archetype ("The Beacon"), her trait and facet scores. The scores feel right. Then Nerin's letter arrives — not a report, but a personal letter naming her core tension: creative ambition held in check by a need for external validation. No paywall — the portrait is free. The "feel seen" moment IS the conversion event. The post-portrait experience includes a subscription conversion moment (design deferred to UX). Léa screenshots her archetype card and sends it to three friends: "You have to try this."
 
-**Recovery beat — what if the portrait doesn't land?** If Léa reads the portrait and thinks "that's not me," the credibility chain breaks. Behavioral signals (no share, no return visit) capture this. The subscription (conversation extension + deeper sessions) becomes the long-term recovery path — more exchanges produce better evidence, which produces a richer, more accurate letter from Nerin.
+**Recovery beat — what if the portrait doesn't land?** If Léa reads the portrait and thinks "that's not me," the credibility chain breaks. Behavioral signals (no share, no return visit) capture this. The subscription (conversation extension + deeper sessions) becomes the recovery path — more exchanges produce better evidence, which produces a richer, more accurate letter from Nerin. Since portrait is free, there's no buyer's remorse — just a motivation gap to bridge.
 
-**Capabilities revealed:** Sign-up flow, 15-exchange conversation with Nerin, Director model (territory coverage, feel-seen moments), depth meter + progress milestones (25%/50%/75%), Nerin teasing portrait during conversation, results page (OCEAN code, archetype, scores), PWYW modal with founder story + example portrait, portrait as Nerin's letter, behavioral proxy tracking, archetype card sharing, public profile as landing page.
+**Capabilities revealed:** Sign-up flow, 15-exchange conversation with Nerin, Director model (territory coverage, feel-seen moments), depth meter + progress milestones (25%/50%/75%), Nerin teasing portrait during conversation, results page (OCEAN code, archetype, scores), free portrait as Nerin's letter, subscription CTA post-portrait, behavioral proxy tracking, archetype card sharing, public profile as landing page.
 
 ### Journey 2: The Invited User — Marc
 
-**Who he is:** Marc, 34, Léa's partner. Not into personality tests. Léa completed her assessment and wants to use her free relationship analysis credit.
+**Who he is:** Marc, 34, Léa's partner. Not into personality tests. Léa completed her assessment and wants to understand their relationship better.
 
-**Opening Scene — The QR Flow:** Léa opens the QR drawer in the app. Marc scans the code with his phone (or opens the URL it contains). He lands on a screen showing Léa's archetype card, both users' confidence rings, and Léa's available credit balance, with Accept and Refuse buttons. Marc understands: Léa wants to understand their relationship better, and it starts with a 30-minute conversation about him. He knows what Léa got out of it — she's been talking about her portrait — so there's social proof before he even starts. He accepts, creates an account, verifies his email, and enters the platform. Note: Marc is the highest-intent visitor type — he already has social proof from his partner. If he visits the homepage before completing signup, the generic self-discovery narrative is a mismatch. The homepage content must work for visitors who already have a reason to be here and just need a clear path forward (FR66).
+**Opening Scene — The QR Flow:** Léa opens the QR drawer in the app. Marc scans the code with his phone (or opens the URL it contains). He lands on a simple screen: Léa's name, Accept and Refuse buttons, and a short disclaimer explaining that accepting means sharing his personality scores with Léa to generate their relationship analysis. Marc understands: Léa wants to understand their relationship better, and it starts with a 30-minute conversation about him. He knows what Léa got out of it — she's been talking about her portrait — so there's social proof before he even starts. He accepts, creates an account, verifies his email, and enters the platform. Note: Marc is the highest-intent visitor type — he already has social proof from his partner. If he visits the homepage before completing signup, the generic self-discovery narrative is a mismatch. The homepage content must work for visitors who already have a reason to be here and just need a clear path forward (FR66).
 
 **Rising Action — The Skeptic's First Exchanges:** Marc meets Nerin and expects a quiz. Instead, Nerin asks about his weekend — what he does when nothing is planned. Marc answers briefly. Exchanges 2-5 are short, low-energy responses. The Director model detects this: low telling score, guarded energy. It responds by keeping territories light (daily routines, comfort zones), using soft entry pressure, and letting Marc set the pace. Nerin doesn't push — she stays curious without demanding depth. But Nerin isn't passive either — by exchange 5, she drops something specific enough to catch Marc's attention: an observation about the *way* he talks about routine, not just what he says. By exchange 6, Marc notices Nerin keeps circling around structure — meal prep, workout schedule, project timelines — and Nerin says: "You build systems for things most people leave to chance. I'm curious what happens when the system breaks." Marc laughs — that's exactly what Léa says about him. The depth meter starts climbing. He leans in.
 
 **Climax:** Exchange 12. Nerin connects something Marc said about his father's expectations to how he handles feedback at work. Marc didn't expect to go there. The observation is specific enough that he feels *seen*, not analyzed. Nerin teases what he's been noticing — there's a letter waiting at the end. Marc finishes the conversation with a sense that this thing actually understood something real.
 
-**Resolution — The Relationship Analysis:** Marc gets his results — a different archetype than Léa, but they share letters in their OCEAN codes, which makes the similarities visible at a glance. The PWYW modal opens with the founder's story — Marc reads Vincent's portrait, sees what a portrait looks like, pays €3 for his own letter from Nerin.
+**Resolution — The Relationship Analysis:** Marc gets his results — a different archetype than Léa, but they share letters in their OCEAN codes, which makes the similarities visible at a glance. Nerin's letter arrives — Marc reads his portrait, a personal letter that names things about him he's never articulated. No payment required — the portrait is free.
 
-Now both assessments are complete — the relationship analysis generates. When they open it, a ritual screen greets them: a suggestion to find a quiet moment, sit down together, and discuss what they discover. The ritual has a single Start button — no skip option. They choose to read it side by side — a structured comparison of how they handle conflict, emotional expression, decision-making. It names the dynamic they've been navigating for years but never articulated. They talk about it over dinner. Marc tells his friend Thomas: "It's not what you think — it's actually good."
+Now both assessments are complete — the relationship analysis generates. When they open it, a ritual screen greets them: a suggestion to find a quiet moment, sit down together, and discuss what they discover. The ritual has a single Start button — no skip option. They choose to read it side by side. First, the data grid — a visual comparison of their traits and facets, showing where they align and where they diverge. Then, the narrative — a celebratory text that names the dynamic they've been navigating for years but never articulated. It's not clinical, it's warm: "You two have a deal — he builds the structure, you bring the disruption. Neither of you signed up for it, but it works." They talk about it over dinner. Marc tells his friend Thomas: "It's not what you think — it's actually good."
 
-**Capabilities revealed:** QR flow (drawer + scan/URL), Director model adaptation for low-motivation/guarded users (soft pressure, light territories, early hook), depth meter + milestones, relationship analysis generation (triggered when both complete), ritual suggestion screen, cross-profile data correlation, OCEAN code comparison (shared letters = shared traits), PWYW modal with founder story, portrait as Nerin's letter, conversion of skeptic into ambassador.
+**Capabilities revealed:** QR flow (drawer + scan/URL), Director model adaptation for low-motivation/guarded users (soft pressure, light territories, early hook), depth meter + milestones, free relationship analysis generation (triggered when both complete), ritual suggestion screen, cross-profile data correlation, OCEAN code comparison (shared letters = shared traits), free portrait as Nerin's letter, conversion of skeptic into ambassador.
 
 ### Journey 3 (Illustrative — Post-MVP): The Returning Subscriber — Léa
 
@@ -382,9 +414,9 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 **Rising Action:** He reviews completion rates — 15/20 completed. The 5 dropouts all happened between exchanges 8-11. He checks the Director model logs: those sessions got stuck in a single territory for 4+ consecutive turns. Steering compliance was below 50% for those sessions. He adjusts prompt parameters and monitors the next batch.
 
-**Climax:** Month 2. Vincent sees the first organic signups — users he didn't seed. Relationship analysis QR scans are driving new completions. He tracks the viral coefficient: 1.3 — each user is bringing slightly more than one new user. PWYW revenue trickles in: average €4.20/portrait, 25% conversion. The unit economics work. Then he sees a user who shared their archetype card within minutes of unlocking their portrait, followed by a return visit the next day and a message to a friend. That's the moment he knows the product is real — not the metrics, the behavioral signal behind the metrics.
+**Climax:** Month 2. Vincent sees the first organic signups — users he didn't seed. Relationship analysis QR scans are driving new completions. He tracks the viral coefficient: 1.3 — each user is bringing slightly more than one new user. Subscription conversions trickle in: 4% of completed assessments convert at €9.99/mo. The unit economics work — 96-98% gross margin per subscriber. Then he sees a user who shared their archetype card within minutes of unlocking their portrait, followed by a return visit the next day and a message to a friend. That's the moment he knows the product is real — not the metrics, the behavioral signal behind the metrics.
 
-**Resolution:** Vincent monitors cost per assessment (~€0.18 on Haiku), portrait generation costs (~€0.15 on Sonnet), and platform reliability (99.2% completion without errors). He's watching the ambassador quality signal: early users describe the experience as "it actually understood me" rather than "try this test." The product is working.
+**Resolution:** Vincent monitors cost per assessment (~€0.30 on Haiku), portrait generation costs (~€0.20-0.40 on Sonnet), and platform reliability (99.2% completion without errors). He's watching the ambassador quality signal: early users describe the experience as "it actually understood me" rather than "try this test." The product is working.
 
 **Capabilities revealed:** Admin dashboard/monitoring, completion funnel analytics, mid-conversation dropout tracking by exchange number, steering compliance metrics, cost tracking per assessment/portrait, viral coefficient measurement, revenue reporting, error monitoring, Director model observability.
 
@@ -392,28 +424,62 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 **Who she is:** Inès, 32, product manager in Paris. She stumbles onto the homepage from a Google search about personality assessments. She's never heard of Big Ocean, doesn't know the Big Five, and has no social proof from friends. She has 10 seconds of attention to give.
 
-**Opening Scene — The First 3 Seconds:** Inès reads a headline that stops her — not a comparison to other tests (she hasn't taken any), but a promise that lands: something about discovering a part of yourself you've never been able to articulate. Below, a single line of context: a 30-minute conversation with an AI that writes you a personal letter about who you are. One CTA. No competing options. She's intrigued — that's a specific, unusual promise.
+**Opening Scene — The First 3 Seconds:** Inès reads a headline that stops her — not a comparison to other tests (she hasn't taken any), but a promise that lands: something about discovering a part of yourself you've never been able to articulate, and an AI that keeps understanding you from there. Below, a single line of context: a 30-minute conversation that writes you a personal letter about who you are — completely free. One CTA. No competing options. She's intrigued — that's a specific, unusual promise, and it hints at something ongoing, not just a one-time result.
 
-**Rising Action — The Scroll:** She scrolls. The page doesn't shift into a sales pitch — it stays in conversational format. She sees Nerin say something to a user that's startlingly specific: a pattern observation that feels like it could only come from a real conversation. It's not a feature description — it's proof of depth. A few beats later, a short excerpt from a portrait — a paragraph that reads like a letter from someone who knows you. Not generic. Not flattering. *Specific.* She thinks: "I want to know what it would say about me." The page addresses the question forming in her head: "Is 30 minutes a lot?" A beat explains what the time feels like — not a quiz, not awkward, more like a conversation that keeps surprising you. Another beat mentions the pricing model — pay what you want, starting at €1. She registers: this isn't a paywall trap.
+**Rising Action — The Scroll:** She scrolls. The page doesn't shift into a sales pitch — it stays in conversational format. She sees Nerin say something to a user that's startlingly specific: a pattern observation that feels like it could only come from a real conversation. It's not a feature description — it's proof of depth. A few beats later, a short excerpt from a portrait — a paragraph that reads like a letter from someone who knows you. Not generic. Not flattering. *Specific.* She thinks: "I want to know what it would say about me." The page addresses the question forming in her head: "Is 30 minutes a lot?" A beat explains what the time feels like — not a quiz, not awkward, more like a conversation that keeps surprising you. Another beat mentions that the assessment and portrait are completely free. She registers: no paywall, no credit card required. Then she sees a section showing what happens *after* the portrait — daily check-ins that connect your mood to your personality, coaching that already knows who you are, a growth timeline. This isn't a quiz — it's a companion. Further down, the founder's own portrait excerpt — his struggles, his vulnerability, why he built this. It feels personal, not corporate. She trusts it.
 
-**Climax — The Decision:** Inès doesn't need to be convinced the method is better than a quiz. She needs to believe the output will be worth 30 minutes. The portrait excerpt did that. The Nerin conversation snippet did that. The PWYW transparency removed the last friction. She clicks the CTA.
+**Climax — The Decision:** Inès doesn't need to be convinced the method is better than a quiz. She needs to believe the output will be worth 30 minutes. The portrait excerpt did that. The Nerin conversation snippet did that. The "beyond the portrait" section showed her this could be more than a one-time experience. The founder's story made it feel real. The free-product transparency removed the last friction. She clicks the CTA.
 
-**Resolution:** She signs up, verifies her email, and meets Nerin. She came in cold and converted on three things: a sharp hook, concrete proof of output quality, and zero pricing surprise.
+**Resolution:** She signs up, verifies her email, and meets Nerin. She came in cold and converted on four things: a sharp hook, concrete proof of output quality, a glimpse of ongoing value, and zero pricing surprise.
 
-**Capabilities revealed:** Homepage messaging (FR59), universal hook without test-frame reference (FR60), single primary CTA (FR61), portrait excerpt as early proof (FR62), Nerin conversation preview showing character depth (FR63), fear-addressing content for process anxiety and time commitment (FR64), PWYW transparency as trust signal (FR65), multi-persona content that works for zero-context visitors (FR66).
+**Capabilities revealed:** Homepage messaging (FR59), universal hook with ongoing value promise (FR60), single primary CTA (FR61), portrait excerpt as early proof (FR62), Nerin conversation preview showing character depth (FR63), fear-addressing content for process anxiety and time commitment (FR64), free-product transparency as trust signal (FR65), multi-persona content that works for zero-context visitors (FR66), founder story block (FR84), beyond-the-portrait self-care teaser (FR85).
+
+### Journey 7 (Phase 1b): The Daily Check-in — Léa
+
+**Who she is:** Same Léa, 3 weeks after completing her assessment. She subscribed after her portrait landed. It's a Tuesday morning, she woke up feeling off — restless, slightly irritable — and she can't pinpoint why.
+
+**The trigger:** Léa sees a notification: "How are you feeling today?" It's a simple daily prompt — not intrusive, more like a gentle knock. She opens the app.
+
+**The check-in:** Five mood options. She taps "Uneasy." An optional text field appears — she types: "Can't focus, everything feels urgent but nothing actually is." She submits.
+
+**The recognition (free):** Within seconds, a response appears — not from an LLM, but a template-based recognition tuned to her personality profile: "Your high Conscientiousness means unfinished tasks create a background hum of pressure. When everything feels urgent, it's often that hum getting louder — not the tasks themselves." Léa pauses. That's exactly it. The recognition doesn't solve anything — it names what's happening, and naming it is enough to take the edge off.
+
+**The coaching (subscription):** Because she's a subscriber, a second layer appears: an actionable coaching suggestion. "Try this: write down every 'urgent' thing. Cross out anything that won't matter Friday. The list usually shrinks by half." Below that, her weekly focus: "This week's theme: distinguishing real urgency from Conscientiousness noise."
+
+**The pattern (over time):** Léa has been checking in for 3 weeks. She opens her mood calendar — a visual grid of her check-ins. She notices a pattern: every Monday and Tuesday she's "Uneasy" or "Tense." Wednesdays shift to "Focused." She'd never have spotted this without the calendar. The pattern becomes a conversation starter in her next Coach session.
+
+**Why this matters strategically:** The daily check-in costs $0 for free users (template responses) and ~$0.05 for subscribers (LLM coaching). It creates a daily touchpoint that prevents churn — users who check in 3x/week have dramatically higher month-2 retention than those who don't. The mood calendar creates visible data that makes the subscription feel valuable. And the personality-informed recognition — even the free version — reinforces the "this thing understands me" feeling that drives word-of-mouth.
+
+**Capabilities revealed:** Daily mood check-in with 5-option selector + optional text (FR67), personality-informed recognition for free users (FR68), coaching suggestion + weekly focus for subscribers (FR69), mood calendar visualization (FR70), weekly digest for subscribers (FR71), mood data privacy (FR72).
+
+### Journey 8 (Phase 1b): The Portrait Evolution — Marc
+
+**Who he is:** Same Marc, 2 months after his first assessment. He subscribed because the relationship analysis with Léa was surprisingly good. He's had 3 additional conversations with Nerin since — each one deepening the personality model.
+
+**The trigger:** Marc receives a push notification: "Your personality confidence just crossed 75%. We've learned something new about how you handle change — it surprised us." The notification includes a single sentence — a delta insight that's specific enough to be intriguing.
+
+**The gallery:** Marc opens the app and sees his portrait gallery — a timeline of snapshots. His first portrait sits at 52% confidence, written from 15 exchanges. Below it, a note: "Based on 25 of 30 facets." His current portrait: 75% confidence, 28 facets covered. He taps the first portrait and reads it side by side with the current one. The difference is visible — the early portrait described broad strokes; the current one names specific tensions and contradictions that feel precisely right.
+
+**The regeneration:** Marc taps "Regenerate portrait." Nerin writes a new letter — not an update to the old one, but a fresh narrative incorporating everything learned since. The old portrait stays in the gallery as a snapshot. The new one is richer, more nuanced, more him. He screenshots a paragraph and sends it to Léa: "Read this — it nailed something I've been trying to say for years."
+
+**Why this matters strategically:** Portrait evolution is the most underrated retention mechanic. Each regeneration proves that the subscription is delivering value — the portrait literally gets better. The gallery creates a visible record of growth that compounds switching cost. And the confidence milestone notifications are the perfect re-engagement trigger — they arrive at exactly the moment when the product has something new and specific to say.
+
+**Capabilities revealed:** Portrait gallery/timeline with versioned snapshots (FR73), subscriber portrait regeneration (FR74), confidence milestone push notifications with delta insight (FR75).
 
 ### Journey Requirements Summary
 
 | Journey | Key Capabilities Revealed |
 |---------|--------------------------|
-| **Léa (First-Timer)** | Sign-up with email verification (FR50, FR50a, FR50b), conversation (FR1), Director model (FR3), depth meter + milestones (FR4, FR5), Nerin portrait teasing (FR6), results page (FR16), PWYW modal (FR21), portrait as Nerin's letter (FR20), behavioral proxy tracking (FR24), archetype sharing (FR44, FR46), public profile landing (FR39) |
+| **Léa (First-Timer)** | Sign-up with email verification (FR50, FR50a, FR50b), conversation (FR1), Director model (FR3), depth meter + milestones (FR4, FR5), Nerin portrait teasing (FR6), results page (FR16), free portrait + subscription CTA (FR21), portrait as Nerin's letter (FR20), behavioral proxy tracking (FR24), archetype sharing (FR44, FR46), public profile landing (FR39) |
 | **Marc (Invited)** | QR flow (FR28), Director model adaptation for guarded users (FR3), early hook for skeptics (FR6), depth meter (FR4), relationship analysis (FR29), ritual suggestion screen (FR31), OCEAN code comparison (FR39), ambassador conversion (FR33) |
 | **Léa (Returning Subscriber, illustrative)** | Coach agent, personality-aware advice, cross-agent intelligence, event-driven return — no FRs yet (post-MVP) |
 | **Thomas (Profile Visitor)** | Public profile (FR39, FR42), OG tags (FR41), archetype as social object (FR46), OCEAN code comparison (FR39), CTA funnel (FR43) |
 | **Vincent (Founder)** | Admin monitoring (Nice-to-Have), completion funnel (FR24), dropout analytics (Nice-to-Have), steering compliance (FR3), cost tracking (FR55), viral metrics (Nice-to-Have) |
-| **Inès (Cold Visitor)** | Homepage messaging (FR59), universal hook (FR60), single CTA (FR61), portrait excerpt as proof (FR62), Nerin conversation preview (FR63), fear-addressing content (FR64), PWYW transparency (FR65), multi-persona content (FR66) |
+| **Inès (Cold Visitor)** | Homepage messaging (FR59), universal hook with ongoing value (FR60), single CTA (FR61), portrait excerpt as proof (FR62), Nerin conversation preview (FR63), fear-addressing content (FR64), free-product transparency (FR65), multi-persona content (FR66), founder story (FR84), beyond-the-portrait self-care teaser (FR85) |
+| **Léa (Daily Check-in, Phase 1b)** | Mood check-in (FR67), personality-informed recognition (FR68), coaching + weekly focus (FR69), mood calendar (FR70), weekly digest (FR71), mood data privacy (FR72) |
+| **Marc (Portrait Evolution, Phase 1b)** | Portrait gallery/timeline (FR73), portrait regeneration (FR74), confidence milestone notifications (FR75) |
 
-**Critical path:** Journeys 1→2 form the growth loop. The PWYW modal (founder vulnerability + example portrait) is the monetization conversion moment. The relationship ritual transforms the product from individual tool to shared experience. Journey 5 ensures operational visibility.
+**Critical path:** Journeys 1→2 form the growth loop. The free portrait is the credibility moment; the subscription CTA is the monetization conversion moment. The relationship ritual transforms the product from individual tool to shared experience. Journey 5 ensures operational visibility.
 
 **Two acquisition channels:** Journey 4 (Thomas) and Journey 6 (Inès) are complementary non-user acquisition paths. Thomas arrives via social sharing (profile links, archetype cards in group chats) — his conversion is cumulative, driven by repeated exposure and social proof. Inès arrives via organic search or direct link with zero context — her conversion is immediate, driven by homepage messaging clarity and output proof. Journey 4 is the passive/social channel; Journey 6 is the organic/direct channel. Both feed Journey 1.
 
@@ -437,7 +503,7 @@ These constraints protect users from the inherent risks of AI-powered personalit
 
 - **Visibility between users:** Each user can see the other's public profile data (scores, confidence, archetype) — unless that profile is set to private. Binary visibility only — fully public or fully private. No intermediate state (e.g., hiding scores while showing OCEAN code)
 - **Relationship analysis access:** Both users can see the full relationship analysis
-- **Per-relationship consent:** Initiator implicitly consents by generating the QR token. Recipient consents by accepting on the QR accept screen (both users must have completed assessments). Single consent gate — like accepting a friend request
+- **Per-relationship consent:** Initiator implicitly consents by generating the QR token. Recipient consents by accepting on the QR accept screen, which includes an explicit data-sharing disclaimer (trait and facet scores shared for analysis generation). Both users must have completed assessments. Single consent gate with informed consent
 - **Account deletion:** If one user deletes their account, the relationship analysis is deleted for both parties
 - **Data correlation boundary:** Relationship analysis does not expose raw conversation transcripts to the other party
 
@@ -484,30 +550,32 @@ Conversation quality → self-recognition (scores + archetype) → portrait reve
 **6. Relationship Analysis as Viral Engine**
 The core growth mechanic requires *another person* to complete their own 30-minute assessment. Every relationship analysis QR scan is a potential new user acquisition that goes through the full credibility chain. The product creates network effects from what starts as a fundamentally individual experience.
 
-**7. PWYW with Founder Vulnerability**
-The payment modal shows the founder's own portrait — his struggles, his vulnerabilities, why he built this. This creates an emotional connection that frames payment as participation in something personal rather than a transaction. The user sees a concrete example of the product's output and judges its value before deciding what to pay.
+**7. Free Portrait as Trust Signal**
+The portrait is free — no paywall, no credit card. This is a deliberate strategic choice: the "feel seen" moment IS the conversion event. By giving away the highest-value artifact, big-ocean proves its capability before asking for anything. The founder's own portrait (visible on the homepage or about page) adds vulnerability and authenticity — "this thing understood me, and I built it so it could understand you." The free portrait removes the last friction point and shifts the competitive frame: competitors charge $29-49 for reports; big-ocean gives you a personal letter for free.
 
 **8. Relationship Analysis Ritual as Harm Reduction**
 The ritual screen (read together, discuss) and framing guardrails (dynamics not deficits, no blame) aren't just UX — they're a harm reduction mechanism for how personality data is consumed. Accurate personality intelligence will sometimes surface uncomfortable truths. The innovation is creating a container where difficult discoveries are productive rather than destructive.
 
 ### Disruption Vectors
 
-**1. Assessment-as-Onboarding Flip:** The entire $6-11B market treats assessment as the product. big-ocean treats it as onboarding — how the AI learns you. The product is everything after. If the result is free onboarding, competitor models (pay for results) collapse.
+**1. Assessment-as-Onboarding Flip:** The entire $6-11B market treats assessment as the product. big-ocean treats it as onboarding — how the AI learns you. The product is everything after. The assessment AND portrait are free — competitor models (pay for results) can't compete with free.
 
-**2. "Don't Have to Explain Yourself" Category:** No product category exists for "an AI that already understands who you are." This is non-consumptive disruption — serving people who currently do nothing (situation "not bad enough for therapy," can't afford coaching, processing things alone because explaining is exhausting). The non-consumer market is enormous.
+**2. "Good Enough Therapist" (Year 1 play):** Serve the 75% who could benefit from self-understanding but will never enter a therapist's office. Personality framing removes stigma, self-care depth delivers value. Classical low-end disruption at 1/100th the cost. Competitive frame: $150/hr therapists, not free quizzes.
 
-**3. Agent Platform as Network (post-MVP):** Linear value chain (user → test → result) transforms into multi-sided platform: users (bring personality data), specialized agents (serve different jobs from same data), and eventually third-party integrations. Network effects: more users → richer data → better agents → more users.
+**3. Longitudinal Identity Record (Ongoing moat):** First product offering a persistent, evolving record of who you are and how you're changing. Irreplaceable after 6+ months of use. Make the journey visible — portrait gallery, "you then vs. you now," confidence growth timeline. This is the most underrated moat: it sells the subscription for you.
 
-**4. Incomplete-by-Design as Strategic Weapon:** Every competitor maximizes completeness. big-ocean deliberately assesses ~25/30 facets in 15 exchanges. This is MORE trustworthy (honest about what 30 minutes can discover), creates subscription demand (explore the gaps), and enables cross-agent referrals driven by data gaps. No competitor will copy this because it requires product quality confidence.
+**4. "Don't Have to Explain Yourself" Category:** No product category exists for "an AI that already understands who you are." This is non-consumptive disruption — serving people who currently do nothing (situation "not bad enough for therapy," can't afford coaching, processing things alone because explaining is exhausting). The non-consumer market is enormous.
+
+**5. Agent Platform as Network (post-MVP):** Linear value chain (user → test → result) transforms into multi-sided platform: users (bring personality data), specialized agents (serve different jobs from same data), and eventually third-party integrations. Network effects: more users → richer data → better agents → more users.
 
 ### Blue Ocean ERRC Grid
 
 | Strategy | Actions |
 |----------|---------|
-| **Eliminate** | Multiple-choice questionnaires, type categorization / 4-letter codes, clinical language, dashboard as primary result |
-| **Reduce** | Assessment length (15 exchanges vs 50-100+ items), framework breadth (one framework done deeply), price of entry (PWYW from €1 vs $29-49 reports) |
-| **Raise** | Personalization depth (16 types → millions of unique 30-facet profiles), emotional impact, relationship insight, scientific credibility, viral shareability (81 archetypes > 16 letter codes) |
-| **Create** | Conversational assessment, coherence-based scoring, "you don't have to explain yourself" experience, personality-aware life companion (post-MVP), incomplete-by-design assessment, portrait as ritual |
+| **Eliminate** | Multiple-choice questionnaires, type categorization / 4-letter codes, clinical language, dashboard as primary result, portrait paywall, relationship analysis credits |
+| **Reduce** | Assessment length (15 exchanges vs 50-100+ items), framework breadth (one framework done deeply), price of entry (completely free vs $29-49 reports), acquisition cost (relationship analysis = zero-CAC growth) |
+| **Raise** | Personalization depth (16 types → millions of unique 30-facet profiles), emotional impact, relationship insight, scientific credibility, viral shareability (81 archetypes > 16 letter codes), retention through self-care companion |
+| **Create** | Conversational assessment, coherence-based scoring, "you don't have to explain yourself" experience, personality-aware life companion (subscription), incomplete-by-design assessment, portrait as ritual, mood diary with personality-informed recognition, portrait evolution gallery, free relationship analysis as growth engine |
 
 ### Market Context & Competitive Landscape
 
@@ -520,10 +588,13 @@ The ritual screen (read together, discuss) and framing guardrails (dynamics not 
 | Dimensional | Social features, strong ratings (4.9/5), 751K users | Quiz-based, modest growth suggesting retention issues |
 | Listen Labs | Conversation + funding | B2B focused, no consumer social features |
 | BetterUp | Coaching at scale | €200+/month enterprise pricing, no consumer play |
+| Headspace/Calm | 2M+ subscribers, brand recognition, B2B pivot | Losing subscribers. No personality model. Pivoting to B2B2C — validates therapist wedge |
+| 16Personalities (revenue) | Bootstrapped, 1 employee, ~$340K/yr, 25M monthly visits, SEO dominance | Took 5+ years. Won through SEO. Knowledge library (archetypes + traits + facets + Big Five science) replicates and expands this playbook |
+| Noom | $1B ARR, behavioral psychology model | $656M raised. Daily micro-interactions model worth studying for mood diary design |
 
 big-ocean's unique position: the only product where the assessment experience IS the marketing AND the assessment is the onboarding for an ongoing relationship. The structural advantage is that conversation quality, sharing behavior, and growth are the same system — not separate concerns. The "don't have to explain yourself" factor is entirely new to the market.
 
-**Revenue model clarity:** MVP monetization (portrait PWYW + relationship credits) targets break-even while building the user base and data moat. Subscription (post-MVP) generates LTV through specialized agents sharing the personality architecture.
+**Revenue model clarity:** MVP monetization is free — portrait and relationship analysis are acquisition and growth engines, funded by the founder's €1K/month investment. Revenue comes exclusively from subscription (€9.99/mo, post-Phase 1b triggers). Real cost data: assessment $0.30, portrait $0.20-0.40, subscriber ongoing $0.35-0.60/month. Gross margin per subscriber: 96-98%.
 
 ### Validation Approach
 
@@ -535,9 +606,9 @@ big-ocean's unique position: the only product where the assessment experience IS
 **Post-launch validation:**
 - 100 completed assessments in 3 months — if users complete and share, the category exists
 - >70% completion rate — proves the control system works as an experience
-- PWYW conversion >20% — portrait self-revelation drives willingness to pay
-- Break-even signal — MVP monetization covers LLM costs. Not a profit target, a sustainability floor
-- Viral coefficient >1 — relationship analysis drives organic acquisition
+- Free→subscription conversion >3% — self-revelation drives willingness to subscribe
+- Break-even signal — subscription revenue covers LLM costs + infrastructure. Not a profit target, a sustainability floor
+- Viral coefficient >0.5 — relationship analysis (free, zero friction) drives organic acquisition
 - Character resonance — do users describe Nerin as a character, or as "the AI"?
 
 ### Risk Mitigation
@@ -546,7 +617,7 @@ See [Risk Mitigation Strategy](#risk-mitigation-strategy) in Project Scoping for
 
 ### Strategic Priorities
 
-**1. Conversation engine is the primary innovation investment.** The Director model + Nerin character must work before anything else matters. If the first 20 users don't complete and don't feel seen, no amount of archetype cards, public profiles, or payment modals will save the product.
+**1. Conversation engine is the primary innovation investment.** The Director model + Nerin character must work before anything else matters. If the first 20 users don't complete and don't feel seen, no amount of archetype cards, public profiles, or free portraits will save the product.
 
 **2. Iteration over perfection.** The 81 archetypes, territory descriptions, mirror system, and templates are first drafts that will improve with real user data. Ship, learn, refine. Don't over-polish pre-launch.
 
@@ -554,7 +625,7 @@ See [Risk Mitigation Strategy](#risk-mitigation-strategy) in Project Scoping for
 
 **4. Data flywheel as long-term moat.** ConversAnalyzer improves → portraits improve → more users → more data → ConversAnalyzer improves. This flywheel is the company's long-term defensibility. Every conversation makes the next one better.
 
-**5. Protect the founder story.** The PWYW modal with the founder's portrait is the soul of the product. Keep it even as the company grows.
+**5. Protect the founder story.** The founder's vulnerability — his own portrait, his reasons for building this — is the soul of the product. Surface it on the homepage and about page. Keep it even as the company grows.
 
 ## Web App Specific Requirements
 
@@ -596,9 +667,10 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **Public profiles are SEO-critical:** Server-rendered with structured data, unique URLs per user
 - **OG meta tags per public profile:** Archetype name, OCEAN code, archetype card image — optimized for social preview when shared in messaging apps and social media
 - **OG image generation:** Dynamic archetype card image per user for social previews
+- **Knowledge library pages:** SSR with structured data. Four tiers: archetype definitions (81 pages), trait/facet explainers (35), Big Five science articles (10-20), relationship/career guides (50-100). Each page targets specific search intent and includes a CTA to the free assessment. Schema.org structured data for scientific content
 - **Landing/marketing pages:** SSR for SEO. Standard meta tags, structured data
 - **Conversation and results pages:** Not indexed (behind auth). `noindex` meta tag
-- **Sitemap:** Public profiles only (for users who opt into public visibility)
+- **Sitemap:** Public profiles + knowledge library pages (for users who opt into public visibility on profiles)
 
 ### Accessibility
 
@@ -606,7 +678,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **Conversation UX:** Chat interface must be keyboard-navigable, screen-reader compatible, with proper ARIA labels for depth meter and progress milestones
 - **Public profile:** Score visualizations (facet bars, trait bands) must have text alternatives
 - **Color contrast:** Archetype card colors and ocean theme palette must meet AA contrast ratios
-- **Focus management:** Proper focus handling in PWYW modal and relationship analysis ritual screen
+- **Focus management:** Proper focus handling in subscription modal and relationship analysis ritual screen
 
 ### Implementation Considerations
 
@@ -637,7 +709,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 | Depth meter + progress milestones (25%/50%/75%) | Prevents mid-conversation dropout |
 | Nerin portrait teasing during conversation | Builds anticipation for the payoff |
 | Results page (OCEAN code, archetype, scores) | Free tier value — the self-recognition moment |
-| PWYW modal with founder story + example portrait | Monetization conversion moment |
+| Free portrait with subscription CTA | Portrait is the 'feel seen' moment; subscription CTA is the monetization conversion |
 | Portrait generation (Nerin's letter, Sonnet) | The payoff — the "worth it" moment. Portrait unlock uses a simple button ("Nerin has written something for you. Unlock your portrait."), not a visual envelope |
 | Behavioral proxy tracking (share rate, return visits) | Measures self-revelation via behavioral signals |
 | Public profile (default-private, shareable) | Top-of-funnel acquisition channel |
@@ -646,12 +718,12 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 | Relationship analysis (2-person, both-complete trigger) | The growth engine — each QR scan = potential new user |
 | Ritual suggestion screen (Start button only, no skip) | Harm reduction + experience enhancement |
 | Per-relationship consent (accept gate) | Domain requirement — privacy |
-| Relationship analysis credits (1 free on first portrait purchase PWYW ≥€1; €5/additional) | Revenue + multi-relationship use case |
-| Polar.sh payment integration | PWYW + credits |
-| Transactional emails via Resend (3 types: drop-off re-engagement with last territory, Nerin check-in ~2 weeks post-assessment, deferred portrait recapture) | Brings users back — lifecycle triggers for retention and conversion |
-| Homepage conversion content (messaging, hook, portrait preview, fear-addressing, PWYW transparency) | The product is better than the marketing — cold visitors need to understand the value in 3 seconds. Without a converting homepage, growth depends entirely on social sharing |
+| Relationship analysis (free, unlimited) | Growth engine — every analysis = potential new user at zero cost |
+| Subscription billing integration | €9.99/mo subscription — single revenue stream |
+| Transactional emails via Resend (3 types: drop-off re-engagement, Nerin check-in ~2 weeks, subscription conversion nudge) | Brings users back — lifecycle triggers for retention and conversion |
+| Homepage conversion content (messaging, hook, portrait preview, fear-addressing, free-product transparency) | The product is better than the marketing — cold visitors need to understand the value in 3 seconds. Without a converting homepage, growth depends entirely on social sharing |
 | Auth (Better Auth) | Already built |
-| Cost guard (session-aware) | Prevents budget blowout without killing sessions |
+| Cost guard (session-aware) + cost ceiling architecture | Prevents budget blowout. Free-tier cost ceiling critical before marketing — hard caps, circuit breaker for viral spikes |
 
 **Nice-to-Have (post-MVP, pre-H2):**
 
@@ -683,7 +755,7 @@ See [Product Scope — Post-MVP Phases](#post-mvp-phases) for detailed phase des
 |------|--------|-----------|
 | **Nerin character quality (~40% → launch-ready)** | High — credibility chain breaks at step 1 | #1 pre-launch investment. Director model overhaul |
 | **Director model compliance** | High — low territory compliance degrades conversation quality | Already architected. Ship at 70% compliance, improve iteratively |
-| **Portrait quality** | High — no self-revelation = PWYW fails | Sonnet generation with rich evidence. Test with first 20 users |
+| **Portrait quality** | High — no self-revelation = no sharing, no subscription conversion | Rich evidence generation. Test with first 20 users |
 | **Relationship analysis quality** | Medium — new feature, unvalidated | Ship simpler V1, iterate on user feedback |
 | **Solo founder bandwidth** | High — ambitious MVP for one person | Most infrastructure built. Conversation engine first, layer features |
 
@@ -694,7 +766,7 @@ See [Product Scope — Post-MVP Phases](#post-mvp-phases) for detailed phase des
 | **Category doesn't exist (no market)** | Critical | Seed first 20 users, observe category language and spontaneous sharing before scaling |
 | **Director model feels mechanical** | High | Character voice + desire framing provide naturalness on top of Director outputs |
 | **Ocean theme limits appeal** | Medium | Test via archetype card sharing — if cards get shared, theme works |
-| **PWYW settles at minimum (€1)** | Medium | Survivable if relationship credits convert. Iterate framing before changing model |
+| **Free→subscription conversion <2%** | High | Iterate subscription value proposition. Add more compelling subscription-only features. Test pricing. If <1% after 6 months, consider reintroducing portrait paywall |
 | **Relationship analysis surfaces painful truths** | Medium | Inherent to category. Ritual + framing guardrails are harm reduction |
 | **Defensibility — tech is copyable** | High | Moat is data: relationship graph + extraction patterns + model refinements. Competitors can copy the product, not 6 months of data |
 | **First-mover window is narrow** | High | First 6 months = race to build data moat. Speed to 100 users = defensibility |
@@ -708,7 +780,7 @@ See [Product Scope — Post-MVP Phases](#post-mvp-phases) for detailed phase des
 
 | Gate | GO Criteria | NO-GO Response |
 |------|------------|---------------|
-| G1: Launch → Scale | NPS >40, PWYW >15% | Iterate Nerin quality |
+| G1: Launch → Scale | NPS >40, sharing >10% | Iterate Nerin quality |
 | G2: Scale → Check-in | Viral coeff >0.3 | Fix sharing mechanics |
 | G3: Check-in → Subscription | 4/5 phase transition triggers fire (see Success Criteria) | If "talk again" <30%, stay transactional |
 | G4: Beta → Public subscription | Coach NPS >50, "felt generic" <30% | Iterate until "don't have to explain myself" lands |
@@ -719,7 +791,7 @@ See [Product Scope — Post-MVP Phases](#post-mvp-phases) for detailed phase des
 | Hypothesis | Kill Criteria |
 |-----------|--------------|
 | 15-exchange conversation creates wonder | NPS <30 or sharing <10% |
-| Portrait makes people feel seen | PWYW <10% or avg <€1 |
+| Portrait makes people feel seen | Share rate <10% or return visit <30% |
 | Relationship analysis drives viral acquisition | Invite acceptance <20% or viral coeff <0.3 |
 | Users want to talk to Nerin again | <30% express interest |
 | Coaching feels meaningfully personalized | NPS <40 or "felt generic" >30% |
@@ -728,13 +800,89 @@ See [Product Scope — Post-MVP Phases](#post-mvp-phases) for detailed phase des
 
 ### Backup Plans
 
-| Scenario | Year 3 Revenue | What It Is |
-|----------|---------------|-----------|
-| Full vision works | €1-3M | Personality-aware agent platform |
-| Subscription partially works | €300K-800K | Niche premium personality product |
-| Transactional only | €75-300K | Best personality assessment online. Profitable + sustainable |
+| Scenario | Year 2-3 Revenue | What It Is |
+|----------|-----------------|-----------|
+| Full vision works | €150K-500K year 2-3 | Personality-aware agent platform |
+| Subscription partially works | €50-150K year 2 | Niche premium personality product |
+| Transactional reintroduced | €30-80K year 2 | Reintroduce portrait paywall or credits if subscription fails. Best personality assessment online |
+| Free product, no revenue | €0 | Valuable free tool with large user base. Pivot to B2B2C API licensing |
 
-None of these are failure.
+### Acquisition Strategy
+
+**Primary channels (priority order):**
+1. **Relationship invite loop (primary):** Every relationship analysis = potential new user. Free = zero friction. Compound growth. Combined viral coefficient K ≈ 0.20-0.25
+2. **Archetype card sharing:** Shareable, visual, identity-signaling, zero marginal cost. K ≈ 0.01-0.02 individually but supplements invite loop
+3. **SEO knowledge library:** A public content library serving as the primary organic acquisition channel. Four content tiers:
+   - **Archetype pages (81):** One page per archetype — description, strengths, growth areas, compatible archetypes, famous examples. The 16Personalities SEO playbook
+   - **Trait & facet explainers (35):** One page per Big Five trait (5) + one per facet (30). Scientific explanation, behavioral examples, spectrum visualization, "where do you fall?" CTA
+   - **Big Five science articles (10-20):** Origin of the Big Five, OCEAN vs MBTI, how personality is measured, personality across cultures, personality and relationships, personality and career. SEO targets: high-intent informational queries
+   - **Relationship & career guides (50-100):** Compatibility pairs, "how [archetype] handles conflict," career fit by trait profile, relationship dynamics by OCEAN combination
+   - **Total: 175-235 pages over 12-18 months.** Start with 10 high-intent pages (month 1-3). AI-generate drafts, human-edit. Each page has a CTA to the free assessment
+4. **Launch blitz (month 4):** Product Hunt, Hacker News, Reddit, indie communities, 20+ creator/influencer outreach asks
+
+**Skip:** Paid ads until €5K/mo revenue. Not cost-effective for a solo founder with €1K/month budget.
+
+**Realistic projection:** 50-200 subscribers by month 12, €500-3,000/mo MRR. €200K year 1 requires viral breakout or B2B2C partnership.
+
+### Therapist B2B Wedge
+
+First B2B play — closest to existing product, warm leads available:
+- **Pitch includes:** Evidence explanations (what the client said → why that score), mood calendar for between-session tracking, personality-informed session preparation
+- **Timeline:** Start conversations month 3, free pilot month 4-6, paid tier (€29-49/mo per practitioner) month 7-9
+- **Revenue model:** Therapists are both revenue AND distribution — they send clients who become B2C subscribers
+- **Enterprise:** "Contact us" page + organic discovery. Build when demand signals are strong. Not a year 1 priority
+
+### Pre-Mortem: Five Ways Big Ocean Dies
+
+**Death 1 — LLM costs eat revenue.** Free-tier AI responses cost more than the free users are worth. Fix: template-based responses for free users (zero LLM cost for daily check-in), live AI only for subscribers. Breakeven requires free-user ongoing cost ≈ $0/month.
+
+**Death 2 — Archetypes are forgettable.** Clinical descriptors don't trigger sharing. Need: short evocative names (1-2 words), distinct visual identity per archetype, cultural scaffolding. Design investment here has 100x ROI on virality.
+
+**Death 3 — Invite assessment completion too low.** The 30-minute assessment IS the self-selection filter. Users who won't invest 30 minutes won't subscribe. Show invited user a teaser derived from inviter's profile to motivate the investment. Estimated invite completion: 20-25%.
+
+**Death 4 — B2B2C starts too late.** B2B sales cycle is 6-12 months. If wanted by month 12, outreach must start month 1. Need: 5 named target companies, simplest integration PoC, warm introductions.
+
+**Death 5 — Quit job too early.** Quit based on composite signal, not MRR alone. ALL five signals must be true (see Quit-Job Composite Signal in Success Criteria).
+
+### Execution Roadmap
+
+**Phase 1: Ship & Validate (Month 1-4)**
+- Month 1: Relationship analysis v2 (free), subscription paywall, archetype card redesign brief, first 5 knowledge library pages (archetype definitions + 1 Big Five origin article), cost ceiling architecture
+- Month 2: Card redesign launch, invite teaser flow, conversion CTA polish, therapist pilot conversations
+- Month 3: Soft launch (50-100 beta users), validate completion >50% + share >10% + conversion >3%, publish 5 more library pages (trait explainers), negotiate 4-day work week
+- Month 4: Product Hunt + HN + Reddit launch blitz. Iterate on beta feedback. 500-2,000 free users target
+
+**Phase 2: Grow & Learn (Month 5-9)**
+- Month 5-6: Analyze launch data, double down on working channel, therapist dashboard MVP if validated, first influencer outreach (10-20 asks), mood diary MVP, 20 library pages live (archetypes + traits + first science articles)
+- Month 7-8: Iterate subscription value (add personality curriculum if churn high), second influencer/social wave
+- Month 9: Decision gate. Review all metrics. 30 library pages live. MRR target: €1,000-3,000
+
+**Phase 3: Scale & Optimize (Month 10-18)**
+- Month 10-12: 50 library pages, optimize conversion funnel, relationship coach agent if justified. MRR target: €1,500-3,000
+- Month 13-15: Accelerate library (compatibility guides + career pages + facet explainers), consider revenue financing or angels. MRR target: €3,000-5,000
+- Month 16-18: Quit job if composite signal met. Hire first developer. 100+ library pages. MRR target: €5,000-10,000
+
+### Market Analysis
+
+**TAM/SAM/SOM:**
+
+| Level | Market | Size | Growth |
+|-------|--------|------|--------|
+| **TAM** | Global personality assessment + self-development digital tools | ~$25B | 8-12% CAGR |
+| **SAM** | AI-powered personality & coaching platforms (B2C + B2B), primarily English/French-speaking markets | ~$2.5B | 15-20% CAGR |
+| **SOM** | Conversational AI personality assessment — direct-to-consumer, first 2 years | ~$5-15M | New category |
+
+**Five Forces:**
+
+| Force | Intensity | Reality |
+|-------|-----------|---------|
+| **Supplier power** | HIGH | Dependency on Anthropic/OpenAI APIs — they set prices, can change terms, could build competing products |
+| **Buyer power** | HIGH | Consumers have infinite free alternatives. Switching cost near zero until relationship data accumulates |
+| **Competitive rivalry** | MODERATE | Few direct competitors in "conversational AI + Big Five." Adjacent competitors are massive |
+| **Threat of substitutes** | VERY HIGH | Anyone can prompt ChatGPT "analyze my personality." Free AI chatbots are the real substitute threat |
+| **Threat of new entrants** | HIGH | Low barrier — any developer with API access can build a personality chatbot in weeks |
+
+**Pattern from competitive benchmarks:** B2C wellness subscriptions are peaking. Headspace and Calm both losing subscribers, pivoting to B2B2C. Validates therapist wedge and enterprise roadmap. Bootstrapped ceiling: ~€500K-2M/yr without funding.
 
 ## Functional Requirements
 
@@ -766,28 +914,29 @@ None of these are failure.
 ### Portrait
 
 - **FR20:** The system generates a narrative portrait written as a personal letter from Nerin using a high-capability LLM
-- **FR21:** Users are presented with a PWYW modal showing the founder's story and example portrait after completing the assessment
-- **FR22:** Users can view their portrait after payment
-- **FR22a:** One portrait purchase unlocks one portrait for the user's assessment result
+- **FR21:** Users receive their portrait (Nerin's letter) for free immediately after completing the assessment. A subscription conversion moment exists in the post-portrait experience — design deferred to UX specification
+- **FR22:** Users can view their portrait immediately after generation (no payment required)
+- **FR22a:** One portrait is generated per assessment result — free, no purchase required
 - **FR23:** *(Post-MVP — subscription)* Conversation extension produces a new assessment result. The subscriber can purchase a new portrait for that result — the new portrait incorporates observations derived from extended evidence not present in the original. The prior portrait remains attached to the prior result as "previous version"
-- **FR24:** The system tracks behavioral proxies for portrait emotional impact: share rate and return visits within 48 hours
+- **FR24:** The system records share events (archetype card copy, profile link copy) and return-visit timestamps per portrait. Dashboard displays: share rate (shares / portrait views), 48-hour return rate (users who revisit within 48h / total portrait recipients)
 - **FR25:** *(Post-MVP — subscription)* Conversation extension creates a new assessment session. The Director model initializes from the prior session's final state and evidence. On completion, new assessment results are generated. The new result has no portrait until purchased separately (FR22a). The prior portrait and any relationship analyses based on the prior results become "previous version"
 - **FR26:** Portrait generation is asynchronous — users are notified when ready
-- **FR27:** The system retries portrait generation on failure and informs the user if it ultimately fails
+- **FR27:** The system retries portrait generation up to 3 times with exponential backoff (5s, 15s, 45s). If all retries fail, the user is notified within 5 minutes with an option to retry manually
 
 ### Relationship Analysis
 
 - **FR28:** Users can initiate a relationship analysis by opening a QR drawer; the other person scans the QR code or opens the contained URL
-- **FR29:** The system generates a 2-person relationship analysis when both users have completed their assessments
-- **FR30:** The QR accept screen shows the initiator's archetype card, both users' confidence rings, and available credit balance, with Accept and Refuse buttons. The recipient must accept before the analysis proceeds (single consent gate)
+- **FR29:** The system generates a 2-person relationship analysis when both users have completed their assessments. The analysis page contains two parts: (1) a **data grid** — analytical comparison of traits, facets, and scores between both users, and (2) a **unified narrative** — a celebratory, LLM-generated text describing the relationship dynamic between both profiles. Both parts are free
+- **FR30:** The QR accept screen shows the initiator's name, Accept and Refuse buttons, and a data-sharing disclaimer: accepting shares the user's trait and facet scores with the initiator for the purpose of generating the relationship analysis. Single consent gate — accepting is informed consent to data sharing
 - **FR31:** Users see a ritual suggestion screen before accessing the relationship analysis
-- **FR32:** The relationship analysis describes relational dynamics without blame language and without exposing individual vulnerability data
-- **FR33:** Users receive one free relationship analysis credit upon completing their first portrait purchase (PWYW ≥€1). Additional credits cost €5 each
+- **FR32:** The relationship analysis (both data grid and narrative) describes relational dynamics without blame language and without exposing individual vulnerability data. The narrative celebrates the relationship — it names dynamics and tensions as shared patterns, not individual deficits
+- **FR32a:** *(Post-MVP — subscription)* The relationship agent provides a personalized lens on the relationship through the requesting user's perspective only, using only that user's data. No additional consent needed — the agent reads the shared analysis + the requesting user's own personality data
+- **FR33:** Relationship analysis is free and unlimited. Every completed relationship analysis is a potential new user acquisition at zero cost — the growth engine
 - **FR34:** If one user deletes their account, the shared relationship analysis is deleted
 - **FR35:** Each relationship analysis is linked to both users' assessment results (not to invitations). All analyses are preserved as snapshots — the newest is primary, older ones are classified as "previous version." Version detection is derive-at-read: if newer assessment results exist for either user, the analysis is classified as "previous version." Users can view all their relationship analyses
 - **FR36:** Users receive an email notification when a relationship analysis they participated in is ready
 - **FR37:** The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up, verify their email, and complete their assessment before seeing the accept screen
-- **FR38:** The system tracks relationship analysis credits per user (1 free, additional purchased)
+- **FR38:** *(Removed — relationship analysis is free and unlimited, no credit tracking needed)*
 
 ### Public Profile & Social Sharing
 
@@ -800,10 +949,10 @@ None of these are failure.
 - **FR45:** When a logged-in user with a completed assessment views another user's public profile, a relationship analysis CTA is displayed: "You care about [Name]. Discover your dynamic together." with a brief QR flow explanation
 - **FR46:** The system generates archetype card images per archetype (81 cards) — users with the same archetype share the same card visual. Each card contains: archetype name, short description (1-2 sentences), a geometric visual element, and OCEAN code. No individual trait/facet scores. One card per archetype (generic, not personalized)
 
-### Payments & Monetization
+### Subscription & Monetization
 
-- **FR47:** Users can pay for portraits via PWYW with embedded checkout. The payment provider handles all pricing UI. Default €5, minimum €1. No preset amount buttons in the product UI — a single "Unlock your portrait" button opens the checkout modal
-- **FR48:** Users can purchase relationship analysis credits via embedded checkout
+- **FR47:** Users can subscribe at €9.99/mo via embedded checkout. Subscription unlocks premium features defined in FR10 (conversation extension), FR49 (conversation access), FR69 (coaching + weekly focus), FR71 (weekly digest), FR74 (portrait regeneration). Additional subscription features (specialized agents, growth insights, pattern analysis) are defined in Phase 2a scope — no FRs yet
+- **FR48:** *(Removed — relationship analysis is free, no credit purchase needed)*
 - **FR49:** *(Post-MVP — subscription)* Subscribers can access conversation extensions as part of their subscription
 
 ### User Account & Privacy
@@ -818,21 +967,52 @@ None of these are failure.
 
 ### Homepage & Conversion
 
-- **FR59:** The homepage communicates what Big Ocean is and what the user receives within 3 seconds of landing — without referencing other personality tests or defining by negation
-- **FR60:** The homepage leads with a transformation-oriented hook: what the portrait reveals about you, not how the method works. The hook must land for visitors with zero prior context
+- **FR59:** The homepage above-the-fold content contains: (1) a single-sentence value proposition communicating what the user receives, (2) a visual hint of output quality (archetype card or portrait excerpt), (3) one primary CTA. *Acceptance: first-time visitors in usability testing (n≥5) can describe what the product offers within 10 seconds of landing*
+- **FR60:** The homepage headline communicates a transformation promise — not just what you'll discover, but the ongoing value: an AI that understands who you are and helps you navigate life from that understanding. The hook emphasizes the free, zero-commitment entry: a 30-minute conversation that writes you a personal letter, completely free — and the beginning of an ongoing relationship, not a one-time result. *Acceptance: headline does not contain the words "test," "quiz," "assessment," or name any competitor. Headline implies ongoing value, not one-and-done*
 - **FR61:** The homepage has one primary CTA to start the assessment. No competing secondary CTAs, no "See how it works" alternatives that dilute conversion
 - **FR62:** The homepage surfaces a concrete portrait excerpt within the first 40% of scroll depth — a paragraph that reads as a personal letter, demonstrating output specificity and emotional weight
 - **FR63:** The homepage includes a Nerin conversation preview showing character depth and perceptiveness — demonstrating what the conversation feels like, not describing it. Nerin is shown being Nerin (observing patterns, making connections), not pitching the product
-- **FR64:** The homepage addresses three visitor fears: process anxiety ("Will this be awkward?"), time commitment ("Is 30 minutes worth it?"), and self-exposure ("What if I don't like what it says?") — integrated into the page flow, not as an FAQ section
-- **FR65:** The homepage surfaces the PWYW pricing model early as a trust signal — framed as generosity and confidence in the product, not as a footnote. Users should encounter pricing transparency before reaching the CTA, not after committing 30 minutes
-- **FR66:** The homepage content works across multiple visitor types (zero-context searcher, social media curious, invited friend awaiting their own assessment, therapy-seeker) without requiring a single narrative arc or assuming a specific entry motivation
+- **FR64:** The homepage contains three content blocks addressing visitor concerns, each with a specific reassurance: (1) process anxiety → "It's a conversation, not a quiz" with Nerin preview as proof, (2) time commitment → "30 minutes that surprise you" with user testimonial or engagement stat, (3) self-exposure → "Everything Nerin writes comes from a place of understanding" with portrait tone example. *Acceptance: each block is identifiable as a content section, not buried in prose*
+- **FR65:** The homepage surfaces that the assessment and portrait are completely free — framed as confidence in the product, not as a footnote. Users should encounter this transparency before reaching the CTA, removing the last friction point
+- **FR66:** The homepage supports four entry motivations without branching: (1) zero-context searcher — value proposition lands without prior knowledge, (2) social media curious — archetype card/OCEAN code visible, (3) invited friend — clear path to start own assessment, (4) self-understanding seeker — depth and scientific credibility communicated. *Acceptance: usability test with 1 user per persona type; each can find the CTA within 60 seconds*
+- **FR84:** The homepage includes a founder story block: the founder's own portrait excerpt, why he built this, and what the experience meant to him. Positioned as an authenticity signal — vulnerability that builds trust. *Acceptance: block contains a real portrait excerpt (≥3 sentences) and a first-person statement from the founder*
+- **FR85:** The homepage surfaces the ongoing value beyond the portrait: personality-informed daily check-ins, coaching, growth tracking — positioning the product as a personal development and self-care companion, not a one-time personality test. This section plants the seed without selling the subscription directly. *Acceptance: section describes ≥2 post-portrait features with concrete examples of ongoing value. Does not mention pricing or subscription*
+
+### Knowledge Library (SEO)
+
+- **FR78:** The platform hosts a public knowledge library of server-rendered articles organized in four tiers: archetype definitions (81), trait/facet explainers (35), Big Five science (10-20), and relationship/career guides (50-100). All pages are accessible without authentication
+- **FR79:** Each archetype definition page contains: archetype name, description, strengths, growth areas, compatible archetypes, and a CTA to start the free assessment. *Acceptance: page renders with structured data (Schema.org), passes Lighthouse SEO audit >90*
+- **FR80:** Each trait explainer page covers one Big Five trait: scientific definition, behavioral examples across the spectrum, facet breakdown with descriptions, and a CTA. Each facet explainer covers one of the 30 facets with similar depth
+- **FR81:** Big Five science articles cover foundational topics (origin of the model, OCEAN vs MBTI, how personality is measured, personality across cultures, etc.) for informational search intent. Each article includes a CTA to the free assessment
+- **FR82:** Relationship and career guide pages combine personality dimensions with practical contexts (e.g., "How high-Openness people handle conflict," "Best career paths for [archetype]," "[Archetype A] × [Archetype B] compatibility"). AI-generated drafts, human-edited
+- **FR83:** Knowledge library pages are included in the sitemap and rendered with Schema.org structured data for scientific and educational content
 
 ### Cost Management
 
-- **FR55:** The system monitors per-session LLM costs against a budget threshold
+- **FR55:** The system monitors per-session LLM costs against budget thresholds defined in NFR6 (~€0.30/assessment) and NFR7 (~€0.20-0.40/portrait)
 - **FR56:** The cost guard never blocks a user mid-session; budget protection applies at session boundaries
-- **FR57:** When cost guard triggers, users can retry sending their message
+- **FR57:** When cost guard triggers at a session boundary, users see a "temporarily unavailable" message and can retry after a configurable cooldown period (default: 15 minutes)
 - **FR58:** Users are informed when cost guard triggers and told they can retry
+
+### Transactional Emails
+
+- **FR76:** The system sends three types of lifecycle emails: (1) drop-off re-engagement — sent to users who abandoned mid-assessment, referencing their last conversation territory, (2) Nerin check-in — sent ~2 weeks post-assessment as a conversational follow-up from Nerin, (3) subscription conversion nudge — sent to engaged free users (≥3 return visits or ≥1 relationship analysis) highlighting subscription value
+- **FR77:** The system sends a notification email within 5 minutes when a relationship analysis the user participated in is ready
+
+### Mood Diary & Daily Check-in
+
+- **FR67:** Users can perform a daily mood check-in: mood selector (5 options) + optional text input
+- **FR68:** Free users receive a personality-informed recognition response (template-based, zero LLM cost): connecting their mood to their personality patterns
+- **FR69:** *(Subscription)* Subscribers receive recognition + actionable coaching suggestion + weekly/monthly focus statements (LLM-generated)
+- **FR70:** Users can view a mood calendar showing their check-in history and patterns over time
+- **FR71:** *(Subscription)* Subscribers receive a weekly digest: mood patterns + focus recommendation
+- **FR72:** Mood check-in data is stored per user and visible only to the user (and optionally to their therapist in B2B mode)
+
+### Portrait Evolution
+
+- **FR73:** Each portrait generation is stored as a versioned snapshot with its confidence level. Users can view a portrait gallery/timeline showing their progression
+- **FR74:** *(Subscription)* Subscribers can regenerate their portrait with updated data from new conversations — each regeneration creates a new snapshot
+- **FR75:** Users receive push notifications when their personality confidence level crosses defined thresholds: every 5-8 percentage points in the 50-70% range, every 10-15 percentage points above 80%. Each notification includes a delta insight — a single sentence describing the facet or pattern most changed since the previous milestone (e.g., "Your Agreeableness score shifted the most — here's what we found")
 
 ## Non-Functional Requirements
 
@@ -843,8 +1023,10 @@ None of these are failure.
 - **NFR3:** Results page LCP <1.5s (emotional moment after completing 15 exchanges)
 - **NFR4:** Chat page initial load <2s, subsequent interactions <200ms (client-side)
 - **NFR5:** Portrait generation completes within 60s (async — user notified, not waiting. Benchmark and adjust)
-- **NFR6:** Per-assessment LLM cost stays within ~€0.20 budget (cost-efficient LLM for conversation + extraction)
-- **NFR7:** Per-portrait LLM cost stays within ~€0.20 budget (high-capability LLM for generation)
+- **NFR6:** Per-assessment LLM cost stays within ~€0.30 budget (cost-efficient LLM for conversation + extraction)
+- **NFR7:** Per-portrait LLM cost stays within ~€0.20-0.40 budget (high-capability LLM for generation, optimizable via model routing and structured generation pipeline)
+- **NFR7a:** Free-tier ongoing cost per user must approach $0/month. Mood diary recognition uses template-based responses (zero LLM cost). Live AI responses reserved for subscribers
+- **NFR7b:** Cost ceiling architecture: per-user token budgets, hard caps on free-tier LLM usage, circuit breaker for cost spikes during viral events
 
 ### Security & Privacy
 
@@ -868,17 +1050,17 @@ None of these are failure.
 
 ### Accessibility
 
-- **NFR20:** WCAG 2.1 AA compliance required for: public profile, conversation UI, results page, PWYW modal. Best-effort AA for remaining pages
+- **NFR20:** WCAG 2.1 AA compliance required for: public profile, conversation UI, results page, subscription modal. Best-effort AA for remaining pages
 - **NFR21:** Chat interface keyboard-navigable with proper ARIA labels
 - **NFR22:** Score visualizations (facet bars, trait bands) have text alternatives
 - **NFR23:** Ocean theme color palette meets AA contrast ratios
-- **NFR24:** Proper focus management in modals (PWYW, ritual screen)
+- **NFR24:** Proper focus management in modals (subscription, ritual screen)
 
 ### Integration
 
-- **NFR25:** Embedded checkout integration for PWYW and credits (extension purchases added with subscription)
+- **NFR25:** Embedded checkout integration for subscription billing (€9.99/mo)
 - **NFR26:** The system can switch LLM providers without code changes to the conversation or portrait pipeline
-- **NFR27:** Transactional email delivery. Three email types: (1) drop-off re-engagement with last territory, (2) Nerin check-in ~2 weeks post-assessment, (3) deferred portrait recapture. Relationship analysis notifications delivered within 5 minutes of completion, >95% delivery rate
+- **NFR27:** Transactional email delivery. Three email types: (1) drop-off re-engagement with last territory, (2) Nerin check-in ~2 weeks post-assessment, (3) subscription conversion nudge for engaged free users. Relationship analysis notifications delivered within 5 minutes of completion, >95% delivery rate. Confidence milestone notifications within 1 hour of threshold
 
 ### Observability
 

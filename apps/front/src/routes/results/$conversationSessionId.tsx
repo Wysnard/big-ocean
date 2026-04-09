@@ -133,6 +133,8 @@ function ResultsSessionPage() {
 	const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 	const { appTheme } = useTheme();
 	const pwywAutoOpenRef = useRef(false);
+	const portraitUnlockTriggerRef = useRef<HTMLButtonElement>(null);
+	const selectedFacetTriggerRef = useRef<HTMLElement | null>(null);
 
 	// Story 3.4: Auto-open PWYW modal ~2.5s after first visit when portrait not unlocked
 	useEffect(() => {
@@ -304,9 +306,13 @@ function ResultsSessionPage() {
 	}, []);
 
 	// Story 12.2: Facet click handler — opens evidence panel
-	const handleFacetClick = useCallback((facetName: FacetName) => {
-		setSelectedFacet((prev) => (prev === facetName ? null : facetName));
-	}, []);
+	const handleFacetClick = useCallback(
+		(facetName: FacetName, triggerElement?: HTMLElement | null) => {
+			selectedFacetTriggerRef.current = triggerElement ?? null;
+			setSelectedFacet((prev) => (prev === facetName ? null : facetName));
+		},
+		[],
+	);
 
 	const handleCloseEvidencePanel = useCallback(() => {
 		setSelectedFacet(null);
@@ -438,6 +444,7 @@ function ResultsSessionPage() {
 							? handleUnlockPortrait
 							: undefined
 					}
+					portraitUnlockTriggerRef={portraitUnlockTriggerRef}
 					selectedTrait={selectedTrait}
 					messageCount={results.messageCount}
 					detailZone={
@@ -456,6 +463,7 @@ function ResultsSessionPage() {
 										facetName={selectedFacet}
 										evidence={selectedFacetEvidence}
 										onClose={handleCloseEvidencePanel}
+										restoreFocusRef={selectedFacetTriggerRef}
 									/>
 								)}
 							</>
@@ -514,6 +522,7 @@ function ResultsSessionPage() {
 				onOpenChange={setShowPwywModal}
 				onCheckout={() => void handlePwywCheckout()}
 				isCheckoutLoading={isCheckoutLoading}
+				restoreFocusRef={portraitUnlockTriggerRef}
 			/>
 		</>
 	);

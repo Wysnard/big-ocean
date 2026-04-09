@@ -363,4 +363,154 @@ Assessment and portrait generation are built and strong. Highest-priority gaps: 
 
 Start creator/influencer outreach month 3-6 (20 asks for 2-3 yeses). B2B2C (dating apps, coaching platforms) start outreach month 1, expect 6-12 month sales cycle. Podcast/newsletter partnerships month 3-6.
 
+### Final Elicitation Findings
+
+**Archetype system:** 81 archetypes across 3 registers (O-group: abstract concepts, G-group: nature/forces, P-group: roles/jobs). Names are strong — "The Ember," "The Paradox," "The Maverick." Card displays archetype name prominently + OCEAN code with full trait-level names expanded vertically (Open-minded, Flexible, Introverted, Warm, Resilient). No abstract tribe labels needed — the trait names ARE the relatable identity markers. Card design needs professional improvement — highest-ROI design investment (€200-500 for a freelancer).
+
+**MVP subscription confirmed:** Unlimited Nerin conversations + portrait regeneration + 1 relationship analysis credit/month + confidence milestone notifications + teased upcoming agents. €9.99/mo. No new agent needed for launch.
+
+**Relationship data consent:** Other user consents to trait/facet score access for relationship agent + data grid comparison. No portrait sharing, no evidence sharing. Portrait is personal.
+
+**Therapist B2B model:** Pitch includes evidence explanations (what the client said → why that score) + mood calendar for between-session tracking. Free pilot with known practitioners. This is the first B2B play — closest to existing product, warm leads available.
+
+**Enterprise:** "Contact us" page + organic discovery through team relationship analysis. Build when demand signals are strong. Not a year 1 priority.
+
+**Landing page:** 30-min duration mentioned in hero and in "why conversation" section. Suggestion: make confidence % larger in hero — "Your portrait — 52% discovered" as a progress bar, not a footnote.
+
+**Conversion CTA:** Frame as need, not want. "We've discovered 25 of your 30 personality facets. Your portrait is real — but incomplete. Continue with Nerin to uncover the full picture." Personalized to lowest-confidence trait if technically feasible.
+
+---
+
+## Strategic Options
+
+### Option A: The Bootstrapper's Flywheel
+
+Pure B2C, organic growth, no funding. Ship MVP subscription + archetype card redesign + relationship analysis v2. Launch blitz month 4. Reinvest all revenue. Stay at day job until composite signal threshold met.
+
+Revenue: €8K-50K year 1. Pros: full control, low risk, forces PMF discipline. Cons: very unlikely €200K year 1, slow, solo bottleneck.
+
+### Option B: The Therapist Wedge
+
+B2C + therapist B2B. Everything in Option A plus therapist dashboard (client profiles with evidence, mood calendar). Pilot with 3-5 known practitioners month 3-4. Therapists are both revenue (€29-49/mo) AND distribution (send clients who become B2C users).
+
+Revenue: €16K-60K year 1. Pros: two revenue streams, therapist endorsement = trust signal, pre-qualified users, fundable story. Cons: two customer segments to support solo, dashboard build effort.
+
+### Option C: The Moonshot Sprint
+
+B2C + therapist B2B + pre-seed funding. Everything in Option B plus negotiate part-time at day job month 3, seek €100-200K pre-seed month 6-9 using early traction. Fund a designer + growth marketer.
+
+Revenue: €40K-100K year 1, €200K-500K year 2. Pros: highest probability of €200K (year 2), funding solves solo bottleneck, professional design. Cons: equity dilution 10-15%, fundraising takes 2-3 months, investor pressure.
+
+### Comparative Evaluation
+
+| Criterion | A (Bootstrap) | B (Therapist Wedge) | C (Moonshot Sprint) |
+|---|---|---|---|
+| Year 1 revenue | €8K-50K | €16K-60K | €40K-100K |
+| Year 2 revenue | €50K-150K | €80K-200K | €200K-500K |
+| P(€200K) year 2 | 15-25% | 25-40% | 40-60% |
+| Personal risk | Lowest | Low-medium | Medium |
+| Control | Full | Full | Shared |
+| Path to quit job | Month 18-30 | Month 12-20 | Month 9-15 |
+
+### Red Team Verdict
+
+The options are not a choice — they're a sequence with decision gates:
+
+- **Month 1-3 (Option A):** Ship relationship analysis v2, subscription paywall, archetype card redesign. Pure B2C. Validate core.
+- **Month 3 (two low-risk moves):** Start therapist pilot conversations (3-5 practitioners). Negotiate 4-day work week if viable.
+- **Month 4-6 (Option B activated):** Product Hunt launch. If therapist interest confirmed, build dashboard. Two channels running.
+- **Month 6-9 (Decision gate):** MRR >€2K + 15% MoM → build pitch deck. MRR >€3K → reduce day job further. MRR <€1K → course-correct product.
+- **Month 9-12 (Option C if earned):** If traction supports, pitch pre-seed. If not, continue Option B targeting €200K year 2.
+
+**Victor's curveball — credit economy:** Worth exploring as complement to subscription (credits for casual users, subscription for committed). Decision at month 6 based on churn data. Not a month 1 priority.
+
+**Key panel consensus:** Part-time job transition (4-day week) is the lowest-risk capacity multiplier. Do this at month 3 if finances allow — don't wait for funding.
+
+### Competitive Benchmarking
+
+**Key comparables:**
+- 16Personalities: bootstrapped, 1 employee, 25M monthly visits, ~$340K/yr. Took 5+ years. Won through SEO dominance.
+- Crystal Knows: $6.4M raised, $10.5M revenue (2024), B2B DISC platform. 10 years to $10M.
+- BetterUp: $628M raised, ~$250M revenue, B2B coaching. Needed massive capital.
+- Headspace: $325M+ raised, $348M revenue, 2M subscribers (declining). Pivoting to B2B.
+- Calm: $218M raised, $210M revenue (declining 24%). Shifting to B2B2C.
+- Noom: $656M raised, $1B ARR, behavioral psychology model.
+
+**Pattern: B2C wellness subscriptions are peaking.** Headspace and Calm both losing subscribers. Both pivoting to B2B2C. Validates therapist wedge and enterprise roadmap.
+
+**Bootstrapped ceiling: ~€500K-2M/yr.** Break through via: revenue-based financing (Pipe/Capchase at €5-10K MRR), strategic angels (€50-100K for 3-8% equity), founding member pre-sales, or B2B2C partnerships.
+
+### Competitive Playbooks (Build Mode)
+
+**16Personalities SEO playbook:** 81 archetypes = 81 landing pages. Plus career guides, relationship guides, compatibility pairs = 300-400 content pages over 12-18 months. Start with 10 high-intent pages. AI-generate drafts, human-edit. Cost: tokens + 2-3 hrs/page.
+
+**Noom psychology playbook:** Daily micro-interactions (personality curriculum, not just mood logging). Archetype-specific content. Progress visualization. Structured weekly journey for subscribers, not just "unlimited conversations."
+
+**Operational playbook:** Post-launch requires 25-35 hrs/week. With day job = 70 hrs/week, sustainable for 2-3 months max. Transition: 4-day work week at month 3, VA at €1.5K MRR, content freelancer at €3K MRR, quit job at €5K MRR, first developer at €8K MRR, first full-time hire at €10-15K MRR.
+
+**Hiring framework:** Hire when (1) specific bottleneck identified, (2) bottleneck is delegable, (3) can afford 6 months from current revenue. First spend: freelance designer for archetype cards (€200-500, before launch). Never hire to figure out what to do — hire to do what you've already validated.
+
+---
+
+## Recommended Strategy: The Patient Flywheel
+
+Organic-first growth modeled on 16Personalities, with therapist wedge as B2B accelerator and opportunistic social/influencer operations as upside bets.
+
+**Revenue expectations:** €10-30K year 1, €50-150K year 2, €150-500K year 3, €500K-2M year 4-5. Quit job at €5K MRR (month 15-18 if growth holds).
+
+**Key hypotheses (7):** Completion rate >50%, share rate >10%, invite rate >20%, conversion >3%, month-2 retention >70%, SEO pages ranking by month 6-9, therapists find product valuable.
+
+**Critical success factors:** (1) Beautiful archetype card (hire designer, €200-500). (2) SEO content starts month 1 (10 pages, then 50+ by year end). (3) Sharp post-portrait conversion CTA. (4) Cost ceiling architecture at launch. (5) Stay at day job until 5-signal composite met.
+
+---
+
+## Execution Roadmap
+
+### Phase 1: Ship & Validate (Month 1-4)
+- Month 1: Relationship analysis v2, subscription paywall, card redesign brief, first 5 SEO pages, cost ceiling architecture
+- Month 2: Card redesign launch, invite teaser flow, conversion CTA polish, therapist pilot conversations
+- Month 3: Soft launch (50-100 beta users), validate H1-H3, publish 5 more SEO pages, negotiate 4-day work week
+- Month 4: Product Hunt + HN + Reddit launch blitz. Iterate on beta feedback. 500-2,000 free users target.
+
+### Phase 2: Grow & Learn (Month 5-9)
+- Month 5-6: Analyze launch data, double down on working channel, therapist dashboard MVP if validated, first influencer outreach (10-20 asks), mood diary MVP, 20 SEO pages live
+- Month 7-8: Iterate subscription value (add personality curriculum if churn high), second influencer/social wave, TikTok/Instagram experiments
+- Month 9: Decision gate. Review all metrics. 30 SEO pages live. Clear picture of what works. MRR target: €1,000-3,000.
+
+Opportunistic growth ops throughout: TikTok/Reels, creator partnerships, Reddit presence. Lottery tickets, not the plan.
+
+### Phase 3: Scale & Optimize (Month 10-18)
+- Month 10-12: 50 SEO pages, optimize conversion funnel, relationship coach agent if justified, hire VA if needed. MRR target: €1,500-3,000.
+- Month 13-15: Accelerate SEO (compatibility + career pages), self-serve team product if signals exist, consider revenue financing or angels. MRR target: €3,000-5,000.
+- Month 16-18: Quit job if composite signal met. Hire first developer. 100+ SEO pages. Therapist network 10-20+. MRR target: €5,000-10,000.
+
+---
+
+## Success Metrics
+
+### Leading Indicators
+- Assessment completion: >50%. Archetype card share: >10%. Invite send: >20%. Invite completion: >20%. Free→paid conversion: >3%. SEO impressions: growing MoM.
+
+### Lagging Indicators
+- Month 6: MRR €300-800, 30-80 subscribers, 1-3K users
+- Month 12: MRR €1,500-3,000, 150-300 subscribers, 5-15K users
+- Month 18: MRR €5,000-10,000, 500-1,000 subscribers, 15-50K users
+
+### Decision Gates
+1. Month 3: Product works (>50% completion, >5% share, >2% conversion) → else fix before marketing
+2. Month 6: Channel found (>50 users/month from at least 1 source) → else test new channels
+3. Month 8: Subscription validated (>70% month-2 retention) → else add more value
+4. Month 12: Growth sustainable (MRR >€1,500, >10% MoM) → else reassess PMF
+5. Month 15-18: Quit-job ready (all 5 composite signals) → else stay 4-day week
+
+---
+
+## Risks and Mitigation
+
+**Top risks:** SEO slower than expected (40%) → supplement with social content. Subscription churn >8% (35%) → add personality curriculum. Solo founder burnout (50%) → 4-day week at month 3, VA at first bottleneck, clear boundaries. Funded competitor enters (30%) → moat is data + SEO authority + archetype culture, not tech. Free tier costs exceed budget (25%) → templated responses, hard caps, circuit breaker.
+
+**Regulatory:** Monitor EU AI Act. If classified high-risk, compliance becomes moat. Budget for legal at €5K MRR.
+
+---
+
 _Generated using BMAD Creative Intelligence Suite - Innovation Strategy Workflow_

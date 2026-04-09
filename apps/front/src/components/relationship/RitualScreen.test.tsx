@@ -5,7 +5,7 @@
  * a relationship analysis is shown to both users.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RitualScreen } from "./RitualScreen";
@@ -74,5 +74,13 @@ describe("RitualScreen", () => {
 		render(<RitualScreen {...defaultProps} />);
 
 		expect(screen.getByText(/Talk about what you're expecting/i)).toBeInTheDocument();
+	});
+
+	it("moves initial focus to the Start button", async () => {
+		render(<RitualScreen {...defaultProps} />);
+
+		await waitFor(() => {
+			expect(screen.getByTestId("ritual-start-button")).toHaveFocus();
+		});
 	});
 });

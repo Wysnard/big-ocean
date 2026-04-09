@@ -1,6 +1,6 @@
 import type { PortraitStatus } from "@workspace/contracts";
 import type { FacetResult, OceanCode5, TraitName, TraitResult } from "@workspace/domain";
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import { ArchetypeHeroSection } from "./ArchetypeHeroSection";
 import { ConfidenceRingCard } from "./ConfidenceRingCard";
 import { OceanCodeStrand } from "./OceanCodeStrand";
@@ -34,6 +34,8 @@ interface ProfileViewProps {
 	onRetryPortrait?: () => void;
 	/** Callback to open PWYW modal for portrait unlock (Story 3.4) */
 	onUnlockPortrait?: () => void;
+	/** Ref to the inline portrait unlock trigger for focus restoration */
+	portraitUnlockTriggerRef?: Ref<HTMLButtonElement>;
 	/** Current selected trait for DetailZone */
 	selectedTrait?: TraitName | null;
 	/** Total message count for confidence ring */
@@ -60,6 +62,7 @@ export function ProfileView({
 	fullPortraitStatus,
 	onRetryPortrait,
 	onUnlockPortrait,
+	portraitUnlockTriggerRef,
 	selectedTrait,
 	messageCount,
 	detailZone,
@@ -123,7 +126,7 @@ export function ProfileView({
 							<h2 id="results-portrait-heading" className="sr-only">
 								{portraitSectionLabel}
 							</h2>
-							<PortraitUnlockCta onUnlock={onUnlockPortrait} />
+							<PortraitUnlockCta ref={portraitUnlockTriggerRef} onUnlock={onUnlockPortrait} />
 						</section>
 					) : null}
 

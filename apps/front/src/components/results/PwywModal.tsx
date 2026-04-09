@@ -8,12 +8,15 @@
 import { Button } from "@workspace/ui/components/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
 import { Loader2, Sparkles } from "lucide-react";
+import { type RefObject, useRef } from "react";
+import { MAIN_CONTENT_ID } from "@/components/PageMain";
 
 interface PwywModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onCheckout: () => void;
 	isCheckoutLoading?: boolean;
+	restoreFocusRef?: RefObject<HTMLElement | null>;
 }
 
 /** Short excerpt from Vincent's portrait, demonstrating depth and specificity */
@@ -26,13 +29,28 @@ export function PwywModal({
 	onOpenChange,
 	onCheckout,
 	isCheckoutLoading = false,
+	restoreFocusRef,
 }: PwywModalProps) {
+	const unlockButtonRef = useRef<HTMLButtonElement>(null);
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				data-testid="pwyw-modal"
 				className="max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl lg:p-10"
 				showCloseButton
+				aria-describedby={undefined}
+				onOpenAutoFocus={(event) => {
+					event.preventDefault();
+					unlockButtonRef.current?.focus();
+				}}
+				onCloseAutoFocus={(event) => {
+					event.preventDefault();
+					const restoreTarget = restoreFocusRef?.current ?? document.getElementById(MAIN_CONTENT_ID);
+					if (restoreTarget instanceof HTMLElement) {
+						restoreTarget.focus();
+					}
+				}}
 			>
 				<DialogHeader>
 					<DialogTitle className="text-xl font-display text-center">
@@ -90,6 +108,7 @@ export function PwywModal({
 				{/* Sticky footer — always visible below scroll area */}
 				<div className="space-y-3 pt-2">
 					<Button
+						ref={unlockButtonRef}
 						data-testid="pwyw-unlock-button"
 						size="lg"
 						className="w-full min-h-12 text-base font-medium"

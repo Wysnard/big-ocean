@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { SavedFacetEvidence } from "@workspace/contracts";
+import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { EvidencePanel } from "./EvidencePanel";
 
@@ -64,6 +65,50 @@ describe("EvidencePanel", () => {
 		const closeButton = screen.getByLabelText("Close evidence panel");
 		fireEvent.click(closeButton);
 		expect(onClose).toHaveBeenCalledOnce();
+	});
+
+	it("restores focus to the originating facet trigger when closed", async () => {
+		const triggerRef = createRef<HTMLButtonElement>();
+		const onClose = vi.fn(() => {
+			triggerRef.current?.focus();
+		});
+
+		render(
+			<div>
+				<button ref={triggerRef} type="button">
+					Facet trigger
+				</button>
+				<EvidencePanel
+					facetName="imagination"
+					evidence={mockEvidence}
+					onClose={onClose}
+					restoreFocusRef={triggerRef}
+				/>
+			</div>,
+		);
+
+		fireEvent.click(screen.getByLabelText("Close evidence panel"));
+
+		await waitFor(() => {
+			expect(screen.getByRole("button", { name: "Facet trigger" })).toHaveFocus();
+		});
+	});
+
+	it("keeps Tab navigation inside the panel", async () => {
+		render(<EvidencePanel facetName="imagination" evidence={mockEvidence} onClose={vi.fn()} />);
+
+		const panel = screen.getByRole("dialog");
+		const closeButton = screen.getByLabelText("Close evidence panel");
+
+		await waitFor(() => {
+			expect(panel).toHaveFocus();
+		});
+
+		fireEvent.keyDown(panel, { key: "Tab" });
+		expect(closeButton).toHaveFocus();
+
+		fireEvent.keyDown(closeButton, { key: "Tab" });
+		expect(closeButton).toHaveFocus();
 	});
 
 	it("renders empty state when no evidence", () => {

@@ -11,7 +11,7 @@ import type { SavedFacetEvidence } from "@workspace/contracts";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { TRAIT_TO_FACETS, toFacetDisplayName } from "@workspace/domain";
 import { X } from "lucide-react";
-import { useEffect, useId, useRef } from "react";
+import { type RefObject, useEffect, useId, useRef } from "react";
 import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
 
 export interface HighlightRange {
@@ -33,22 +33,67 @@ interface EvidencePanelProps {
 	facetName: FacetName;
 	evidence: readonly SavedFacetEvidence[];
 	onClose: () => void;
+	restoreFocusRef?: RefObject<HTMLElement | null>;
 }
 
-export function EvidencePanel({ facetName, evidence, onClose }: EvidencePanelProps) {
+export function EvidencePanel({
+	facetName,
+	evidence,
+	onClose,
+	restoreFocusRef,
+}: EvidencePanelProps) {
 	const parentTrait = getParentTrait(facetName);
 	const traitVar = parentTrait ? `var(--trait-${parentTrait})` : "var(--primary)";
 	const headingId = useId();
 	const panelRef = useRef<HTMLDivElement>(null);
+	const closeButtonRef = useRef<HTMLButtonElement>(null);
 
 	// Focus the panel on mount for keyboard accessibility
 	useEffect(() => {
 		panelRef.current?.focus();
 	}, []);
 
+	const handleClose = () => {
+		onClose();
+		requestAnimationFrame(() => {
+			restoreFocusRef?.current?.focus();
+		});
+	};
+
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Escape") {
-			onClose();
+			handleClose();
+			return;
+		}
+		if (e.key !== "Tab") {
+			return;
+		}
+
+		const focusables = [closeButtonRef.current].filter(
+			(element): element is HTMLButtonElement => element instanceof HTMLButtonElement,
+		);
+
+		if (focusables.length === 0) return;
+
+		const first = focusables[0];
+		const last = focusables[focusables.length - 1];
+		const activeElement = document.activeElement;
+
+		if (activeElement === panelRef.current) {
+			e.preventDefault();
+			first.focus();
+			return;
+		}
+
+		if (e.shiftKey && activeElement === first) {
+			e.preventDefault();
+			last.focus();
+			return;
+		}
+
+		if (!e.shiftKey && activeElement === last) {
+			e.preventDefault();
+			first.focus();
 		}
 	};
 
@@ -69,8 +114,9 @@ export function EvidencePanel({ facetName, evidence, onClose }: EvidencePanelPro
 					{toFacetDisplayName(facetName)} — Evidence
 				</h4>
 				<button
+					ref={closeButtonRef}
 					type="button"
-					onClick={onClose}
+					onClick={handleClose}
 					className="rounded-full p-1 hover:bg-muted motion-safe:transition-colors"
 					aria-label="Close evidence panel"
 				>
