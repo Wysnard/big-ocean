@@ -105,12 +105,14 @@ describe("TraitCard", () => {
 		renderTraitCard({ isSelected: false });
 		const button = screen.getByRole("button");
 		expect(button).toHaveAttribute("aria-expanded", "false");
+		expect(button).toHaveAttribute("aria-controls", "trait-detail-zone-openness");
 	});
 
 	it("has aria-expanded='true' when selected", () => {
 		renderTraitCard({ isSelected: true });
 		const button = screen.getByRole("button");
 		expect(button).toHaveAttribute("aria-expanded", "true");
+		expect(button).toHaveAttribute("aria-controls", "trait-detail-zone-openness");
 	});
 
 	it("toggles via Enter key", () => {

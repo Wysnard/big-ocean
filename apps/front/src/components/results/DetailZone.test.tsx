@@ -144,4 +144,40 @@ describe("DetailZone", () => {
 		);
 		expect(screen.getByText(/1 evidence items/)).toBeInTheDocument();
 	});
+
+	it("exposes the open panel as a labeled region for the selected trait", () => {
+		render(
+			<DetailZone
+				trait={mockTrait}
+				facetDetails={mockFacetDetails}
+				isOpen={true}
+				onClose={vi.fn()}
+				isLoading={false}
+			/>,
+		);
+
+		expect(screen.getByRole("region", { name: "Openness — Evidence" })).toHaveAttribute(
+			"id",
+			"trait-detail-zone-openness",
+		);
+	});
+
+	it("supports keyboard activation for facet evidence cards", () => {
+		const onFacetClick = vi.fn();
+
+		render(
+			<DetailZone
+				trait={mockTrait}
+				facetDetails={mockFacetDetails}
+				isOpen={true}
+				onClose={vi.fn()}
+				isLoading={false}
+				onFacetClick={onFacetClick}
+			/>,
+		);
+
+		const facetButton = screen.getByRole("button", { name: /open evidence for imagination/i });
+		fireEvent.keyDown(facetButton, { key: "Enter" });
+		expect(onFacetClick).toHaveBeenCalledWith("imagination");
+	});
 });

@@ -23,6 +23,7 @@ describe("PortraitReadingView", () => {
 		);
 
 		expect(container.querySelector("[data-slot='portrait-reading-view']")).toBeTruthy();
+		expect(screen.getByRole("article", { name: /your portrait/i })).toBeTruthy();
 	});
 
 	it("renders portrait sections as headings and body text", () => {
@@ -38,6 +39,14 @@ describe("PortraitReadingView", () => {
 
 		expect(screen.getByTestId("view-full-profile-btn")).toBeTruthy();
 		expect(screen.getByText("See your full personality profile")).toBeTruthy();
+	});
+
+	it("keeps the reading surface at prose width", () => {
+		render(<PortraitReadingView content={SAMPLE_PORTRAIT} onViewFullProfile={vi.fn()} />);
+
+		expect(screen.getByRole("article", { name: /your portrait/i }).className).toContain(
+			"max-w-[65ch]",
+		);
 	});
 
 	it("calls onViewFullProfile when link is clicked", () => {

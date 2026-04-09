@@ -59,6 +59,8 @@ export function ShareProfileSection({
 		<>
 			<div
 				data-slot="share-profile-section"
+				role="region"
+				aria-label="Share your profile"
 				className="col-span-full rounded-2xl border border-border p-6"
 				style={{
 					background:

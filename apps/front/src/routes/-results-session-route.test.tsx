@@ -81,7 +81,11 @@ vi.mock("@/components/results/ProfileView", () => ({
 }));
 
 vi.mock("@/components/results/ShareProfileSection", () => ({
-	ShareProfileSection: () => <div data-testid="share-section" />,
+	ShareProfileSection: () => (
+		<div data-testid="share-section" role="region" aria-label="Share your profile">
+			Share section
+		</div>
+	),
 }));
 
 vi.mock("@/components/results/DetailZone", () => ({
@@ -93,15 +97,25 @@ vi.mock("@/components/results/QuickActionsCard", () => ({
 }));
 
 vi.mock("@/components/results/RelationshipCreditsSection", () => ({
-	RelationshipCreditsSection: () => <div data-testid="relationship-credits-section" />,
+	RelationshipCreditsSection: () => (
+		<div data-testid="relationship-credits-section" role="region" aria-label="Relationship credits" />
+	),
 }));
 
 vi.mock("@/components/relationship/RelationshipCard", () => ({
-	RelationshipCard: () => null,
+	RelationshipCard: () => (
+		<div data-testid="relationship-card" role="region" aria-label="Relationship comparison">
+			Relationship card
+		</div>
+	),
 }));
 
 vi.mock("@/components/relationship/RelationshipAnalysesList", () => ({
-	RelationshipAnalysesList: () => null,
+	RelationshipAnalysesList: () => (
+		<div data-testid="relationship-analyses-list" role="region" aria-label="Relationship analyses">
+			Relationship analyses
+		</div>
+	),
 }));
 
 vi.mock("@workspace/ui/hooks/use-theme", () => ({
@@ -179,6 +193,44 @@ describe("results/$conversationSessionId route behavior", () => {
 		expect(screen.getByTestId("results-content")).toBeTruthy();
 		expect(mockUseGetResults).toHaveBeenCalledWith("session-123", true);
 		expect(screen.queryByTestId("results-continue-chat")).toBeNull();
+	});
+
+	it("adds labeled regions for the lower results-page sections", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockUseGetResults.mockReturnValue({
+			data: {
+				archetypeName: "Navigator",
+				oceanCode5: "OCEAV",
+				archetypeDescription: "Description",
+				overallConfidence: 0.78,
+				isCurated: true,
+				traits: [{ name: "openness", score: 60, level: "O", confidence: 0.8 }],
+				facets: [{ name: "intellect", traitName: "openness", score: 60, confidence: 0.8 }],
+				archetypeColor: "#000",
+				oceanCode4: "OCEA",
+				messageCount: 24,
+				publicProfileId: "public-123",
+				shareableUrl: "https://example.com/profile/public-123",
+				isPublic: true,
+			},
+			isLoading: false,
+			error: null,
+		});
+
+		render(<Component />);
+
+		expect(screen.getByRole("region", { name: "Share your profile" })).toContainElement(
+			screen.getByTestId("share-section"),
+		);
+		expect(screen.getByRole("region", { name: "Relationship comparison" })).toContainElement(
+			screen.getByTestId("relationship-card"),
+		);
+		expect(screen.getByRole("region", { name: "Relationship analyses" })).toContainElement(
+			screen.getByTestId("relationship-analyses-list"),
+		);
+		expect(screen.getByRole("region", { name: "Relationship credits" })).toContainElement(
+			screen.getByTestId("relationship-credits-section"),
+		);
 	});
 
 	it("does not render results content on 404 error", async () => {

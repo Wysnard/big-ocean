@@ -99,6 +99,14 @@ describe("PersonalPortrait", () => {
 		const { container } = render(<PersonalPortrait fullPortraitContent={markdownPortrait} />);
 		const card = container.querySelector('[data-slot="personal-portrait"]');
 		expect(card).toBeInTheDocument();
+		expect(screen.getByRole("article", { name: "Your Personality Portrait" })).toBeInTheDocument();
+	});
+
+	it("labels the article with displayName when provided", () => {
+		render(<PersonalPortrait fullPortraitContent={markdownPortrait} displayName="Alice" />);
+		expect(
+			screen.getByRole("article", { name: "Alice\u2019s Personality Portrait" }),
+		).toBeInTheDocument();
 	});
 
 	it("renders blockquotes as styled blockquote elements", () => {

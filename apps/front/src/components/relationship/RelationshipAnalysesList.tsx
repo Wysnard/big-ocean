@@ -21,7 +21,12 @@ export function RelationshipAnalysesList() {
 	if (!analyses || analyses.length === 0) return null;
 
 	return (
-		<div data-testid="relationship-analyses-list" className="space-y-3">
+		<div
+			data-testid="relationship-analyses-list"
+			role="region"
+			aria-label="Relationship analyses"
+			className="space-y-3"
+		>
 			<h3 className="text-sm font-medium text-foreground">Relationship Analyses</h3>
 			{analyses.map((analysis) => (
 				<div

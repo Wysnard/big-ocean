@@ -22,6 +22,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 	onViewFullProfile,
 }: PortraitReadingViewProps) {
 	const sections = useMemo(() => splitMarkdownSections(content), [content]);
+	const firstLevel1Index = sections.findIndex((s) => s.level === 1);
 
 	return (
 		<div
@@ -29,13 +30,19 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 			data-slot="portrait-reading-view"
 			className="min-h-[calc(100dvh-3.5rem)] bg-background"
 		>
-			<article className="mx-auto max-w-[720px] px-6 py-12 sm:py-16">
+			<article
+				aria-labelledby="portrait-reading-title"
+				className="mx-auto max-w-[65ch] px-6 py-12 sm:py-16"
+			>
 				{sections.length > 0 ? (
 					sections.map((section, i) => (
 						<div key={section.header} className={i > 0 ? "mt-8" : ""}>
 							{section.level === 1 ? (
 								<div className="mb-6">
-									<h1 className="text-2xl sm:text-3xl font-heading font-semibold text-foreground">
+									<h1
+										{...(i === firstLevel1Index ? { id: "portrait-reading-title" } : {})}
+										className="text-2xl sm:text-3xl font-heading font-semibold text-foreground"
+									>
 										{section.header}
 									</h1>
 									{section.inscription && (
@@ -58,7 +65,14 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 						</div>
 					))
 				) : (
-					<div className="text-base leading-[1.7] text-foreground/80 whitespace-pre-line">{content}</div>
+					<>
+						<h1 id="portrait-reading-title" className="sr-only">
+							Portrait reading view
+						</h1>
+						<div className="text-base leading-[1.7] text-foreground/80 whitespace-pre-line">
+							{content}
+						</div>
+					</>
 				)}
 
 				{/* Transition to full profile */}

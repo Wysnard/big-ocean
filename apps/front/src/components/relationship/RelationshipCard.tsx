@@ -10,13 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { RelationshipCardState } from "@workspace/contracts/http/groups/relationship";
 import { Button } from "@workspace/ui/components/button";
-import {
-	Heart,
-	Loader2,
-	QrCode,
-	Users,
-	XCircle,
-} from "lucide-react";
+import { Heart, Loader2, QrCode, Users, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
@@ -45,7 +39,12 @@ export function RelationshipCard() {
 	if (!isAuthenticated || isPending || isLoading || !state) return null;
 
 	return (
-		<div data-testid="relationship-card" data-testid-state={state._tag}>
+		<div
+			data-testid="relationship-card"
+			data-testid-state={state._tag}
+			role="region"
+			aria-label="Relationship comparison"
+		>
 			<CardContent state={state} />
 		</div>
 	);

@@ -70,6 +70,12 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 			}),
 		[traits],
 	);
+	const highestTrait = useMemo(() => {
+		return [...chartData].sort((a, b) => b.score - a.score)[0];
+	}, [chartData]);
+	const chartAriaLabel = highestTrait
+		? `Personality radar chart for this profile. Highest trait: ${highestTrait.label} (${Math.round(highestTrait.score)} of ${MAX_TRAIT_SCORE}).`
+		: "Personality radar chart showing Big Five trait scores.";
 
 	// Custom shape: single polygon with trait-color linear gradient fill + stroke
 	const renderGradientShape = useCallback(
@@ -235,7 +241,7 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 				<CardTitle className="text-lg font-display">Personality Shape</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<div role="img" aria-label="Personality radar chart showing Big Five trait scores">
+				<div role="img" aria-label={chartAriaLabel}>
 					{chart}
 				</div>
 			</CardContent>

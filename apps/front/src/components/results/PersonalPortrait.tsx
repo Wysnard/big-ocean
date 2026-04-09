@@ -89,35 +89,41 @@ export const PersonalPortrait = memo(function PersonalPortrait({
 				)}
 
 				{/* Portrait content */}
-				{!isGenerating &&
-					!isFailed &&
-					(sections.length > 0 ? (
-						sections.map((section, i) => (
-							<div key={section.header} className="space-y-2">
-								{section.level === 1 ? (
-									<div>
-										<h3 className="text-base font-semibold text-foreground">{section.header}</h3>
-										{section.inscription && (
-											<p className="text-sm italic text-foreground/60 mt-0.5">{section.inscription}</p>
-										)}
-									</div>
-								) : (
-									<h4 className="text-sm font-semibold text-foreground">{renderHeader(section.header)}</h4>
-								)}
-								{section.body && (
-									<div className="text-sm leading-relaxed text-foreground/80">
-										<Markdown components={markdownComponents}>{section.body}</Markdown>
-									</div>
-								)}
-								{i < sections.length - 1 && <div className="border-b border-border/30 pt-2" />}
+				{!isGenerating && !isFailed && (
+					<article
+						aria-label={
+							displayName ? `${displayName}\u2019s Personality Portrait` : "Your Personality Portrait"
+						}
+					>
+						{sections.length > 0 ? (
+							sections.map((section, i) => (
+								<div key={section.header} className="space-y-2">
+									{section.level === 1 ? (
+										<div>
+											<h3 className="text-base font-semibold text-foreground">{section.header}</h3>
+											{section.inscription && (
+												<p className="text-sm italic text-foreground/60 mt-0.5">{section.inscription}</p>
+											)}
+										</div>
+									) : (
+										<h4 className="text-sm font-semibold text-foreground">{renderHeader(section.header)}</h4>
+									)}
+									{section.body && (
+										<div className="text-sm leading-relaxed text-foreground/80">
+											<Markdown components={markdownComponents}>{section.body}</Markdown>
+										</div>
+									)}
+									{i < sections.length - 1 && <div className="border-b border-border/30 pt-2" />}
+								</div>
+							))
+						) : (
+							/* Fallback: render raw text if no # or ## sections found */
+							<div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">
+								{content}
 							</div>
-						))
-					) : (
-						/* Fallback: render raw text if no # or ## sections found */
-						<div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">
-							{content}
-						</div>
-					))}
+						)}
+					</article>
+				)}
 			</CardContent>
 		</AccentCard>
 	);

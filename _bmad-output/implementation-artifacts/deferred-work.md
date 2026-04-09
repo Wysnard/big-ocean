@@ -39,3 +39,8 @@
 - `getTurnState(messageCount, 0)` yields `isFinalTurn=true` always when `totalTurns=0`. No guard against zero or negative `totalTurns` in the helper. Currently mitigated by config defaults but no defensive check. Pre-existing.
 - `e2e/specs/dashboard-page.spec.ts` line 11 comment says `FREE_TIER_MESSAGE_THRESHOLD=2` but the e2e compose sets it to `1`. Pre-existing factual error in an untouched file.
 - `docker/init-db-test.sql` FK constraint still named `assessment_session_user_id_user_id_fkey` (pre-ADR-39 naming). FK constraint names were not in scope for Story 45-8 (only index names).
+
+## Deferred from: code review of 47-3-results-page-and-portrait-accessibility (2026-04-09)
+
+- Route test mock drift: mocks in `-results-session-route.test.tsx` hardcode `role`/`aria-label` values that must stay in sync with real component implementations manually. Pre-existing mock architecture pattern.
+- Brittle className assertion in `PortraitReadingView.test.tsx:47` — tests implementation detail (`max-w-[65ch]`) rather than observable behavior. No behavioral alternative available for asserting prose width.

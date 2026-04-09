@@ -88,6 +88,8 @@ export function RelationshipCreditsSection() {
 		return (
 			<div
 				data-testid="relationship-credits-section"
+				role="region"
+				aria-label="Relationship credits"
 				className="rounded-2xl border border-border bg-card p-5 shadow-sm"
 			>
 				<div className="flex items-center justify-center py-4">
@@ -106,6 +108,8 @@ export function RelationshipCreditsSection() {
 	return (
 		<div
 			data-testid="relationship-credits-section"
+			role="region"
+			aria-label="Relationship credits"
 			className="rounded-2xl border border-border bg-card p-5 shadow-sm"
 		>
 			<div className="flex items-center gap-2 mb-3">

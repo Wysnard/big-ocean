@@ -36,7 +36,9 @@ describe("PersonalityRadarChart", () => {
 
 	it("has role='img' and aria-label on the chart visual container", () => {
 		render(<PersonalityRadarChart traits={mockTraits} />);
-		const imgEl = screen.getByRole("img", { name: /personality radar chart/i });
+		const imgEl = screen.getByRole("img", {
+			name: /personality radar chart for this profile\. highest trait: openness \(90 of 120\)\./i,
+		});
 		expect(imgEl).toBeInTheDocument();
 	});
 

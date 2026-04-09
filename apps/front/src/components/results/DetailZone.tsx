@@ -8,7 +8,7 @@ import type { ChartConfig } from "@workspace/ui/components/chart";
 import { ChartContainer } from "@workspace/ui/components/chart";
 import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { X } from "lucide-react";
-import { useMemo } from "react";
+import { type KeyboardEvent, useMemo } from "react";
 import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
 
@@ -105,11 +105,23 @@ export function DetailZone({
 	const traitVar = `var(--trait-${trait.name})`;
 	const levelLetter = trait.score < 40 ? "Low" : trait.score < 80 ? "Mid" : "High";
 	const totalEvidence = facetDetails.reduce((sum, f) => sum + f.evidence.length, 0);
+	const regionTitleId = `trait-detail-zone-title-${trait.name}`;
+	const regionId = `trait-detail-zone-${trait.name}`;
+
+	const handleFacetKeyDown = (facetName: FacetName) => (event: KeyboardEvent<HTMLDivElement>) => {
+		if (!onFacetClick) return;
+		if (event.key !== "Enter" && event.key !== " ") return;
+		event.preventDefault();
+		onFacetClick(facetName);
+	};
 
 	return (
 		<div
+			id={regionId}
 			data-slot="detail-zone"
 			data-trait={trait.name}
+			role="region"
+			aria-labelledby={regionTitleId}
 			className="col-span-full overflow-hidden motion-safe:transition-all motion-safe:duration-400"
 			style={{
 				maxHeight: isOpen ? "2000px" : "0px",
@@ -125,7 +137,7 @@ export function DetailZone({
 							style={{ width: 24, height: 24 }}
 						/>
 						<div>
-							<h3 className="text-lg font-display font-semibold text-foreground">
+							<h3 id={regionTitleId} className="text-lg font-display font-semibold text-foreground">
 								{TRAIT_LABELS[trait.name]} — Evidence
 							</h3>
 							<p className="text-sm text-muted-foreground">
@@ -171,6 +183,12 @@ export function DetailZone({
 									data-facet={facet.name}
 									className={`flex-row${onFacetClick ? " cursor-pointer hover:ring-1 hover:ring-primary/30 motion-safe:transition-shadow" : ""}`}
 									onClick={onFacetClick ? () => onFacetClick(facet.name) : undefined}
+									role={onFacetClick ? "button" : undefined}
+									tabIndex={onFacetClick ? 0 : undefined}
+									aria-label={
+										onFacetClick ? `Open evidence for ${toFacetDisplayName(facet.name)}` : undefined
+									}
+									onKeyDown={onFacetClick ? handleFacetKeyDown(facet.name) : undefined}
 								>
 									<CardAccent position="left" style={{ backgroundColor: traitVar }} />
 									<CardContent className="flex-1 p-4">
