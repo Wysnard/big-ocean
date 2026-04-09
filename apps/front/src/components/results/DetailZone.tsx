@@ -116,11 +116,10 @@ export function DetailZone({
 	};
 
 	return (
-		<div
+		<section
 			id={regionId}
 			data-slot="detail-zone"
 			data-trait={trait.name}
-			role="region"
 			aria-labelledby={regionTitleId}
 			className="col-span-full overflow-hidden motion-safe:transition-all motion-safe:duration-400"
 			style={{
@@ -250,6 +249,6 @@ export function DetailZone({
 					</div>
 				)}
 			</div>
-		</div>
+		</section>
 	);
 }

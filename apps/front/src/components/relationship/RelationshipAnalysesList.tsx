@@ -21,9 +21,8 @@ export function RelationshipAnalysesList() {
 	if (!analyses || analyses.length === 0) return null;
 
 	return (
-		<div
+		<section
 			data-testid="relationship-analyses-list"
-			role="region"
 			aria-label="Relationship analyses"
 			className="space-y-3"
 		>
@@ -72,6 +71,6 @@ export function RelationshipAnalysesList() {
 					</div>
 				</div>
 			))}
-		</div>
+		</section>
 	);
 }

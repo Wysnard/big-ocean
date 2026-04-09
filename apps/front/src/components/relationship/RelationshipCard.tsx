@@ -39,14 +39,13 @@ export function RelationshipCard() {
 	if (!isAuthenticated || isPending || isLoading || !state) return null;
 
 	return (
-		<div
+		<section
 			data-testid="relationship-card"
 			data-testid-state={state._tag}
-			role="region"
 			aria-label="Relationship comparison"
 		>
 			<CardContent state={state} />
-		</div>
+		</section>
 	);
 }
 

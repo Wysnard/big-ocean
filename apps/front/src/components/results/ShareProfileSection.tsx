@@ -57,9 +57,8 @@ export function ShareProfileSection({
 
 	return (
 		<>
-			<div
+			<section
 				data-slot="share-profile-section"
-				role="region"
 				aria-label="Share your profile"
 				className="col-span-full rounded-2xl border border-border p-6"
 				style={{
@@ -110,7 +109,7 @@ export function ShareProfileSection({
 						</button>
 					</div>
 				</div>
-			</div>
+			</section>
 
 			<PublicVisibilityPrompt
 				open={promptNeeded}

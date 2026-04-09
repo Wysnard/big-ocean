@@ -86,16 +86,15 @@ export function RelationshipCreditsSection() {
 
 	if (isLoading) {
 		return (
-			<div
+			<section
 				data-testid="relationship-credits-section"
-				role="region"
 				aria-label="Relationship credits"
 				className="rounded-2xl border border-border bg-card p-5 shadow-sm"
 			>
 				<div className="flex items-center justify-center py-4">
 					<Loader2 className="h-5 w-5 motion-safe:animate-spin text-muted-foreground" />
 				</div>
-			</div>
+			</section>
 		);
 	}
 
@@ -106,9 +105,8 @@ export function RelationshipCreditsSection() {
 	const hasCredits = data.availableCredits > 0;
 
 	return (
-		<div
+		<section
 			data-testid="relationship-credits-section"
-			role="region"
 			aria-label="Relationship credits"
 			className="rounded-2xl border border-border bg-card p-5 shadow-sm"
 		>
@@ -162,6 +160,6 @@ export function RelationshipCreditsSection() {
 					</Button>
 				</div>
 			)}
-		</div>
+		</section>
 	);
 }

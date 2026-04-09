@@ -82,9 +82,9 @@ vi.mock("@/components/results/ProfileView", () => ({
 
 vi.mock("@/components/results/ShareProfileSection", () => ({
 	ShareProfileSection: () => (
-		<div data-testid="share-section" role="region" aria-label="Share your profile">
+		<section data-testid="share-section" aria-label="Share your profile">
 			Share section
-		</div>
+		</section>
 	),
 }));
 
@@ -98,23 +98,23 @@ vi.mock("@/components/results/QuickActionsCard", () => ({
 
 vi.mock("@/components/results/RelationshipCreditsSection", () => ({
 	RelationshipCreditsSection: () => (
-		<div data-testid="relationship-credits-section" role="region" aria-label="Relationship credits" />
+		<section data-testid="relationship-credits-section" aria-label="Relationship credits" />
 	),
 }));
 
 vi.mock("@/components/relationship/RelationshipCard", () => ({
 	RelationshipCard: () => (
-		<div data-testid="relationship-card" role="region" aria-label="Relationship comparison">
+		<section data-testid="relationship-card" aria-label="Relationship comparison">
 			Relationship card
-		</div>
+		</section>
 	),
 }));
 
 vi.mock("@/components/relationship/RelationshipAnalysesList", () => ({
 	RelationshipAnalysesList: () => (
-		<div data-testid="relationship-analyses-list" role="region" aria-label="Relationship analyses">
+		<section data-testid="relationship-analyses-list" aria-label="Relationship analyses">
 			Relationship analyses
-		</div>
+		</section>
 	),
 }));
 
