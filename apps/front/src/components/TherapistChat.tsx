@@ -281,6 +281,13 @@ export function TherapistChat({
 		previousAssistantMessageIdsRef.current = assistantMessageIds;
 
 		if (previousAssistantMessageIds === null) {
+			if (assistantMessageIds.length > 0) {
+				setAssistantAnnouncement(ASSISTANT_MESSAGE_ANNOUNCEMENT);
+				assistantAnnouncementTimerRef.current = setTimeout(() => {
+					setAssistantAnnouncement("");
+					assistantAnnouncementTimerRef.current = null;
+				}, 3000);
+			}
 			return;
 		}
 
@@ -677,6 +684,7 @@ function ChatContent({
 													<div
 														key={`milestone-${milestone.label}`}
 														data-slot="milestone-badge"
+														aria-hidden="true"
 														className="border-y border-border py-3 mt-2 text-center"
 													>
 														<p className="text-sm text-muted-foreground">{milestone.message}</p>
@@ -685,15 +693,14 @@ function ChatContent({
 											)}
 										</div>
 									))}
-
-								{/* Typing indicator while loading */}
-								{isLoading && <TypingIndicator />}
-
-								{/* Story 7.18: Auth gate for anonymous users after farewell */}
-								{isFarewellReceived && !isAuthenticated && <ChatAuthGate sessionId={sessionId} />}
-
 								<div ref={messagesEndRef} />
 							</div>
+
+							{/* Typing indicator while loading */}
+							{isLoading && <TypingIndicator />}
+
+							{/* Story 7.18: Auth gate for anonymous users after farewell */}
+							{isFarewellReceived && !isAuthenticated && <ChatAuthGate sessionId={sessionId} />}
 						</div>
 					)}
 

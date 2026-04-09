@@ -145,7 +145,20 @@ describe("TherapistChat", () => {
 
 		const announcer = screen.getByTestId("chat-announcer");
 		expect(announcer).toHaveAttribute("aria-live", "polite");
-		expect(announcer).toHaveTextContent("");
+		expect(announcer).toHaveTextContent("Nerin sent a message");
+	});
+
+	it("keeps typing and auth gate UI outside the transcript log", () => {
+		mockHookReturn.isLoading = true;
+		mockHookReturn.isFarewellReceived = true;
+
+		renderWithProviders(<TherapistChat sessionId="session-123" isAuthenticated={false} />);
+
+		const log = screen.getByRole("log", { name: "Conversation history" });
+		expect(log).not.toContainElement(screen.getByTestId("chat-auth-gate"));
+
+		const typingDot = document.querySelector("[class*='animate-bounce']");
+		expect(log.contains(typingDot)).toBe(false);
 	});
 
 	it("announces a short summary when a new assistant message arrives", async () => {

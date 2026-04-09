@@ -226,6 +226,141 @@ Big Ocean targets deep personalization across multiple relationships — a quadr
 - **Victor:** Longitudinal identity record is the most underrated moat. Make the journey visible — "you 6 months ago vs. now" sells the subscription for you.
 - **Dr. Quinn:** Meta-disruption is capacity. Every vector assumes more capacity than exists. Fastest path to more capacity (quit job at €5K/mo? co-founder? contractor at €3K/mo?) must be an explicit roadmap milestone.
 
+### Socratic Elicitation: Product Architecture Decisions
+
+**Three-layer product model confirmed:**
+
+1. **Discovery layer (free, built):** Assessment, portrait, archetype card, evidence grid, sharing. Acquisition engine.
+2. **Relationship layer (credits, partially built):** Shared portrait (1 credit, scanner pays) or personalized portrait (1 credit per person). Relationship coach agent uses only requesting user's data (no consent issue). Growth engine via invite loop.
+3. **Daily practice layer (subscription, not built):** Additional conversations for confidence growth, specialized agents, coaching, portrait regeneration, growth insights. Retention engine.
+
+**Diary/check-in design (needs refinement):**
+- BeReal-inspired: "How are you feeling?" + mood select + optional text input
+- Free users get personality-informed recognition ("Your high Conscientiousness means unfinished tasks eat at you — that's your wiring, not weakness")
+- Subscribers get recognition + actionable coaching + weekly/monthly focus statements
+- Mood calendar visualization (free) shows patterns over time
+- Retention risk: daily engagement is hardest to build. The AI response quality IS the hook.
+
+**Portrait evolution strategy:**
+- Portraits are not anchored to Big Five on purpose — goal is the "feel seen" moment
+- Each regeneration can completely rewrite the narrative (depth changes, not incremental updates)
+- Resolution: preserve old portraits as gallery/timeline. Each portrait is a snapshot at its confidence level. Progression visible through depth and accuracy, not narrative continuity.
+- Only subscribers can regenerate portraits with updated data
+- Annual "Big Ocean Wrapped" event: full portrait refresh celebrating the year
+
+**Confidence % as honest conversion mechanic:**
+- Scientifically real: ~50% after 15 free turns, ~25/30 facets touched
+- Full transparency: evidence audit, per-facet scores and confidence, trait aggregation
+- No artificial locking — portrait does its best at any confidence level
+- Subscription unlocks more conversations → more evidence → higher confidence → richer portrait
+- Intrinsic motivation, not paywall pressure
+
+**Credits + subscription coexistence:**
+- Credits = impulse/event-driven purchases (relationship portraits). Social, shareable, top of funnel.
+- Subscription = ongoing practice (conversations, coaching, agents, portrait refresh). Habit-driven, personal, bottom of funnel.
+- Complementary, not competing. Different purchase psychology, different use patterns.
+
+**Free tier boundary:**
+- One 15-turn assessment, portrait at ~50% confidence, archetype card, evidence grid, mood diary with recognition, mood calendar, 1 relationship analysis (shared)
+- Subscription: unlimited conversations, specialized agents, coaching, portrait regeneration, growth insights, weekly/monthly focus
+
 ---
+
+### Red Team Results: Decisions That Survived
+
+**Daily Practice Layer:**
+- MVP: mood selector (5 options) + optional text + AI personality-informed recognition (free) / + coaching suggestion (paid)
+- Weekly digest for subscribers: patterns + focus recommendation
+- Sequence: ship after relationship invite loop (month 2-3), coaching layer month 3-4
+- MVP subscription at launch = more conversations + relationship analysis included + basic mood check-in. Full coaching comes later.
+
+**Pricing (launch hypothesis — test and adjust at 60 days):**
+- Free: 1 assessment (15 turns), portrait, archetype card, evidence grid, mood check-in + calendar, 1 free shared relationship analysis
+- Subscription: launch at €9.99/mo (test, adjust up if conversion >5%). Annual plan deferred to month 4-6.
+- Credits: €4.99 for additional shared relationship portraits, €3.99 each for personalized. Subscribers get 2 included/month + discount on additional.
+- First relationship analysis free (acquisition tool — cost $0.40, value = new user worth €90+ LTV)
+
+**Acquisition (honest projections):**
+- Archetype card sharing: supplement, not engine. Viral coefficient ~0.01-0.02. Invest in design quality.
+- Relationship invite loop: primary organic channel. Compound growth. First analysis free removes friction.
+- SEO/content: 5-10 high-quality articles on high-intent topics. AI-assisted, human-edited. Scale later with real user data.
+- Paid ads: skip entirely until €5K/mo revenue.
+- Realistic month-12 projection: 50-200 subscribers, €500-3,000/mo. €200K year 1 requires viral breakout, B2B2C partnership, or revised timeline.
+
+**Relationship Analysis (revised model):**
+- Two-part design: (1) Relationship portrait — private, personalized letter through YOUR lens, purchased individually via credit. (2) Data grid comparison — shared, free, compares traits/facets. Data grid drives invite loop (free). Portrait drives monetization (credit per person).
+- NOT included in subscription — it's a celebration artifact, not daily-use.
+
+**Viral Mechanics Deep-Dive:**
+- Combined viral coefficient (archetype sharing + relationship invite loop): K ≈ 0.20-0.25. Every 4-5 acquired users bring 1 free user.
+- Highest-leverage improvement: progressive assessment for invited users (5-question preview → quick comparison → full assessment upsell). Could push K toward 0.4-0.5.
+- Archetype card shareability depends on archetype system richness — needs to feel like a cultural world (Hogwarts-level identity), not clinical labels.
+- Even at K = 0.5, organic B2C alone reaches ~€1,000-3,000/month by month 12. €200K year 1 requires step-function event (press, influencer, viral breakout) or B2B2C parallel channel.
+- Relationship credits as negative-CAC acquisition: users PAY you (€4.99) to invite new users. 2nd+ relationship analyses are simultaneously revenue AND acquisition. Self-funding growth engine.
+- Super connectors (3-5% of users) generate disproportionate value: 3-5 shares + 2-5 invites each.
+- €200K year 1 requires ~75,000 total free users, ~2,500+ subscription conversions. Probability: 10-15% pure organic, 25-30% with aggressive launch tactics + breakout event, 35-40% with B2B2C parallel. Strategy: maximize "at bats" (Product Hunt, HN, Reddit, creator outreach) while building best possible viral loops. Base case €15-50K year 1 must be survivable.
+
+**Portrait Gallery & Evolution:**
+- Portrait versioning: each generation stored as snapshot with confidence level. Gallery view.
+- Push notifications on confidence milestones: dynamic thresholds (5-8% in 50-70% range, 10-15% above 80%).
+- Delta insight hook: "The most surprising thing we learned since last time" — one sentence notification.
+- Annual Wrapped: defer to year 2. Build gallery first, validate engagement.
+
+### Pre-Mortem: Five Ways Big Ocean Dies
+
+**Death 1 — LLM costs eat revenue.** Free-tier AI responses cost more than the free users are worth. Fix: template-based responses for free users (zero LLM cost for daily check-in), live AI only for subscribers. Breakeven requires free-user ongoing cost ≈ $0/month, not $1.30/month.
+
+**Death 2 — Archetypes are forgettable.** Clinical descriptors don't trigger sharing. Need: short evocative names (1-2 words), distinct visual identity per archetype, cultural scaffolding (archetype-specific content, comparison language). Design investment here has 100x ROI on virality.
+
+**Death 3 — Invite assessment completion too low.** REVISED: Progressive assessment (shortened version) rejected — the 30-minute assessment IS the self-selection filter. Users who won't invest 30 minutes won't subscribe. Instead: show invited user a teaser derived from inviter's existing profile ("Based on User A's personality, we know they tend to...") to motivate the 30-minute investment. Estimated invite completion: 20-25% (lower volume but higher-intent completers, better subscription conversion). Friction is a feature, not a bug.
+
+**Death 4 — B2B2C starts too late.** B2B sales cycle is 6-12 months. If wanted by month 12, outreach must start month 1. Need: 5 named target companies, simplest integration proof-of-concept, warm introductions not cold email, free pilot by month 4-6.
+
+**Death 5 — Quit job too early.** Quit based on composite signal, not MRR alone. ALL five must be true: MRR ≥€5K, growth ≥15% MoM for 3+ months, churn ≤6%, ≥6 months savings runway, ≥2 working acquisition channels. Alternative: negotiate part-time at current job first.
+
+**Meta-lesson:** Every failure stems from optimism bias. Antidote: early measurement and hard decision gates at every stage.
+
+---
+
+## Innovation Opportunities
+
+### Innovation Initiatives (Priority-Ranked)
+
+**CRITICAL (ship first):**
+1. Archetype world-building — evocative names, distinct visuals, cultural scaffolding
+2. Relationship analysis v2 — free data grid + paid personalized portrait + invite teaser flow
+3. Subscription with ongoing conversations — confidence growth, specialized agents
+4. Free-tier cost ceiling — templated mood responses, per-user token budgets, circuit breaker
+
+**HIGH (ship next):**
+5. Mood diary + calendar — daily check-in, free templated recognition, paid AI coaching
+6. Launch blitz — Product Hunt, HN, Reddit, indie communities, 20+ creator outreach asks
+
+**MEDIUM (build when revenue allows):**
+7. Portrait gallery + confidence milestone notifications
+8. Relationship coach agent (user's data only)
+9. SEO content engine (5-10 high-intent articles)
+10. B2B2C integration proof-of-concept (start outreach month 1, build PoC month 2-3)
+
+**DEFERRED (year 2+):**
+11. Annual "Wrapped" portrait refresh
+12. Personality API / identity layer
+
+### Business Model Innovation
+
+Three-layer self-reinforcing flywheel:
+- Free (acquisition): assessment + portrait + archetype card + data grid + mood diary. ~$0.70 one-time, ~$0/mo ongoing.
+- Credits (growth): relationship portraits €3.99-4.99. First shared grid free (negative-CAC). Event-driven + viral.
+- Subscription (retention): €9.99/mo. Conversations, agents, coaching, portrait regeneration.
+
+Each layer feeds the next. Free → credit buyer → subscriber → content creator → acquires more free users.
+
+### Value Chain Opportunities
+
+Assessment and portrait generation are built and strong. Highest-priority gaps: relationship analysis completion, one specialized agent (relationship coach), daily engagement layer, and distribution (archetype sharing + invites + launch blitz).
+
+### Partnership Opportunities
+
+Start creator/influencer outreach month 3-6 (20 asks for 2-3 yeses). B2B2C (dating apps, coaching platforms) start outreach month 1, expect 6-12 month sales cycle. Podcast/newsletter partnerships month 3-6.
 
 _Generated using BMAD Creative Intelligence Suite - Innovation Strategy Workflow_

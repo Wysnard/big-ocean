@@ -182,6 +182,9 @@ GPT-5 Codex
 - 2026-04-08T23:31+0200 - Implemented chat transcript log semantics, assistant summary announcements, explicit composer accessibility labels/instructions, and depth-meter `aria-valuetext` updates in `TherapistChat.tsx` and `DepthMeter.tsx`.
 - 2026-04-08T23:33+0200 - Added targeted regression coverage in `TherapistChat-core.test.tsx` and `DepthMeter.test.tsx`; verified `TherapistChat-core`, `TherapistChat-farewell-auth-focus`, and `DepthMeter` Vitest suites all pass.
 - 2026-04-08T23:33+0200 - Ran `pnpm --filter=front typecheck` successfully. Manual keyboard walkthrough and a real screen-reader spot check remain pending outside this terminal session.
+- 2026-04-09T00:08+0200 - Addressed code-review findings by announcing the opening assistant message on fresh chat loads, moving typing/auth UI outside the transcript log, and hiding milestone badge text from assistive-tech log navigation.
+- 2026-04-09T00:08+0200 - Re-ran focused validation: `TherapistChat-core`, `TherapistChat-farewell-auth-focus`, `DepthMeter` Vitest suites all pass and `pnpm --filter=front typecheck` remains green after the review fixes.
+- 2026-04-09T12:01+0200 - Resumed Story 47.2 to evaluate the remaining open verification tasks. Confirmed the only unchecked items are manual keyboard walkthrough and a real screen-reader spot check, which cannot be completed from this terminal-only environment.
 
 ### Completion Notes List
 
@@ -193,6 +196,8 @@ GPT-5 Codex
   - `pnpm --filter=front exec vitest run src/components/TherapistChat-core.test.tsx src/components/chat/__tests__/DepthMeter.test.tsx`
   - `pnpm --filter=front exec vitest run src/components/TherapistChat-farewell-auth-focus.test.tsx`
   - `pnpm --filter=front typecheck`
+- Fixed the review follow-ups by announcing Nerin's opening prompt on first-load fresh sessions and by limiting `role="log"` exposure to transcript entries rather than typing/auth helper UI.
+- No additional code changes were required on this pass; the remaining work is human-run verification on a live `/chat` session with keyboard navigation and an actual screen reader.
 - Story remains `in-progress` because manual keyboard verification and a real screen-reader spot check were not executed in this terminal session.
 
 ### File List
@@ -207,3 +212,5 @@ GPT-5 Codex
 ### Change Log
 
 - 2026-04-08: Implemented Story 47.2 chat accessibility changes and added focused automated coverage; manual verification remains pending.
+- 2026-04-09: Fixed code-review findings around first-load assistant announcements and transcript log scoping.
+- 2026-04-09: Reconfirmed the story is blocked only on manual accessibility verification outside this environment.
