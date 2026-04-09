@@ -173,7 +173,6 @@ export function ResultsSignUpForm({
 									className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 									placeholder="At least 12 characters"
 									aria-invalid={fieldErrors.length > 0 || !!error}
-									aria-required="true"
 									aria-describedby={
 										[
 											fieldErrors.length > 0 ? fieldErrorId : null,
