@@ -68,7 +68,7 @@ function SessionContextDropdown({ className }: { className?: string }) {
 				<DropdownMenuTrigger asChild>
 					<button
 						type="button"
-						className="flex items-center justify-center size-8 rounded-full border border-border text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
+						className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-border text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
 						aria-label="Session info"
 					>
 						<Info className="size-[18px]" />
@@ -464,7 +464,11 @@ function ChatInputBar({
 					size="sm"
 					className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
 				>
-					{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+					{isLoading ? (
+						<Loader2 className="h-4 w-4 motion-safe:animate-spin" />
+					) : (
+						<Send className="h-4 w-4" />
+					)}
 				</Button>
 			</div>
 			<span id={CHAT_INPUT_SHORTCUTS_ID} className="sr-only">

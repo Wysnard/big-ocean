@@ -227,11 +227,45 @@ describe("SignupForm", () => {
 	it("has accessible labels and aria attributes", () => {
 		renderSignupForm();
 
+		expect(screen.getByLabelText("Name")).toHaveAttribute("required");
+		expect(screen.getByLabelText("Name")).toHaveAttribute("aria-required", "true");
 		expect(screen.getByLabelText("Name").getAttribute("autocomplete")).toBe("name");
+		expect(screen.getByLabelText("Email")).toHaveAttribute("required");
+		expect(screen.getByLabelText("Email")).toHaveAttribute("aria-required", "true");
 		expect(screen.getByLabelText("Email").getAttribute("autocomplete")).toBe("email");
+		expect(screen.getByLabelText("Password")).toHaveAttribute("required");
+		expect(screen.getByLabelText("Password")).toHaveAttribute("aria-required", "true");
 		expect(screen.getByLabelText("Password").getAttribute("autocomplete")).toBe("new-password");
+		expect(screen.getByLabelText("Confirm Password")).toHaveAttribute("required");
+		expect(screen.getByLabelText("Confirm Password")).toHaveAttribute("aria-required", "true");
 		expect(screen.getByLabelText("Confirm Password").getAttribute("autocomplete")).toBe(
 			"new-password",
+		);
+	});
+
+	it("links inline validation errors to the relevant fields", async () => {
+		renderSignupForm();
+
+		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "" } });
+		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "" } });
+		fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
+		fireEvent.change(screen.getByLabelText("Confirm Password"), {
+			target: { value: "different" },
+		});
+		fireEvent.submit(screen.getByRole("button", { name: "Create Account" }));
+
+		await waitFor(() => {
+			expect(screen.getByText("Name is required")).toBeInTheDocument();
+		});
+
+		expect(screen.getByLabelText("Name")).toHaveAttribute("aria-describedby", "signup-name-error");
+		expect(screen.getByLabelText("Email")).toHaveAttribute("aria-describedby", "signup-email-error");
+		expect(screen.getByLabelText("Password").getAttribute("aria-describedby")).toContain(
+			"signup-password-error",
+		);
+		expect(screen.getByLabelText("Confirm Password")).toHaveAttribute(
+			"aria-describedby",
+			"signup-confirm-password-error",
 		);
 	});
 

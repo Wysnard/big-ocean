@@ -89,11 +89,18 @@ export function AccountDeletionSection({ onDelete, isDeleting }: AccountDeletion
 								autoComplete="off"
 								autoCapitalize="none"
 								spellCheck={false}
-								className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								required
+								aria-required="true"
+								aria-describedby={error ? "delete-confirm-error" : undefined}
+								className="flex min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								disabled={isDeleting}
 							/>
 							{error && (
-								<p data-testid="delete-error-message" className="text-sm text-destructive">
+								<p
+									id="delete-confirm-error"
+									data-testid="delete-error-message"
+									className="text-sm text-destructive"
+								>
 									{error}
 								</p>
 							)}

@@ -157,7 +157,29 @@ describe("LoginForm", () => {
 		renderLoginForm();
 
 		expect(screen.getByLabelText("Email").getAttribute("autocomplete")).toBe("email");
+		expect(screen.getByLabelText("Email")).toHaveAttribute("required");
+		expect(screen.getByLabelText("Email")).toHaveAttribute("aria-required", "true");
 		expect(screen.getByLabelText("Password").getAttribute("autocomplete")).toBe("current-password");
+		expect(screen.getByLabelText("Password")).toHaveAttribute("required");
+		expect(screen.getByLabelText("Password")).toHaveAttribute("aria-required", "true");
+	});
+
+	it("links inline validation errors to the relevant field", async () => {
+		renderLoginForm();
+
+		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "" } });
+		fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
+		fireEvent.submit(screen.getByRole("button", { name: "Sign In" }));
+
+		await waitFor(() => {
+			expect(screen.getByText("Email is required")).toBeInTheDocument();
+		});
+
+		expect(screen.getByLabelText("Email")).toHaveAttribute("aria-describedby", "login-email-error");
+		expect(screen.getByLabelText("Password")).toHaveAttribute(
+			"aria-describedby",
+			"login-password-error",
+		);
 	});
 
 	it("renders link to signup page", () => {

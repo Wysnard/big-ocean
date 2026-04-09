@@ -102,7 +102,7 @@ export function ShareProfileSection({
 							type="button"
 							onClick={handleActionClick}
 							aria-label={copied ? "Link copied" : hasWebShare ? "Share link" : "Copy link"}
-							className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[oklch(0.67_0.13_181)] px-3.5 py-1.5 text-sm font-medium text-white hover:bg-[oklch(0.60_0.13_181)] transition-colors"
+							className="shrink-0 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
 						>
 							{getButtonIcon()}
 							<span>{getButtonLabel()}</span>

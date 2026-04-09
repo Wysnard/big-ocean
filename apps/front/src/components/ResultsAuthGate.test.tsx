@@ -77,6 +77,36 @@ describe("ResultsAuthGate", () => {
 		expect(mockSignUpEmail).not.toHaveBeenCalled();
 	});
 
+	it("marks results auth fields as required and links inline errors", async () => {
+		render(
+			<ResultsAuthGate sessionId="session-123" onAuthSuccess={() => {}} onStartFresh={() => {}} />,
+		);
+
+		fireEvent.click(screen.getByText("Sign Up to See Your Results"));
+		const email = screen.getByLabelText("Email");
+		const password = screen.getByLabelText("Password");
+
+		expect(email).toHaveAttribute("required");
+		expect(email).toHaveAttribute("aria-required", "true");
+		expect(password).toHaveAttribute("required");
+		expect(password).toHaveAttribute("aria-required", "true");
+
+		fireEvent.change(email, { target: { value: "invalid-email" } });
+		const form = screen
+			.getByRole("button", { name: "Create Account and Reveal Results" })
+			.closest("form");
+		if (!form) {
+			throw new Error("Expected sign-up form");
+		}
+		fireEvent.submit(form);
+
+		await waitFor(() => {
+			expect(screen.getByText("Please enter a valid email address.")).toBeInTheDocument();
+		});
+
+		expect(email.getAttribute("aria-describedby")).toContain("results-signup-email-error");
+	});
+
 	it("submits sign-up with anonymous session linking", async () => {
 		const onAuthSuccess = vi.fn();
 

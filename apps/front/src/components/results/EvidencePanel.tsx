@@ -117,7 +117,7 @@ export function EvidencePanel({
 					ref={closeButtonRef}
 					type="button"
 					onClick={handleClose}
-					className="rounded-full p-1 hover:bg-muted motion-safe:transition-colors"
+					className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-1 hover:bg-muted motion-safe:transition-colors"
 					aria-label="Close evidence panel"
 				>
 					<X className="w-3.5 h-3.5 text-muted-foreground" />

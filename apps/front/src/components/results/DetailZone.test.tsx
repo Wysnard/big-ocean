@@ -118,6 +118,21 @@ describe("DetailZone", () => {
 		expect(onClose).toHaveBeenCalledOnce();
 	});
 
+	it("uses a 44px minimum touch target for the close button", () => {
+		render(
+			<DetailZone
+				trait={mockTrait}
+				facetDetails={mockFacetDetails}
+				isOpen={true}
+				onClose={vi.fn()}
+				isLoading={false}
+			/>,
+		);
+		const closeButton = screen.getByLabelText("Close detail zone");
+		expect(closeButton.className).toMatch(/min-h-11/);
+		expect(closeButton.className).toMatch(/min-w-11/);
+	});
+
 	it("shows loading skeletons when loading", () => {
 		const { container } = render(
 			<DetailZone

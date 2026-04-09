@@ -106,6 +106,7 @@ export function ResultsSignInForm({
 					// biome-ignore lint/correctness/noChildrenProp: TanStack Form uses render props pattern
 					children={(field) => {
 						const fieldErrors = formatValidationErrors(field.state.meta.errors);
+						const fieldErrorId = "results-signin-email-error";
 						return (
 							<div>
 								<label
@@ -124,11 +125,16 @@ export function ResultsSignInForm({
 									className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 									placeholder="you@example.com"
 									aria-invalid={fieldErrors.length > 0 || !!error}
-									aria-describedby={fieldErrors.length > 0 || error ? errorId : undefined}
+									aria-required="true"
+									aria-describedby={
+										[fieldErrors.length > 0 ? fieldErrorId : null, error ? errorId : null]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									required
 								/>
 								{fieldErrors.length > 0 && (
-									<p role="alert" className="mt-1 text-xs text-destructive">
+									<p id={fieldErrorId} role="alert" className="mt-1 text-xs text-destructive">
 										{fieldErrors.join(", ")}
 									</p>
 								)}
@@ -142,6 +148,7 @@ export function ResultsSignInForm({
 					// biome-ignore lint/correctness/noChildrenProp: TanStack Form uses render props pattern
 					children={(field) => {
 						const fieldErrors = formatValidationErrors(field.state.meta.errors);
+						const fieldErrorId = "results-signin-password-error";
 						return (
 							<div>
 								<label
@@ -160,11 +167,16 @@ export function ResultsSignInForm({
 									className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 									placeholder="Your password"
 									aria-invalid={fieldErrors.length > 0 || !!error}
-									aria-describedby={fieldErrors.length > 0 || error ? errorId : undefined}
+									aria-required="true"
+									aria-describedby={
+										[fieldErrors.length > 0 ? fieldErrorId : null, error ? errorId : null]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									required
 								/>
 								{fieldErrors.length > 0 && (
-									<p role="alert" className="mt-1 text-xs text-destructive">
+									<p id={fieldErrorId} role="alert" className="mt-1 text-xs text-destructive">
 										{fieldErrors.join(", ")}
 									</p>
 								)}

@@ -44,3 +44,11 @@
 
 - Route test mock drift: mocks in `-results-session-route.test.tsx` hardcode `role`/`aria-label` values that must stay in sync with real component implementations manually. Pre-existing mock architecture pattern.
 - Brittle className assertion in `PortraitReadingView.test.tsx:47` — tests implementation detail (`max-w-[65ch]`) rather than observable behavior. No behavioral alternative available for asserting prose width.
+
+## Deferred from: code review of 47-5-touch-targets-and-contrast-audit (2026-04-09)
+
+- W1: Hardcoded error IDs (e.g., `login-email-error`, `signup-name-error`) risk DOM ID collision if multiple form instances render simultaneously. Pattern works today but `useId()` would be more robust.
+- W2: Task 3 contrast audit (AC2) is incomplete — no color token or contrast-related changes in the diff. Explicitly marked incomplete in story spec.
+- W3: Task 7.3/7.4 manual mobile-sized walkthrough and light/dark contrast verification not completed. Acknowledged in story completion notes.
+- W4: No regression tests for shared `Input` min-height change (`h-9` → `min-h-11`) or `Button` size contract changes. Task 6.1 says to add tests if changes are material.
+- W5: No reduced-motion regression tests for `motion-reduce:animate-none` additions to dialog, sheet, and tooltip. Motion behavior is hard to test in JSDOM; manual verification is more appropriate.

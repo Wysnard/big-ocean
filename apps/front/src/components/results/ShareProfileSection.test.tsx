@@ -68,6 +68,16 @@ describe("ShareProfileSection", () => {
 		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Copy");
 	});
 
+	it("uses a 44px minimum touch target for the share action", () => {
+		render(<ShareProfileSection {...defaultProps} />);
+		expect(screen.getByTestId("share-copy-btn").className).toMatch(/min-h-11/);
+	});
+
+	it("shows explicit public/private text instead of color-only state", () => {
+		render(<ShareProfileSection {...defaultProps} />);
+		expect(screen.getByTestId("share-visibility-status")).toHaveTextContent("Public");
+	});
+
 	it("calls onShareAction when share button is clicked", () => {
 		const onShareAction = vi.fn();
 		render(<ShareProfileSection {...defaultProps} onShareAction={onShareAction} />);

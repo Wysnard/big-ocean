@@ -147,7 +147,7 @@ export function DetailZone({
 					<button
 						type="button"
 						onClick={onClose}
-						className="rounded-full p-1.5 hover:bg-muted motion-safe:transition-colors"
+						className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-1.5 hover:bg-muted motion-safe:transition-colors"
 						aria-label="Close detail zone"
 					>
 						<X className="w-4 h-4 text-muted-foreground" />

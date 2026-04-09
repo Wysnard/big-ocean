@@ -71,13 +71,19 @@ export function WaitlistForm() {
 				</p>
 
 				<form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
+					<label htmlFor="waitlist-email" className="sr-only">
+						Email
+					</label>
 					<input
+						id="waitlist-email"
 						type="email"
 						value={email}
 						onChange={(e) => setEmail(e.target.value)}
 						placeholder="your@email.com"
 						required
-						className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+						aria-required="true"
+						aria-describedby={status === "error" ? "waitlist-error-msg" : undefined}
+						className="min-h-11 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
 						data-testid="waitlist-email-input"
 					/>
 					<button
@@ -91,7 +97,11 @@ export function WaitlistForm() {
 				</form>
 
 				{status === "error" && (
-					<p className="mt-3 text-sm text-destructive" data-testid="waitlist-error">
+					<p
+						id="waitlist-error-msg"
+						className="mt-3 text-sm text-destructive"
+						data-testid="waitlist-error"
+					>
 						{errorMessage}
 					</p>
 				)}

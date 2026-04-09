@@ -137,6 +137,7 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 				<form.Field name="email">
 					{(field) => {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						const fieldErrorId = "login-email-error";
 						return (
 							<Field data-invalid={isInvalid}>
 								<FieldLabel htmlFor="login-email">Email</FieldLabel>
@@ -148,12 +149,20 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 									onChange={(e) => field.handleChange(e.target.value)}
 									autoComplete="email"
 									placeholder="you@example.com"
+									required
 									aria-invalid={isInvalid}
-									aria-describedby={serverError ? errorId : undefined}
+									aria-describedby={
+										[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 								/>
 								{isInvalid && (
-									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+									<FieldError
+										id={fieldErrorId}
+										errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
+									/>
 								)}
 							</Field>
 						);
@@ -163,6 +172,7 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 				<form.Field name="password">
 					{(field) => {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						const fieldErrorId = "login-password-error";
 						return (
 							<Field data-invalid={isInvalid}>
 								<FieldLabel htmlFor="login-password">Password</FieldLabel>
@@ -174,12 +184,20 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 									onChange={(e) => field.handleChange(e.target.value)}
 									autoComplete="current-password"
 									placeholder="Your password"
+									required
 									aria-invalid={isInvalid}
-									aria-describedby={serverError ? errorId : undefined}
+									aria-describedby={
+										[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 								/>
 								{isInvalid && (
-									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+									<FieldError
+										id={fieldErrorId}
+										errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
+									/>
 								)}
 							</Field>
 						);

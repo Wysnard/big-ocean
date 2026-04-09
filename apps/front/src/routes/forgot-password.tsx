@@ -110,6 +110,7 @@ function ForgotPasswordPage() {
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
 									required
+									aria-required="true"
 									autoComplete="email"
 									className="min-h-11 w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 									placeholder="you@example.com"

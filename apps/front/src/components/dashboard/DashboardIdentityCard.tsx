@@ -80,7 +80,7 @@ export function DashboardIdentityCard({
 								<Link
 									to="/public-profile/$publicProfileId"
 									params={{ publicProfileId }}
-									className="text-muted-foreground hover:text-foreground transition-colors"
+									className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 									aria-label="View public profile"
 								>
 									<ExternalLink className="w-4 h-4" />
@@ -101,13 +101,14 @@ export function DashboardIdentityCard({
 						return (
 							<Tooltip key={traitName}>
 								<TooltipTrigger asChild>
-									<span
+									<button
+										type="button"
 										aria-describedby={tooltipId}
-										className="inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-bold cursor-default"
+										className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 										data-trait={traitName}
 									>
 										{letter}
-									</span>
+									</button>
 								</TooltipTrigger>
 								<TooltipContent id={tooltipId} side="bottom">
 									{TRAIT_DISPLAY_NAMES[traitName]}: {levelLabel}

@@ -67,6 +67,13 @@ describe("EvidencePanel", () => {
 		expect(onClose).toHaveBeenCalledOnce();
 	});
 
+	it("uses a 44px minimum touch target for the close button", () => {
+		render(<EvidencePanel facetName="imagination" evidence={mockEvidence} onClose={vi.fn()} />);
+		const closeButton = screen.getByLabelText("Close evidence panel");
+		expect(closeButton.className).toMatch(/min-h-11/);
+		expect(closeButton.className).toMatch(/min-w-11/);
+	});
+
 	it("restores focus to the originating facet trigger when closed", async () => {
 		const triggerRef = createRef<HTMLButtonElement>();
 		const onClose = vi.fn(() => {

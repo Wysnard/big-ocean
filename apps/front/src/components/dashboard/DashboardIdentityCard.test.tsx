@@ -7,8 +7,13 @@ import { describe, expect, it, vi } from "vitest";
 
 // Mock TanStack Router Link to avoid router context requirement
 vi.mock("@tanstack/react-router", () => ({
-	Link: ({ children, ...props }: { children: React.ReactNode; to: string }) => (
-		<a href={props.to}>{children}</a>
+	Link: ({
+		children,
+		...props
+	}: { children: React.ReactNode; to: string } & Record<string, unknown>) => (
+		<a {...props} href={props.to as string}>
+			{children}
+		</a>
 	),
 }));
 
@@ -39,9 +44,33 @@ describe("DashboardIdentityCard", () => {
 		}
 	});
 
+	it("renders OCEAN code letters as 44px buttons", () => {
+		renderWithProviders(<DashboardIdentityCard {...defaultProps} />);
+		const buttons = screen.getAllByRole("button");
+		const oceanButtons = buttons.filter((button) => {
+			const text = button.textContent?.trim() ?? "";
+			return text.length === 1 && defaultProps.oceanCode5.includes(text);
+		});
+		expect(oceanButtons).toHaveLength(5);
+		for (const button of oceanButtons) {
+			expect(button.className).toMatch(/min-h-11/);
+			expect(button.className).toMatch(/min-w-11/);
+		}
+	});
+
 	it("renders View Full Results link", () => {
 		renderWithProviders(<DashboardIdentityCard {...defaultProps} />);
 		expect(screen.getByText("View Full Results")).toBeInTheDocument();
+	});
+
+	it("gives the public profile link a compliant tap target", () => {
+		renderWithProviders(<DashboardIdentityCard {...defaultProps} publicProfileId="public-123" />);
+		const link = screen
+			.getAllByRole("link")
+			.find((candidate) => candidate.getAttribute("href")?.includes("/public-profile/"));
+		if (!link) throw new Error("Expected public profile link");
+		expect(link.className).toMatch(/min-h-11/);
+		expect(link.className).toMatch(/min-w-11/);
 	});
 
 	it("has data-testid attribute", () => {

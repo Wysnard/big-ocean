@@ -173,6 +173,7 @@ function ResetPasswordPage() {
 							<form.Field name="newPassword">
 								{(field) => {
 									const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+									const fieldErrorId = "reset-new-password-error";
 									return (
 										<Field data-invalid={isInvalid}>
 											<FieldLabel htmlFor={field.name}>New Password</FieldLabel>
@@ -184,8 +185,13 @@ function ResetPasswordPage() {
 												onChange={(e) => field.handleChange(e.target.value)}
 												autoComplete="new-password"
 												placeholder="At least 12 characters"
+												required
 												aria-invalid={isInvalid}
-												aria-describedby={serverError ? errorId : `${field.name}-help`}
+												aria-describedby={
+													[isInvalid ? fieldErrorId : null, serverError ? errorId : null, `${field.name}-help`]
+														.filter(Boolean)
+														.join(" ") || undefined
+												}
 												className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 											/>
 											<p id={`${field.name}-help`} className="text-xs text-muted-foreground">
@@ -193,6 +199,7 @@ function ResetPasswordPage() {
 											</p>
 											{isInvalid && (
 												<FieldError
+													id={fieldErrorId}
 													errors={field.state.meta.errors.map((e) => ({
 														message: String(e),
 													}))}
@@ -206,6 +213,7 @@ function ResetPasswordPage() {
 							<form.Field name="confirmPassword">
 								{(field) => {
 									const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+									const fieldErrorId = "reset-confirm-password-error";
 									return (
 										<Field data-invalid={isInvalid}>
 											<FieldLabel htmlFor={field.name}>Confirm Password</FieldLabel>
@@ -217,12 +225,18 @@ function ResetPasswordPage() {
 												onChange={(e) => field.handleChange(e.target.value)}
 												autoComplete="new-password"
 												placeholder="Confirm password"
+												required
 												aria-invalid={isInvalid}
-												aria-describedby={serverError ? errorId : undefined}
+												aria-describedby={
+													[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
+														.filter(Boolean)
+														.join(" ") || undefined
+												}
 												className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 											/>
 											{isInvalid && (
 												<FieldError
+													id={fieldErrorId}
 													errors={field.state.meta.errors.map((e) => ({
 														message: String(e),
 													}))}

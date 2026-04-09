@@ -142,6 +142,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 				<form.Field name="name">
 					{(field) => {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						const fieldErrorId = "signup-name-error";
 						return (
 							<Field data-invalid={isInvalid}>
 								<FieldLabel htmlFor="signup-name">Name</FieldLabel>
@@ -153,12 +154,20 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 									onChange={(e) => field.handleChange(e.target.value)}
 									autoComplete="name"
 									placeholder="Your name"
+									required
 									aria-invalid={isInvalid}
-									aria-describedby={serverError ? errorId : undefined}
+									aria-describedby={
+										[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 								/>
 								{isInvalid && (
-									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+									<FieldError
+										id={fieldErrorId}
+										errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
+									/>
 								)}
 							</Field>
 						);
@@ -168,6 +177,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 				<form.Field name="email">
 					{(field) => {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						const fieldErrorId = "signup-email-error";
 						return (
 							<Field data-invalid={isInvalid}>
 								<FieldLabel htmlFor="signup-email">Email</FieldLabel>
@@ -179,12 +189,20 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 									onChange={(e) => field.handleChange(e.target.value)}
 									autoComplete="email"
 									placeholder="you@example.com"
+									required
 									aria-invalid={isInvalid}
-									aria-describedby={serverError ? errorId : undefined}
+									aria-describedby={
+										[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 								/>
 								{isInvalid && (
-									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+									<FieldError
+										id={fieldErrorId}
+										errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
+									/>
 								)}
 							</Field>
 						);
@@ -194,6 +212,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 				<form.Field name="password">
 					{(field) => {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						const fieldErrorId = "signup-password-error";
 						return (
 							<Field data-invalid={isInvalid}>
 								<FieldLabel htmlFor="signup-password">Password</FieldLabel>
@@ -205,15 +224,23 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 									onChange={(e) => field.handleChange(e.target.value)}
 									autoComplete="new-password"
 									placeholder="At least 12 characters"
+									required
 									aria-invalid={isInvalid}
-									aria-describedby={serverError ? errorId : "signup-password-help"}
+									aria-describedby={
+										[isInvalid ? fieldErrorId : null, serverError ? errorId : null, "signup-password-help"]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 								/>
 								<p id="signup-password-help" className="text-xs text-muted-foreground">
 									Minimum 12 characters
 								</p>
 								{isInvalid && (
-									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+									<FieldError
+										id={fieldErrorId}
+										errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
+									/>
 								)}
 							</Field>
 						);
@@ -223,6 +250,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 				<form.Field name="confirmPassword">
 					{(field) => {
 						const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+						const fieldErrorId = "signup-confirm-password-error";
 						return (
 							<Field data-invalid={isInvalid}>
 								<FieldLabel htmlFor="signup-confirm-password">Confirm Password</FieldLabel>
@@ -234,12 +262,20 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 									onChange={(e) => field.handleChange(e.target.value)}
 									autoComplete="new-password"
 									placeholder="Confirm password"
+									required
 									aria-invalid={isInvalid}
-									aria-describedby={serverError ? errorId : undefined}
+									aria-describedby={
+										[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
+											.filter(Boolean)
+											.join(" ") || undefined
+									}
 									className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
 								/>
 								{isInvalid && (
-									<FieldError errors={field.state.meta.errors.map((e) => ({ message: String(e) }))} />
+									<FieldError
+										id={fieldErrorId}
+										errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
+									/>
 								)}
 							</Field>
 						);
