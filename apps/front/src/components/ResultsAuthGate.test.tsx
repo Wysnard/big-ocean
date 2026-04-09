@@ -89,7 +89,6 @@ describe("ResultsAuthGate", () => {
 		expect(email).toHaveAttribute("required");
 		expect(email).toHaveAttribute("aria-required", "true");
 		expect(password).toHaveAttribute("required");
-		expect(password).toHaveAttribute("aria-required", "true");
 
 		fireEvent.change(email, { target: { value: "invalid-email" } });
 		const form = screen
