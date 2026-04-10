@@ -81,6 +81,12 @@ RUN pnpm install --frozen-lockfile
 COPY packages/ ./packages/
 COPY apps/front/ ./apps/front/
 
+# Vite inlines import.meta.env.VITE_* at build time, so VITE_API_URL must be
+# present during `pnpm build`. Railway forwards service env vars to ARGs of
+# the same name automatically.
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build the frontend
 RUN pnpm --filter=front run build
 
