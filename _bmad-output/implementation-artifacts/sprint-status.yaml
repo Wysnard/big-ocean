@@ -1,5 +1,5 @@
-# generated: 2026-04-09T20:09:46+0200
-# last_updated: 2026-04-10T12:00:00+0200
+# generated: 2026-04-10T15:19:13+0200
+# last_updated: 2026-04-10T15:19:13+0200
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -34,15 +34,15 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-04-09T20:09:46+0200
-last_updated: 2026-04-10T12:00:00+0200
+generated: 2026-04-10T15:19:13+0200
+last_updated: 2026-04-10T15:19:13+0200
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  # Epic 1: Conversation Calibration — 15-Turn Assessment (= historical Epic 45)
+  # Epic 1: Conversation Calibration — 15-Turn Assessment
   epic-1: done
   1-1-schema-migration-table-renames: done
   1-2-repository-and-domain-layer-renames: done
@@ -51,16 +51,14 @@ development_status:
   1-5-fk-column-code-cascade: done
   1-6-assessment-turn-count-25-to-15: done
   1-7-dead-code-cleanup: done
-  1-8-deferred-cleanup: done
-  1-9-file-rename-cascade: done
   epic-1-retrospective: done
 
-  # Epic 2: Conversation Extension Cleanup (= historical Epic 46)
+  # Epic 2: Conversation Extension Cleanup
   epic-2: done
   2-1-gate-extension-use-case-and-remove-ui-surface: done
   epic-2-retrospective: optional
 
-  # Epic 3: Accessibility Foundations (= historical Epic 47)
+  # Epic 3: Accessibility Foundations
   epic-3: done
   3-1-skip-link-and-semantic-landmarks: done
   3-2-conversation-ui-accessibility: done
