@@ -1,9 +1,14 @@
-@import "tailwindcss";
+/*
+ * Disable Tailwind's auto content detection: it scans different files in
+ * SSR vs client builds, producing different CSS hashes and a hydration
+ * mismatch in production (TanStack/router#4959). Use explicit @source paths
+ * relative to this file (packages/ui/src/styles/globals.css) so both builds
+ * scan the same inputs and emit byte-identical CSS.
+ */
+@import "tailwindcss" source(none);
 @import "tw-animate-css";
 
-@source "../../apps/front/src/**/*.{ts,tsx}";
-@source "../../apps/api/src/**/*.{ts,tsx}";
-@source "../components/**/*.{ts,tsx}";
+@source "../../../../apps/front/src/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
