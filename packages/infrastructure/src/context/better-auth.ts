@@ -379,7 +379,12 @@ export const BetterAuthLive = Layer.effect(
 				defaultCookieAttributes: {
 					httpOnly: true,
 					secure: isHttps,
-					sameSite: "lax" as const,
+					// HTTPS deployments (prod) host front and api on different hostnames
+					// (e.g. front-*.up.railway.app vs api-*.up.railway.app), so the session
+					// cookie has to ride cross-site fetches. SameSite=None requires Secure,
+					// which we already have under HTTPS. Local dev keeps SameSite=Lax since
+					// front+api share localhost and we can't set Secure over plain HTTP.
+					sameSite: isHttps ? ("none" as const) : ("lax" as const),
 				},
 				useSecureCookies: isHttps,
 			},
