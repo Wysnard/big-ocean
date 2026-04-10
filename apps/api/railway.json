@@ -10,6 +10,6 @@
     "healthcheckPath": "/health",
     "healthcheckTimeout": 60,
     "region": "us-west1",
-    "startCommand": "tsx src/index.ts"
+    "startCommand": "tsx src/migrate.ts && tsx src/index.ts"
   }
 }
