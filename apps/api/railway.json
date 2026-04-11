@@ -17,6 +17,7 @@
     "healthcheckPath": "/health",
     "healthcheckTimeout": 60,
     "region": "us-west1",
+    "preDeployCommand": "tsx src/migrate.ts",
     "startCommand": "tsx src/index.ts"
   }
 }
