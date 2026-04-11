@@ -1,7 +1,29 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+lastEdited: '2026-04-11'
+editHistory:
+  - date: '2026-04-11'
+    type: 'revision'
+    source: '_bmad-output/design-thinking-2026-04-09.md + _bmad-output/planning-artifacts/prd.md (2026-04-11 edit)'
+    summary: 'Three-space architecture integration (Today/Me/Circle). Intimacy Principle as brand DNA. Silent journal fork (free users deposit silently, no LLM daily). Sunday weekly letter from Nerin (free version complete + subscriber prescriptive layer). Post-assessment focused reading transition (closing button → PortraitReadingView generating state → letter reveal → end-of-letter link → full Me page → return seed). Relationship letter as living relational space (Section A-F, annual Spotify Wrapped regeneration, free for all). Invite ceremony copy locked. Week 3+ subscription conversion inside the Sunday weekly letter (not at portrait paywall). PWYW and credits FULLY RETIRED. Portrait is free. Relationship letter is free. Subscription = €9.99/mo conversation extension + bundled first-extension portrait regen in MVP; all other paid features (daily LLM recognition, mini-dialogue, prescriptive weekly layer, portrait gallery, Section D relational observations) post-MVP. Dashboard concept retired; /dashboard redirects to /today. /profile route retired. ChatAuthGate retired (anonymous path removed; all /chat users authenticated from turn 1 per FR50/50a/50b). New top-level sections added: §19 Relationship Letter Page Specification, §20 Weekly Letter Specification. Major rewrites: §Executive Summary, §Core User Experience (Three-Space Navigation Model replaces Three-Surface Model), §7 Defining Experience (Four-Beat + Bridge, monetization architecture, reverse-engineered chain), §10 Journey Flows (Journey 1 first-timer updated for post-assessment transition + return seed, Journey 2 Relationship Analysis RETIRED → Journey 2 Daily Silent Journal, Journey 3 PWYW Curtain RETIRED → Journey 3 Sunday Weekly Letter, Journey 4 Returning User rewritten for three-space, Journey 5 Public Profile minor updates, new Journey 6 Relationship Letter, new Journey 7 Invite Ceremony, new Journey 8 Subscription Conversion at Week 3+), §11 Component Strategy (retired PWYWCurtainModal/PortraitUnlockButton/CreditBalance/InvitationBottomSheet/ChatAuthGate/PortraitWaitScreen; added BottomNav, CheckInForm, MoodDotsWeek, JournalEntry, QuietAnticipationLine, WeeklyLetterCard, WeeklyLetterReadingView, CirclePersonCard, InviteCeremonyDialog, RelationshipLetterSectionA-F, ReturnSeedSection, SubscriptionPitchSection/SubscriptionValueSummary, MoodCalendarView, MePageSection), §15 Dashboard Specification RETIRED → §15 Three-Space Page Specifications (Today / Me / Circle), §16 Homepage (PWYW retired, zero-cost reassurance, load-bearing homepage note), §18 Results Page (converged with Me page, post-assessment transition flow replaces PWYW modal flow). §8 Visual Design Foundation, §9 Design Direction, §12 UX Patterns, §13 Responsive/Accessibility, §14 Re-Engagement Emails, §17 Public Profile — lingering PWYW/credit references exist and should be cleaned up in a follow-up pass, but are not load-bearing for the architectural shift.'
+  - date: '2026-04-07'
+    type: 'revision'
+    summary: 'Innovation strategy integration: 25→15 exchanges, Director model, extension→subscription, post-MVP agent platform UX'
+  - date: '2026-03-24'
+    type: 'revision'
+    summary: 'Homepage redesign from brainstorming session'
+  - date: '2026-03-23'
+    type: 'revision'
+    summary: 'Dashboard/profile merge, email verification gate'
+  - date: '2026-03-18'
+    type: 'revision'
+    summary: 'Page specs expanded'
+  - date: '2026-03-16'
+    type: 'initial'
+    summary: 'Initial UX design specification'
 inputDocuments:
-  - '_bmad-output/planning-artifacts/prd.md'
+  - '_bmad-output/planning-artifacts/prd.md (2026-04-11 — design thinking integration, three-space architecture, silent journal fork, weekly letter conversion, relationship letter living space, PWYW retired)'
+  - '_bmad-output/design-thinking-2026-04-09.md (full session: EMPATHIZE/DEFINE/IDEATE/PROTOTYPE/TEST, locked design decisions, locked copy for invite ceremony + subscription conversion pitch)'
   - '_bmad-output/planning-artifacts/ux-design-specification-archived.md'
   - 'docs/project-overview.md'
   - 'docs/FRONTEND.md (potentially outdated — last updated 2026-02-10)'
@@ -11,7 +33,11 @@ inputDocuments:
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-03-16 (updated 2026-03-18, page specs expanded 2026-03-18, dashboard/profile merge 2026-03-23, email verification gate 2026-03-23, homepage redesign from brainstorming 2026-03-24, innovation strategy integration 2026-04-07: 25→15 exchanges, Director model, extension→subscription, post-MVP agent platform UX)
+**Date:** 2026-04-11 (latest revision — see `editHistory` frontmatter for full timeline)
+
+**Status:** Revision in progress. All 14 workflow steps are marked completed in `stepsCompleted`; the 2026-04-11 revision is an in-place update to the completed spec, not a re-run of the workflow.
+
+**Known gap:** §8 Visual Design Foundation, §9 Design Direction, §12 UX Patterns, §13 Responsive/Accessibility, §14 Re-Engagement Emails, and §17 Public Profile still contain lingering PWYW, credit, and dashboard references from the pre-2026-04-11 era. These are not architecturally load-bearing — the three-space architecture and retired monetization model are reflected in the core spec sections (§1-2, §7, §10, §11, §15, §16, §18, §19, §20). A cleanup pass is recommended but not blocking.
 
 ---
 
@@ -19,9 +45,31 @@ inputDocuments:
 
 ### Project Vision
 
-Big-ocean transforms personality assessment from a static questionnaire into a guided 15-turn conversation with Nerin, an AI personality specialist. Built on the Big Five (OCEAN) framework, it extracts personality evidence through natural dialogue, scores 30 facets, and maps results to memorable archetypes via a 5-letter OCEAN code. The platform combines scientific rigor with consumer-grade shareability — turning self-discovery into a social experience.
+Big-ocean transforms personality assessment from a static questionnaire into a guided 15-turn conversation with Nerin, an AI personality specialist. Built on the Big Five (OCEAN) framework, it extracts personality evidence through natural dialogue, scores 30 facets, and maps results to memorable archetypes via a 5-letter OCEAN code.
 
-The product sits at the intersection of conversational AI and personality science, differentiated by guided UX, structured insights, and social outputs that no existing personality test or general-purpose chatbot provides.
+**The assessment is onboarding, not the product.** The product itself is a three-space companion world the user lives in afterwards: **Today** (daily ephemeral companion — silent journal, mood calendar, Sunday weekly letter from Nerin), **Me** (persistent identity — portrait, archetype, scores, public face, subscription), and **Circle** (the few people you care about — relationship letters, invite ceremony). Assessment tunnels into this world; it is never the destination.
+
+The product sits at the intersection of conversational AI, personality science, and daily companion apps — differentiated by a guided assessment, scientifically grounded insights, a daily return loop powered by personality-informed recognition, and relationship letters that turn every relationship into a reason to come back.
+
+### Brand DNA: The Intimacy Principle
+
+**"Big Ocean is built for a few people, not a crowd."** Every feature must pass this audit:
+
+1. Does it show "how many"? → probably wrong
+2. Does it reward broad visibility over focused connection? → wrong
+3. Does it use follower/fan/network language? → wrong
+4. Does it celebrate depth and duration of fewer relationships? → right
+5. Does it treat the user as a sovereign member of a small circle, not a node in a growth graph? → right
+
+**Implementation rules (all user-facing copy and components must comply):**
+- No count metrics anywhere ("X connections", profile view counters, sign-up attribution shown to user)
+- No follower/friend/fan language — use "people you care about"
+- No search, no recommendations, no directory of users
+- No sorting options on Circle — organic order only
+- Each person rendered as full-width card with individual weight, not a grid of avatars
+- Scroll length itself is honest feedback about circle size
+- Empty states teach the value system rather than prompting growth
+- No hard cap on Circle size (rules create resentment; culture through design)
 
 ### Assessment Invisibility Principle
 
@@ -52,54 +100,106 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 2. **Conversational trust through Nerin's observations** — The UI environment, pacing, and visual treatment must frame Nerin as a compelling conversation partner worth opening up to. Surface-level responses produce poor assessments — the UX should encourage depth without feeling demanding. Nerin's mid-conversation observations ("I notice that when you talk about creativity, your energy shifts") are the primary trust-building and retention mechanism. These are conversational reflections, never assessment reveals.
 
-3. **Results that demand sharing** — The archetype reveal is the critical conversion moment from user to evangelist. It must feel like a personal discovery, not a generic report. Results should reference specific conversation moments as evidence — showing the "how" behind scores, not just the scores themselves.
+3. **Three-space navigation cognitive model** — Today / Me / Circle is a departure from standard "dashboard + profile" IA. Users must instantly grasp that Today is ephemeral (come back tomorrow), Me is persistent identity, and Circle is the few people you care about. The bottom nav must carry this model without a tutorial. Default routing: first post-assessment visit → `/me`; every subsequent visit → `/today`. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. `/settings` is a thin admin route accessed via gear icon on Me, not a fourth tab.
 
-4. **Mobile-first conversation ergonomics with session persistence** — 30-45 minutes of mobile interaction requires careful attention to input fatigue, response sizing, and visual breathing room. Save-and-resume is essential — users will be interrupted. Auth-gating before the conversation starts ensures email is collected, enabling automated recapture.
+4. **The post-assessment transition is the emotional peak** — The transition from conversation close to first portrait read is the single most valuable moment in the product. It must use focused reading, not a cluttered results page. Flow: closing exchange → "Show me what you found →" button (user-voiced) → navigate to `PortraitReadingView` in a "generating" state with OceanSpinner and the line *"Nerin is writing your letter..."* → letter fades in full-screen, distraction-free, max-width 720px → warm "There's more to see →" link at the bottom → full results/Me page with identity hero, inline portrait, return seed, and notification permission request in Nerin's voice. The emotional weight of the first read must not be diluted by navigation or chrome.
 
-5. **Recapture flow for interrupted sessions** — Auth-gate the conversation so email is collected and verified before the first turn. Verified email ensures reliable delivery for re-engagement. If a user pauses mid-conversation, automated email reminders bring them back ("You and Nerin were in the middle of something — pick up where you left off"). This converts the save-and-resume problem from "lost user" to "delayed user with a nudge."
+5. **Phase 5 → Phase 6 bridge (daily return loop)** — Without a daily reason to come back, the 90% churn cliff kills the subscription flywheel before Week 3. The **silent journal fork** is the bridge: free users deposit a mood + optional note daily into a calendar with no LLM response, with a quiet anticipation line — *"Nerin will write you a letter about your week on Sunday."* — and the Sunday weekly letter arrives as the reward. Silence in the free tier is a feature, not a cost optimization. Paid daily dialogue (LLM recognition + mini-dialogue) is post-MVP.
 
-6. **The public profile as acquisition surface** — Relationship explorers arrive at public profile pages via shared archetype cards, not the homepage. The framing line ("[Name] dove deep with Nerin — here's what surfaced"), archetype description, and comparison-driven CTA ("What's YOUR code?") must convert the viewer into a new user. If the sharer's profile is private, the link shows "This user has made their profile private" and redirects to the homepage.
+6. **Weekly letter as the subscription conversion moment** — The subscription pitch does not appear at the portrait paywall (there isn't one — the portrait is free). It appears **inside the Sunday weekly letter**, in Nerin's voice, after 2-3 weeks of free recognition. The conversion copy is not a pricing page: *"I have more I want to say about what comes next. With a subscription, I can write you a fuller letter each week — with what to try, what patterns I'm seeing across weeks, and what I think might help in the week ahead."* The free version of the weekly letter must feel COMPLETE and satisfying on its own — not a preview, not a cripple-ware teaser.
 
-7. **Assessment integrity vs. ambient feedback** — The visual environment and progress signals must never telegraph personality dimensions or trait directions. If users can infer where the assessment is heading, they can game their responses, undermining the coherence-based methodology. All real-time feedback reflects conversational energy and engagement depth, never personality scoring.
+7. **Relationship letter as a living space, not an artifact** — The page for one specific relationship is not a one-time analysis. It's a living relational space with an annual regeneration ritual (Spotify Wrapped model). Section A (This Year's Letter), Section B (real-time data grid with complementarity framing), Section C (letter history), Section E (shared notes), Section F (Your Next Letter countdown) are all free for everyone. Annual regeneration is automatic on connection anniversary, notified (not approved). Section D relational observations (D1-D4) are post-MVP subscriber-only.
 
-8. **Day 2+ retention beyond the initial assessment** — The core assessment is a one-time experience. MVP retention levers are relationship analysis and archetype sharing. Post-MVP, the subscription (€10/mo or €100/yr) adds conversation extension, Coach agent, Growth Journal, and pattern analysis as ongoing engagement drivers. Email/notification reminders nudge users to explore relationships and share. The UX should be designed with return hooks in mind even if not all are in MVP. Without a compelling return loop, the product risks the same retention cliff that plagues every personality assessment platform.
+8. **The invite ceremony as viral moment** — Inviting someone into Circle is self-expression, not marketing. The ceremony copy must lead with the reward ("Discover the dynamic between you. When they finish their conversation with Nerin, the two of you get a letter about your relationship…"), not the cost. The invite is placed at: bottom of Circle list, Me → Your Circle section, contextual CTA on another user's public profile, and highest-converting placement — inside the Sunday weekly letter when Nerin references the relational dimension.
+
+9. **Mobile-first conversation ergonomics with session persistence** — 30-45 minutes of mobile interaction requires careful attention to input fatigue, response sizing, and visual breathing room. Save-and-resume is essential — users will be interrupted. The anonymous conversation path has been removed, so all users are authenticated from turn 1; this simplifies session ownership but puts more conversion pressure on the homepage and pre-conversation onboarding.
+
+10. **Recapture flow for interrupted sessions** — Email is captured upfront at signup (per FR50). If a user pauses mid-conversation, automated email reminders bring them back ("You and Nerin were in the middle of something — pick up where you left off"). Works for every started user because email is collected before the first turn.
+
+11. **The public profile as acquisition surface, separate from Me** — Relationship explorers arrive at public profile pages via shared archetype cards, not the homepage. Public profile is SEO, SSR, no auth, separate route (`/public-profile/$id`) from Me (`/me`, authenticated, private). Me contains a "Your Public Face" section as the control center for the separate public route. Different audiences, different JTBD, don't merge.
+
+12. **Assessment integrity vs. ambient feedback** — The visual environment and progress signals must never telegraph personality dimensions or trait directions. If users can infer where the assessment is heading, they can game their responses, undermining the coherence-based methodology. All real-time feedback reflects conversational energy and engagement depth, never personality scoring.
+
+13. **Intimacy Principle enforcement across every surface** — Every feature and every copy string must pass the Intimacy Principle audit. No counts, no follower language, no search/sort/recommend on Circle, no profile view counters, no sign-up attribution metrics anywhere. This is not style guidance — it is brand DNA and must be design-reviewed on every change.
 
 ### Design Opportunities
 
-1. **Relationship comparison as viral engine** — QR scan → compare → share flows turn every completed assessment into a potential acquisition channel. The shared results page is the primary viral surface — not a generic "share" button but a dedicated conversion experience with teaser content that creates FOMO around the comparison.
+1. **Three-space product world as daily return loop** — Today / Me / Circle transforms big-ocean from a one-time test into a place people live. Today as ephemeral daily companion (BeReal philosophy — consistency over days, not engagement within a day), Me as identity sanctuary (low-frequency but high-emotion visits), Circle as relational scroll (intimacy without network). The three spaces cover three different emotional registers that can't coexist on one page.
 
-2. **Immersive conversational interface** — Explore a departure from standard chat-bubble UI toward a full-screen, ambient experience where the conversation feels like entering a space, not opening a messaging app. The ocean/geometric visualization lives around and behind the text, creating an intimate environment distinct from any chatbot interaction. No timestamps, no avatar bubbles — each exchange is its own moment. (Design direction to evaluate, not a commitment.)
+2. **Silent journal as a ritual** — Drawing from BeReal: one daily action, low friction, content gated behind the user's own deposit, ephemeral feel, static after check-in. Free users deposit mood + note with no LLM response. The silence is the feature — Nerin's voice is rare and precious, stored up for the Sunday weekly letter. The quiet anticipation line *"Nerin will write you a letter about your week on Sunday"* turns waiting into longing.
 
-3. **Energy-responsive ambient visualization** — The ocean/geometric system responds to conversational energy and depth (emotional texture, engagement intensity, conversational momentum) — NOT to personality dimensions. This preserves assessment integrity while creating a living, responsive environment that rewards deeper engagement visually without revealing scoring.
+3. **Weekly letter from Nerin as conversion engine** — The Sunday weekly letter is the primary retention-to-revenue bridge. Free version is a complete descriptive artifact (date range, week narrative, visual mood shape, "what stood out" beat, Nerin's sign-off). Subscriber version adds a prescriptive "For the week ahead" coaching layer, "Zooming out" cross-week pattern detection, and a reflective prompt. The conversion pitch at the end of the free version is in Nerin's voice, not system voice — *"I have more I want to say about what comes next."*
 
-4. **Depth progress system (existing pattern)** — The conversation sustains momentum through three complementary mechanisms: a depth meter (vertical bar showing conversation progress — how far through the 15 turns, not engagement quality), unnamed milestones that mark the journey without countdown anxiety, and Nerin's in-conversation validation when the system detects increasing depth and authenticity. This is the therapeutic alliance trust loop — vulnerability met with recognition encourages further opening.
+4. **Relationship letter as living relational space** — Section A is the emotional center (this year's letter + ritual screen), Section B is a real-time data grid updating as either user has new Nerin conversations, Section C is letter history as a multi-year relationship biography, Section E is user-owned shared notes, Section F is the "Your Next Letter" countdown. The annual regeneration model (Spotify Wrapped) creates predictable anticipation; letter history compounds into an irreplaceable moat by Year 3+. The letter itself is free for everyone — the annual moment is a gift, not a paywall.
 
-5. **Evidence-linked results narrative** — Unlike any competitor, big-ocean can connect archetype insights back to specific things the user said during their conversation. "Your high openness showed up when you described..." transforms results from generic personality labels into deeply personal storytelling.
+5. **Invite ceremony as viral flywheel moment** — Invite copy leads with the reward (relationship letter), not the cost (30-min conversation). Concrete promise: "click / clash / unspoken rhythms." Self-reflexive hook: "a side of yourself that only shows up around them." The invitee's side is reframed as a gift from them ("just someone curious about them"). Invite name field is an intentionality ceremony, not a form.
 
-6. **Personality portrait as social identity object** — The shareable artifact should be a visual personality portrait — a unique, generative visual signature tied to the user's OCEAN code — not a results card or data summary. Designed for identity performance on social media (think: Spotify Wrapped aesthetic meets generative art). The OCEAN code becomes a visual identity, not a letter string.
+6. **Nerin output grammar — three visual formats** — Users learn to read each format in its own emotional register. **Journal format** (margin notes, shared-page feel) = daily check-in recognition on Today [post-MVP for paid users; free users see the quiet anticipation line]. **Letter format** (focused reading, max-width 720px, warm body font) = portrait, weekly summary, annual relationship letter. **Chat format** = subscriber mini-dialogue on Today (post-MVP). Each format has its own UI conventions, typography, and pacing.
+
+7. **Post-assessment focused reading transition** — The first read of the portrait happens in a distraction-free focused reading view (`PortraitReadingView` at `/results/$sessionId?view=portrait`), not on a cluttered results page. Entry: "Show me what you found →" button after Nerin's closing exchange (user-voiced). Generating state: OceanSpinner + "Nerin is writing your letter...". Ready state: letter fades in full-screen. End-of-letter transition: warm "There's more to see →" link → full results/Me page. This is the single most emotionally-weighted flow in the product and deserves a full-tier focused reading container.
+
+8. **Return seed on first Me page visit** — At the bottom of the full results/Me page on the first visit, Nerin plants the return seed: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a notification permission request in Nerin's voice: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* — NOT a system-voice "Enable notifications" prompt. If granted, schedule a first daily prompt for the next day. If denied, the relationship still works — no lock-in. This is the Phase 5 → Phase 6 bridge.
+
+9. **Immersive conversational interface** — Explore a departure from standard chat-bubble UI toward a full-screen, ambient experience where the conversation feels like entering a space, not opening a messaging app. The ocean/geometric visualization lives around and behind the text, creating an intimate environment distinct from any chatbot interaction. No timestamps, no avatar bubbles — each exchange is its own moment. (Design direction to evaluate, not a commitment.)
+
+10. **Energy-responsive ambient visualization** — The ocean/geometric system responds to conversational energy and depth (emotional texture, engagement intensity, conversational momentum) — NOT to personality dimensions. This preserves assessment integrity while creating a living, responsive environment that rewards deeper engagement visually without revealing scoring.
+
+11. **Depth progress system (existing pattern)** — The conversation sustains momentum through three complementary mechanisms: a depth meter (vertical bar showing conversation progress — how far through the 15 turns, not engagement quality), unnamed milestones that mark the journey without countdown anxiety, and Nerin's in-conversation validation when the system detects increasing depth and authenticity. This is the therapeutic alliance trust loop — vulnerability met with recognition encourages further opening.
+
+12. **Evidence-linked results narrative** — Unlike any competitor, big-ocean can connect archetype insights back to specific things the user said during their conversation. "Your high openness showed up when you described..." transforms results from generic personality labels into deeply personal storytelling.
+
+13. **Personality portrait as social identity object** — The shareable artifact is a visual personality portrait — a unique, generative visual signature tied to the user's OCEAN code — not a results card or data summary. Designed for identity performance on social media (think: Spotify Wrapped aesthetic meets generative art). The OCEAN code becomes a visual identity, not a letter string.
 
 ### Future Considerations
 
-- **Voice input as optional modality** — Could reduce mobile fatigue and produce richer, more natural responses. Parked due to cost implications (~$0.27/conversation via speech-to-text APIs vs. the $0.15/user LLM cost target). Revisit as a premium feature or when costs decrease.
-- **Community feed** — A social discovery feed where users can browse archetypes, see anonymized personality portraits, and find people with complementary or contrasting profiles. Strong candidate for Day 2+ retention. Not MVP.
+- **Paid daily dialogue (post-MVP subscriber layer)** — LLM-generated daily check-in recognition in journal format (margin notes), plus "Tell me more →" mini-dialogue (3-5 exchange conversation with Nerin who has read the actual note). Splits the free/paid line into qualitatively different products (free = silent journal, paid = daily dialogue), not two versions of the same product. Rejected the template engine approach as over-engineering; every place Nerin speaks uses LLM.
+- **Personality-typed daily triggers (post-MVP)** — Daily notification copy uses personality data to deliver personality-informed prompts per user. High-Neuroticism: "Let's check the weather inside." High-Openness: "What surprised you today?" High-Conscientiousness: "How's the list looking?" MVP ships with one default notification time; users can customize in settings.
+- **Prescriptive weekly letter layer (post-MVP)** — Subscriber version of the weekly letter adds "For the week ahead" (prescriptive focus statement + one concrete micro-action), "Zooming out" cross-week pattern detection, and a reflective prompt. In MVP, subscribers already receive the descriptive free version.
+- **Portrait gallery and regeneration (post-MVP subscriber)** — Longitudinal portrait gallery with side-by-side comparison, subscriber-only regeneration ceremony with wait screen, "Who you're becoming" delta annotations on radar, growth arc narrative. In MVP, subscribers receive one automatic portrait regeneration bundled with their first conversation extension.
+- **Section D relational observations (post-MVP)** — Subscriber-only layer on the relationship letter page. D1 (mood trends side by side, requires mutual opt-in), D2 (Nerin's relational observations), D3 ("take care of" personality-informed suggestions, per-subscriber), D4 (alignment patterns). D5 (gentle check-ins and prompts) deferred pending user testing.
+- **Annual letter regeneration (Year 1 Q4+)** — Automatic trigger on connection anniversary, no on-demand regeneration. Both users notified, not asked for approval. Letter history preserved forever. Creates Spotify Wrapped-style annual ceremony.
+- **Voice input as optional modality** — Could reduce mobile fatigue and produce richer, more natural responses. Parked due to cost implications. Revisit as a premium feature or when costs decrease.
 - **Reassessment over time** — "How have you changed?" periodic reassessment to track personality evolution. Planned for post-MVP.
-- **Subscription model (Phase 2a)** — €10/mo or €100/yr. Includes Coach agent, conversation extension (25 additional turns), Growth Journal, pattern analysis, monthly reflection, unlimited relationship portraits, and complete portrait at 30/30. See innovation strategy for agent platform vision.
-- **Agent platform** — Coach agent as the first subscription-gated agent, with extensible agent architecture for future specialized agents (career coach, relationship advisor, etc.). Each agent leverages the personality profile as persistent context.
+- **Subscription depth expansion** — €9.99/mo. MVP perks: conversation extension (+15 exchanges with Director model re-initialization) and automatic first-extension portrait regeneration. Post-MVP perks unlock in phases: Phase 1b (daily LLM recognition, mini-dialogue, prescriptive weekly letter, personality-typed notification scheduling), Phase 2a (Coach agent, portrait gallery, Section D D2-D4), Phase 2b (Relationship / Career agents, cross-agent intelligence), Phase 2c (annual relationship letter regeneration).
+- **Agent platform (post-MVP)** — Coach agent as the first subscription-gated agent, with extensible agent architecture for future specialized agents (career coach, relationship advisor, etc.). Each agent leverages the personality profile as persistent context.
+- **B2B therapist wedge (post-MVP)** — Therapists surface pre-screening tool. Team management, group dynamics. Optional future path, not a core motivation.
+
+> **Removed from the roadmap (violates Intimacy Principle):** ~~Community feed — browsing archetypes, anonymized portraits, and finding people with complementary or contrasting profiles.~~ Rejected: community feeds are network-scale, not intimacy-scale, and contradict the "built for a few people, not a crowd" brand DNA.
 
 ## Core User Experience
 
 ### Defining Experience
 
-The core experience of big-ocean is a 15-turn conversation with Nerin that transforms from "I'm here to get my personality results" into "I'm genuinely engaged in this conversation about myself." The user enters with an expectation of insight — for personal development or relationship understanding — and the conversation must deliver on that anticipation through two distinct value layers:
+The core experience of big-ocean unfolds in two phases: an **onboarding tunnel** (the 15-turn assessment, run once) and a **three-space companion world** (lived in indefinitely afterwards). The assessment is where credibility is earned and the portrait is delivered; the three-space world is where the user returns, grows, and invites others.
 
-**Layer 1: The Conversation (30-45 minutes)**
-Nerin's observations during the conversation — surfacing patterns, contradictions, and tensions in what the user has said — serve three purposes simultaneously: they build credibility ("this AI is actually listening"), they create the feeling of being understood ("how did she notice that?"), and they build anticipation for the portrait ("if she's catching this much now, the full results must be incredible"). The conversation is not a waiting room for results — it's the first act of a two-act experience.
+**Phase 1 — Onboarding tunnel (Day 0, ~30 min):**
 
-**Layer 2: The Portrait & Results**
-The archetype reveal, evidence-linked narrative, and trait breakdown must land with the weight of everything the conversation promised. This is where anticipation converts to conviction. The results page is the personal payoff — a private, deep insight experience designed entirely for the user.
+The 15-turn conversation with Nerin transforms from "I'm here to get my personality results" into "I'm genuinely engaged in this conversation about myself." Nerin's observations — surfacing patterns, contradictions, and tensions in what the user has said — build credibility ("this AI is actually listening"), create the feeling of being understood ("how did she notice that?"), and build anticipation for the portrait ("if she's catching this much now, the full results must be incredible"). The conversation is not a waiting room for results — it's the first act of a multi-act experience.
 
-**The core loop:**
-Conversation with Nerin → Portrait reveal (private results) → Share personality card → Viewer lands on public profile (or homepage if private) → Viewer takes their own conversation → QR scan triggers relationship analysis → Both see deep comparison → Both share again
+Onboarding closes with a focused reading transition: Nerin's distinct closing → "Show me what you found →" button → `PortraitReadingView` in generating state → letter fades in full-screen → "There's more to see →" → full results/Me page → return seed + notification permission request in Nerin's voice.
+
+**Phase 2 — Three-space companion world (Day 1+):**
+
+From Day 1 onwards, the user lives in three spaces accessed via persistent bottom nav:
+
+- **Today** — Daily ephemeral companion. Pre-check-in: personality-typed prompt from Nerin + 5 mood options + optional text + week dots (7 days, today empty). Post-check-in (free tier): the entry is saved silently into the mood calendar, no LLM response, the quiet anticipation line *"Nerin will write you a letter about your week on Sunday"* is displayed. Paid tier journal format with LLM recognition in margin notes is post-MVP. Static after check-in — one daily action, come back tomorrow. BeReal philosophy.
+- **Me** — Persistent identity. Identity hero (archetype, OCEAN code, radar, confidence), Your Portrait (re-read the letter), Your Growth (mood calendar + pattern observations, conditional on history), Your Public Face (preview + private/public toggle + share link + card image), Your Circle preview, Subscription pitch, Account (gear → `/settings`). Low-frequency but high-emotion visits.
+- **Circle** — The few people you care about. Each person rendered as full-width card with archetype, OCEAN code, duration ("understanding each other since February"), "last shared" recency signal (presence, not activity, never a streak), and "View your dynamic" link to the relationship letter page. Invite ceremony card always appended at the bottom. No counts, no sorting, no search, no recommendations, organic order only. Empty state teaches the value system: "Big Ocean is made for the few people you care about."
+
+Assessment (`/chat`) sits outside the three-space world. Public profile (`/public-profile/$id`) is a separate SEO/SSR route (no auth), controlled from Me → Your Public Face. A thin `/settings` route handles admin (email, password, delete) via the gear icon on Me.
+
+**The core loop (from onboarding through the daily flywheel):**
+
+1. Conversation with Nerin (15 turns, 30-45 min)
+2. Focused reading portrait reveal (free, distraction-free `PortraitReadingView`)
+3. First Me page visit with return seed ("Tomorrow, I'll ask how you're doing")
+4. Daily: silent journal deposit on Today
+5. Weekly: Sunday letter from Nerin in letter format at `/today/week/$weekId` — free version descriptive, complete, satisfying
+6. Relationship invite ceremony → invitee takes their own assessment → relationship letter generated → both sit with it together on a Read Together Again ritual → annual regeneration on anniversary
+7. Week 3+ subscription conversion inside the Sunday weekly letter — Nerin's voice, not paywall voice — unlocks conversation extension + first-extension portrait regeneration
+8. Satisfied user shares their archetype card + invites more people → new conversations begin
+
+**Viral and retention flywheels share one moment then diverge.** The post-assessment emotional peak offers both Path A (share + invite = viral) and Path B ("come back tomorrow" = retention). Both are offered; neither blocks the other.
 
 ### Conversation Arc
 
@@ -113,21 +213,43 @@ The conversation is not a flat sequence of questions. It has a three-act narrati
 
 The transition between acts should be felt, not announced. The depth meter, ambient visualization energy, and Nerin's conversational tone all shift subtly as the conversation deepens.
 
-### Three-Surface Model
+### Three-Space Navigation Model
 
-The product operates across three distinct surfaces, each with a different audience and purpose:
+The authenticated product is organized around **three spaces**, not a dashboard. Each space has a different emotional register, a different visit frequency, and a different job. Bottom nav carries the three tabs: **Today | Me | Circle**.
 
-**1. Results Page (Private)**
-The full assessment output — portrait, archetype name, trait breakdown, evidence-linked narrative. Designed entirely for the authenticated user's personal insight experience. No conversion elements, no sharing pressure. This is the payoff.
+**1. Today — Daily Ephemeral Companion**
+`/today` — Default landing for every visit after the first. Silent journal check-in, week-so-far dots, mood calendar link, quiet anticipation line, Sunday weekly letter inline card. Visited daily. The page is static after check-in — one action, come back tomorrow. Not a feed. Not a museum. Ephemeral by design: yesterday's page doesn't live here; the mood calendar is a separate view for looking back.
 
-**2. Public Profile (Opt-in, Private by Default)**
-A separate, public-facing page the user can choose to enable. Displays the personality portrait, archetype, and curated information the user has selected. Serves as the acquisition surface for visitors arriving via shared links — includes comparison teaser ("see how you match") to convert viewers into new users. When the profile doesn't exist or is private, visitors are redirected to the homepage.
+**2. Me — Persistent Identity & Growth Archive**
+`/me` — First visit post-assessment lands here (portrait reveal + identity celebration). Subsequent visits are low-frequency, high-emotion. Contains: Identity Hero (archetype, OCEAN code, radar, confidence), Your Portrait (re-read the letter), Your Growth (mood calendar + pattern observations, conditional on mood history), Your Public Face (preview of what strangers see + public/private toggle + shareable link + card image — NO view counts, NO sign-up attribution metrics), Your Circle preview (with "View all →"), Subscription pitch (for free users) or value summary (for subscribers), Account (gear icon → `/settings`).
 
-**3. Relationship Analysis (Auth-Gated, Private Data)**
-Deep comparison between two users, using full private assessment data from both parties. Accessed via QR-based connection — both users must have completed assessments. One user generates a temporary QR, the other scans and accepts (paying the credit). This is the primary viral mechanism for relationship-motivated users.
+**3. Circle — People You Care About**
+`/circle` — The few people the user cares about, rendered as full-width person cards (not a grid of avatars). Each card shows archetype, OCEAN code, duration ("understanding each other since February"), "last shared" recency signal, and "View your dynamic" link to the relationship letter page. Invite ceremony card is always appended at the bottom. Header framing: "The few people you care about." **No counts, no sorting, no search, no recommendations, organic order only.** Empty state: "Big Ocean is made for the few people you care about. This is where they'll live."
 
-**Personality Card (Always Shareable)**
-A visual identity artifact — the user's personality portrait as a shareable image/link. Always available regardless of profile privacy settings. The card links to the user's public profile URL; if the profile is private or doesn't exist, the visitor is transparently redirected to the homepage. Privacy never blocks sharing — every user can express their identity without exposing personal data.
+#### Supporting surfaces (outside the three-space world)
+
+**Assessment tunnel (`/chat`)** — The 15-turn conversation. Sits outside the three-space world as an onboarding tunnel. Not a tab. Run once (or extended once per subscription cycle via Director model re-initialization).
+
+**Focused reading views** — Dedicated distraction-free routes for Nerin's letter-format outputs:
+- `/results/$sessionId?view=portrait` — First portrait read (`PortraitReadingView`)
+- `/today/week/$weekId` — Weekly letter from Nerin
+- Relationship letter Section A entered via "Read Together Again" ritual screen
+
+**Relationship letter page** — Deep page for one specific relationship, accessed from Circle → person card → "View your dynamic". Living relational space (not an artifact) with annual regeneration ritual. Free for everyone.
+
+**Public profile (`/public-profile/$id`)** — Separate SEO/SSR route, no auth. What strangers see. Controlled from Me → Your Public Face. Different audience, different JTBD from Me; the two are NOT merged.
+
+**Personality card (always shareable)** — A visual identity artifact the user can share from Me → Your Public Face. The card links to the user's public profile URL; if the profile is private, the visitor is transparently redirected to the homepage. Privacy never blocks sharing — every user can express their identity without exposing personal data.
+
+**`/settings`** — Thin admin route (email, password, data export, delete) accessed via gear icon on Me. Not a fourth nav tab.
+
+#### Routing decisions
+
+- **First visit post-assessment:** → `/me` (portrait reveal, identity celebration)
+- **All subsequent authenticated visits:** → `/today` (daily return default)
+- **Unauthenticated visits:** → `/` (homepage)
+- **Relationship letter page first visit:** enters through "Read this together when you can sit with it" ritual screen; subsequent visits bypass ritual by default ("Read Together Again" re-enters ritual mode)
+- No `/dashboard` route — the dashboard concept has been retired. `/dashboard` if hit redirects to `/today`.
 
 ### Competitive Context
 
@@ -158,45 +280,71 @@ A visual identity artifact — the user's personality portrait as a shareable im
 
 2. **Dynamic social previews** — The shared archetype card link must render the archetype card image (with short description) via OG meta tags. If the preview looks generic or broken on iMessage, Instagram, or WhatsApp, the viral loop breaks before it starts. The card must look incredible in every platform's link preview format.
 
-3. **Initiating a relationship analysis** — From the results page, opening the QR drawer and scanning should be effortless. The scanner sees the initiator's archetype card and decides whether to accept (spending their credit). Both users must have completed assessments — no half-baked analyses.
+3. **Daily silent check-in** — Open app → Today is the default route → tap mood → optionally type a note → tap save. No ceremony, no friction. The entry is saved silently to the mood calendar. Week-so-far dots update. The quiet anticipation line is shown. Target: ~10 seconds on quiet days. The BeReal principle — the act of depositing is itself valuable.
 
-4. **Starting the conversation** — Auth-gate collects email (and minimal profile info), then the conversation begins immediately. No onboarding tutorial, no "how this works" explainer unless the user seeks it. Nerin's first message IS the onboarding.
+4. **Reading the Sunday weekly letter** — Sunday evening push notification ("Your week with Nerin is ready") → tap → land directly in `/today/week/$weekId` focused reading view → read the letter → scroll to conversion moment (free users) or sign-off (subscribers) → dismiss. The letter is the payoff for the week. Same typographic register as the portrait.
 
-5. **Resuming an interrupted conversation** — If a user returns (via email reminder or direct navigation), they land exactly where they left off. No re-authentication friction, no "welcome back" modal. Just Nerin, picking up naturally.
+5. **Initiating an invite ceremony** — From Me → Your Circle section, Circle → bottom of list, or the weekly letter's relational beat → "Invite someone you care about" → short Nerin-voiced ceremony screen → name field (optional) → choose QR / copy link / native share sheet. One intentional tap, not a form.
+
+6. **Starting the conversation** — Homepage CTA → signup (email + password, per FR50) → email verification (FR50a, FR50b) → pre-conversation onboarding introducing Nerin and format (FR54) → `/chat`. Authenticated from turn 1. Nerin's first message IS the onboarding. The anonymous path has been removed — homepage conversion is load-bearing.
+
+7. **Resuming an interrupted conversation** — If a user returns (via email reminder or direct navigation), they land exactly where they left off. No re-authentication friction, no "welcome back" modal. Just Nerin, picking up naturally.
 
 **Should feel natural but may require some thought:**
 
-6. **Navigating results** — The portrait, trait breakdown, evidence narrative, and comparison features have depth. Navigation should feel like exploring, not like reading a report. Progressive disclosure over information dump.
+8. **Navigating Me** — The portrait, trait breakdown, evidence narrative, public face control, subscription pitch, and Circle preview have depth. Navigation should feel like exploring, not like reading a report. Progressive disclosure over information dump.
 
-7. **Relationship analysis unlock** — Once both parties have completed, the comparison should surface automatically or with minimal action. The user shouldn't have to "find" their comparison — it should find them (notification, email, prominent placement on results page).
+9. **Entering the relationship letter page** — Circle person card → "View your dynamic" → first-visit ritual screen ("Read this together when you can sit with it") → Section A letter fades in → scroll exposes Section B data grid, Section C letter history, Section E shared notes, Section F "Your Next Letter" countdown. Subsequent visits bypass ritual by default; "Read Together Again" re-enters ritual mode.
+
+10. **Subscription conversion at the weekly letter** — End of free weekly letter → Nerin's voice conversion copy → one primary CTA button ("Unlock Nerin's full weekly letter — €9.99/mo →") + soft dismiss ("Not right now"). No pricing page, no feature comparison table, no aggressive retention nag. The dismiss returns next Sunday with the same framing.
 
 ### Critical Success Moments
 
-1. **The first Nerin observation (Act 1 → Act 2 transition, turns 5-8)** — The moment Nerin surfaces a pattern or tension the user didn't expect. This is the credibility inflection point. If it lands, the user thinks "okay, this is real" and commits to the full conversation. If it feels generic or off-base, trust erodes and depth of subsequent answers drops. **This is the single most important UX moment in the entire product.**
+1. **The first Nerin observation (Act 1 → Act 2 transition, turns 5-8)** — The moment Nerin surfaces a pattern or tension the user didn't expect. This is the credibility inflection point. If it lands, the user thinks "okay, this is real" and commits to the full conversation. If it feels generic or off-base, trust erodes and depth of subsequent answers drops. **This is the single most important UX moment in the entire assessment.**
 
-2. **The portrait reveal** — The transition from conversation end to results. This moment carries all the anticipation built over 30-45 minutes. The visual personality portrait, the archetype name, the opening narrative must deliver on the promise the conversation built. (Nice-to-have: choreographed transition — visual shift, beat of silence, sense of arrival rather than a page load.)
+2. **The portrait reveal inside focused reading** — The transition from conversation end to first portrait read, delivered inside `PortraitReadingView` (not on a cluttered results page). Closing exchange → "Show me what you found →" button → navigate to `/results/$sessionId?view=portrait` → OceanSpinner with Nerin-voiced line *"Nerin is writing your letter..."* → letter fades in full-screen, max-width 720px, warm background. The visual personality portrait, the archetype name, the opening narrative must deliver on the promise the conversation built. This is the emotional peak. The focused reading container exists specifically to protect this moment from dilution.
 
-3. **The "that's so me" confirmation** — Somewhere in the results, the user reads something that feels uncannily accurate — ideally tied to a specific thing they said during the conversation. This is the moment that converts a user into a sharer. Evidence-linked narrative ("Your high openness showed up when you described...") is the mechanism.
+3. **The "that's so me" confirmation during the first read** — Somewhere in the portrait letter, the user reads something that feels uncannily accurate — ideally tied to a specific thing they said during the conversation. This is the moment that converts a user into a sharer. Evidence-linked narrative ("Your high openness showed up when you described...") is the mechanism.
 
-4. **The relationship analysis unlock** — When both parties have completed and the comparison becomes available. This should feel like a reward, not a feature. The notification/reveal should carry excitement ("Your comparison with [name] is ready").
+4. **The return seed on first Me page visit** — After end-of-letter transition ("There's more to see →") and the full results/Me page scroll, at the bottom: Nerin's message *"Tomorrow, I'll ask how you're doing. Come check in with me."* + notification permission request in Nerin's voice *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* — NOT a system-voice "Enable notifications" prompt. **This is the Phase 5 → Phase 6 bridge.** If this moment fails, the daily loop never starts and the subscription flywheel dies in Week 1.
 
 5. **First share action** — The moment a user decides to share their archetype card. The share flow must be instant and the card must look incredible in the destination context (iMessage preview, Instagram story, WhatsApp thumbnail). If profile is private, prompt visibility toggle at this moment.
 
+6. **The first silent journal check-in (Day 1)** — User opens app the next day after seeing the return seed → lands on `/today` → sees the pre-check-in state with Nerin's prompt + mood options → deposits their first entry → sees the week-so-far dots and the quiet anticipation line. Must feel light, respectful, and quiet. If the first check-in feels like a chore or a survey, the BeReal habit never forms.
+
+7. **The first Sunday weekly letter (Week 1)** — User receives push notification *"Your week with Nerin is ready"* → taps → lands in `/today/week/$weekId` focused reading view → reads a complete, satisfying, descriptive letter. **The free version must feel COMPLETE, not a teaser.** If Week 1 free is mediocre, no Week 2 happens and the three-act conversion story dies before Act 2.
+
+8. **The subscription conversion moment (Week 3+ inside the weekly letter)** — End of the free weekly letter: *"I have more I want to say about what comes next…"* → one CTA button → conversion. Not a pricing page, not a feature grid, not a retention nag. Should feel like the natural next step in an ongoing relationship with Nerin, not a paywall.
+
+9. **The relationship letter reveal** — When both parties have completed and the Section A letter is generated. First-visit ritual screen ("Read this together when you can sit with it") → Section A letter fades in → both users experience the letter as a shared moment. Should feel like a gift, not a feature unlock notification.
+
+10. **The invite ceremony moment** — User decides to invite someone into Circle. The ceremony copy leads with the reward ("Discover the dynamic between you…"), the name field is an intentionality pause, not a form. The share method choice (QR / link / native) closes the ceremony without friction.
+
 ### Experience Principles
 
-1. **The conversation is the product, not the cost of admission.** Every design decision about the conversation should optimize for engagement quality, not completion speed. If a user feels like they're "getting through" the conversation to reach results, the UX has failed.
+1. **The assessment is onboarding, not the product.** Every design decision about the assessment should optimize for engagement quality and credibility, not for completion speed — but the assessment also cannot be the end of the experience. The product is the three-space world the user lives in afterwards. If the assessment feels like the destination, the return loop never forms.
 
-2. **Anticipation is a feature.** Nerin's observations build anticipation for the portrait deliberately. The longer the user has been engaged and the more credible Nerin feels, the more powerful the portrait reveal becomes. Don't shortcut this arc.
+2. **Anticipation is a feature.** Nerin's observations build anticipation for the portrait deliberately. The longer the user has been engaged and the more credible Nerin feels, the more powerful the portrait reveal becomes. Silence in the free daily check-in is also anticipation — Nerin's rare voice in the Sunday weekly letter carries weight because the user hasn't heard from Nerin since their portrait. Design anticipation as a currency the product spends at the right moments.
 
 3. **The conversation has narrative structure.** Three acts — settling in, deep exploration, convergence — each with different requirements for tone, pacing, and depth signals. The UX must support this arc through ambient visualization, depth meter behavior, and Nerin's evolving conversational approach.
 
-4. **Sharing should feel like self-expression, not distribution.** The archetype card is something users share because it says something about who they are, not because we asked them to. The card must be beautiful enough to be worth posting. Privacy is handled at the sharing moment — prompt to go public, not buried in settings.
+4. **The product has three emotional registers, carried by three visual formats.** Nerin's output grammar is locked: **Journal format** (margin notes, shared-page feel) for daily check-in recognition [post-MVP paid], **Letter format** (focused reading, max-width 720px, warm body font) for portrait / weekly summary / annual relationship letter, **Chat format** for subscriber mini-dialogue [post-MVP]. Each format has its own typography, pacing, and UI conventions. Users learn to read each format in the appropriate emotional register.
 
-5. **The viral loop is relationship-powered.** The personality card drives broad social sharing; the QR-based relationship analysis drives deep comparison. Both paths must be effortless, but they serve different motivations and lead to different experiences.
+5. **Free users get a silent journal. Paid users (post-MVP) get a daily dialogue with Nerin.** These are not two versions of the same product — they are qualitatively different experiences. Users understand forks better than gradients. Silence in the free tier is a feature, not a limitation.
 
-6. **Assessment invisibility above all.** No UX element should remind the user they are being evaluated. The depth meter shows conversation progress (how far through the 15 turns), not scoring or engagement quality. Nerin observes, doesn't diagnose. The ambient visualization responds to energy, not traits. The assessment runs silently beneath a conversation that feels genuinely human.
+6. **The free weekly letter must feel COMPLETE.** The free version of the Sunday weekly letter is not a preview, not a teaser, not cripple-ware. It is a full descriptive artifact the user is glad to receive. If the free version feels incomplete, the conversion dynamic reverses and users resent the platform. The conversion pitch at the end is Nerin wanting to tell the user more, not a paywall.
 
-7. **Pre-conversation touchpoints must sell the commitment.** Because time-to-value is big-ocean's weakest competitive dimension, every surface before the conversation (landing page, public profile, shared personality card) must work harder than competitors to justify 30-45 minutes. The quality promise must be viscerally clear before turn 1.
+7. **Subscription conversion lives inside the daily loop, not at the assessment end.** The portrait is free. The relationship letter is free. The subscription pitch appears inside the Sunday weekly letter after 2-3 weeks of free recognition, in Nerin's voice: *"I have more I want to say about what comes next."* Three-act story: Act 1 (Day 0-7) build habit, Act 2 (Day 7-21) show the gap, Act 3 (Day 21+) natural unlock.
+
+8. **Sharing should feel like self-expression, not distribution.** The archetype card is something users share because it says something about who they are, not because we asked them to. The card must be beautiful enough to be worth posting. Privacy is handled at the sharing moment — prompt to go public, not buried in settings.
+
+9. **The viral loop is relationship-powered.** The personality card drives broad social sharing; the invite ceremony + relationship letter drive deep dyadic engagement. The relationship letter is free because every letter = potential new user acquisition (zero friction growth). Both paths must be effortless, but they serve different motivations.
+
+10. **Assessment invisibility above all.** No UX element should remind the user they are being evaluated. The depth meter shows conversation progress (how far through the 15 turns), not scoring or engagement quality. Nerin observes, doesn't diagnose. The ambient visualization responds to energy, not traits. The assessment runs silently beneath a conversation that feels genuinely human.
+
+11. **Intimacy Principle is design-reviewed on every change.** "Built for a few people, not a crowd" is not style guidance. Every new surface must pass the audit: no counts, no follower/network language, no search/sort/recommend on Circle, no profile view counters, no sign-up attribution metrics anywhere user-facing, full-width person cards (not grids of avatars).
+
+12. **Pre-conversation touchpoints are now load-bearing.** The anonymous path has been removed. Cold visitors cannot experience Nerin before committing to signup + email verification. Every surface before `/chat` (homepage, Nerin preview, portrait excerpt, public profile they arrived from) must work harder than competitors to justify 30-45 minutes AND signup friction. Trade-off accepted: lower top-of-funnel conversion for higher middle-of-funnel quality (Headspace / BetterUp precedent).
 
 ## Desired Emotional Response
 
@@ -613,28 +761,40 @@ Users will describe big-ocean as "a conversation that sees you" — not a test, 
 **Success states:**
 1. User forgets they're being assessed and engages authentically
 2. User experiences at least one "how did you know that?" moment from Nerin
-3. User completes all turns without checking how many are left
+3. User completes all 15 turns without checking how many are left
 4. User's portrait feels deeply personal — not generic, not interchangeable
-5. User screenshots or shares their portrait within 24 hours
+5. User reaches the focused reading portrait view and reads the entire letter without navigating away
+6. User screenshots or shares their portrait / archetype card within 24 hours
+7. User returns the next day (Day 1) and completes their first silent journal check-in
+8. User reads the first Sunday weekly letter end-to-end (Week 1)
+9. User invites at least one person into Circle within the first 30 days
+10. User either subscribes or dismisses softly at the Week 3+ weekly letter conversion moment — not with resentment
 
 **Failure states:**
 1. User gives surface-level answers throughout, treating it as a quiz to finish
 2. User checks turn count repeatedly — the conversation feels like a task
 3. User completes 15 turns and the results feel generic — worse than a dropout because it generates active negative word-of-mouth
-4. The portrait paywall breaks the emotional arc instead of extending it
-5. User can predict what their results will say before seeing them
+4. User can predict what their results will say before seeing them
+5. The focused reading portrait view feels like a loading screen (rather than Nerin writing) — the emotional peak is lost
+6. User completes the assessment and never returns — the Phase 5 → Phase 6 bridge failed
+7. User opens `/today` for the first daily check-in and the silent journal feels like a chore, not a ritual
+8. The Week 1 free weekly letter feels incomplete or cripple-ware — conversion dynamic reverses
+9. The subscription pitch inside the weekly letter reads as a paywall, not as Nerin wanting to say more
+10. Circle contains only the invite card at Day 30 — the viral / retention flywheel never engaged
 
-### 7.5 Four-Beat Defining Experience
+### 7.5 Four-Beat Defining Experience (Assessment) + The Bridge
 
-The defining experience follows a four-beat rhythm. All four must land for the product to work:
+The assessment follows a four-beat rhythm. All four must land for the assessment onboarding to work — but the assessment is only Act 1 of the full product experience. A fifth beat bridges into the three-space companion world.
 
 **Beat 1 — The Hook (turns 1-3):** Nerin says something that makes the user think "this isn't what I expected — this is better." The quiz expectation breaks. The conversation frame takes hold.
 
-**Beat 2 — The Mirror (turns 8-18):** Nerin reflects something back that the user didn't consciously know about themselves. The "how did you know that?" moment. This is where trust converts to emotional investment. The depth engagement system, ambient visualization, and Nerin's observations must actively earn continued engagement through this mid-conversation zone. Nerin's observations serve double duty: they build trust AND they build portrait anticipation. Each observation is a preview of the portrait's depth — by turn 18, the user should sense that Nerin has been paying attention to everything and the portrait must be incredible.
+**Beat 2 — The Mirror (turns 5-11):** Nerin reflects something back that the user didn't consciously know about themselves. The "how did you know that?" moment. This is where trust converts to emotional investment. The depth engagement system, ambient visualization, and Nerin's observations must actively earn continued engagement through this mid-conversation zone. Nerin's observations serve double duty: they build trust AND they build portrait anticipation. By turn 11, the user should sense that Nerin has been paying attention to everything and the portrait must be incredible.
 
-**Beat 3 — The Free Reveal (post-conversation):** Archetype name, description, evidence-linked narrative, trait/facet data — all free. This proves the system works. The user sees their conversation reflected back accurately. Trust is at its peak. The free layer must feel **accurate but incomplete** — like seeing your reflection in a window vs. in a mirror. Data and evidence confirm "yes, this system understood me." But the narrative thread — the meaning of those patterns, the connections between them, what they say about who the user is becoming — lives exclusively in the portrait. The results page layout should be designed portrait-first, with the portrait as the centerpiece behind the curtain. The free elements surround it — archetype above, evidence alongside, data below. When the portrait is locked, the page feels complete-but-missing-its-heart.
+**Beat 3 — The Convergence (turns 11-15):** Themes deepen and connect. The user begins forming their own hypothesis about what their portrait will say. Anticipation peaks. Nerin's final closing message (FR12) signals *"I have something to share with you."*
 
-**Beat 4 — The Portrait (PWYW curtain):** The portrait — Nerin's personal letter to the user — sits behind a PWYW gate (€1 minimum). The founder's own portrait serves as the conversion bridge: "I built big-ocean because of what Nerin wrote for me. Before you read yours, here's mine." This is personal vulnerability, not a product demo — the founder's willingness to be fully seen IS the conversion mechanism. The founder portrait should be a curated excerpt (30-60 seconds to read), showing the most emotionally resonant passage to demonstrate depth — A/B test which specific excerpt maximizes conversion (the highest-converting passage makes readers imagine their own version). The free results prove accuracy; the founder's portrait proves depth; the payment is a gesture of acceptance, not a transaction. Framing: "Nerin wrote you a portrait. Pay what you feel it's worth." The portrait already exists — the user isn't buying its creation, they're receiving something made for them.
+**Beat 4 — The Portrait Read (focused reading, free):** The portrait is free. The user taps "Show me what you found →" → navigates to `PortraitReadingView` at `/results/$sessionId?view=portrait` → sees the generating state (OceanSpinner + *"Nerin is writing your letter..."*) → letter fades in full-screen, distraction-free, max-width 720px, warm background, letter format. The user reads the letter uninterrupted. This is the emotional peak.
+
+**Beat 5 — The Bridge (return seed + daily world):** At the end of the letter, a warm link: *"There's more to see →"* navigates to the full results/Me page. At the bottom of that page, Nerin plants the return seed — *"Tomorrow, I'll ask how you're doing. Come check in with me."* + notification permission request in Nerin's voice. Tomorrow, the user lands on `/today` for their first silent journal check-in. **The assessment is not the destination; the three-space companion world is.**
 
 ### 7.6 Portrait as the Emotional Peak
 
@@ -644,165 +804,211 @@ The portrait IS the defining artifact of big-ocean — what no competitor offers
 - Must reference 2-3 specific things from the user's conversation — recognizably their words and situations
 - Connects patterns the user didn't connect themselves
 - Every portrait must feel unreproducible for anyone else — one generic or Barnum-effect statement converts skeptics from advocates to active detractors
-- Should identify one specific unexplored thread from the conversation — a half-open door that seeds genuine curiosity for deeper exploration, without feeling like a cliffhanger or withholding tactic. The portrait must feel COMPLETE while leaving one door ajar. In MVP, this drives relationship exploration and sharing. Post-MVP, it drives subscription conversion (conversation extension).
+- Should identify one specific unexplored thread from the conversation — a half-open door that seeds genuine curiosity for deeper exploration without feeling like a cliffhanger or withholding tactic. The portrait must feel COMPLETE while leaving one door ajar. This drives both invite-into-Circle behavior and eventual subscription conversion at the weekly letter.
 
-**Portrait quality is non-negotiable.** A disappointed completer who paid is the worst possible outcome — active negative word-of-mouth from someone who invested 30-45 minutes AND money.
+**The portrait is free.** It is the "feel seen" moment that drives subscription conversion downstream, not the conversion moment itself. Gating it destroys trust before the daily return loop even begins. The portrait delivers for free; the subscription pitch lands 2-3 weeks later inside the Sunday weekly letter, in Nerin's voice, after the daily habit has formed.
+
+**Portrait quality is non-negotiable.** A disappointed completer is the worst possible outcome — active negative word-of-mouth from someone who invested 30-45 minutes. Since the portrait is the first emotional peak in a longer relationship (not a one-time purchase), a mediocre portrait poisons every downstream moment: Day 1 check-in, Week 1 weekly letter, relationship invite, Week 3 subscription pitch.
 
 ### 7.7 Monetization Architecture
 
-**Progressive unlock model:**
+**MVP monetization is a single subscription product. The portrait is free. Relationship letters are free. Everything user-facing at MVP is free except conversation extensions.**
 
-| Layer | Access | What It Contains |
-|-------|--------|-----------------|
-| **Free** | All completers | Archetype + description + evidence snippets + trait/facet data |
-| **Portrait** | PWYW €1 minimum | Nerin's personal letter + 1 relationship credit |
-| **Relationship credit** | €5 per additional credit | Comparison analysis with someone who matters |
-| **Subscription (Post-MVP)** | €10/mo or €100/yr | Coach agent, conversation extension, Growth Journal, pattern analysis, monthly reflection, unlimited relationship portraits, complete portrait at 30/30 |
+**Free tier — everyone:**
+- 15-exchange assessment with Nerin (Director model)
+- Portrait (free — the "feel seen" moment)
+- OCEAN code + archetype + trait/facet scores
+- Three-space navigation (Today / Me / Circle)
+- Silent daily journal + mood calendar
+- **Free weekly descriptive letter from Nerin** (Sunday 7pm, `/today/week/$weekId`)
+- Relationship letter (Section A this year's letter + Section B real-time data grid + Section C letter history + Section E shared notes + Section F next letter countdown)
+- Circle + invite ceremony
+- Shareable public profile (`/public-profile/$id`, private by default)
+- Archetype card sharing
 
-**PWYW modal framing:**
-> *Nerin wrote you a portrait — a personal letter about who you are, drawn from everything you shared.*
->
-> *Your payment also includes one relationship analysis credit.*
->
-> *Pay what you feel it's worth — €1 minimum.*
+**Subscription — €9.99/mo, two MVP perks only:**
 
-The portrait is the emotional headline. The relationship credit is the practical hook that converts fence-sitters — especially relationship explorers who came for the comparison. The founder's vulnerability and Vincent's example portrait demonstrate the depth and specificity of what the user is unlocking.
+| What | Detail |
+|------|--------|
+| **Conversation extension with Nerin** | +15 exchanges to continue the assessment via Director model re-initialization from prior state (FR25) |
+| **Automatic portrait regeneration** | Bundled with the first conversation extension per subscriber — no additional purchase, no separate flow (FR23) |
 
-**Payment implementation:** Polar embedded checkout (modal overlay, no redirect) with Apple Pay / Google Pay priority for one-gesture payment. On `success` event, portrait unfolds. The user never leaves the results page. Polar natively supports PWYW pricing with minimum price. Domain validation required for wallet payment methods.
+All other paid features are post-MVP (see Future Considerations).
 
-**Portrait unlock button for deferred payers:** Portrait is generated and stored at conversation completion, not on-demand. If the user returns later, the portrait is waiting. A portrait unlock button visual signals something personal already exists. Email recapture: "Nerin's portrait is waiting for you."
+**No PWYW, no credits, no pay-per-anything in MVP.** The portrait paywall, the €5 relationship credit, the one-time portrait purchase — all retired. The monetization philosophy is: *Data INPUT is free. Nerin's voice is free at two touchpoints in MVP (portrait, weekly descriptive letter) — the retention engine. Subscription buys more conversation with Nerin, nothing else in MVP.*
 
-### 7.8 Relationship Credit System
+**Subscription conversion moment:** Inside the Sunday weekly letter, end-of-letter, from ~Week 3 onwards. Nerin's voice, not system voice. One primary CTA (*"Unlock Nerin's full weekly letter — €9.99/mo →"*) and soft dismiss (*"Not right now"*). No pricing page, no feature grid. See §Weekly Letter spec for the full copy.
 
-**Credit lifecycle:**
+**Payment implementation:** Polar embedded checkout for the subscription flow. Apple Pay / Google Pay priority. On `success` event, subscription activates and user's Today page updates immediately. No redirect, no disruption of the reading flow.
 
-| Event | Credit Change |
-|-------|-------------|
-| Portrait PWYW payment (first time only) | +1 |
-| €5 credit purchase | +1 |
-| Relationship analysis accepted (scanner pays) | -1 (consumed) |
+### 7.8 Relationship Letter as Free Growth Engine
 
-Credits never expire. One free credit per account with first portrait purchase.
+The relationship letter is the primary growth mechanism. It is free because every letter = potential new user acquisition (zero friction growth). The intimacy of the dyad is the marketing.
 
-**Two Polar products:**
-1. Portrait — PWYW, €1 minimum, one-time (includes 1 relationship credit)
-2. Relationship credit — fixed €5, purchasable multiple times
+**Flow:**
 
-**€5 prices intention, not features.** The platform values meaningful relationships — the price should be high enough that users are deliberate about who they compare with. Partners, best friends, siblings — not casual curiosity.
+1. User A completes assessment → receives portrait → lands in three-space world
+2. User A navigates to Circle → taps invite ceremony card → Nerin-voiced screen → names the invitee (optional) → chooses QR / link / native share
+3. User B receives invite → signs up → completes assessment → receives their portrait
+4. On Section B data completing for both users, Nerin generates the Section A letter → both notified → first read enters the "Read Together Again" ritual screen
+5. Section B (real-time data grid) updates automatically as either user has new conversations
+6. On connection anniversary (Year 1+): automatic Section A regeneration → both notified ("Your [Year] letter from Nerin is ready") → new letter added to Section C history → previous letter preserved forever
+7. User B may invite others → compounds the flywheel
 
-**Connection model:** Both users must have completed assessments. User A generates a temporary QR code (from results page or dashboard). User B scans the QR, sees User A's archetype card, and accepts the analysis (spending their own credit). No invitation flow, no pending states. QR-only, in-person or shared URL. See Journey 2 (§10.2) for full flow details.
+**QR consent model:**
+- Accepting the QR = sharing personality scores with the other user forever (until revoked)
+- Nerin uses ongoing conversation data to keep the relationship letter current
+- One-time ongoing consent, not per-action opt-in
+- Revocable at any time from Me → Your Circle → person card → "Stop sharing"
+- **No per-regeneration approval.** Original QR consent covers all future annual letter regenerations. Notification is the mechanism for keeping users informed.
 
-**Viral loop:**
-```
-User A completes assessment → shares archetype card
-    ↓
-User B sees card → signs up → completes assessment (Journey 1)
-    ↓
-User A and B meet → QR scan → relationship analysis (€5, scanner pays)
-    ↓
-Both experience the relationship analysis → talk about it
-    ↓
-User B shares their archetype card → User C signs up
-    ↓
-...each new user feeds the growth loop through sharing
-```
+**Circle card "last shared" signal:** Tracks moments of mutual understanding (relationship letter views, shared notes, portrait sends) — celebrates presence, not activity. NOT a streak. No penalty, no shaming for inactivity.
 
 ### 7.9 Novel UX Patterns
 
 **Familiar-adapted:**
 - Conversational interface (familiar from messaging apps, adapted: no timestamps, no avatars, ambient environment)
 - Profile sharing (familiar from social platforms, adapted: generic archetype card with visibility toggle at share moment)
-- PWYW pricing (familiar from indie games/music, adapted: embedded modal checkout with wallet payments, no redirect)
+- Bottom nav with three tabs (familiar from mobile apps, adapted: Today / Me / Circle with distinct emotional registers, no dashboard, no feed)
+- Daily mood check-in (familiar from Headspace / BeReal, adapted: personality-typed prompt, silent deposit for free tier, no LLM response)
+- Weekly content notification (familiar from Spotify Wrapped / Substack, adapted: letter format from Nerin, not a report)
 
 **Genuinely novel:**
 - Assessment invisibility — the user is being scientifically assessed but the UX never reveals this
 - Energy-responsive ambient visualization — responds to conversational energy, not personality dimensions
-- Depth meter as conversation progress — vertical bar with turn-based milestones at 25/50/75%, showing how far through the conversation
+- Depth meter as conversation progress — vertical bar with turn-based milestones, showing how far through the 15 turns
 - Evidence-linked personality narrative — results reference specific things the user said
-- Conversation highlights — user-selected moments from the conversation surfaced in results and relationship analysis
-- Founder portrait as conversion bridge — not a product demo, a personal artifact that previews emotional weight
-- Portrait passage highlighting — mark and share specific passages as visual artifacts
-- Progressive unlock results page — layers reveal as user invests (free → portrait → social). Post-MVP: subscription adds conversation extension
-- Paywall as commitment filter — €1 filters for users who genuinely value the experience, purifying the viral loop
+- Conversation highlights — user-selected moments from the conversation surfaced in results and relationship letters
+- **Nerin output grammar (three visual formats)** — Journal (margin notes, post-MVP paid), Letter (focused reading: portrait / weekly letter / annual relationship letter), Chat (subscriber mini-dialogue, post-MVP). Three emotional registers carried by three typographic systems.
+- **Silent journal fork** — Free tier = silent deposit, no LLM. Paid tier (post-MVP) = daily dialogue. Qualitative difference, not quantitative. Silence is a feature.
+- **Weekly letter as subscription conversion moment** — Conversion lives inside the free daily loop, not at the assessment end. Three-act story across 3+ weeks.
+- **Post-assessment focused reading transition** — First portrait read protected by a dedicated distraction-free container (`PortraitReadingView`), generating state with Nerin-voiced spinner line, letter fades in full-screen.
+- **Return seed in Nerin's voice** — Notification permission request phrased as Nerin asking, not as system UI. *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"*
+- **Relationship letter as living relational space** — Not an artifact. Annual regeneration ritual (Spotify Wrapped), letter history as multi-year biography, Section B real-time data grid updating as users have new conversations.
+- **Intimacy Principle as brand DNA** — Every feature passes an explicit "built for a few people, not a crowd" audit. No counts, no follower language, no search/sort/recommend, no profile view metrics.
+- **Invite ceremony as self-expression** — Copy leads with the reward (letter about your dynamic), not the cost (30-min conversation). Name field as intentionality ceremony.
 
 ### 7.10 Experience Mechanics
 
-**1. Initiation:**
-- User arrives via landing page, shared personality card, or public profile
-- Auth-gate collects email (minimal friction, enables recapture)
-- Nerin's first message IS the onboarding — no tutorial, no explainer
-- First message breaks the quiz mental model immediately
+**1. Pre-conversation (homepage → signup → verification → onboarding):**
+- Cold visitor arrives via homepage, shared personality card, or public profile
+- Homepage conversion is load-bearing (anonymous path removed): Nerin conversation preview (FR63) and portrait excerpt (FR62) sell the commitment
+- Signup (email + password, FR50) → email verification (FR50a, FR50b)
+- Pre-conversation onboarding introducing Nerin and format (FR54)
+- Entry into `/chat` with an authenticated user ID from turn 1
 
-**2. Interaction:**
+**2. Assessment (15 turns, 30-45 min):**
 - 15-turn guided conversation with three-act arc (Settling In → Deep Exploration → Convergence)
 - Pacing system adapts to engagement depth (light vs. deep seekers)
 - Depth meter (vertical bar) and ambient visualization provide non-numeric progress
 - Nerin's observations surface patterns, build trust, and build portrait anticipation simultaneously
-- Save-and-resume with email recapture for interrupted sessions
+- Save-and-resume works for every user (email captured upfront, FR76 drop-off re-engagement possible)
 
-**3. Transition:**
-- Nerin's final message plants the seed — signals she has formed a perspective, builds anticipation without being explicit about the portrait
-- 3-5 second breath — ambient visualization shifts, environment transforms
-- Portrait is generated only after payment (LLM generation cost) — the "breath" is a designed pause for emotional transition, not buffering
-- The user is emotionally primed: trust is high, curiosity peaked
+**3. Closing exchange → focused reading transition:**
+- Nerin's distinct closing per FR12
+- Input field fades
+- Single button below closing message: **[Show me what you found →]** — user-voiced, warm, keeps the conversation feel alive for one more beat
+- Tap button → navigate to `/results/$sessionId?view=portrait` (focused reading, NOT to full results page first)
 
-**4. Free Reveal:**
-- Archetype name + description + evidence-linked snippets + trait/facet data
-- Evidence snippets display life domain tags as subtle metadata (e.g., small label: "work", "relationships", "daily life") — helps user understand the source context of each observation
-- Life domains are NOT surfaced as a taxonomy or breakdown — Nerin naturally references domain-specific patterns in conversation and portrait when they're meaningful
-- Proves accuracy, creates intellectual satisfaction
-- Story gap visible — data is there but meaning is missing
-- Portrait space is the focal point of the layout — visibly waiting
+**4. PortraitReadingView generating state (new work required):**
+- OceanSpinner centered
+- Nerin-voiced line: *"Nerin is writing your letter..."*
+- No other content visible
+- Portrait generated server-side; polling / subscription triggers state transition when ready
 
-**5. Portrait Curtain:**
-- Founder's portrait (curated excerpt, 30-60s read) as personal vulnerability bridge
-- PWYW gate: founder's love letter + Vincent's portrait as example + relationship credit mention. Polar embed, default €5, min €1
-- Polar embedded checkout — modal overlay, Apple Pay/Google Pay, `success` event triggers portrait unfold
-- Server-side payment verification before serving portrait content (success event → Polar API verify → serve)
-- Portrait unlock button visual for deferred payers, email recapture for return visits
+**5. Portrait read (focused reading, free):**
+- Spinner resolves and the letter fades in
+- Full-screen, distraction-free, max-width 720px, warm background, letter format
+- User reads uninterrupted — this is the emotional peak
+- At the end of the letter: warm link *"There's more to see →"* → `/results/$sessionId` (full results/Me page with inline portrait, radar, scores, etc.)
 
-**6. Post-Portrait:**
-- Portrait passage highlighting for sharing
-- Personality card always shareable
-- 1 free relationship credit unlocked (first portrait purchase only)
-- Additional relationship credits available (€5 each)
-- Post-MVP: conversation extension (subscription) seeded by portrait's half-open door
+**6. Full results/Me page + return seed:**
+- Identity hero (archetype, OCEAN code, radar chart)
+- Portrait section renders inline via `PersonalPortrait` for re-read-in-context
+- Public Face section with private default
+- Subscription pitch visible (free-tier CTA — "Unlock Nerin's full attention" — soft, not aggressive)
+- Circle section (empty on first visit, with invite ceremony card)
+- Share & invite affordances revealed on scroll
+- **Return seed at the bottom:** Nerin's message *"Tomorrow, I'll ask how you're doing. Come check in with me."* + notification permission request in Nerin's voice
+
+**7. Day 1+ daily return loop:**
+- Default landing for every subsequent visit: `/today`
+- Pre-check-in: personality-typed prompt + 5 mood options + optional text + week dots (7 days, today empty)
+- Post-check-in (free tier): entry saved silently to mood calendar, NO LLM response, quiet anticipation line displayed
+- Static after check-in — one action, come back tomorrow
+- Contextually-surfaced library article (2-3/week, not daily, cheap static content)
+
+**8. Sunday weekly letter (free, everyone):**
+- Sunday 7pm local time push notification: *"Your week with Nerin is ready"*
+- Tap → `/today/week/$weekId` focused reading view (same visual language as `PortraitReadingView`)
+- Free version: date range header, personalized opening, week narrative (2-3 paragraphs), visual mood shape (7-day dot grid), "what stood out" beat, Nerin's sign-off
+- Complete and satisfying on its own — not a preview
+- End-of-letter conversion pitch (from Week 3+): Nerin's voice, one CTA, soft dismiss
+
+**9. Relationship flywheel (Circle + invite ceremony + relationship letter):**
+- User navigates Circle → bottom invite ceremony card → ceremony screen → name field → share method
+- Invitee signs up → completes assessment → receives portrait
+- Section A letter generated automatically when both users have sufficient data
+- First read: "Read this together when you can sit with it" ritual screen → Section A letter fades in
+- Section B data grid updates automatically as either user continues to have conversations with Nerin
+- Annual regeneration on connection anniversary
+
+**10. Subscription conversion (Week 3+, inside weekly letter):**
+- End of free weekly letter
+- Nerin's voice copy: *"I have more I want to say about what comes next. With a subscription, I can write you a fuller letter each week…"*
+- One primary CTA: *"Unlock Nerin's full weekly letter — €9.99/mo →"*
+- Soft dismiss: *"Not right now"* — returns next Sunday with same framing
+- On success: subscription activates → Today page updates → next weekly letter is the full version → first conversation extension becomes available (with bundled portrait regeneration)
 
 ### 7.11 The Reverse-Engineered Chain
 
-Every link must hold — if any breaks, downstream conversion fails:
+Every link must hold — if any breaks, downstream conversion fails. The chain is longer than before because the product continues past the assessment:
 
 ```
+Homepage: Nerin preview + portrait excerpt sell 30+ min signup commitment
+    ↓
+Signup + email verification: email captured upfront, auth from turn 1
+    ↓
 Turn 1-3: Hook breaks quiz expectation → user engages authentically
     ↓
-Turn 8-18: Nerin's observations build trust AND portrait anticipation
+Turn 5-11: Nerin's observations build trust AND portrait anticipation (the Trust-Surprise loop)
     ↓
-Turn 15: Nerin's final message signals "I have something to share"
+Turn 15: Nerin's distinct closing signals "I have something to share"
     ↓
-Transition: 3-5 second breath, environment shifts, portrait already generating
+Closing exchange: "Show me what you found →" button (user-voiced)
     ↓
-Free reveal: Archetype + evidence + data = accuracy proof, story gap visible
+Navigate to /results/$sessionId?view=portrait (focused reading, NOT results page first)
     ↓
-Founder portrait: Personal vulnerability demonstrates format depth
+PortraitReadingView generating state: OceanSpinner + "Nerin is writing your letter..."
     ↓
-PWYW gate: Founder's love letter + example portrait + 1 relationship credit. Polar embed, one gesture.
+Letter fades in: Nerin's voice, specific references, unreproducible, half-open door — FREE
     ↓
-Portrait unfolds: Nerin's voice, specific references, unreproducible, half-open door
+End-of-letter: "There's more to see →" → full results/Me page
     ↓
-Screenshot + share: Passage so resonant it demands sharing
+Full Me page scroll: identity hero, re-read portrait inline, public face control, invite ceremony
     ↓
-Share: Archetype card enters friend group vocabulary
+RETURN SEED: Nerin's message + notification permission in Nerin's voice — Phase 5→6 bridge fires
     ↓
-New user signs up via shared card → completes assessment (Journey 1)
+Day 1: User opens app → lands on /today → first silent journal check-in
     ↓
-Portrait purchase (PWYW) → gets 1 relationship credit
+Days 1-6: Silent daily deposits + week-so-far dots + quiet anticipation line
     ↓
-QR scan → relationship analysis → shared reading experience
+Sunday Week 1: Push notification → weekly letter focused reading view → FREE letter complete and satisfying
     ↓
-Loop compounds: Each portrait payment funds the next relationship analysis
+Days 7-20: Habit forms; silent daily deposits; user experiences accumulating mood calendar
+    ↓
+Circle invite: User invites someone → invitee completes assessment → relationship letter generated → shared Read Together Again ritual (viral flywheel)
+    ↓
+Sunday Week 3+: Weekly letter includes subscription conversion moment in Nerin's voice
+    ↓
+Conversion: User subscribes → conversation extension + bundled first portrait regeneration unlock
+    ↓
+Subscription retention: Sunday weekly letters get the prescriptive layer, the conversation can be extended, portrait can regenerate, post-MVP daily dialogue will arrive
 ```
 
-**PWYW amount as product metric:** Track payment amounts as a quality signal. Average payment above €1 minimum indicates emotional resonance; payments clustering at €1 may signal the portrait isn't landing.
+**Three-act conversion story tracking:** Act 1 = Day 0-7 (build habit, no subscription mention). Act 2 = Day 7-21 (show the gap in the weekly letter, ghost subscriber section visible on Today). Act 3 = Day 21+ (natural unlock inside the flow the user already uses).
+
+**Metrics watchpoints:** Day 7 return >40%, Day 30 retention >25%, Sunday weekly letter open rate >60%, daily silent check-in rate >30%, invite-to-Circle rate >25%, Week 3+ subscription conversion from weekly letter >3%. Qualitative signal: "companion not test" — do users describe big-ocean as a relationship with Nerin, not an assessment they took?
 
 ## Visual Design Foundation
 
@@ -1221,11 +1427,13 @@ Unified visual language for all charts and data displays:
 
 ## User Journey Flows
 
-### 10.1 Journey 1: First-Timer Flow (Léa)
+### 10.1 Journey 1: First-Timer Flow (Léa) — Onboarding Tunnel into Companion World
 
-**Goal:** Curious stranger → completed assessment → paying portrait customer → sharing ambassador
+**Goal:** Curious stranger → signed-up user → completed assessment → free portrait read in focused reading → lands in three-space companion world with a return seed planted for Day 1
 
-**Entry point:** Sees friend's archetype card on social media → taps link → public profile
+**Entry point:** Sees friend's archetype card on social media → taps link → public profile (or directly via homepage)
+
+**End state:** First silent journal check-in on Day 1 (via notification or organic return). Subscription conversion is Week 3+ and lives in Journey 8.
 
 #### Flow Diagram
 
@@ -1240,22 +1448,24 @@ flowchart TD
     D --> F["CTA: comparison-driven ('What's YOUR code?')"]
     E --> F
 
-    %% Auth
+    %% Auth (mandatory — anonymous path removed)
     F --> G{Has account?}
-    G -->|No| H[Sign Up — email/password]
+    G -->|No| H[Sign Up — email/password per FR50]
     G -->|Yes| I[Log In]
-    H --> H2["Verify-email page:
+    H --> H2["Verify-email page per FR50a/FR50b:
     'Check your inbox — click the link to activate your account'
     Resend button if not received. Link expires after 1 week"]
     H2 --> H3["User clicks verification link in email"]
-    H3 --> J[Account activated → straight to conversation]
-    I --> J
+    H3 --> H4["Pre-conversation onboarding per FR54:
+    introduces Nerin and format briefly"]
+    I --> H4
+    H4 --> J[Enter /chat with authenticated user ID from turn 1]
 
-    %% Conversation start — spread across 1-3 exchanges
+    %% Conversation start — spread across exchanges 1-3
     J --> K["Nerin exchange 1: scannable greeting + first question
-    (who she is, what you'll do together, question visible without scrolling)"]
+    (scannable on mobile, question visible without scrolling)"]
     K --> K2["Exchanges 2-3: Nerin naturally weaves in
-    'not therapy' framing, duration, what you'll get"]
+    framing, duration, what to expect"]
 
     %% Conversation loop
     K2 --> L[Conversation loop: exchanges 1-15]
@@ -1274,79 +1484,136 @@ flowchart TD
 
     %% Drop-off
     L -->|User leaves| R[Session saved + last topic stored as string]
-    R --> S["Re-engagement email:
+    R --> S["Re-engagement email per FR76:
     'You and Nerin were talking about [topic]...'
-    (templated, no LLM call)"]
+    (templated, no LLM call)
+    Works for every started user — email captured upfront"]
     S --> T["Or: logged-in prompt on return
     (including if visiting a friend's profile)"]
     T --> L
 
     %% Conversation end
-    L --> U["Exchange 15: complete
-    (Nerin has been teasing portrait since 75% milestone)"]
+    L --> U["Exchange 15 per FR12: Nerin's distinct closing message
+    'I have something to share with you.'
+    Input field fades"]
 
-    %% Results
-    U --> V["Results Page: OCEAN code + archetype + trait/facet scores
-    Relationship CTA and sharing options visible"]
+    %% Closing exchange → focused reading button (user-voiced)
+    U --> U2["Single button appears below closing:
+    [Show me what you found →]
+    User-voiced, warm, keeps conversation feel alive"]
 
-    %% PWYW
-    V --> W[PWYW modal auto-opens]
-    W --> X["Founder story: dense, not long (3-4 sentences)
-    Love letter essence — every sentence earns its place"]
-    X --> Y["Vincent's portrait: scrollable preview
-    Shows spine structure, specificity, tone, depth"]
-    Y --> Z{Pay or skip?}
-    Z -->|Pays ≥€1| AA[Payment via Polar — Apple/Google Pay]
-    Z -->|Skips| AB["Free results — archetype card still shareable
-    Share prompt equally prominent"]
+    %% Navigate to focused reading (NOT to results page)
+    U2 --> V["Navigate directly to
+    /results/$sessionId?view=portrait
+    (focused reading view)"]
 
-    %% Portrait
-    AA --> AC[Portrait generates — Nerin's letter]
-    AC --> AD{Generation succeeds?}
-    AD -->|Yes| AE[Portrait delivered — personal letter from Nerin]
-    AD -->|Fails| AF[Retry button]
-    AF --> AC
+    %% PortraitReadingView generating state (new work — FR93-FR95)
+    V --> V1["PortraitReadingView in generating state:
+    OceanSpinner centered
+    Nerin-voiced line: 'Nerin is writing your letter...'
+    No other content visible"]
+    V1 --> V2{Generation succeeds?}
+    V2 -->|Yes| V3["Spinner resolves, letter fades in
+    Full-screen, max-width 720px
+    Warm background, letter format
+    User reads uninterrupted"]
+    V2 -->|Fails| V4["Retry state — Nerin-voiced reassurance
+    'Something slipped. One moment.'
+    Auto-retry, no user action needed"]
+    V4 --> V1
 
-    %% Post-portrait — share, no survey
-    AE --> AG["Share prompt: 'Show someone who you are'
+    %% Portrait is free — no paywall
+    V3 --> V5["THE EMOTIONAL PEAK
+    Portrait is FREE — no PWYW, no paywall
+    The 'feel seen' moment"]
+
+    %% End-of-letter transition
+    V5 --> V6["At bottom of PortraitReadingView:
+    warm link 'There's more to see →'
+    Navigate to /results/$sessionId (full Me page)"]
+
+    %% Full Me page first visit
+    V6 --> W["Full results/Me page loads:
+    - Identity hero (archetype, OCEAN code, radar)
+    - Portrait renders inline via PersonalPortrait
+    - Your Public Face (private by default)
+    - Subscription pitch (soft)
+    - Circle section (empty, invite ceremony card)
+    - Share & invite affordances on scroll"]
+
+    %% Return seed — THE Phase 5→6 bridge (FR96)
+    W --> W1["RETURN SEED at bottom of page:
+    Nerin's message:
+    'Tomorrow, I'll ask how you're doing.
+    Come check in with me.'
+    +
+    Notification permission in Nerin's voice:
+    'I'd like to check in with you tomorrow.
+    Mind if I send a quiet note?'
+    NOT a system-voice prompt"]
+    W1 --> W2{Permission granted?}
+    W2 -->|Yes| W3["Schedule first daily prompt for next day
+    at profile-appropriate time
+    (post-MVP: personality-typed; MVP: default 7pm)"]
+    W2 -->|No| W4["Relationship still works
+    User opens app themselves — no lock-in"]
+
+    %% Share + invite (revealed on scroll, not competing)
+    W --> X["Share prompt: 'Show someone who you are'
     Archetype card download (1:1 + 9:16) + Web Share
-    Screenshots are valid sharing too"]
-    AB --> AG
+    Screenshots also valid"]
+    W --> Y["Invite ceremony card in Circle section
+    → Journey 7 (Invite Ceremony)"]
+
+    %% Day 1 return
+    W3 --> Z1["DAY 1: Quiet notification fires
+    'Nerin is wondering how you're doing'"]
+    W4 --> Z2["DAY 1+: User opens app organically
+    Default landing: /today (three-space world)"]
+    Z1 --> Z2
+    Z2 --> Z3["First silent journal check-in
+    → Journey 2 (Daily Silent Journal)"]
 
     %% Growth loop
-    AG --> AH[Shares to friends — growth loop begins]
-    AH --> AI[Friend lands on Léa's public profile → cycle restarts]
+    X --> AA[Shares to friends — growth loop begins]
+    AA --> AB[Friend lands on Léa's public profile → cycle restarts]
 
-    %% Relationship credit
-    AE --> AJ["1 free relationship credit unlocked
-    (first portrait only, lifetime)"]
-    AJ --> AK["QR scan with another completed user → Journey 2"]
+    %% Relationship flywheel
+    Y --> AC["Journey 7: Invite ceremony
+    → invitee completes assessment
+    → Journey 6: Relationship Letter Flow"]
 ```
 
 #### Screen States & Key Moments
 
 | Step | Screen | Key UX Element | Purpose |
 |------|--------|---------------|---------|
-| Public Profile | `/profile/:id` | Archetype name + description + OCEAN code with tooltips, GeometricSignature, trait bars on scroll | Hook comparison curiosity, tooltips aid understanding |
-| Sign Up | `/signup` | Email/password | Minimal friction — one screen, redirects to verify-email page after submission |
-| Verify Email | `/verify-email` | "Check your inbox" message + resend button | Gate before platform access. Resend available if link expired or not received. Link expires after 1 week |
+| Public Profile | `/public-profile/$id` | Archetype name + description + OCEAN code with tooltips, GeometricSignature, trait bars on scroll | Hook comparison curiosity, tooltips aid understanding |
+| Sign Up | `/signup` | Email/password (FR50), one screen | Minimal friction — redirects to verify-email page after submission |
+| Verify Email | `/verify-email` | "Check your inbox" message + resend button (FR50a/50b) | Gate before platform access. Resend available if link expired or not received. Link expires after 1 week |
+| Pre-conversation onboarding | `/chat` (intro) | Brief introduction to Nerin and format (FR54) | Sets expectations without overwhelming |
 | Exchange 1 | `/chat` | Nerin's scannable greeting + first question (visible without scrolling on mobile) | Start conversation, don't overwhelm |
-| Exchanges 2-3 | `/chat` | Nerin weaves in framing naturally ("not therapy", ~30 min, what you'll get) | Context spread across messages, not front-loaded |
-| Depth Meter | `/chat` sidebar | Visual milestones at 25% (~4), 50% (~8), 75% (~11) — turn-based | Progress reassurance, sunk-cost motivation |
+| Exchanges 2-3 | `/chat` | Nerin weaves in framing naturally | Context spread across messages, not front-loaded |
+| Depth Meter | `/chat` sidebar | Visual milestones at 25% / 50% / 75% — turn-based | Progress reassurance, sunk-cost motivation |
 | Feel-seen Moments | In-conversation | Only attempted when evidence confidence is high | Mid-conversation value delivery — swing only when confident |
-| 75%+ | In-conversation | Nerin teases portrait: builds anticipation for what she's written | User finishes *wanting* to read Nerin's letter |
-| Results | `/results` | OCEAN code strand, radar chart, trait cards, archetype hero, relationship CTA, sharing options | Scientific credibility + delight |
-| PWYW Modal | Overlay | Dense founder story (3-4 sentences) + scrollable Vincent portrait preview | Shows what they're buying — quality, specificity, tone |
-| Portrait | Below results | Spine-format letter from Nerin (AI-generated sections) | Emotional payoff |
-| Share | Post-portrait or post-skip | Archetype card (1:1 + 9:16) + Web Share. Screenshots also valid | Growth loop — convenience layer, not gate |
+| Exchange 15 | `/chat` | Nerin's distinct closing (FR12) + [Show me what you found →] button | User-voiced transition, conversational continuity |
+| PortraitReadingView generating | `/results/$sessionId?view=portrait` | OceanSpinner + "Nerin is writing your letter..." | Emotional framing, not a loading screen |
+| PortraitReadingView ready | `/results/$sessionId?view=portrait` | Letter fades in, full-screen max-width 720px, warm background | THE emotional peak — free, distraction-free |
+| End-of-letter link | PortraitReadingView bottom | "There's more to see →" warm link | Soft transition to full Me page |
+| Full Me page | `/results/$sessionId` | Identity hero, inline portrait, public face control, subscription pitch, empty Circle + invite, share affordances | Explore-don't-dump, progressive disclosure |
+| Return Seed | Me page bottom | Nerin's message + Nerin-voiced notification permission request | Phase 5→6 bridge — the single most important retention moment |
+| Day 1 silent check-in | `/today` | First journal deposit | Journey 2 begins |
 
 #### Decision Points
 
 1. **Public profile scroll depth** — Quick glancers see archetype + description + code (tooltips help). Deep scrollers see scientific data. Both reach comparison-driven CTA.
-2. **Director model adaptation** — Nerin matches user energy/telling continuously. Goes deeper when user signals readiness. Stays light and curious when user is guarded. Feel-seen moments only attempted at high evidence confidence — a missed observation is worse than none.
-3. **Mid-conversation drop-off** — Session auto-saves. Last conversation topic stored as simple string. Re-engagement email templates in the topic ("You and Nerin were talking about [topic]"). Logged-in prompt appears on return, including via friend's profile link. One email only — respect silence.
-4. **PWYW pay or skip** — Skip gets free results + equally prominent share prompt. Pay unlocks portrait + 1 free relationship credit (first purchase only). Founder story is dense not long. Vincent's portrait preview is scrollable — shows enough depth to demonstrate value.
-5. **Sharing** — Screenshots are valid sharing. Archetype card is a convenience layer: prettier format + profile link for conversion. Card designed for destination (Stories 9:16, link previews 1:1).
+2. **Auth path is mandatory** — The anonymous conversation path has been removed. All users sign up and verify email before turn 1. Homepage conversion is now load-bearing.
+3. **Director model adaptation** — Nerin matches user energy/telling continuously. Goes deeper when user signals readiness. Stays light and curious when user is guarded. Feel-seen moments only attempted at high evidence confidence — a missed observation is worse than none.
+4. **Mid-conversation drop-off** — Session auto-saves. Last conversation topic stored as simple string. Re-engagement email templates in the topic (per FR76). Logged-in prompt appears on return. One email only — respect silence.
+5. **Closing exchange → focused reading** — The button is user-voiced ("Show me what you found") and navigates directly to `/results/$sessionId?view=portrait` (NOT to the full results page first). The focused reading container exists to protect the emotional weight of the first read.
+6. **Portrait read is FREE** — No PWYW, no modal, no paywall. The portrait is the "feel seen" moment that powers everything downstream. Gating it destroys trust before the daily return loop even begins.
+7. **Return seed permission outcome** — Permission granted → schedule Day 1 notification. Permission denied → no lock-in, daily loop still works via organic return. Either way, Day 1 the user lands on `/today` by default.
+8. **Sharing vs invite** — Sharing the archetype card (broad viral) and the invite ceremony (deep dyadic) are two different paths; both are revealed on scroll below the identity hero, neither blocks the other.
 
 #### Error Recovery
 
@@ -1356,522 +1623,646 @@ flowchart TD
 | Verification email not received | Resend button on `/verify-email` page (rate-limited) |
 | Verification link expired | Redirect to `/verify-email` with "Link expired" message + resend button |
 | Login with unverified account | Redirect to `/verify-email` with resend option |
-| Conversation interrupted | Session saved, topic stored, templated re-engagement email |
+| Conversation interrupted | Session saved, topic stored, templated re-engagement email (FR76) |
 | Feel-seen moment doesn't land | Nerin stays curious, doesn't double down — redirects naturally |
-| PWYW payment fails | Retry, change method, or skip |
-| Portrait generation fails | Retry button, status indicator |
-| Portrait doesn't resonate | Relationship analysis and sharing options on results page |
+| PortraitReadingView generating state stuck | Auto-retry with Nerin-voiced reassurance; escalate to soft error after 3 retries |
+| Portrait generation fails outright | "Nerin needs a moment" screen, backend reconciles, user notified by email when ready |
+| Portrait doesn't resonate | Me page shows inline portrait + invite ceremony + share affordances + subscription pitch — multiple next steps |
+| Notification permission denied | Daily loop still works via organic return; no lock-in; Circle and weekly letter arrive regardless |
 
 #### Flow Optimizations
 
-1. **Zero-to-value in 3 taps** — Public profile → CTA → Sign up → verify email → conversation. The verification step adds one async gate (check inbox) but ensures email recapture reliability.
-2. **Archetype description + tooltips on public profile** — Visitor understands what they're looking at without a tutorial.
-3. **Nerin's context spread across exchanges 1-3** — First message scannable on mobile, question visible without scrolling.
-4. **Adaptive pacing, not scripted beats** — Director model reads energy/telling, Nerin matches the user's pace. Big ocean is a self-understanding companion, not a script.
-5. **Feel-seen moments gated by confidence** — Only attempted when evidence is strong. Failed observation breaks trust — better to stay curious than swing and miss.
-6. **Depth meter milestones at 25/50/75%** — Turn-based visual markers, don't influence Nerin's behavior.
-7. **Dense PWYW modal** — Founder story in 3-4 sentences + scrollable portrait preview showing depth and specificity. Not too short (user won't see value) or too long (user skips).
-8. **Portrait → Share (no micro-survey)** — Emotional peak flows to action. Behavioral proxies (share rate, relationship initiation, return visits) track resonance.
-9. **Screenshots are sharing** — Archetype card is convenience layer (prettier + profile link). Growth loop works either way.
-10. **Simple re-engagement** — Last topic stored as string during conversation, templated into email. No LLM call needed. One email only — respect silence.
+1. **Homepage is load-bearing** — Anonymous path removed means cold visitors must commit to signup + email verification before experiencing Nerin. Homepage Nerin preview (FR63) and portrait excerpt (FR62) do the sales work that the anonymous conversation used to do.
+2. **Email captured upfront** — Enables FR76 drop-off re-engagement for every started user. No anonymous-to-authenticated session linking needed.
+3. **User-voiced closing button** — "Show me what you found" keeps the conversational register alive for one more beat before transitioning to focused reading. Feels like asking Nerin, not clicking a UI element.
+4. **Focused reading as the first portrait destination** — Not the full results page. Protects the emotional weight of the first read. One extra navigation step is a tiny price for a distraction-free letter experience.
+5. **Generating state in Nerin's voice** — "Nerin is writing your letter..." frames the wait as intimate, not as buffering.
+6. **Portrait is free** — No PWYW. The portrait is the acquisition engine, not the revenue engine. Revenue lives in the Sunday weekly letter at Week 3+ (Journey 8).
+7. **End-of-letter link is warm** — "There's more to see →" rather than "Continue" or "Next". Carries the letter's emotional register into the full Me page.
+8. **Return seed in Nerin's voice, NOT system voice** — "I'd like to check in with you tomorrow. Mind if I send a quiet note?" The notification permission request is framed as Nerin asking, which is the highest-converting permission copy in the product.
+9. **Day 1 default landing is `/today`** — After the first visit, the user never lands on `/me` by default again. Me becomes the low-frequency identity space; Today becomes the daily habit.
+10. **Sharing + invite + subscription pitch coexist** — None of them blocks the others. The user can share, invite, and subscribe in any order, at any time, without feeling funneled.
 
-### 10.2 Journey 2: Relationship Analysis Flow
+### 10.2 Journey 2: Daily Silent Journal Flow
 
-**Goal:** Two users with completed assessments → QR scan → analysis generates → shared reading experience
+**Goal:** Daily return → silent mood + note deposit → mood calendar entry → week-so-far dots update → quiet anticipation line reminds of Sunday weekly letter → user closes app within ~10 seconds on quiet days, 5 minutes on deep days.
 
-**Entry point:** User A opens QR drawer from results page or dashboard. Both users must have accounts + completed assessments.
+**Entry point:** Either a quiet Nerin-voiced notification ("Nerin is wondering how you're doing") or organic app open. Default landing after the first post-assessment visit is always `/today`.
+
+**Principle:** BeReal philosophy. One daily action. Content gated behind the user's own deposit. Static after check-in — no feed, no scrolling through yesterday. Silence in the free tier is a feature, not a limitation.
 
 #### Flow Diagram
 
 ```mermaid
 flowchart TD
-    %% Precondition
-    A["Precondition: both users have accounts
-    + completed assessments"]
+    %% Trigger
+    A{"How does the user arrive?"}
+    A -->|Quiet Nerin notification| B["Day 1+ quiet push notification
+    (Nerin's voice, not system voice)
+    'Nerin is wondering how you're doing'
+    Tap → /today"]
+    A -->|Organic return| C["User opens app on their own
+    Default authenticated landing: /today"]
+    A -->|Post-assessment Day 0| D["First arrival via return seed
+    notification permission accepted on Me page"]
 
-    %% QR Drawer — private, on-demand
-    A --> B["User A goes to results page or dashboard"]
-    B --> C["Opens QR drawer
-    → QR generated on open
-    TTL: 6 hours, auto-regenerates every hour
-    while drawer stays open"]
+    %% Arrive on /today
+    B --> E["/today — pre-check-in state"]
+    C --> E
+    D --> E
 
-    %% Scanning
-    C --> D["User B scans QR (phone camera)
-    or opens shared URL"]
-    D --> E["Browser opens URL →
-    User A's archetype card displayed"]
+    %% Pre-check-in state
+    E --> F["Pre-check-in layout:
+    - Personality-typed prompt from Nerin
+      (MVP: one default prompt;
+       post-MVP: profile-aware per user)
+    - 5 mood options (emoji selection)
+    - Optional text field ('One note, if you want')
+    - Week dots: 7 days, today empty
+    - Previous days filled based on past check-ins
+    - Bottom nav persistent: Today / Me / Circle"]
 
-    %% Auth gate
-    E --> F{"User B logged in?"}
-    F -->|No| G["Login / Sign up prompt
-    → standard auth wall"]
-    F -->|Yes, assessment complete| H["Accept screen:
-    User A's archetype card
-    Both users' confidence rings
-    'Analyze your relationship with [name]?'
-    Uses 1 credit — [X] remaining
-    [Accept] [Refuse]"]
-    F -->|Yes, assessment incomplete| I["'Complete your assessment first'
-    → Link to continue"]
+    %% Decide to check in
+    F --> G{User engages?}
+    G -->|Taps mood → saves| H[Check-in deposit]
+    G -->|Opens app, looks, closes| I["No penalty, no shaming
+    Today dot stays empty"]
+    G -->|Writes long note| J["Takes a few minutes
+    Deep-day mode — user still saves
+    when they're done"]
+    J --> H
 
-    %% Decision
-    H --> J{User B's choice}
-    J -->|Accept| K["Credit consumed
-    QR token invalidated
-    QR drawer closes on User A's device"]
-    J -->|Refuse| L["Nothing happens
-    No notification to User A
-    QR stays active until TTL"]
+    %% Save the check-in
+    H --> K["Save to mood calendar:
+    - Mood emoji + optional note text
+    - Timestamp
+    - Note visibility (Private by default;
+      post-MVP: Inner Circle / Public Pulse)"]
 
-    %% Credit
-    K --> M{User B has credit?}
-    M -->|Free credit from first portrait| N[Credit consumed]
-    M -->|No credits| O["Purchase (€5 via Polar)
-    inline on accept screen"]
-    O --> N
+    %% Post-check-in state (FREE TIER — silent)
+    K --> L["Post-check-in Today state (FREE):
+    JOURNAL FORMAT (no chat bubbles)
+    - Your entry anchored at top
+      (mood + note displayed as-is)
+    - NO Nerin response
+    - NO LLM call
+    - Week-so-far dots: 7 days, today now filled
+    - Quiet anticipation line:
+      'Nerin will write you a letter about
+       your week on Sunday.'
+    - Contextually surfaced library article
+      (2-3/week cap, not daily, cheap static)
+    - Ghost subscriber section (post-MVP):
+      faint outline of what paid users see
+      (mini-dialogue, today's focus) —
+      not clickable, not naggy"]
 
-    %% Ritual launch — synchronous
-    N --> P["Both users see ritual screen simultaneously:
-    Nerin speaks to both
-    'I wrote this about the two of you.
-    Talk about what you're expecting
-    before you read it.'
-    Distinct visual — personal, not UI
-    Start button only"]
+    %% Paid tier (post-MVP — documented for completeness)
+    K --> L2["POST-MVP — Paid tier post-check-in:
+    - Your entry at top (same)
+    - Nerin's personalized recognition in
+      margin note format (LLM call, Haiku)
+      '2-3 sentences connecting mood to personality,
+       no wellness language, no advice, one open question'
+    - 'Tell me more →' button opens mini-dialogue
+      (3-5 exchange conversation with Nerin)
+    - Today's Focus / micro-action section
+    - LLM cost: ~$0.04-0.12/mo per active subscriber"]
 
-    %% Generation
-    P --> Q[Relationship analysis generates]
-    Q --> R{Generation succeeds?}
-    R -->|Yes| S["Both users notified (in-app + email):
-    'Your relationship analysis is ready.'"]
-    R -->|Fails| T[Retry — both notified of delay]
-    T --> Q
+    %% Static after check-in — BeReal philosophy
+    L --> M["Page is static after check-in.
+    Yesterday is not here — mood calendar is
+    a separate view for looking back.
+    No feed. No infinite scroll.
+    User closes app. Comes back tomorrow."]
 
-    %% Analysis content
-    S --> U["Relationship Analysis Page"]
-    U --> V["Relationship portrait (spine format)
-    Nerin's letter about their dynamic
-    AI-generated sections — same renderer"]
-    U --> W["OCEAN code comparison
-    Shared letters highlighted"]
-    U --> X["Radar chart overlay
-    Both profiles superimposed"]
-    U --> Y["Trait-level dynamic descriptions
-    Differences = dynamics, not deficits"]
+    %% Mood calendar view
+    L --> N{"User wants to look back?"}
+    N -->|Yes| O["Tap 'Mood calendar →'
+    → /today/calendar view
+    14-day grid of mood emojis
+    Empty dots for days without check-ins
+    No shaming, no streak counter"]
+    N -->|No| M
 
-    %% Framing
-    V --> Z["Framing throughout:
-    'This describes your dynamic,
-    not who's right or wrong'
-    No individual vulnerability exposed
-    No blame language"]
+    %% Sunday arrival
+    M --> P{"Is today Sunday?"}
+    P -->|Yes, and 3+ check-ins this week| Q["Inline weekly letter card appears
+    on Today page top:
+    'Your week with Nerin is ready →'
+    Tap → /today/week/$weekId
+    (Journey 3: Sunday Weekly Letter Flow)"]
+    P -->|No| M
 
-    %% Post-analysis
-    Z --> AA["Shared reading → conversation"]
-    AA --> AB["Ambassador conversion:
-    'We did this together — it was good'"]
-
-    %% Relationship list
-    AB --> AC["Analysis archived in relationship list
-    All snapshots viewable — newest primary,
-    old ones marked 'previous version'"]
-
-    %% Repeat
-    AC --> AD["Either user can generate new QR
-    for analyses with other users"]
+    %% Skip path
+    I --> R["No entry saved for today
+    Week dot stays empty — no shaming
+    Tomorrow's prompt still arrives
+    User can still check in later today"]
 ```
 
 #### Screen States & Key Moments
 
 | Step | Screen | Key UX Element | Purpose |
 |------|--------|---------------|---------|
-| QR Drawer | Results page or dashboard | Drawer opens → QR generated. Auto-regenerates hourly. 6h TTL | Private, on-demand, always fresh while open |
-| Scanned URL | Browser (User B) | User A's archetype card + both confidence rings + accept/refuse + credit balance | Full information before committing |
-| Accept | Same URL page | Accept consumes credit, invalidates QR token, closes User A's drawer | Consent + payment + synchronous transition |
-| Ritual Screen | Both devices | Nerin speaks to both directly. Launches on both devices after accept | Synchronous shared moment — personal, not UI |
-| Generating | In-app | Loading state | Both users see progress |
-| Analysis | `/relationship/:id` | Portrait (spine) + OCEAN comparison + radar overlay + dynamics | The shared payoff |
-| Relationship List | Dashboard or `/relationships` | All analyses as snapshots — newest primary, old marked "previous version" | History preserved |
+| Pre-check-in | `/today` | Nerin-voiced prompt + 5 mood emojis + optional note field + week dots (today empty) | One daily action, low friction (~10 sec) |
+| Check-in save | `/today` | User selects mood, optionally writes note, taps save | Deposits into silent journal |
+| Post-check-in (free) | `/today` | Journal format: user entry at top + week-so-far dots filled + quiet anticipation line + library article slot | Silence is a feature; the wait for Sunday is valuable |
+| Post-check-in (paid, post-MVP) | `/today` | Same journal format + Nerin's margin note recognition + "Tell me more →" mini-dialogue entry + today's focus | Daily dialogue with Nerin who knows you |
+| Static page | `/today` | No feed, no scrolling through old days, just today's state | BeReal philosophy — one action per day |
+| Mood calendar | `/today/calendar` | 14-day grid of mood emojis, empty dots for missed days | Pattern discovery, not tracking chore |
+| Sunday inline card | `/today` top on Sundays | "Your week with Nerin is ready →" card linking to weekly letter | Bridges Daily → Weekly; signals reward for the week's deposits |
 
-#### QR Mechanics
+#### Silent Journal Architecture (Free Tier — MVP)
 
-| Element | Details |
-|---------|---------|
-| Where to generate | QR drawer on results page or dashboard — private screens only |
-| Generation trigger | Drawer opens → QR generated. Not before |
-| TTL | 6 hours |
-| Auto-regeneration | Every hour while drawer is open — QR always fresh |
-| Drawer closed | No active QR. Regenerates on next open |
-| What QR encodes | URL with temporary token linking to User A |
-| On accept | QR token invalidated immediately. No further scans possible. Drawer closes on User A's device |
-| On refuse | Nothing happens. No notification. QR stays active until TTL |
-| Expired QR | "This link has expired" if opened after TTL |
+| Element | Detail |
+|---------|--------|
+| LLM calls on daily check-in | **Zero.** No Nerin response in free tier. Silence is the feature. |
+| Cost per active free user | ~$0.02-0.08/month (only the Sunday weekly letter LLM call) |
+| Anticipation mechanism | Quiet line on Today after check-in: *"Nerin will write you a letter about your week on Sunday."* |
+| Note storage | Saved verbatim to mood calendar. Private by default. Three visibility levels post-MVP (Private / Inner Circle / Public Pulse emoji-only) |
+| Library article | Contextually surfaced 2-3/week (not daily), picked from SEO library based on user's personality profile. Static content, zero LLM cost. |
+| Pattern signals | **Not surfaced in MVP free tier.** Passed as prompt context to the Sunday weekly letter LLM call (streak, silence break) but never shown to the user as a numeric metric. |
+| No push, no nag | Each check-in is the user's choice. Missing a day has no penalty. No streak counter, no "don't break your streak" language. |
 
-#### Relationship Credits
+#### Paid Daily Check-in Architecture (Post-MVP)
 
-| Rule | Details |
-|------|---------|
-| Free credit | 1 free credit with first portrait purchase (PWYW ≥€1). One per account, lifetime |
-| Paid credits | €5 each via Polar |
-| Who pays | Scanner (User B) always pays |
-| Non-payers | See relationship feature at full price (€5). No hidden feature — seeing the cost may motivate PWYW portrait purchase (€1 min → free credit worth €5) |
-| Extension cascade | **Post-MVP (subscription feature).** Conversation extension invalidates existing portrait + relationship analyses. Regeneration economics governed by subscription tier. UX to be validated with user research before implementation |
+**Not in first ship.** Documented here for traceability since Journey 1's return seed promises "check in tomorrow" and the free tier's silent journal is the MVP implementation; the paid daily dialogue is the post-MVP upgrade path.
 
-#### Relationship Analysis as Snapshot (Archive Model)
+| Element | Detail |
+|---------|--------|
+| LLM call | One per check-in. Haiku. 2-3 sentences connecting mood to personality, no wellness language, no advice, one open question if natural. |
+| Visual format | **Journal format** — Nerin's response renders as a margin note on the same page as the user's entry. Warm body font, shared-page feel. NOT chat bubbles. |
+| Mini-dialogue | "Tell me more →" button opens a 3-5 exchange conversation with Nerin who has read the actual note. Chat format. ~30% engagement assumed. |
+| Today's Focus | Prescriptive micro-action section: one concrete thing to try today based on check-in context. |
+| LLM prompt context | Top 3 facets, dominant traits, archetype, key evidence strings, mood selection, note text, pattern signals (streak, silence break, mood/note divergence). |
+| Cost per active subscriber | ~$0.32-0.72/month (daily recognition + mini-dialogue + weekly letter) |
 
-| Event | What Happens |
-|-------|-------------|
-| Analysis generated | Snapshot added to relationship list for both users |
-| Previous version detection | Analysis has FK to result table. If a newer result exists for either user, analysis is a previous version |
-| Extension by either user | All relationship analyses involving that user marked "previous version" for both parties |
-| Re-analysis | New snapshot generated (costs 1 credit). Old snapshot archived, still viewable |
-| Relationship list | All snapshots listed chronologically — newest primary, older marked "previous version" |
-| Account deletion | All relationship analyses involving that user deleted for both parties |
+**Principle: LLM for everything Nerin says.** No template engine. Three places Nerin speaks (daily check-in, weekly letter, portrait) all use LLM. Three places where templates ARE appropriate: notification copy, UI labels, error states.
 
-#### Content & Framing Rules
+#### Note Visibility (Post-MVP)
 
-- **Spine format** — same renderer as personal portrait. AI-generated section headers, emojis, content
-- **Dynamics, not deficits** — "the tension between structure and spontaneity" not "Marc is rigid"
-- **No blame** — no one is the problem
-- **No individual vulnerability** — inner struggles, pressure responses stay private. Only relational patterns
-- **Framing reinforced** — ritual screen + within analysis: "This describes your dynamic, not who's right or wrong"
+Three levels, user chooses per check-in:
+
+| Level | Label | Who Can See |
+|-------|-------|-------------|
+| 🔒 **Private (default)** | "Only you and Nerin" | User + Nerin (LLM context) |
+| 💙 **Inner circle** | "Visible to consented people in your Circle" | Circle members who've mutually opted into each other's inner circle (like Instagram Close Friends) |
+| 🌊 **Public pulse** | "Mood emoji only on your public profile" | Public — but ONLY the mood emoji, never the note text |
+
+MVP ships with Private only. Inner Circle and Public Pulse are post-MVP additions.
 
 #### Error Recovery
 
 | Failure | Recovery |
 |---------|----------|
-| QR expired when scanned | "This link has expired" — User A opens drawer to regenerate |
-| User B not logged in | Standard auth wall — login/signup |
-| User B hasn't completed assessment | "Complete your assessment first" with link to continue |
-| User B has no credits | Purchase flow (€5 via Polar) inline on accept screen |
-| Wrong person scanned | Archetype card + confidence rings shown before accept — verify before committing |
-| Analysis generation fails | Retry, both users notified |
-| One user deletes account | All shared analyses deleted |
-| QR shared publicly | Safe — credit gate + auth + TTL. Card is public-level data. Token invalidated after first accept |
+| User loses network while writing note | Auto-save draft locally, restore on reconnect |
+| Mood calendar fails to load | Today state still works — mood calendar is a separate view, not a hard dependency |
+| Notification permission revoked mid-cycle | Daily loop still works via organic return; no lock-in; next Sunday weekly letter still delivers via email fallback |
+| User checks in twice in one day | Second check-in overwrites first (with soft confirm); day represents current state, not a timeline |
+| User skips 7+ days | No shame, no "we miss you" nag. Next Sunday generates a "Nerin noticed you checked in a few times" letter (if ≥3 check-ins) or no letter at all |
+| Library article fetch fails | Article slot hidden — post-check-in state is still valid without it |
+| LLM call fails on Sunday weekly letter (paid) | Retry silently; fall back to a simple "this week in dots" visual if persistent failure; never show an error state to the user |
 
 #### Flow Optimizations
 
-1. **QR drawer: private, on-demand, auto-fresh** — generated on open, auto-regenerates hourly, 6h TTL. No stale codes.
-2. **One QR mechanism** — encodes a URL. Works for in-person (scan) and remote (share URL). No separate flows.
-3. **Scanner always pays** — simple, protects privacy, doesn't exhaust inviter's credits.
-4. **QR invalidated on accept** — token dies after first acceptance. Drawer closes on User A's device. No lingering state.
-5. **Ritual launches on both devices** — synchronous shared moment after accept. Nerin speaks to both.
-6. **Refuse = silence** — no notification to User A. No awkward social dynamics.
-7. **Standard auth wall for non-users** — no special handling. Same as any social platform.
-8. **Confidence rings on accept screen** — both users' confidence visible. Subtle quality signal without gating.
-9. **Archive model with FK-based version detection** — analysis references result table. Newer result = previous version. Simple DB logic.
-10. **Non-payers see full-price relationship** — €5 visible. Motivates PWYW portrait purchase (€1 → free credit worth €5). Smart conversion nudge.
-11. **One free credit per account, lifetime** — tied to first portrait purchase only. Not repeatable on extension/regeneration.
+1. **Silent is the default in MVP** — No LLM call, no Nerin response, no chat bubbles. The silence is what makes the Sunday weekly letter carry weight.
+2. **Quiet anticipation line is the bridge** — "Nerin will write you a letter about your week on Sunday" turns waiting into longing. Most-read copy string in the product.
+3. **Journal format, not chat bubbles** — Even in the post-MVP paid tier, Nerin's response is rendered as a margin note on a shared page, not as a chat bubble. Different emotional register from `/chat`.
+4. **Static after check-in** — No feed, no infinite scroll, no "what else?" pressure. One daily action. BeReal philosophy.
+5. **Week dots are the only "progress"** — Not a streak, not a counter. A visual representation of deposits. Empty days are OK.
+6. **Mood calendar is a separate view** — Looking back is a deliberate choice, not the default view. Today is ephemeral.
+7. **Ghost subscriber section (post-MVP)** — Faint outline of paid-tier features (mini-dialogue, today's focus) visible to free users. Creates awareness without nagging.
+8. **Personality-typed prompts (post-MVP)** — MVP uses one default prompt. Post-MVP per-user prompts use assessment data (High-N "Let's check the weather inside", High-O "What surprised you today?", etc.).
+9. **Notification is in Nerin's voice, not system voice** — "Nerin is wondering how you're doing" — not "Time for your daily check-in." The permission was requested in Nerin's voice (Journey 1 return seed); the notification honors the same register.
+10. **No streak punishment** — Missing a day has no penalty, no red streak broken, no guilt copy. Consistency over days, not perfection.
 
-### 10.3 Journey 3: Portrait Curtain + PWYW Flow
+### 10.3 Journey 3: Sunday Weekly Letter Flow
 
-**Goal:** User sees results → absorbs accuracy → PWYW modal → pays or skips → portrait delivered → relationship credit unlocked
+**Goal:** Sunday evening → push notification → focused reading of Nerin's weekly letter → complete satisfying artifact for free users → subscription conversion moment at Week 3+ inside the letter itself (Journey 8).
 
-**Entry point:** Assessment complete → results page loads → user absorbs results → PWYW modal opens after brief delay
+**Entry point:** Sunday 6-8pm local time. Push notification *"Your week with Nerin is ready"* (or inline card on Today page top if user opens organically on Sunday). Generation triggered at Sunday 6pm local time per user, for users with ≥3 check-ins that week.
+
+**Principle:** The weekly letter is the single most important subscription conversion moment in the product. The **free version must feel COMPLETE and satisfying on its own** — not a preview, not cripple-ware. A full descriptive artifact the user is glad to receive.
 
 #### Flow Diagram
 
 ```mermaid
 flowchart TD
-    %% Results absorption
-    A["Assessment complete — results page loads
-    OCEAN code, archetype, trait/facet scores visible"]
-    A --> B["User absorbs results briefly
-    Archetype name, code, scores validate accuracy
-    'This is really me' moment"]
-    B --> C["PWYW modal auto-opens after delay
-    Modal overlay — same treatment mobile + desktop"]
+    %% Sunday scheduling
+    A["Sunday 6pm local time per user"]
+    A --> B{"Did user check in ≥3 times this week?"}
+    B -->|No, 0 check-ins| C["Do nothing. No summary generated.
+    No notification. No shame.
+    Next week tries again."]
+    B -->|No, 1-2 check-ins| D["Generate short 'Nerin noticed you
+    checked in a few times' letter.
+    Warm, no guilt.
+    Same delivery flow."]
+    B -->|Yes, 3+ check-ins| E["Generate full weekly letter
+    via LLM with tight prompt +
+    rich user context"]
 
-    %% Modal content — single scrollable narrative
-    C --> D["Section 1: Bridge + Congratulations
-    'Congratulations on completing 15 turns with Nerin.
-    Before you read what she wrote,
-    I want to tell you why this exists.'"]
-    D --> E["Section 2: Founder's love letter
-    3-4 sentences, dense, every word earns its place
-    Vincent's vulnerability: why he built this,
-    what Nerin's portrait meant to him"]
-    E --> F["Section 3: Vincent's portrait (full length)
-    Complete spine-format example — not truncated
-    User sees full proof, expects same volume
-    Emojis, AI titles, specificity, depth"]
-    F --> G["Section 4: CTA
-    'Unlock your portrait'
-    'Includes 1 relationship analysis credit'
-    Single button → opens Polar embed modal"]
+    %% Generation
+    E --> F["LLM prompt context:
+    - Top 3 facets with scores
+    - Dominant traits + archetype
+    - Key evidence strings
+    - Personality signature framing
+    - Week's check-ins (moods + notes)
+    - Pattern signals (if any):
+      streak, silence break,
+      mood/note divergence"]
+    F --> G{User tier?}
+    G -->|Free| H["Generate FREE version only:
+    - Date range header
+    - Personalized opening ('Dear [name]')
+    - Week narrative (2-3 paragraphs)
+    - Visual mood shape (7-day dot grid)
+    - 'What stood out' beat
+    - Nerin's sign-off
+    - Conversion pitch (Week 3+)"]
+    G -->|Subscriber| I["Generate BOTH versions together:
+    (same LLM call, richer output)
+    - FREE version sections (above)
+    - + 'For the week ahead' prescriptive
+      focus + micro-action
+    - + 'Zooming out' cross-week
+      pattern detection
+    - + Relational beat (if partner in
+      circle + mutual opt-in + both sub'd)
+    - + Library article link
+    - + Reflective prompt"]
 
-    %% Polar modal — stacks on top
-    G --> H["Polar checkout embed opens on top of PWYW modal
-    Default price: €5 / Minimum: €1
-    User adjusts price within Polar UI
-    Apple Pay / Google Pay / card
-    No redirect — stays in-app"]
+    %% Storage
+    H --> J[Save to weekly_summaries table]
+    I --> J
+    D --> J
+    J --> K["Both content_free and content_subscriber
+    stored, so user can preview subscriber
+    version if they convert mid-week"]
 
-    %% Skip
-    C --> I["Skip: 'Maybe later' or close modal
-    Always visible, no guilt language"]
-    I --> J["Modal closes → results page accessible
-    Portrait section: portrait unlock button visual
-    Subtle animation (breathing/glow)
-    'Unlock your portrait' re-entry CTA"]
+    %% Delivery
+    K --> L["Delivery channels (Sunday 7pm local):
+    - Push notification
+    - Email fallback
+    - Inline card on /today top on Sundays"]
+    L --> M["Push notification copy:
+    'Your week with Nerin is ready'
+    Possessive, personal, Nerin's voice.
+    NOT 'weekly report available'"]
 
-    %% Payment outcome
-    H --> K{Payment succeeds?}
-    K -->|Yes| L["Polar success event →
-    Backend: verify via Polar API →
-    Unlock portrait + add 1 relationship credit
-    (first purchase only, lifetime)"]
-    K -->|Fails| M["Error in Polar modal
-    Retry or change method"]
-    M --> H
+    %% Entry
+    M --> N{How does user enter?}
+    N -->|Push notification tap| O["Direct navigation to
+    /today/week/$weekId"]
+    N -->|Organic /today visit on Sunday| P["Inline card at top of /today
+    'Your week with Nerin is ready →'
+    Tap → /today/week/$weekId"]
+    N -->|Email link| O
 
-    %% Post-payment
-    L --> N["Both modals close (Polar + PWYW)
-    'Thank you. Nerin is writing your portrait now.'"]
+    %% Focused reading view
+    O --> Q["/today/week/$weekId
+    Focused reading view
+    Same visual language as PortraitReadingView:
+    max-width 720px, warm background,
+    letter format, distraction-free"]
+    P --> Q
 
-    %% Portrait generation
-    N --> O["Portrait generates
-    Loading skeleton in portrait section"]
-    O --> P{Generation succeeds?}
-    P -->|Yes| Q["Portrait appears on results page
-    Spine-format letter from Nerin
-    Smooth reveal — portrait unlock button opens"]
-    P -->|Fails| R["'Generation failed' + retry button
-    User already paid — no re-charge"]
-    R --> O
+    %% Reading the letter
+    Q --> R["Letter structure:
+    1. Date range header
+    2. Personalized opening
+    3. Week narrative (2-3 paragraphs,
+       references specific mood selections
+       + personality-informed framing)
+    4. Visual mood shape (7-day dots as
+       small secondary element, not center)
+    5. 'What stood out' beat — one
+       specific observation that feels seen
+    6. Nerin's sign-off"]
 
-    %% Post-portrait
-    Q --> S["Share prompt:
-    'Show someone who you are'
-    Archetype card download (1:1 + 9:16)
-    + Web Share API
-    Screenshots valid too"]
+    %% Tier branch at end of letter
+    R --> S{User tier?}
+    S -->|Free| T["End of free letter:
+    — Nerin
 
-    %% Results page continues below portrait
-    Q --> T["Below portrait on results page:
-    Relationship analysis section
-    '€5 per analysis' (or 'You have 1 credit')
-    QR drawer accessible
-    Relationship CTA and sharing options"]
+    ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
 
-    %% Re-entry for skippers
-    J --> U["Portrait unlock button persists on results page
-    Patient, not pushy
-    Tapping re-opens PWYW modal"]
-    U --> C
+    'I have more I want to say about
+     what comes next.
+     With a subscription, I can write
+     you a fuller letter each week —
+     with what to try, what patterns
+     I'm seeing across weeks, and what
+     I think might help in the week ahead.'
 
-    %% Email recapture
-    J --> V["Email recapture for deferred payers:
-    'Nerin's portrait is waiting for you'"]
-    V --> U
+    [Unlock Nerin's full weekly letter — €9.99/mo →]
+
+    [Not right now]"]
+    S -->|Subscriber| U["Subscriber letter continues
+    with prescriptive layer:
+    - 'For the week ahead' focus statement
+      + one concrete micro-action
+    - 'Zooming out' cross-week observations
+    - (Optional) Relational beat about
+      partner's week
+    - Library article link
+    - Reflective prompt to sit with
+      until next week
+    - Nerin's sign-off"]
+
+    %% Free tier — three-act conversion
+    T --> V{"Week number?"}
+    V -->|Week 1| W["First Sunday letter.
+    User reads complete free version.
+    May notice the conversion line.
+    Week 1 trust built. No conversion expected."]
+    V -->|Week 2-3| X["User reads complete free version.
+    Conversion line begins to feel like
+    a gap they might want filled."]
+    V -->|Week 3+| Y["Cumulative felt gap + accumulated trust.
+    Natural conversion moment.
+    User subscribes because they WANT
+    the fuller version, not because
+    they hit a paywall.
+    → Journey 8: Subscription Conversion Flow"]
+
+    %% Dismiss path
+    T --> Z["'Not right now' = soft dismiss
+    Closes conversion section
+    Letter body still visible
+    No escalating nag, no retention wall
+    Returns next Sunday with same framing"]
+
+    %% Post-read
+    U --> AA["Sign-off + sit with it
+    User closes letter, may return
+    to /today, may not"]
+    W --> AA
+    X --> AA
+    Y --> AA
+    Z --> AA
 ```
 
-#### Modal Content Structure
+#### Free vs Subscriber Content Structure
 
-Single scrollable narrative in a modal overlay. Same treatment on mobile and desktop. Polar checkout stacks on top when CTA is tapped.
+| Section | Free | Subscriber |
+|---------|------|-----------|
+| Date range header | ✅ | ✅ |
+| Personalized opening ("Dear [name]") | ✅ | ✅ |
+| Week narrative (2-3 paragraphs, mood + personality framing) | ✅ | ✅ |
+| Visual mood shape (7-day dot grid) | ✅ | ✅ |
+| "What stood out" beat (one specific observation) | ✅ | ✅ |
+| Nerin's sign-off | ✅ | ✅ |
+| **Descriptive letter feels complete** | **✅ YES — THIS IS THE RULE** | ✅ |
+| "For the week ahead" (prescriptive focus + micro-action) | — | ✅ |
+| "Zooming out" (cross-week pattern detection) | — | ✅ |
+| Relational beat (partner's week, if both subscribed + opted in) | — | ✅ (post-MVP) |
+| Library article link | — | ✅ |
+| Reflective prompt | — | ✅ |
+| Conversion pitch at end | ✅ (Week 3+) | — |
 
-| Section | Content | Purpose |
-|---------|---------|---------|
-| 1. Bridge | Congratulations on 15 turns. "Before you read what she wrote, I want to tell you why this exists." | Validates effort, bridges from personal to founder context |
-| 2. Founder's Letter | 3-4 sentences. Vincent's love letter: why he built this, what his portrait meant to him. Dense, personal, vulnerable | Emotional permission to pay. Trust through vulnerability |
-| 3. Example Portrait | Vincent's actual portrait — full length, not truncated. Complete spine format. User sees exactly the volume and quality they'll receive | Full proof. No bait-and-switch on content length |
-| 4. CTA | "Unlock your portrait" + "Includes 1 relationship analysis credit." Single button → Polar modal | Clear action. Credit mention converts relationship-motivated users |
+**Translation:** Free = descriptive letter. Paid = descriptive letter + prescriptive coaching layer + pattern detection + resources. These are genuinely different artifacts, not the same artifact split in half.
 
-#### Polar Integration
+#### Conversion Mechanic Inside the Weekly Summary
 
-| Element | Details |
-|---------|---------|
-| Method | `@polar-sh/checkout/embed` — Polar modal stacks on top of PWYW modal |
-| Default price | €5 (configured in Polar) |
-| Minimum price | €1 (enforced by Polar) |
-| Price selection | User adjusts within Polar's UI — no pricing controls in our UI |
-| Payment options | Apple Pay / Google Pay / card |
-| No redirect | Entire flow stays in-app |
-| Success event | `success` → backend verifies via Polar API → unlocks portrait + adds relationship credit |
-| Failure | Retry within Polar modal |
+End of free version (copy locked in design-thinking session):
 
-#### Conversion Psychology
+```
+— Nerin
 
-| Element | How It Works |
-|---------|-------------|
-| Delayed auto-open | User absorbs results first → "this is accurate" validates the product before the ask |
-| Congratulations bridge | Acknowledges their 15-turn investment → they've earned the right to see what Nerin wrote |
-| Founder vulnerability | Love letter tone builds trust → paying feels like supporting a person, not a product |
-| Full-length example | No mystery about what they're buying → removes uncertainty, sets accurate expectations |
-| Relationship credit at CTA | For users who came hearing about relationship analysis: €1 PWYW → free €5 credit = obvious deal |
-| Default €5 | Behavioral anchoring — most users won't adjust down. Good for revenue without being pushy |
-| €1 minimum | Price is never the blocker. Removes "I can't afford it" objection |
-| No guilt on skip | "Maybe later" respected. Portrait unlock button waits patiently. No FOMO tactics |
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
 
-#### Skip Path
+I have more I want to say about
+what comes next.
 
-| Available to Non-Payers | Not Available |
-|------------------------|--------------|
-| OCEAN code + archetype + description | Portrait (Nerin's letter) |
-| All trait and facet scores | Free relationship credit |
-| Radar chart | |
-| Archetype card (download + share) | |
-| Relationship CTA + sharing options | |
-| Relationship analysis (€5, no free credit) | |
+With a subscription, I can write
+you a fuller letter each week —
+with what to try, what patterns
+I'm seeing across weeks, and what
+I think might help in the week
+ahead.
 
-#### Sealed Envelope (Deferred Payers)
+[Unlock Nerin's full weekly letter — €9.99/mo →]
 
-| Element | Details |
-|---------|---------|
-| Visual | Portrait unlock button in portrait section — evocative, not a generic button |
-| Animation | Subtle breathing or glow — communicates "something personal is here, waiting" |
-| Behavior | Tapping opens PWYW modal. Always accessible. Patient, not pushy |
-| Email recapture | "Nerin's portrait is waiting for you" — sent to deferred payers after X days |
-| On purchase | Portrait unlock button opens → portrait reveals with smooth animation |
+[Not right now]
+```
+
+**Design principles for the conversion ending:**
+
+1. Nerin's voice, not system voice — "I have more I want to say"
+2. Concretely names what's missing ("what to try, what patterns, what might help")
+3. Framed as Nerin wanting to tell the user more, not as paywall
+4. "Not right now" is soft dismiss — returns next Sunday with same framing
+5. No aggressive retention nag, no escalating prompts
+6. The conversion line should feel like one more sentence in the letter, not a page break into a pricing page
+
+#### Three-Act Conversion Landing in Weekly Summaries
+
+| Act | When | What Happens | Goal |
+|-----|------|--------------|------|
+| **Act 1 — Build the habit** | Day 0-7 | No weekly letter yet (needs a full week of check-ins). Free daily silent journal. Zero subscription mention anywhere. | Trust Nerin; form habit |
+| **Act 1.5 — First Sunday** | Week 1 | First full weekly letter. Free version complete and satisfying. User reads end-to-end. Conversion line appears but user rarely converts yet — accumulated trust is too thin. | Deliver value; prove the weekly letter is worth opening |
+| **Act 2 — Show the gap** | Weeks 2-3 | Each Sunday, full descriptive letter arrives with same conversion line. User builds trust through the free descriptive artifact. The gap becomes felt. | Build habit of reading Sunday letter; let the gap accumulate |
+| **Act 3 — Natural unlock** | Week 3+ | Cumulative felt gap + accumulated trust = natural conversion moment. User subscribes because they want the fuller version, not because they hit a paywall. | Convert via desire, not coercion |
+
+**Why the free version must be GOOD:** It is the engine of conversion, not a teaser. If Week 1 free is mediocre, no Week 2 happens. If Week 2 is mediocre, no Week 3 happens. The free letter is the retention engine and the conversion engine simultaneously.
+
+#### Edge Cases
+
+| Case | Behavior |
+|------|----------|
+| User skipped all check-ins this week | No summary generated. No notification. No shame. No "you missed a week" message. |
+| User has 1-2 check-ins | Generate a short "Nerin noticed you checked in a few times" letter. Warm, no guilt. Same delivery flow. |
+| User just subscribed mid-week | Their next Sunday letter is the full subscriber version (already generated alongside the free version at 6pm). |
+| User just cancelled mid-billing | Full version continues until end of billing period, then free version. |
+| Generation fails | Retry silently. If persistent failure, fall back to a simple "this week in dots" visual. Never show an error state. |
+| Generation succeeds after Sunday 6pm cutoff (late check-in) | Still generate and deliver — late is OK. |
+| Push notification not delivered | Email fallback + inline card on Today on Sunday. Three delivery channels; user experiences the letter via whichever they open first. |
+| User has no name set | Fall back to "Dear you" or omit the personalized opening gracefully. |
 
 #### Screen States
 
-| State | Results Page | Portrait Section | PWYW Modal |
-|-------|-------------|-----------------|------------|
-| Results loading | Visible, scores appearing | Not shown | Not yet |
-| Absorption delay | Fully visible, user reading | Not shown | Not yet |
-| PWYW modal open | Dimmed behind modal | Not shown | Open — scrollable |
-| Polar modal open | Dimmed | Not shown | Open — Polar stacked on top |
-| Payment success | Fully visible | Loading skeleton | Closes (both) |
-| Portrait generating | Fully visible | Skeleton + "Nerin is writing..." | Closed |
-| Portrait delivered | Fully visible | Spine-format letter | Closed |
-| Portrait failed | Fully visible | "Failed" + retry | Closed |
-| Skipped | Fully visible | Portrait unlock button + re-entry CTA | Closed |
+| State | URL | Content |
+|-------|-----|---------|
+| Sunday 6pm (generation) | n/a (background) | Generation job fires. User not aware. |
+| Sunday 7pm (delivery) | `/today` | Inline card at top of Today: "Your week with Nerin is ready →" |
+| Sunday 7pm (push fired) | notification tray | "Your week with Nerin is ready" |
+| Reading (free) | `/today/week/$weekId` | Focused reading, max-width 720px, warm background, free letter body + conversion ending (Week 3+) |
+| Reading (subscriber) | `/today/week/$weekId` | Same focused reading, subscriber letter body (descriptive + prescriptive) |
+| Letter not yet ready (user taps too early) | `/today/week/$weekId` | "Nerin is writing your letter..." — same OceanSpinner + Nerin-voiced line as PortraitReadingView |
+| Letter never generated (<3 check-ins) | `/today/week/$weekId` | Soft state: "No letter this week — Nerin needs a few deposits to write with" + link back to /today |
+| Letter archived | `/today/week/$weekId` (old weekId) | Still readable; previous weeks' letters accessible from a history view (post-MVP) |
 
 #### Error Recovery
 
 | Failure | Recovery |
 |---------|----------|
-| Polar embed fails to load | "Payment temporarily unavailable. Try again later." Portrait unlock button persists |
-| Payment fails | Retry or change method within Polar modal |
-| Browser closed mid-payment | Payment state checked on return. If paid → auto-trigger portrait generation |
-| Portrait generation fails | Retry button. Already paid — no re-charge |
-| Portrait generation slow | Skeleton + "Nerin is writing..." reassurance |
-| Paid but portrait missing | Backend reconciliation: payment confirmed → auto-trigger on next page load |
+| LLM generation fails | Retry up to 3 times silently. Escalate to fallback visual "this week in dots" only as last resort. Never surface error to user. |
+| Push notification delivery fails | Email fallback fires. User still sees inline card on next /today visit. |
+| User opens link before generation completes | Show PortraitReadingView-style generating state; poll until ready. |
+| Relational beat LLM context missing | Omit relational beat section gracefully; rest of letter intact. |
+| Subscription conversion tap fails (Polar checkout error) | Clear error inline; dismiss button still works; letter remains readable. |
+| User unsubscribes mid-read | Letter remains complete for this read; next week arrives as free version. |
 
 #### Flow Optimizations
 
-1. **Delayed auto-open** — user absorbs results first. "This is really me" feeling fuels conversion.
-2. **Bridge + congratulations** — validates 15-turn effort before transitioning to founder context.
-3. **Founder letter is dense, not long** — 3-4 sentences. Love letter, not pitch.
-4. **Full-length example portrait** — no truncation. User sees exact volume they'll receive. No bait-and-switch.
-5. **Relationship credit at CTA** — converts relationship-motivated users. €1 PWYW → free €5 credit is an obvious deal.
-6. **Polar owns pricing UI** — one CTA button, Polar handles price selection. Default €5, min €1.
-7. **Modal for both mobile + desktop** — one approach, no conditional rendering. Polar stacks on top.
-8. **Portrait unlock button** — simple, clear CTA. "Nerin has written something for you. Unlock your portrait." Always accessible, always visible.
-9. **Email recapture** — "Nerin's portrait is waiting for you" for deferred payers.
-10. **Paid-but-failed reconciliation** — backend auto-triggers portrait if payment confirmed but not generated.
-11. **PWYW amount as quality metric** — average above €1 = emotional resonance. Clustering at €1 = portrait may not be landing.
+1. **Generation at 6pm, delivery at 7pm** — One hour buffer for generation retries before notification fires. Users never experience a "generating" state from a push notification tap.
+2. **Both free + subscriber content generated together** — Same LLM call produces both outputs. If user converts mid-week, next Sunday's subscriber letter is already waiting. Cost is slightly higher (one call generates two sections) but operationally simpler.
+3. **No template engine** — LLM for the whole letter, free and paid. Haiku for cost, Sonnet optional for premium subscribers. Rich user context dominates output.
+4. **Focused reading view reuses PortraitReadingView visual language** — Same typography, max-width, warm background, letter format. Users already understand how to read a "letter from Nerin."
+5. **Three delivery channels** — Push + email + inline card. User experiences the letter via whichever they open first. No reminder nag.
+6. **Possessive notification copy** — "Your week with Nerin is ready" — personal, continuous with Nerin's character voice. Not "weekly report available."
+7. **Conversion pitch is inside the letter body, not a page break** — The conversion section flows from the sign-off, in Nerin's voice. Users who dismiss with "Not right now" close the conversion section in place; the letter body remains.
+8. **Soft dismiss, not retention wall** — "Not right now" returns next Sunday with the same framing. No escalating prompts, no exit surveys, no "are you sure?" modal.
+9. **Free letter must be COMPLETE** — This is the most important rule in the product. A mediocre free letter kills conversion downstream. The free version is the retention engine AND the conversion engine.
+10. **Edge cases favor warmth** — Zero check-ins = no letter, no shame. 1-2 check-ins = short warm letter, no guilt. The product rewards consistency without punishing inconsistency.
+11. **Cost control via product design, not template shortcuts** — Free users get one LLM call per week (~$0.02-0.08/month). Silent daily fork means free tier never pays for daily LLM. NFR7a satisfied without damaging quality.
 
-### 10.4 Journey 4: Returning User Flow (Léa Returning)
+### 10.4 Journey 4: Returning User Flow (Three-Space Return)
 
-**Goal:** Returning user → re-engagement → explores updated dashboard → relationship analysis → sharing → (post-MVP: subscription unlocks conversation extension and Coach agent)
+**Goal:** Returning user (not first-visit) → lands on `/today` by default → completes their daily check-in → optionally explores Me or Circle → leaves without friction
 
-**Entry point:** Léa returns ~2 weeks after initial assessment, motivated by re-engagement email or organic curiosity about her results
+**Entry points:**
+- Quiet Nerin-voiced daily notification ("Nerin is wondering how you're doing")
+- Sunday weekly letter push notification ("Your week with Nerin is ready")
+- Relationship letter notification ("Your [Year] letter from Nerin is ready") — Year 1+ annual regenerations
+- Organic return (user opens app / visits site)
+- Via friend's public profile or shared archetype card
+- Drop-off re-engagement email (per FR76) for users who didn't complete the assessment
+
+**Principle:** Returning user default landing is always `/today`, never `/me`. Me is a low-frequency, high-emotion identity space — not a hub. Today is the return habit.
 
 #### Flow Diagram
 
 ```mermaid
 flowchart TD
-    %% Re-engagement triggers
-    A{"How does Léa return?"}
-    A -->|Nerin check-in email| B["~2 weeks post-assessment
-    Nerin-voiced: references specific tension
-    from portrait, not promotional
-    'I've been thinking about [theme]...'
-    One email only — then silence"]
-    A -->|Relationship notification| C["'Your analysis with Marc is ready'"]
-    A -->|Organic return| D["Opens app / visits site"]
-    A -->|Via friend's card| E["Sees friend's card → visits profile
-    → navigates to own results"]
+    %% Triggers
+    A{"How does the user return?"}
+    A -->|Daily notification| B["Quiet Nerin-voiced push
+    'Nerin is wondering how you're doing'"]
+    A -->|Sunday weekly letter| C["'Your week with Nerin is ready'
+    → Journey 3: Weekly Letter Flow"]
+    A -->|Relationship letter update| D["'Your [Year] letter from Nerin is ready'
+    → Journey 6: Relationship Letter Flow"]
+    A -->|Organic return| E["Opens app / visits site"]
+    A -->|Via friend's card| F["Sees friend's card → visits public profile
+    → prompted to return to own account"]
+    A -->|Drop-off recapture email| G["FR76: 'You and Nerin were talking
+    about [topic]. Pick up where you left off.'"]
 
-    %% Dashboard — returning state
-    B --> F["Dashboard / results page"]
-    C --> F
-    D --> F
-    E --> F
+    %% Default route
+    B --> H["Default landing: /today
+    (authenticated users' default)"]
+    E --> H
+    F --> H
 
-    %% MVP returning user actions
-    F --> G["Revisits portrait and trait breakdown
-    Reviews evidence-linked insights
-    Explores facet details"]
+    %% Special-case routes
+    C --> I["Direct navigation to
+    /today/week/$weekId
+    → Journey 3"]
+    D --> J["Direct navigation to
+    relationship letter page
+    → Journey 6"]
+    G --> K["Resume /chat session
+    at last exchange (assessment not complete)"]
 
-    G --> H{"Wants to explore relationships?"}
-    H -->|Yes| I["Initiates relationship analysis
-    QR scan with friend/partner (€5)
-    → Journey 2 flow"]
-    H -->|No| J["Shares archetype card
-    → viral loop: friend sees card
-    → signs up → new user"]
+    %% On /today
+    H --> L{"Has user checked in today?"}
+    L -->|No| M["Pre-check-in state
+    → Journey 2: Daily Silent Journal Flow"]
+    L -->|Yes| N["Post-check-in state
+    (journal format with user's entry at top,
+    quiet anticipation line, week dots)"]
 
-    I --> K["Views relationship analysis
-    Shares results with partner"]
-    K --> J
+    %% Navigation choices
+    N --> O{"What does user want?"}
+    M --> O
+    O -->|Look back at mood history| P["Tap 'Mood calendar →'
+    14-day grid view
+    Pattern observation, not tracking"]
+    O -->|Return to identity/portrait| Q["Tap Me tab in bottom nav
+    → /me"]
+    O -->|See Circle| R["Tap Circle tab in bottom nav
+    → /circle"]
+    O -->|Close app| S["Done for today
+    Comes back tomorrow"]
 
-    %% Post-MVP subscription path (not built in MVP)
-    J --> L["(Post-MVP) Subscription CTA surfaces:
-    Coach agent, conversation extension,
-    Growth Journal — €10/mo or €100/yr"]
+    %% Me page — low-frequency but high-emotion
+    Q --> T["/me — Identity & Growth Archive
+    - Identity Hero (archetype, code, radar)
+    - Your Portrait (re-read letter inline)
+    - Your Growth (mood calendar + patterns)
+    - Your Public Face (private/public toggle,
+      share link, card image)
+    - Your Circle (preview + View all →)
+    - Subscription (pitch / value summary)
+    - Account (gear → /settings)"]
+
+    %% Circle
+    R --> U["/circle — People You Care About
+    Full-width person cards
+    'Last shared' recency signals
+    View your dynamic → Journey 6
+    Invite ceremony card at bottom →
+    Journey 7"]
+
+    %% Conversation extension for subscribers
+    T --> V{"Subscriber? Has extension not yet used?"}
+    V -->|Yes| W["Extend conversation with Nerin
+    Director model re-initializes from prior state
+    Bundled automatic portrait regeneration
+    → continues in /chat"]
+    V -->|No / Already used| X["Standard Me page experience"]
 ```
 
 #### Screen States & Key Moments
 
 | Step | Screen | Key UX Element | Purpose |
 |------|--------|---------------|---------|
-| Re-engagement | Email / organic | Nerin-voiced check-in referencing specific tension from portrait. One email, then silence | Emotional hook, not promotional |
-| Dashboard (returning) | `/dashboard` | Identity card, relationship list, credits, "View Full Results" CTA | Hub for returning users |
-| Results (returning) | `/results` | Portrait, trait breakdown, evidence-linked insights, relationship CTA, sharing options | Full history accessible |
-| Relationship initiation | QR scan | QR-based connection with friend/partner (€5) → Journey 2 | Social engagement loop |
-| Sharing | Results / dashboard | Archetype card sharing → viral loop | Growth driver |
+| Daily notification | Notification tray | Nerin-voiced copy, not system voice | Emotional hook, not promotional |
+| Sunday weekly letter notification | Notification tray | "Your week with Nerin is ready" — possessive, personal | Journey 3 entry point |
+| Returning user default landing | `/today` | Bottom nav visible, pre-check-in or post-check-in state based on day | Daily habit reinforcement |
+| Me page visit | `/me` | Identity Hero, re-read portrait, public face, Circle preview, subscription CTA | Identity sanctuary — re-read the letter, share, manage |
+| Circle visit | `/circle` | Full-width person cards, "last shared" signals, invite ceremony card | Relational intimacy scroll |
+| Relationship letter visit | Relationship letter page | Section A letter + Section B real-time data grid + letter history | Living relational space |
+| Drop-off recapture | Email → `/chat` | Session resumed at last exchange | FR76 — email captured upfront works for every started user |
 
 #### Re-engagement Mechanics
 
 | Trigger | Details |
 |---------|---------|
-| Nerin check-in email | ~2 weeks post-assessment. Nerin-voiced, references specific tension from portrait. Not promotional. One email only — respect silence after |
-| Relationship notification | "Your analysis with [name] is ready" (if applicable) |
-| Organic return | User revisits results/dashboard on their own |
-| Friend's card | Sees friend's archetype → visits their profile → navigates to own results |
+| Daily notification (post-permission) | Fires at profile-appropriate time (MVP: default 7pm; post-MVP: personality-typed). Nerin-voiced copy. Tapping navigates to `/today`. Skippable; permission revocable in settings. |
+| Sunday weekly letter notification | Fires Sunday 7pm local time when the weekly letter is generated. "Your week with Nerin is ready." Email fallback. Inline card on /today as third channel. |
+| Relationship letter notification | Fires on annual regeneration (Year 1+ anniversary of QR accept). "Your [Year] letter from Nerin is ready." Notification, not approval request. |
+| Drop-off recapture (FR76) | Triggered for users who didn't complete the assessment. Referenced the last conversation topic. Templated, no LLM call. Email captured upfront so this works for every started user. |
+| Friend's public profile | User visits a friend's `/public-profile/$id`. If logged in, the profile shows a "You've already done this — see your own Me page" link back to `/me`. |
+| Organic return | User opens app on their own. Default landing is always `/today`. |
 
-#### Conversation Extension Mechanics (Post-MVP — Subscription)
-
-> **Note:** Conversation extension is a post-MVP feature included in the subscription (€10/mo or €100/yr), not a standalone purchase. The design decisions below are documented for Phase 2a implementation.
+#### Conversation Extension (MVP Subscription Perk — FR23, FR25)
 
 | Element | Details |
 |---------|---------|
-| Access | Included in subscription (€10/mo or €100/yr) — not a standalone purchase |
-| What it unlocks | 25 additional exchanges (26-50) with Nerin |
-| Context preservation | Nerin references themes and patterns, not specific exchanges. Matches how humans recall conversations |
-| Director model | Starts with 15 exchanges of evidence. Deeper territories, higher confidence for feel-seen moments |
-| Depth meter | Resets for extension segment. New milestones at 25/50/75% |
-| Multiple extensions | One extension only (50 total). Future extensions TBD based on subscription engagement data |
+| Access | **Included in subscription (€9.99/mo).** One of only two MVP subscription perks; not a standalone purchase. |
+| What it unlocks | +15 additional exchanges with Nerin via Director model re-initialization from prior state |
+| Automatic portrait regeneration | **Bundled** with the first conversation extension per subscriber. No additional purchase, no separate flow, no PWYW. Subsequent extensions post-MVP. |
+| Context preservation | Nerin references themes and patterns from prior 15 exchanges, not specific exchanges. Matches how humans recall conversations. |
+| Director model | Starts with prior 15 exchanges of evidence. Deeper territories, higher confidence for feel-seen moments. |
+| Depth meter | Resets for extension segment. New milestones at 25/50/75% of the new 15 exchanges. |
+| Multiple extensions | **Post-MVP.** MVP ships one extension per subscriber with bundled regen. Subsequent extensions deferred pending subscription engagement data. |
+| Entry point | From Me page subscription section, or from subscription conversion moment inside the Sunday weekly letter (Journey 8). |
 
-#### Evolution Framing (Post-MVP — Not "Outdated")
+#### Evolution Framing (Extension Results)
 
-> **Note:** Evolution framing applies when conversation extension (subscription feature) generates updated results. Documented here for Phase 2a.
+| Element | Framing |
+|---------|---------|
+| Portrait after extension | "Previous version" — still viewable; new portrait rendered automatically |
+| Relationship letters after extension | Section B data grid updates automatically (derive-at-read from new facet scores); Section A letter is preserved and re-generated on next annual anniversary |
+| Archetype change | "Evolved with deeper evidence. Both reflect real parts of you." Never framed as an error. |
+| Old versions | Preserved in history as snapshots of a less complete picture |
 
-| Element | Old Framing | New Framing |
-|---------|-------------|-------------|
-| Portrait after extension | "Outdated" | "Previous version" — still viewable |
-| Relationship analyses | "Outdated" | "Previous version" — still viewable |
-| Archetype change | Implied error | "Evolved with deeper evidence. Both reflect real parts of you." |
-| Regeneration prompt | "Regenerate" | "Nerin has 50 exchanges to draw from now. New patterns visible." |
-| Old versions | Could feel "broken" | Preserved in history as snapshots of a less complete picture |
-
-#### Regeneration Economics (Post-MVP — Subscription)
-
-> **Note:** These economics apply to subscribers only. Conversation extension is included in the subscription, not a separate purchase.
-
-| Item | Cost | Framing |
-|------|------|---------|
-| Conversation extension | Included in subscription (€10/mo or €100/yr) | "Go deeper with Nerin" |
-| Portrait regeneration | PWYW (default €5, min €1) | "New portrait from deeper evidence" — not a fix |
-| Relationship re-analysis | €5 per analysis (unlimited for subscribers) | New snapshot, old archived |
-
-#### Nerin's Continuity (Post-MVP — Subscription)
-
-> **Note:** Nerin's continuity mechanics apply to conversation extension, a subscription feature. Documented here for Phase 2a.
+#### Nerin's Continuity on Extension
 
 | Element | How It Works |
 |---------|-------------|
@@ -1885,20 +2276,26 @@ flowchart TD
 
 | Failure | Recovery |
 |---------|----------|
-| Extension payment fails (post-MVP) | Retry within Polar. No partial state. Subscription-gated |
-| Conversation interrupted | Session saved, same re-engagement as Journey 1 |
-| Portrait regeneration fails | Retry. Already paid — no re-charge |
-| Archetype changes dramatically | Evolution framing + old archetype preserved in history |
-| User regrets extension | Old portrait still viewable. New results reflect deeper evidence |
+| Notification permission revoked | Daily loop still works via organic return; next Sunday letter still arrives via email fallback; no lock-in |
+| User never returns | No further outreach beyond drop-off recapture email. No retention nag. Public profile and archetype card persist for future discovery. |
+| Friend's profile is private | Redirect to homepage; user can still return to their own account from there |
+| Subscription extension payment fails | Retry within Polar checkout; no partial state; user remains free-tier until payment confirms |
+| Extension conversation interrupted | Session saved with extension flag; resume works the same as initial assessment |
+| Archetype changes dramatically on extension | Evolution framing preserves old archetype in history; new portrait explicitly references the change |
+| User unsubscribes before using extension | Extension still available until end of billing period; after that, returns to standard free-tier Today/Me/Circle experience |
 
 #### Flow Optimizations
 
-1. **Dashboard as returning hub** — the dashboard answers "what do I have, what can I do next?" for every returning user. No dead ends.
-2. **Portrait seeds curiosity** — the half-open door in Nerin's letter creates unfinished resonance. In MVP, this drives relationship exploration and sharing. Post-MVP, it drives subscription conversion.
-3. **One Nerin-voiced check-in email** — references specific tension from portrait. Not promotional. One email, then silence.
-4. **Relationship as core returning action** — the MVP returning flow centers on relationship analysis (QR scan) and sharing, not extension purchase.
-5. **Sharing closes the viral loop** — returning users who share their archetype card create new users, who create new relationship pairs.
-6. **Post-MVP subscription upsell** — after the user has explored their MVP results and relationships, a subtle subscription CTA introduces Coach agent, conversation extension, and Growth Journal.
+1. **Three-space world is the return hub, not a dashboard** — `/today` by default. Me and Circle are lateral moves via bottom nav, not separate return destinations.
+2. **Daily notification in Nerin's voice, not system voice** — "Nerin is wondering how you're doing" — consistent with the permission request in Journey 1's return seed.
+3. **Sunday weekly letter is the retention spike** — It's the single biggest re-engagement event of the week and also the primary subscription conversion moment.
+4. **Annual relationship letter is a scheduled ritual** — Once a year per relationship, automatic regeneration, notification not approval. Creates predictable anticipation like Spotify Wrapped.
+5. **Drop-off recapture works for everyone** — Email captured upfront at signup (FR50) means FR76 re-engagement works for every started user, not just completers.
+6. **No dashboard dead-end** — The old "dashboard as hub" model is gone. Every return path leads to a live space (Today / Me / Circle), not an identity card with links.
+7. **Portrait re-read is a Me page behavior, not a return trigger** — Users don't return to re-read the portrait; they return to check in daily. Re-reading happens inside Me when they scroll past Identity Hero.
+8. **Extension is a Me page action, not a separate return path** — The subscription section on Me offers the extension for subscribers who haven't used it yet. Also offered inside the Sunday weekly letter conversion moment (Journey 8).
+9. **Subscription sells deeper relationship with Nerin, not features** — "Unlock Nerin's full attention" — depth, not feature list.
+10. **One email only per recapture attempt** — FR76 drop-off recapture email fires once per drop-off event. No escalating nag. Respect silence after.
 
 ### 10.5 Journey 5: Public Profile → Conversion Flow
 
@@ -2102,10 +2499,10 @@ When a logged-in user with a completed assessment visits someone's public profil
 | Element | Details |
 |---------|---------|
 | Profile view | Standard profile data — same as any visitor |
-| Relationship CTA | "You care about [Name]. Discover your dynamic together." + brief QR explanation |
-| QR explanation | "Next time you're together, scan QR codes to unlock your full relationship analysis" |
+| Relationship CTA | "You care about [Name]. Discover your dynamic together." + "Invite them into your Circle →" |
+| What this triggers | Tapping the CTA opens the invite ceremony (Journey 7) with the viewer's Circle. If the profile owner is already in the viewer's Circle, the CTA reads "You already have a letter with [Name] →" and links to the relationship letter page (Journey 6). |
 | Why it works | Visitor is here because they care about this person — the perfect moment to plant the relationship seed |
-| No automatic comparison overlay | Relationship analysis (Journey 2) is where the dynamic is explored, not the profile page |
+| No automatic comparison overlay | The relationship letter lives in its own page (Journey 6), not on the public profile |
 
 #### Privacy Model (Binary)
 
@@ -2161,12 +2558,683 @@ OG image = **archetype card itself** (with short description), not just the Geom
 6. **Binary privacy** — public or private, no partial states. Visibility toggle surfaced at sharing moment, not buried in settings.
 7. **Private/deleted = respect + redirect** — no CTA on error states. "Profile is private" + homepage redirect. Respect the choice.
 8. **OG image = archetype card** — full card with description, not just GeometricSignature. Eye-catching at preview sizes.
-9. **Logged-in visitors see relationship CTA** — "You care about [Name]" plants the seed for in-person QR. Acknowledges they're not together right now.
+9. **Logged-in visitors see invite-into-Circle CTA** — "You care about [Name]. Invite them into your Circle" is the relationship flywheel entry point (Journey 7), not a QR mechanic. If already connected, the CTA links to the relationship letter (Journey 6).
 10. **Tooltips educate, CTA redirects** — tooltips explain the profile owner's data. CTA redirects curiosity back to self. Education ≠ satisfaction.
 11. **Mobile-first** — most traffic from social media taps. Above-the-fold hierarchy fits first viewport on mobile.
 12. **No retargeting** — visitor leaves, no follow-up. Card/link persists in social feeds. Archetype name is googlable.
 13. **No social proof** — no "X friends have this archetype." Big ocean is about genuine connection, not social metrics.
 14. **Screenshots are valid entry** — archetype name googlable. Homepage catches these visitors.
+
+### 10.6 Journey 6: Relationship Letter Flow — Living Relational Space
+
+**Goal:** Two users connected via Circle → Section A letter generated on first sufficient data → read together in ritual screen → Section B data grid updates automatically as either user has new Nerin conversations → annual regeneration on connection anniversary compounds the relationship archive into a multi-year biography.
+
+**Entry point:** User navigates Circle → taps a person card → "View your dynamic" → enters the relationship letter page (`/circle/$personId` or similar). First visit triggers the ritual screen; subsequent visits bypass unless "Read Together Again" is tapped.
+
+**Principle:** Not a one-time generated artifact. A living relational space with an annual ritual at its center (Spotify Wrapped model). Free for everyone. The letter itself is the emotional center; the real-time data grid is the ongoing intelligence.
+
+#### Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Precondition
+    A["Precondition:
+    Both users authenticated
+    Both have completed at least one assessment
+    QR consent accepted (Journey 7)"]
+
+    %% Entry via Circle
+    A --> B["User opens Circle tab → /circle
+    Sees full-width person card for this relationship
+    Taps 'View your dynamic →'"]
+
+    %% First visit vs subsequent
+    B --> C{"First visit to this letter?"}
+    C -->|Yes| D["Ritual Screen:
+    'Read this together when you can sit with it'
+    Nerin-voiced framing
+    Single Start button
+    Visual: distinct from UI, personal"]
+    C -->|No| E["Bypass ritual by default
+    'Read Together Again' button
+    available to re-enter ritual mode"]
+
+    %% Ritual → Section A
+    D --> F["Section A — This Year's Letter
+    Emotional center, top of page
+    Warm narrative, same visual language as portrait
+    Letter format, max-width 720px, warm background
+    Free for both users"]
+    E --> F
+
+    %% Letter structure
+    F --> G["Letter content:
+    - 'This year, the two of you…'
+    - Parts that click
+    - Parts that clash
+    - Unspoken rhythms
+    - A side of yourself that only shows up around them
+    - Close with next-letter anticipation"]
+
+    %% Scroll down
+    G --> H["Section B — Where You Are Right Now
+    Real-time data grid
+    Side-by-side traits, facets, overlap
+    Complementarity framing — NOT comparison
+    Shared OCEAN letters highlighted
+    Differences framed as rhythm, not deficit
+    Each row has short interpretive framing
+    (generated at letter-gen time)
+    Updates automatically as either user
+    has new Nerin conversations (derive-at-read)"]
+
+    H --> I["Section C — Letter History
+    Small vertical timeline of all past annual letters
+    'Your 2026 letter' · 'Your 2027 letter (coming this February)'
+    Creates anticipation — future letters visible as queued
+    Multi-year relationship biography
+    Free for everyone"]
+
+    %% Section D — post-MVP
+    I --> J["Section D — How You're Both Doing
+    POST-MVP subscriber layer
+    MVP: section collapsed / ghosted
+    D1: Mood trends side by side (free, mutual opt-in)
+    D2: Nerin's relational observations (subscriber)
+    D3: 'Take care of' suggestions (subscriber)
+    D4: Alignment patterns (subscriber)
+    D5: Gentle check-ins (deferred, user testing first)"]
+
+    J --> K["Section E — Things You've Learned About Each Other
+    User-owned shared journal
+    Attributed per entry
+    Short curated observations
+    No likes, no reactions
+    Free for everyone — zero LLM cost"]
+
+    K --> L["Section F — Your Next Letter
+    Anticipation anchor
+    Shows upcoming annual regeneration date
+    'Nerin is already learning more about both of you'
+    Soft countdown creating perpetual return reason"]
+
+    %% Annual regen trigger
+    L --> M{"Has anniversary passed?"}
+    M -->|Yes, letter due| N["Automatic regeneration trigger
+    (NO user approval required —
+     QR consent covers all ongoing use)"]
+    N --> O["Generate new Section A letter
+    (1 LLM call per relationship per year)"]
+    O --> P["Both users notified:
+    'Your [Year] letter from Nerin is ready'
+    Notification in Nerin's voice, not system voice
+    Both users enter ritual screen again
+    Previous letter preserved in Section C history"]
+
+    M -->|No, not yet| Q["Show 'Your Next Letter' countdown
+    + 'Nerin is already learning more about both of you'"]
+
+    %% Privacy contract
+    G --> R["Privacy contract (stays intact):
+    What NEVER crosses users:
+    - Note text from daily check-ins
+    - Pattern details about the individual
+    - Mini-dialogue content from Today
+    - Private portrait regeneration insights
+    - Any raw evidence strings
+    What CAN cross users:
+    - Mood emoji selections (5 options only)
+    - Daily presence (did they check in today?)
+    - Nerin's interpretive framings about the shared dynamic
+    - Pattern observations about the relationship"]
+
+    %% Deferred sub-section
+    P --> S["Section [deferred] — Moments
+    Relationship scrapbook
+    Timeline of meaningful shared moments
+    Would power the 'last shared' signal on Circle cards
+    Parked for later discussion"]
+```
+
+#### Section Architecture
+
+| Section | Content | Free/Paid | When |
+|---------|---------|-----------|------|
+| **A — This Year's Letter** | Warm, narrative, same visual language as personal portrait. Entered through ritual screen on first read. | **Free** | First read + annual regen |
+| **B — Where You Are Right Now** | Real-time data grid, side-by-side traits/facets/overlap with complementarity framing. Updates automatically from conversation data. | **Free** | Always current |
+| **C — Letter History** | Vertical timeline of all past annual letters. Multi-year relationship biography. | **Free** | Always visible |
+| **D — How You're Both Doing** | D1: Mood trends side by side (mutual opt-in). D2: Nerin's relational observations. D3: "Take care of" suggestions. D4: Alignment patterns. | **D1 Free (post-MVP), D2-D4 subscriber (post-MVP)** | Post-MVP |
+| **E — Things You've Learned About Each Other** | User-owned shared journal, attributed per entry, no likes/reactions. | **Free** | User-generated, zero cost |
+| **F — Your Next Letter** | Anticipation anchor with countdown to next annual regeneration. | **Free** | Between letters |
+| **[deferred] — Moments** | Relationship scrapbook timeline. Parked. | — | Parked |
+
+**MVP ships: A, B, C, E, F.** D1-D5 are post-MVP.
+
+#### Annual Regeneration Model (Spotify Wrapped Pattern)
+
+| Element | Detail |
+|---------|--------|
+| Cadence | Once per year, on connection anniversary (one year after QR accept) |
+| Trigger | Automatic — no on-demand regeneration, no approval flow |
+| Consent | Original QR consent covers all future regenerations (Journey 7). Notification is the mechanism, not approval. |
+| Both users notified | "Your [Year] letter from Nerin is ready" — Nerin's voice, not system voice |
+| Ritual re-entry | Both users re-enter ritual screen on first read of new letter |
+| Previous letter | Preserved forever in Section C history |
+| Cost | ~1 LLM call per relationship per year — negligible at scale |
+| Year 3+ moat | Multi-year letter history becomes irreplaceable — a biography no competitor can retroactively build |
+
+**Letter is free for everyone.** Highest-emotion moment must not be gated. Spotify Wrapped precedent: free to all, drives retention and virality. Free users experiencing the annual letter with a subscribed partner creates natural subscription pull.
+
+#### QR Consent Contract (established in Journey 7)
+
+The original QR accept screen (Journey 7 invitee side) must clearly state:
+- Accepting = sharing personality scores with the other user forever (until revoked)
+- Nerin uses ongoing conversation data to keep the relationship letter current
+- Users receive an annually updated letter on anniversary
+- One-time ongoing consent, not per-action opt-in
+- Data-sharing is revocable at any time from Me → Your Circle → person card → "Stop sharing"
+
+**No per-regeneration consent required.** Original QR consent covers all future letter regenerations. Notification (not approval) is the mechanism for keeping users informed.
+
+#### Section D — Harm Reduction Design (Post-MVP)
+
+- Observations are ALWAYS about the dynamic, NEVER about the individual
+- No observation characterizes the partner negatively
+- Suggestions are always collaborative framings ("you two"), never diagnostic
+- Directional suggestions are specific and actionable ("go for a walk after dinner"), never generic empathy advice
+- Users can flag "this doesn't fit" to improve calibration
+- Nerin never singles out one person as the problem
+- Framing rule: **"dynamics not deficits, no blame, no one is the problem"**
+
+#### Section D — Asymmetric Visibility (Post-MVP Subscription Conversion Mechanic)
+
+When Léa (subscribed) sees a "For Léa" suggestion and tells Marc "Nerin said I should try something tonight," Marc experiences socially-observable asymmetry — she's getting intelligence he's not. Over time, this drives organic subscription conversion for Marc without any push, feature comparison page, or upsell banner.
+
+**This is the highest-LTV feature on the platform** because subscription value is about *someone you love*, not just about yourself. Relationship-benefit subscriptions have dramatically higher retention than self-only subscriptions.
+
+#### Screen States
+
+| State | URL | Content |
+|-------|-----|---------|
+| Ritual Screen (first visit) | `/circle/$personId` | "Read this together when you can sit with it" + Start button |
+| Ritual Screen (re-entered) | `/circle/$personId?ritual=true` | Same ritual screen, user-initiated |
+| Normal view (post-ritual) | `/circle/$personId` | Sections A → B → C → E → F scrollable, ritual bypassed |
+| Letter generating | `/circle/$personId` | OceanSpinner + "Nerin is writing your letter..." (same visual language as PortraitReadingView) |
+| Letter ready | `/circle/$personId` | Section A letter fades in, full-screen max-width 720px |
+| Annual regen in progress | `/circle/$personId` | Section A shows "Your [Year] letter is on its way" + current letter still visible as previous |
+| Consent revoked | `/circle/$personId` | "[Name] is no longer sharing with you. Your shared history remains visible." + Section E preserved |
+
+#### Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| Letter generation fails | Retry silently. Fall back to "Nerin is still writing" state. Never show raw error. |
+| Section B data grid fetch fails | Show skeleton + "Refreshing your dynamic..." |
+| Annual regeneration fails | Retry next day; current letter remains visible; user notified of delay in Nerin's voice |
+| User revokes sharing | Future updates stop; existing letters preserved in Section C; Section E shared notes preserved but read-only |
+| Partner deletes account | Relationship letter remains accessible to the surviving user as read-only history; clear indication that partner has left |
+| First-visit ritual dismissed accidentally | "Read Together Again" button re-enters ritual mode on demand |
+
+#### Flow Optimizations
+
+1. **Section A is the emotional center** — Same visual language as the portrait. Entered through ritual, read in letter format, not dashboard format.
+2. **Ritual screen only on first visit (default)** — Subsequent visits go straight to the letter. "Read Together Again" button re-enters ritual for intentional re-reads.
+3. **Real-time data grid** — Updates automatically via derive-at-read. No manual refresh, no "regenerate data" button. Always current.
+4. **Letter history as biography** — Year 1 + Year 2 + Year 3 + … compounds into a multi-year record that becomes irreplaceable moat by Year 3+.
+5. **Annual regeneration is automatic, not requested** — No approval flows, no regenerate buttons, no pending states. QR consent covers it. Notification is the mechanism.
+6. **Annual letter is free** — Highest-emotion moment is a gift, not a paywall. Spotify Wrapped pattern.
+7. **Complementarity, not comparison** — Section B framing: "rhythm" not "differences", "how you fit together" not "who's higher". No competitive language anywhere.
+8. **Privacy contract is non-negotiable** — Note text, mini-dialogue content, individual pattern details NEVER cross users. Nerin is the abstraction layer; only Nerin's interpretive framings flow between users.
+9. **Section E shared notes** — User-owned, attributed, no likes/reactions. Zero LLM cost. Accumulates into shared memory over years.
+10. **"Your Next Letter" countdown** — Makes the annual ritual visible between letters. Creates perpetual return reason even in quiet months.
+11. **Dynamics not deficits** — Harm reduction rule applies to every Section A and Section D string (post-MVP). No observation characterizes one person as the problem.
+
+### 10.7 Journey 7: Invite Ceremony Flow — Bringing Someone Into Your Circle
+
+**Goal:** User decides to invite someone they care about → passes through a Nerin-voiced invite ceremony that frames the act as a gift, not marketing → chooses QR / link / native share → invitee signs up → both users connected → relationship letter generation chain begins (Journey 6).
+
+**Entry points (multiple, distributed across the product):**
+
+1. Me page → Your Circle section → "Invite someone you care about"
+2. Circle page → bottom of list → invite ceremony card
+3. Another user's public profile (if logged in) → "Invite [Name] into your Circle"
+4. Inside the Sunday weekly letter → Nerin references the relational dimension at week close — **highest-converting placement** because it fires in an emotional state Nerin just created
+
+**Principle:** The invite ceremony is self-expression, not marketing. Lead with the reward (relationship letter about the two of you), not the cost (30-min conversation). Name field is an intentionality ceremony, not a form.
+
+#### Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Multiple entry points
+    A{"Entry point?"}
+    A -->|Me → Your Circle section| B[Static CTA card]
+    A -->|Circle → invite card at bottom| C[Invite ceremony card]
+    A -->|Public profile of non-connected user| D[Contextual CTA]
+    A -->|Weekly letter relational beat| E[Inline CTA in Nerin's voice
+    Highest converting placement]
+
+    %% Enter ceremony
+    B --> F[Invite Ceremony Dialog]
+    C --> F
+    D --> F
+    E --> F
+
+    %% Ceremony copy (LOCKED)
+    F --> G["INVITE SOMEONE YOU CARE ABOUT
+
+    Discover the dynamic between you.
+
+    When they finish their conversation with Nerin,
+    the two of you get a letter about your relationship —
+    the parts that click, the parts that clash, and
+    the unspoken rhythms you've been navigating for years.
+
+    You'll also see a side of yourself that only
+    shows up around them.
+
+    Most people say it names something they've felt
+    but never put into words.
+
+    ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+
+    Their side: a 30-minute conversation with Nerin.
+    No forms. No quizzes. Just someone curious about them.
+
+    It stays between the two of you.
+
+    Who are you inviting?
+    [Their name (optional)]
+
+    [Share a QR to scan]
+    [Copy a link to send]
+    [Share via…]"]
+
+    %% Name field (optional — intentionality pause)
+    G --> H["Name field (optional):
+    'Their name (optional)'
+    — intentionality ceremony
+    — not required
+    — personalizes follow-up flow"]
+
+    %% Share method
+    H --> I{"Share method?"}
+    I -->|QR to scan| J["QR drawer opens
+    Displays QR code
+    TTL ~6 hours, auto-regenerates
+    In-person mode: invitee scans phone to phone"]
+    I -->|Copy link| K["Copy temporary invite link
+    Toast: 'Link copied'
+    Inviter can paste anywhere
+    (message, email, AirDrop, etc.)"]
+    I -->|Native share| L["Native share sheet
+    (Web Share API / iOS share sheet / Android)
+    Invite link pre-populated"]
+
+    %% Invitee receives invite
+    J --> M[Invitee scans QR]
+    K --> N[Invitee opens link]
+    L --> N
+
+    M --> O["/invite/$inviteId page"]
+    N --> O
+
+    %% Invitee arrives
+    O --> P["Invite landing page:
+    - 'You've been invited by [Inviter name or 'someone']'
+    - Framing: 'They want to understand the dynamic between you.'
+    - Explanation: 30-min conversation with Nerin,
+      private, no forms/quizzes
+    - Promise: 'When you finish, you'll both get a letter
+      about your relationship.'
+    - QR consent disclosure:
+      'Accepting means you share personality scores
+       with [Inviter] forever (until revoked).'
+    - Buttons: [Accept] [Not now]"]
+
+    %% Invitee decision
+    P --> Q{"Accept?"}
+    Q -->|Not now| R["No accept.
+    Inviter gets no notification.
+    Invite link remains active until TTL."]
+    Q -->|Yes| S[Acceptance recorded]
+
+    %% Auth for invitee
+    S --> T{"Has account?"}
+    T -->|No| U["Sign up
+    → verify email (FR50/50a/50b)
+    → pre-conversation onboarding (FR54)
+    → /chat"]
+    T -->|Yes, no assessment| V["→ /chat
+    (authenticated)"]
+    T -->|Yes, assessment complete| W["Instant connection
+    Section B data grid populates immediately
+    Section A letter generation queues"]
+
+    %% Invitee flows into assessment
+    U --> X[Journey 1: First-Timer Flow
+    continues from exchange 1]
+    V --> X
+
+    %% Post-assessment
+    X --> Y["Invitee completes assessment
+    Receives their own portrait
+    Section A letter generation triggered now
+    (both users have scores)"]
+    W --> Y
+
+    %% Letter generation
+    Y --> Z["Section A relationship letter generates
+    Both users notified in Nerin's voice:
+    'Your letter with [Name] is ready'
+    Both enter ritual screen on first read
+    → Journey 6: Relationship Letter Flow"]
+```
+
+#### Invite Ceremony Copy (LOCKED from design thinking session)
+
+The invite ceremony copy is **locked**. Changes require a new design session.
+
+```
+INVITE SOMEONE YOU CARE ABOUT
+
+Discover the dynamic between you.
+
+When they finish their conversation with Nerin, the two of you get a letter
+about your relationship — the parts that click, the parts that clash, and
+the unspoken rhythms you've been navigating for years.
+
+You'll also see a side of yourself that only shows up around them.
+
+Most people say it names something they've felt but never put into words.
+
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+
+Their side: a 30-minute conversation with Nerin. No forms. No quizzes.
+Just someone curious about them.
+
+It stays between the two of you.
+
+Who are you inviting?
+[Their name (optional)]
+
+[Share a QR to scan] [Copy a link to send] [Share via...]
+```
+
+#### Key Framing Moves (The Copy Audit)
+
+1. **Lead with the reward, not the cost** — The letter is the gift. The 30-min conversation is reframed as "Their side" and presented as a gift back ("just someone curious about them").
+2. **"A letter about your relationship"** — Continuous with portrait, not "relationship analysis." Internal data model stays as `relationship_analysis`; **all user-facing copy must say "relationship letter" or "letter about your dynamic."**
+3. **Concrete promise** — "click / clash / unspoken rhythms" — specific, not abstract.
+4. **Self-reflexive hook** — "a side of yourself that only shows up around them" — the most powerful line in the ceremony.
+5. **Social proof without testimonials** — "Most people say it names something they've felt but never put into words."
+6. **Reframe cost as gift to invitee** — "Their side" / "just someone curious about them" — makes the 30-min conversation feel like a kindness, not an ask.
+7. **Privacy promise at send moment** — "It stays between the two of you" — preempts the "what about my data?" objection before it forms.
+8. **Name field as intentionality ceremony** — Optional, but asking for the name turns the tap into a pause that converts the act from impulse into intention.
+
+#### Invite Placement
+
+| Location | Trigger | Why |
+|----------|---------|-----|
+| Me → Your Circle section | Static, always visible | Low-friction return-visit entry |
+| Circle → bottom of list | Static, after the person cards | Organic scroll destination |
+| Another user's public profile (logged in, not connected) | Contextual CTA | Fires at the exact moment of relational curiosity |
+| **Sunday weekly letter — relational beat** | **Inline in Nerin's voice, week close** | **HIGHEST CONVERTING — fires in an emotional state Nerin just created** |
+
+#### QR Consent at Accept Time (Invitee Side)
+
+The invite accept screen (invitee-facing) must **clearly** state the consent contract:
+
+- Accepting = sharing personality scores with [Inviter] forever (until revoked)
+- Nerin uses ongoing conversation data to keep the relationship letter current
+- Users receive an annually updated letter on anniversary
+- One-time ongoing consent, not per-action opt-in
+- Revocable at any time from Me → Your Circle → person card → "Stop sharing"
+
+**No per-regeneration consent required downstream.** Original accept covers all future letter regenerations (Journey 6).
+
+#### Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| Invite link expired | "This invite link has expired. Ask [Inviter] for a new one." Soft redirect to homepage. |
+| Invitee already has an active invite from same inviter | De-dupe: show existing invite instead of creating a new one. |
+| Invitee opens invite but has the inviter blocked | Show soft refusal: "You can't accept this invite right now." No further detail. |
+| Name field left blank | Silent fallback — ceremony uses "someone" in invitee landing page |
+| Invitee accepts but abandons signup | No connection formed. Inviter not notified. Invite link still active until TTL. |
+| Invitee accepts + completes assessment, but one user later deletes account | Relationship letter preserved as read-only history for surviving user; Section B data grid shows "[Name] has left" state |
+| QR drawer fails to generate | Fall back to copy-link flow |
+
+#### Flow Optimizations
+
+1. **Lead with the reward** — Ceremony copy opens with the letter, not with the conversation. Cost comes after reward.
+2. **Name field is optional but offered** — Typing a name is an intentionality pause that converts impulse into commitment.
+3. **Three share methods** — QR (in-person), copy link (async), native share (platform integration). One screen, one tap each.
+4. **Weekly letter relational beat is the highest-converting placement** — Inviting inside the Sunday letter fires in an emotional state Nerin just created. MVP should prioritize this entry point.
+5. **QR consent disclosed upfront, not buried** — Invitee sees the consent contract on the landing page before accept. Transparent.
+6. **Copy is locked** — The ceremony copy was through multiple iterations in the design thinking session. It is not to be edited without a new design review.
+7. **Nerin's voice, not system voice** — Every line of ceremony copy is in Nerin's register. No marketing speak, no CTA shouting.
+8. **Privacy promise at send moment** — "It stays between the two of you" preempts objections before they form.
+9. **Internal naming unchanged** — Data model stays as `relationship_analysis`; only user-facing copy changes to "relationship letter." Reduces rename scope during implementation.
+10. **No social proof via testimonials** — The social proof line is written in the voice of the ceremony, not as a quoted testimonial. Preserves intimacy register.
+
+### 10.8 Journey 8: Subscription Conversion at Weekly Letter (Week 3+)
+
+**Goal:** By Week 3+, cumulative trust from three descriptive weekly letters + felt gap of "what comes next" converts the user to a subscriber inside the flow they already use — not on a pricing page.
+
+**Entry point:** End of Sunday weekly letter, free version (Journey 3, Act 3 landing). User has received ≥2 prior free weekly letters. Subscription conversion copy appears as the letter's sign-off transitions to Nerin asking for more.
+
+**Principle:** Conversion happens through desire, not coercion. The subscription pitch lives inside the letter, in Nerin's voice, with a soft dismiss. No pricing page, no feature grid, no retention nag.
+
+#### Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Precondition
+    A["Precondition:
+    Sunday weekly letter flow active (Journey 3)
+    User has received ≥2 prior weekly letters
+    User is on free tier
+    User is currently reading the free version"]
+
+    %% Reach end of letter
+    A --> B["User reads through free letter body:
+    - Date range header
+    - Personalized opening
+    - Week narrative
+    - Visual mood shape
+    - 'What stood out' beat
+    - Nerin's sign-off"]
+
+    %% Conversion section (inline, not page break)
+    B --> C["Conversion section appears as continuation
+    of Nerin's sign-off — NOT a separate page:
+
+    — Nerin
+
+    ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+
+    'I have more I want to say about
+     what comes next.
+     With a subscription, I can write
+     you a fuller letter each week —
+     with what to try, what patterns
+     I'm seeing across weeks, and what
+     I think might help in the week
+     ahead.'
+
+    [Unlock Nerin's full weekly letter — €9.99/mo →]
+
+    [Not right now]"]
+
+    %% User decision
+    C --> D{"User tap?"}
+    D -->|Unlock CTA| E[Polar embedded checkout opens]
+    D -->|Not right now| F[Soft dismiss]
+    D -->|Close app / navigate away| G[Treated as soft dismiss]
+
+    %% Soft dismiss
+    F --> H["Conversion section collapses in place
+    Letter body still visible
+    No retention wall, no 'are you sure?' modal
+    No exit survey
+    Returns next Sunday with same framing"]
+    G --> H
+
+    %% Polar checkout
+    E --> I["Polar embedded checkout modal
+    €9.99/mo subscription product
+    Apple Pay / Google Pay / card
+    No redirect — stays in-app"]
+
+    I --> J{"Payment?"}
+    J -->|Succeeds| K["Polar success event →
+    Backend verifies via Polar API →
+    Subscription activates →
+    User is now on paid tier"]
+    J -->|Fails| L["Error in Polar modal
+    Retry or change method"]
+    J -->|Dismissed| M["Return to weekly letter
+    Conversion section still visible
+    User can re-tap Unlock or Not right now"]
+    L --> I
+
+    %% Post-conversion
+    K --> N["Immediate state changes:
+    - Current weekly letter re-renders
+      with subscriber version (already
+      generated at Sunday 6pm alongside free)
+    - User sees 'For the week ahead' section,
+      'Zooming out' pattern detection,
+      relational beat, library article link,
+      reflective prompt
+    - Next Sunday's letter will also be
+      the subscriber version"]
+
+    N --> O["Conversation extension becomes available
+    (MVP subscription perk #1)
+    FR25: Director model re-initialization from prior state
+    FR23: Automatic portrait regeneration bundled
+    with first extension per subscriber"]
+
+    O --> P["Me page updates:
+    - Subscription section shows 'Subscribed' state
+    - Value summary visible instead of pitch
+    - 'Extend your conversation with Nerin →'
+      CTA appears
+    - Portrait regen will bundle with first extension"]
+
+    %% Post-MVP unlocks
+    P --> Q["Post-MVP unlocks over time
+    (NOT in first ship):
+    - Daily LLM recognition (margin notes)
+    - Mini-dialogue ('Tell me more →')
+    - Prescriptive weekly letter layer
+    - Personality-typed notification scheduling
+    - Portrait gallery + regeneration ceremony
+    - Section D relational observations
+    - Coach agent"]
+```
+
+#### Conversion Copy (LOCKED from design thinking session)
+
+```
+— Nerin
+
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+
+I have more I want to say about
+what comes next.
+
+With a subscription, I can write
+you a fuller letter each week —
+with what to try, what patterns
+I'm seeing across weeks, and what
+I think might help in the week
+ahead.
+
+[Unlock Nerin's full weekly letter — €9.99/mo →]
+
+[Not right now]
+```
+
+#### Design Principles for the Conversion Ending
+
+1. **Nerin's voice, not system voice** — "I have more I want to say" is personal, not a sales pitch. Every word is in Nerin's register.
+2. **Concretely names what's missing** — "what to try, what patterns, what might help" — the user knows exactly what subscription unlocks.
+3. **Framed as Nerin wanting to tell the user more, not as a paywall** — The pitch is emotional, not transactional.
+4. **"Not right now" is a soft dismiss** — Returns next Sunday with same framing. No retention wall.
+5. **No aggressive retention nag** — No escalating prompts, no "last chance", no exit survey.
+6. **Conversion section flows from sign-off** — It reads as one more sentence in the letter, not a page break into a pricing page.
+7. **One CTA button** — Not a pricing comparison, not a feature grid, not a plan selector. Just the unlock action and the soft dismiss.
+
+#### Three-Act Story Landing at Week 3+
+
+| Act | Week | What Happened | Conversion State |
+|-----|------|---------------|------------------|
+| **Act 1 — Build the habit** | Day 0-7 | Silent journal daily deposits. No subscription mention. No weekly letter yet. | Not asked |
+| **Act 1.5 — First Sunday** | Week 1 | First weekly letter. Free version complete and satisfying. Conversion line appears. | Rare conversion — trust too thin |
+| **Act 2 — Show the gap** | Weeks 2-3 | Each Sunday, same full letter + same conversion line. Felt gap accumulates. | Some conversion begins |
+| **Act 3 — Natural unlock** | Week 3+ | Cumulative felt gap + accumulated trust = natural conversion moment. User subscribes because they WANT the fuller version. | Primary conversion window |
+
+**Why Week 3+ is the sweet spot:**
+- Week 1 is too early — user is still evaluating whether Nerin delivers consistently
+- Week 2 is the "could be a fluke" moment — user needs one more data point
+- Week 3 is when the habit is real, the trust is earned, and the gap is felt
+- Beyond Week 4+ — if user hasn't converted, subsequent Sundays reset the opportunity with the same framing
+
+#### Post-Conversion State Changes
+
+| Surface | Before | After |
+|---------|--------|-------|
+| Current weekly letter | Free version (descriptive) | Subscriber version (descriptive + prescriptive layer) — re-renders in place |
+| Next Sunday's letter | Would be free version | Will be subscriber version |
+| Me page — Subscription section | "Unlock Nerin's full attention" pitch | "Subscribed" value summary + conversation extension CTA |
+| Conversation extension | Locked | Available — first extension triggers bundled portrait regeneration |
+| Portrait regeneration | Locked (MVP) | Bundled automatically with first extension (MVP, FR23) |
+| Today page | Silent journal (free) | Silent journal (free) — **post-MVP**: daily LLM recognition + mini-dialogue upgrade |
+| Today page ghost subscriber section | Visible as faint outline (post-MVP) | Activated (post-MVP) |
+| Cost to user | €0/month | €9.99/month |
+
+#### MVP vs Post-MVP Subscription Value
+
+| MVP Perks (Ship Now) | Post-MVP Perks (Don't Ship Yet) |
+|---|---|
+| Conversation extension (+15 exchanges, Director model re-init) | Daily LLM recognition in journal format (margin notes) |
+| Automatic portrait regeneration bundled with first extension | "Tell me more →" mini-dialogue on daily check-in |
+| Prescriptive layer in Sunday weekly letter | Personality-typed notification scheduling |
+| | Portrait gallery + regeneration ceremony + "Who you're becoming" deltas |
+| | Section D relational observations (D2-D4) |
+| | Annual relationship letter regeneration (Year 1 Q4+) |
+| | Coach agent |
+| | Library article contextual surfacing in daily flow |
+
+**At MVP, the subscription is effectively: "+15 more turns with Nerin + fuller weekly letter."** That is the honest value proposition. Do not oversell post-MVP features as MVP perks.
+
+#### Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| Polar embed fails to load | Inline error + retry; letter remains readable; dismiss button still works |
+| Payment fails | Retry within Polar modal; subscription does not activate |
+| User closes browser mid-payment | On return, check payment state via Polar API; if confirmed, activate subscription retroactively |
+| Subscription activates but letter doesn't re-render | Fallback: refresh page manually; backend reconciles state on next load |
+| User subscribes but immediately regrets | Cancel flow available in Me → Subscription → Manage; remains subscribed until end of billing period |
+| Polar webhook delayed | Optimistic activation on success event; reconcile with webhook within 24h |
+
+#### Flow Optimizations
+
+1. **Conversion pitch is inside the letter body, not a page break** — Flows from sign-off. Reads as one more sentence.
+2. **Nerin's voice throughout** — Every line including the CTA is in Nerin's register. Even "Unlock Nerin's full weekly letter" frames subscription as unlocking depth with Nerin, not unlocking features.
+3. **One CTA button** — Not a pricing comparison, not a feature grid. Tap to unlock or tap to dismiss.
+4. **Soft dismiss returns next Sunday** — No retention wall, no exit survey, no escalating nag. The same framing fires again in 7 days.
+5. **Three-act story lands at Week 3+** — The conversion line has been visible for 2-3 weeks already; by Week 3 the user knows exactly what they're saying yes or no to.
+6. **Weekly letter re-renders in place on conversion** — Subscriber version was already generated alongside the free version at Sunday 6pm, so the re-render is instant, no regeneration delay.
+7. **MVP subscription perks are modest and honest** — +15 turns + fuller weekly letter. Post-MVP features are real but not yet built; the pitch copy does not promise them.
+8. **No pricing page, no feature grid, no plan selector** — Single flat product at €9.99/mo. Polar checkout is a modal overlay, not a navigation.
+9. **Me page subscription section is a control center, not a marketing wall** — After conversion, the section becomes a value summary + conversation extension CTA. It is not a place for upsells.
+10. **Conversation extension is the MVP retention hook, not the conversion hook** — Conversion happens via the weekly letter. Extension is what the subscriber gets AFTER converting — it's a retention + deepening mechanism, not the reason people subscribe.
+11. **Bundled portrait regeneration removes friction** — First extension automatically includes a regenerated portrait. No separate flow, no additional tap, no "would you like to regenerate?" modal. Just happens.
 
 ## 11. Component Strategy
 
@@ -2177,18 +3245,22 @@ OG image = **archetype card itself** (with short description), not just the Geom
 | Component | Usage in big-ocean |
 |-----------|--------------------|
 | Button | CTAs, actions, form submissions |
-| Card | Trait cards, evidence cards, relationship cards |
-| Dialog | PWYW curtain modal, confirmations |
-| Drawer | QR drawer |
-| Sheet | Mobile navigation |
-| Input | Chat input, forms |
-| Switch | Profile visibility toggle |
+| Card | Trait cards, evidence cards, Circle person cards, weekly letter card |
+| Dialog | Invite ceremony dialog, subscription conversion modal wrapper, confirmations |
+| Drawer | Share drawer, mobile filters |
+| Sheet | Mobile settings / secondary navigation |
+| Input | Chat input, forms, daily check-in note field |
+| Textarea | Daily check-in note field (multi-line), shared notes entries |
+| Switch | Profile visibility toggle, mood sharing opt-in, notification permission toggle |
 | Tooltip | OCEAN code letters, trait explanations |
-| Badge | Evolution badge, credit display |
-| Avatar | User avatars |
-| Dropdown Menu | User navigation, settings |
+| Badge | Evolution badge, archetype badge on person cards |
+| Avatar | User avatars (sparingly — Intimacy Principle bans grid of avatars on Circle) |
+| Dropdown Menu | Account / settings menu |
 | Chart (Recharts) | Radar chart base |
-| Sonner (Toast) | Transient error notifications, success confirmations |
+| Sonner (Toast) | Transient error notifications, success confirmations ("Link copied", "Check-in saved") |
+| Tabs | (reserved — do NOT use for Today/Me/Circle navigation; see BottomNav below) |
+
+**Do not install:** Carousel, Navigation Menu (desktop-oriented), Menubar. Three-space navigation uses a custom `BottomNav`, not shadcn's Navigation Menu.
 
 ### 11.2 Already Built (Custom)
 
@@ -2196,33 +3268,58 @@ OG image = **archetype card itself** (with short description), not just the Geom
 |----------|-----------|
 | Chat | Message, MessageBubble, NerinMessage, ChatConversation, ChatInputBarShell, DepthMeter, EvidenceCard, FacetIcon |
 | Ocean Shapes | OceanCircle, OceanTriangle, OceanDiamond, OceanHalfCircle, OceanRectangle, OceanShapeSet |
-| Results | ArchetypeHeroSection, ArchetypeCard, ArchetypeDescriptionSection, PersonalityRadarChart, ConfidenceRingCard, TraitBand, FacetScoreBar, DetailZone, PersonalPortrait, PortraitReadingView, PortraitUnlockButton, HighlightedText, ProfileView, QuickActionsCard, ShareProfileSection, PublicProfileCTA, RelationshipCreditsSection, ConversationTranscript |
+| Results | ArchetypeHeroSection, ArchetypeCard, ArchetypeDescriptionSection, PersonalityRadarChart, ConfidenceRingCard, TraitBand, FacetScoreBar, DetailZone, PersonalPortrait, PortraitReadingView, HighlightedText, ProfileView, QuickActionsCard, ShareProfileSection, PublicProfileCTA, ConversationTranscript |
 | Sea Life | GeometricOcean, Bubbles |
 | Sharing | ArchetypeCardTemplate, ArchetypeShareCard |
-| Relationship | InvitationBottomSheet, RelationshipCard |
-| Auth | ChatAuthGate, ResultsAuthGate, login-form, signup-form |
+| Relationship | RelationshipCard |
+| Auth | ResultsAuthGate, login-form, signup-form |
 | Home | HeroSection, ConversationFlow, ChatBubble, ComparisonCard, ResultPreviewEmbed, TraitStackEmbed |
-| Other | FinalizationWaitScreen, PortraitWaitScreen, Logo, Header, ThemeToggle, ErrorBanner |
+| Other | FinalizationWaitScreen, Logo, Header, ThemeToggle, ErrorBanner |
+
+**Retired (remove during this migration):**
+
+| Retired Component | Reason | Replacement |
+|---|---|---|
+| `ChatAuthGate` | Anonymous path removed — all /chat users are authenticated from turn 1 | Route-level auth check (no gate component needed) |
+| `PortraitUnlockButton` | Portrait is free — no "unlock" state | Inline `PersonalPortrait` on Me page; `PortraitReadingView` for first-read focused reading |
+| `PWYWCurtainModal` | PWYW retired — no paywall modal | N/A — portrait renders directly |
+| `RelationshipCreditsSection` | Credits system retired | `InviteCeremonyDialog` (new) + Circle person cards |
+| `CreditBalance` | Credits system retired | N/A — no credits to display |
+| `InvitationBottomSheet` | Old relationship invitation flow | `InviteCeremonyDialog` (new) |
+| `PortraitWaitScreen` | Old multi-frame identity reveal sequence | `PortraitReadingView` in generating state with OceanSpinner |
+| `QuickActionsCard` (dashboard variant) | Dashboard retired — see §15 | N/A — three-space nav replaces dashboard |
+| `RelationshipCTA` (as QR flow) | QR-credit-scan retired | Repurposed as invite CTA that opens `InviteCeremonyDialog` |
 
 ### 11.3 Architecture Principles
 
 **Navigation:** All internal links use TanStack `Link` from `@tanstack/react-router`. No raw `<a>` tags for internal navigation.
 
-**SSR-first for read-heavy surfaces:** Results page, public profile, and relationship analysis are server-rendered via TanStack Start. react-markdown runs server-side — browser receives ready HTML. Client rendering reserved for interactive components (chat, QR drawer, depth meter). Vincent's example portrait in the PWYW modal is pre-rendered at build time as static content (it never changes).
+**Three-space navigation:** Authenticated users see a persistent `BottomNav` with exactly three tabs (Today / Me / Circle). No `/dashboard` route. `/settings` is a thin admin route accessed via gear icon on Me, not a fourth tab. Assessment (`/chat`) and focused reading views (`PortraitReadingView`, weekly letter reading view) sit outside the three-space world and hide `BottomNav`.
+
+**SSR-first for read-heavy surfaces:** Public profile (`/public-profile/$id`) and library articles are server-rendered via TanStack Start. react-markdown runs server-side — browser receives ready HTML. Authenticated three-space surfaces (`/today`, `/me`, `/circle`) are client-rendered with TanStack Query hydration for fast navigation between tabs. Focused reading views (`PortraitReadingView`, `/today/week/$weekId`, relationship letter Section A) are SSR-friendly but client-hydrated to support the generating state transitions.
+
+**Frontend API rule (project-wide):** All backend calls use the typed Effect `HttpApiClient` with `@workspace/contracts`. Never raw `fetch`. See `apps/front/src/lib/api-client.ts` and CLAUDE.md for the pattern.
+
+**Forms rule (project-wide):** All forms use `@tanstack/react-form` with shadcn/ui form components. The daily check-in form, invite ceremony name field, and shared notes entry all follow this pattern. No plain `useState` per field.
 
 **Error strategy — three tiers:**
 
 | Error Type | Surface | Example |
 |-----------|---------|---------|
-| Transient / recoverable | Sonner toast (shadcn) | "Payment failed — try again", "QR generation failed", "Network error" |
+| Transient / recoverable | Sonner toast (shadcn) | "Check-in saved", "Link copied", "Network error" |
 | Component crash | React Error Boundary at route composition level | Portrait renderer crashes → fallback UI, rest of page works |
-| Action-blocking | Inline in component | Portrait generation failed → retry button where portrait would be |
+| Action-blocking | Inline in component | Portrait generation failed → retry inline with Nerin-voiced reassurance |
 
-Error boundaries are placed at the **route composition level**, not per-component. One component failure never crashes the page.
+Error boundaries are placed at the **route composition level**, not per-component. One component failure never crashes the page. Focused reading views (`PortraitReadingView`, weekly letter) have their own error boundary to protect the emotional register.
 
-**Loading convention:** Skeleton placeholders for content with a known shape (portrait sections, signature shapes, trait bars). Spinner for indeterminate waits (QR generation, payment processing). Applied consistently across all components.
+**Loading convention:** Skeleton placeholders for content with a known shape (portrait sections, signature shapes, trait bars, Circle person cards). `OceanSpinner` with a Nerin-voiced line ("Nerin is writing your letter...") for emotionally-weighted waits (portrait generation, weekly letter generation, relationship letter generation). Do NOT use generic spinners for letter generation — the wait is part of the emotional experience.
 
-**Testing convention:** Each custom component gets: (1) a Storybook story showing all states/variants, (2) a Vitest test for interactive behavior (tooltip opening, toggle state, polling lifecycle).
+**Nerin output grammar in component types:** Components that render Nerin's voice fall into three visual format families, each with its own base component:
+- **Journal format** (`JournalEntry`, `NerinMarginNote`) — shared-page feel, warm body font, no chat bubbles. Used on Today post-check-in state (paid tier, post-MVP).
+- **Letter format** (`PortraitReadingView`, `WeeklyLetterReadingView`, `RelationshipLetterSectionA`) — focused reading, max-width 720px, warm background, letter typography. Used for portrait, weekly letter, annual relationship letter.
+- **Chat format** (`ChatConversation`, existing) — traditional message bubbles with avatars. Used only in `/chat` assessment tunnel and post-MVP mini-dialogue.
+
+**Testing convention:** Each custom component gets: (1) a Storybook story showing all states/variants, (2) a Vitest test for interactive behavior (tooltip opening, toggle state, polling lifecycle, generating-state transition). Focused reading components must be tested in the generating state, not just the ready state.
 
 ### 11.4 Custom Components (New)
 
@@ -2347,54 +3444,40 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 ---
 
-#### PortraitUnlockButton
+#### PortraitReadingView (Extended — Generating State)
 
-**Purpose:** Portrait section placeholder for deferred payers. Simple button that opens PWYWCurtainModal.
+**Existing component extended** to support the "generating" state required for the post-assessment transition (Journey 1).
 
-**Props:**
-- `archetypeName: string`
-- `onTap: () => void` — opens PWYW curtain modal
+**New prop:**
+- `generationState?: "idle" | "generating" | "ready" | "failed"` — drives the render branch
 
-**States:** Default · Hover · Tapped (opens PWYW curtain)
+**New state — "generating":**
+- `OceanSpinner` centered on the viewport
+- Nerin-voiced line beneath: *"Nerin is writing your letter..."*
+- Same warm background, max-width 720px container, typography tokens as the ready state
+- No other content visible — no header, no nav chrome, no retry button until error
+- Auto-transitions to "ready" via polling or subscription on portrait generation completion
 
-**Content:** "Nerin has written something for you. Unlock your portrait." — carries emotional weight in the label, not in visual complexity.
+**New state — "failed" (rare, after retries exhausted):**
+- Same container, Nerin-voiced line: *"Something slipped. One moment."*
+- Auto-retry silently up to 3 times
+- Only if persistent failure: expose a soft "Try again" link at the bottom of the container
 
-**Layout:** Sits inside a container with **reserved vertical space** for the portrait that will replace it. When portrait loads, it fills the reserved space without layout shift.
+**End-of-letter transition:**
+- At the bottom of the rendered portrait letter, a warm link: *"There's more to see →"*
+- Navigates to `/results/$sessionId` (full Me page), NOT back to the chat
+- This link is part of the `PortraitReadingView` composition, not a separate component
 
-**Built on:** shadcn `Button` (primary variant, full-width).
+**Existing state — "ready":**
+- Letter fades in, full-screen, max-width 720px, warm background, letter typography
+- No nav chrome, no `BottomNav`, no footer distractions
+- Scroll triggers the end-of-letter link when the user reaches the bottom
 
-**Usage:** Results page portrait section (deferred payers only).
+**Hide BottomNav:** This route hides `BottomNav` entirely. The reading experience is the whole viewport.
 
-**Accessibility:** `aria-label="Nerin has written something for you. Unlock your portrait."`
+**Usage:** `/results/$sessionId?view=portrait` (post-assessment first read per Journey 1). Also reused as the visual language reference for `WeeklyLetterReadingView` and `RelationshipLetterSectionA`.
 
----
-
-#### PWYWCurtainModal
-
-**Purpose:** Scrollable modal presenting the PWYW experience. Single scroll container — no nested scrollable regions.
-
-**Props:**
-- `isOpen: boolean`
-- `onClose: () => void`
-- `onPaymentSuccess: () => void`
-- `founderPortrait: PortraitSpineData`
-- `includesRelationshipCredit: boolean`
-
-**Scroll:** One continuous scroll container: bridge → founder letter → Vincent's portrait (full length, pre-rendered static content) → CTA. No inner scrollable regions (iOS Safari nested scroll issue). Body scroll locked when modal open.
-
-**Sections:**
-1. "Congratulations on completing 15 turns with Nerin. Before you read what she wrote, I want to tell you why this exists."
-2. Founder's love letter (3-4 sentences, dense)
-3. Vincent's portrait (full length, PortraitSpineRenderer with static data)
-4. "Unlock your portrait" + "Includes 1 relationship analysis credit" + button → Polar embed
-
-**States:** Open (scrollable overlay, same mobile + desktop) · Polar stacked (Polar embed on top) · Payment success (both close) · Payment failed (Sonner toast) · Closed/skipped ("Maybe later", no guilt)
-
-**iOS Safari:** Body scroll locked on mount. Verify shadcn Dialog scroll behavior. Budget Safari-specific testing.
-
-**Built on:** shadcn `Dialog`. Polar via `@polar-sh/checkout/embed`.
-
-**Accessibility:** `aria-modal="true"`. Focus trapped. Close always visible. Heading hierarchy across sections.
+**Accessibility:** `role="main"` on the letter container. Screen readers announce "Nerin is writing your letter" during generating state via `aria-live="polite"`.
 
 ---
 
@@ -2456,19 +3539,25 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 ---
 
-#### RelationshipCTA
+#### InviteIntoCircleCTA (formerly RelationshipCTA)
 
-**Purpose:** Prompts logged-in visitors on a public profile to initiate a relationship analysis.
-
-**Content:** "You care about [Name]. Discover your dynamic together."
+**Purpose:** Prompts logged-in visitors on someone else's public profile (or other contextual surfaces) to invite that person into their Circle via the invite ceremony.
 
 **Props:**
 - `profileUserName: string`
-- `onLearnMore?: () => void`
+- `relationshipState: "not-connected" | "already-connected"`
+- `onInvite: () => void` — opens InviteCeremonyDialog
+- `onViewLetter?: () => void` — only when `relationshipState === "already-connected"`
 
-**States:** Default (card + message + "Learn how") · Expanded (QR flow explanation: "Next time you're together, scan QR codes to unlock your full relationship analysis")
+**States:**
+- **Not connected:** Card + message + "You care about [Name]. Invite them into your Circle →" button
+- **Already connected:** Card + message + "You already have a letter with [Name] →" link to relationship letter page (Journey 6)
 
-**Usage:** Public profile (logged-in visitors with completed assessments only).
+**Content (not connected):** *"You care about [Name]. Discover the dynamic between you."* + primary CTA that opens the invite ceremony.
+
+**Content (connected):** *"You and [Name] already have a letter."* + link to relationship letter page.
+
+**Usage:** Public profile (logged-in visitors with completed assessments only). NOT on Me or Circle — those surfaces have their own invite ceremony entry points.
 
 **Accessibility:** `role="complementary"` with descriptive `aria-label`.
 
@@ -2476,39 +3565,593 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 #### EvolutionBadge
 
-**Purpose:** "Previous version" indicator for archived portraits and relationship analyses.
+**Purpose:** "Previous version" indicator for archived portraits and relationship letters.
 
 **Props:**
 - `basedOnExchanges: number`
-- `variant: "portrait" | "relationship"`
+- `variant: "portrait" | "relationship-letter"`
 
-**States:** Default (subtle label) · Hover/tap (expanded: "Based on 15 exchanges. A newer version exists.")
+**States:** Default (subtle label) · Hover/tap (expanded: "Based on [X] exchanges. A newer version exists.")
 
 **Built on:** shadcn `Badge` + shadcn `Tooltip`.
+
+**Usage:** Me → Your Portrait section (for subscribers who have extended conversations and regenerated portraits). Also used on relationship letter Section C letter history timeline to label past annual regenerations.
 
 **Accessibility:** `aria-label="Previous version based on [X] exchanges"`.
 
 ---
 
-#### CreditBalance
+### 11.4a New Three-Space Components
 
-**Purpose:** Displays remaining relationship analysis credits with inline purchase option.
+The following components are new additions required for the three-space architecture, silent journal, weekly letter, relationship letter, and invite ceremony flows. Component prefixing follows the target space / feature area.
+
+#### BottomNav
+
+**Purpose:** Persistent bottom navigation for authenticated users, showing exactly three tabs: Today / Me / Circle. The foundation of the three-space model.
 
 **Props:**
-- `credits: number`
-- `onPurchase: () => void`
+- None — reads current route and subscription state from TanStack Router and auth context
 
-**States:** Has credits ("[X] credits remaining") · No credits ("No credits — Purchase (€5)") · Purchasing (Polar modal)
+**Structure:**
+- Three tabs, equal width, labeled ("Today" / "Me" / "Circle") with simple icons
+- Active tab visually distinct (color fill + bold label)
+- No badge counts, no unread indicators — Intimacy Principle forbids counts
+- Height: ~56-64px (mobile-native bottom nav height)
+- Persistent on `/today`, `/me`, `/circle`, and their subroutes (e.g., `/today/calendar`)
+- **Hidden** on `/chat`, `/results/$sessionId?view=portrait`, `/today/week/$weekId`, relationship letter Section A first-visit ritual screen, `/public-profile/$id`, `/settings`, and unauthenticated routes
+- Safe-area-inset-bottom padding for notched devices
 
-**Behavior:** Optimistic updates via TanStack Query — balance updates immediately on Polar `success` event, reconciles with backend webhook.
+**States:**
+- Today active
+- Me active
+- Circle active
+- (No "all inactive" state — one tab is always active when visible)
 
-**Errors:** Purchase failure → Sonner toast.
+**Route detection:** Uses TanStack Router's current-match API. No manual prop passing.
 
-**Built on:** shadcn `Badge` + Polar embed.
+**Accessibility:** `role="navigation"` with `aria-label="Main navigation"`. Each tab is a `<button>` or `Link` with `aria-current="page"` when active.
 
-**Usage:** QR accept screen, results page, dashboard.
+**Why not shadcn Tabs:** shadcn's `Tabs` are for in-page content switching with state, not for route-level navigation. Three-space nav is persistent across route changes and uses router state.
 
-**Accessibility:** `aria-live="polite"` for credit count changes.
+---
+
+#### CheckInForm
+
+**Purpose:** The daily check-in form on the Today page pre-check-in state. Captures mood + optional note + visibility level.
+
+**Props:**
+- `prompt: string` — Nerin-voiced prompt for the day (MVP: one default; post-MVP: personality-typed per user)
+- `onSubmit: (checkIn: { mood: MoodOption, note?: string, visibility: NoteVisibility }) => void`
+
+**Structure:**
+- Nerin-voiced prompt line at the top
+- 5 mood options rendered as large tappable emoji buttons
+- Optional `Textarea` for the note, placeholder: "One note, if you want"
+- Visibility selector (MVP: hidden, defaults to Private; post-MVP: segmented control for Private / Inner Circle / Public Pulse)
+- Save button at the bottom (disabled until a mood is selected)
+
+**Form library:** TanStack Form with shadcn form components (per project forms rule). Validation via Effect Schema (`@effect/schema`) — mood required, note optional with soft max length, visibility enum.
+
+**States:**
+- Empty (no mood selected, save disabled)
+- Mood selected, no note
+- Mood selected, note in progress
+- Saving (button shows spinner)
+- Saved (transitions to post-check-in state on the Today page)
+
+**Accessibility:** Each mood emoji is a `<button role="radio">` inside a `role="radiogroup"` with `aria-label` describing the mood. The note textarea has a visible label.
+
+---
+
+#### MoodDotsWeek
+
+**Purpose:** Renders the "week-so-far" 7-day dot grid on the Today page. Small secondary visual element, not the page center.
+
+**Props:**
+- `weekCheckIns: Array<{ date: Date, mood: MoodOption | null }>` — 7 entries for the current week
+- `todayIndex: number` — which dot represents today (0-6)
+
+**Visual:**
+- 7 dots horizontally, equal spacing
+- Filled dots for days with check-ins (colored by mood or a single accent color)
+- Empty outlined dots for days without check-ins
+- Today's dot has a subtle highlight (ring) whether filled or empty
+- Day labels (M T W T F S S) below each dot, small and muted
+
+**No streak counter, no percentage, no "days this week"** — just the dots. The dots ARE the progress representation.
+
+**States:**
+- All empty (start of week, no check-ins yet)
+- Mixed (some filled, some empty — typical state)
+- Today empty, past days filled (pre-check-in state today)
+- Today filled, past days filled (post-check-in state today)
+
+**Accessibility:** `role="list"` with 7 `role="listitem"` dots. Each dot has `aria-label` describing the day and check-in status ("Monday: checked in" or "Tuesday: no check-in").
+
+---
+
+#### JournalEntry
+
+**Purpose:** Renders the user's own check-in entry (mood + note) on the Today page post-check-in state, in journal format (not chat bubbles).
+
+**Props:**
+- `mood: MoodOption`
+- `note?: string`
+- `timestamp: Date`
+- `visibility: NoteVisibility`
+
+**Structure:**
+- Warm body font (not monospace, not the ambient UI font)
+- Mood emoji at the left margin (like a journal icon)
+- Note text flows to the right, wrapped in comfortable reading width
+- Timestamp subtle, small, muted
+- Visibility icon subtle at the corner (🔒 Private, 💙 Inner Circle, 🌊 Public Pulse — MVP shows Private only)
+
+**No chat bubble, no avatar, no "sent" indicator.** The entry is rendered as text on a shared page, not as a message.
+
+**Usage:** Today page post-check-in state. Also used in the mood calendar detail view when a user taps a past check-in.
+
+**Accessibility:** `<article>` with semantic `<time>` for the timestamp. Note text is unstyled paragraph content.
+
+---
+
+#### NerinMarginNote (Post-MVP)
+
+**Purpose:** Renders Nerin's LLM-generated recognition response on the Today page post-check-in state in paid tier. Appears as a margin note on the same page as the user's `JournalEntry`, creating a shared-page feel.
+
+**Props:**
+- `content: string` — Nerin's 2-3 sentence recognition
+- `generationState: "generating" | "ready" | "failed"`
+- `onTellMeMore?: () => void` — opens mini-dialogue (post-MVP)
+
+**Structure:**
+- Positioned as a sibling to the user's entry (not a reply bubble)
+- Indented slightly, smaller text, different warmth tone
+- No "Nerin:" prefix — it's clearly Nerin by typography and position
+- "Tell me more →" button at the bottom (post-MVP)
+
+**Post-MVP only.** MVP ships with the silent journal fork (no NerinMarginNote). This component is documented here so the free-tier Today page reserves visual space for the "ghost subscriber section" faint outline.
+
+**Generating state:** Pulses softly with a Nerin-voiced line ("Nerin is thinking about your day..."). No separate spinner — the margin note container itself pulses.
+
+**Accessibility:** `aria-live="polite"` announces Nerin's response when ready.
+
+---
+
+#### QuietAnticipationLine
+
+**Purpose:** The free-tier Today page post-check-in line that bridges daily → weekly. Single most-read copy string in the product.
+
+**Props:**
+- `nextLetterDate?: Date` — if provided, can softly indicate "this Sunday" or "in 3 days"
+
+**Content (locked):** *"Nerin will write you a letter about your week on Sunday."*
+
+**Variant (optional, with `nextLetterDate`):** *"Nerin will write you a letter about your week in [3 days]."*
+
+**Visual:**
+- Small text, muted color, below the user's `JournalEntry`
+- No icon, no button, no decoration
+- Centered or left-aligned (per layout) but not emphasized
+- Typography one step smaller than the journal entry body
+
+**No animation, no attention-grabbing treatment.** The line is meant to be quietly noticed, not visually shouted.
+
+**Usage:** Today page, free tier only. On paid tier (post-MVP), this line is replaced by `NerinMarginNote`.
+
+**Accessibility:** Plain text with no special role. Screen readers read it inline with the page flow.
+
+---
+
+#### LibraryArticleCard
+
+**Purpose:** Contextually-surfaced library article slot on the Today page post-check-in state. 2-3 per week max (not daily), picked from SEO library based on the user's personality profile.
+
+**Props:**
+- `article: { slug: string, title: string, excerpt: string, archetypeMatch?: string }`
+- `onDismiss?: () => void` — optional hide-for-today
+
+**Visual:**
+- Thin card, not the page center
+- Title + 1-sentence excerpt
+- "Read →" link to the article at `/library/$slug`
+- Muted treatment — does not compete with the journal entry
+
+**Rate limit:** Hidden on days without a matched article. Never shown more than 3 times per week per user. Never shown on Sundays (weekly letter takes priority).
+
+**Content source:** Static SEO library content. Zero LLM cost. Matching done server-side based on the user's dominant archetype + recent mood patterns.
+
+**Accessibility:** `<article>` with semantic headings. Link to the full article.
+
+---
+
+#### WeeklyLetterCard (Today page top inline card)
+
+**Purpose:** Inline card on the Today page top on Sundays (and Mondays if user didn't open on Sunday). Signals "your weekly letter is ready" and links to the focused reading view.
+
+**Props:**
+- `weekId: string`
+- `isSubscriber: boolean` — affects preview text and conversion hint
+- `weekDateRange: { start: Date, end: Date }`
+
+**Visual:**
+- Full-width card at the top of the Today page, above the check-in state
+- Nerin-voiced heading: *"Your week with Nerin is ready"*
+- Date range subtitle: "[Month Day] — [Month Day]"
+- CTA: *"Read your letter →"*
+- Warm visual treatment, distinct from standard cards
+- Subtle entrance animation on first Sunday load (gentle fade + rise)
+
+**Auto-dismiss:** If user has read the letter (tracked by a "read" timestamp on the weekly_summaries row), the card shows a "Re-read →" variant instead of being hidden.
+
+**Usage:** Top of `/today` on Sundays. Also visible on Monday if user didn't open app on Sunday. Disappears Tuesday.
+
+**Accessibility:** `aria-labelledby` pointing to the heading. Card is a single large clickable region.
+
+---
+
+#### WeeklyLetterReadingView
+
+**Purpose:** Focused reading route at `/today/week/$weekId` for the Sunday weekly letter. Same visual language as `PortraitReadingView`.
+
+**Props:**
+- `weekId: string`
+- `content: WeeklyLetterContent` — includes tier, sections, generation metadata
+
+**Structure (shared with PortraitReadingView):**
+- Full-screen, distraction-free
+- Max-width 720px, warm background, letter typography
+- Hide `BottomNav`
+- Top: soft close button (chevron back to `/today`)
+- Body: letter content rendered via `react-markdown` with letter-format CSS
+- Bottom: sign-off, conversion section (free tier, Week 3+), or prescriptive layer (subscriber)
+
+**States:**
+- **Generating** (rare — user taps too early): OceanSpinner + "Nerin is writing your letter..."
+- **Ready, free tier, Week 1-2:** Full descriptive letter, sign-off
+- **Ready, free tier, Week 3+:** Full descriptive letter + conversion section with locked copy + [Unlock CTA] + [Not right now]
+- **Ready, subscriber tier:** Descriptive letter + prescriptive layer (For the week ahead, Zooming out, relational beat, library article link, reflective prompt) + sign-off
+- **No letter this week** (user had <3 check-ins): Soft state "No letter this week — Nerin needs a few deposits to write with" + link back to `/today`
+- **Failed generation:** Same fallback as PortraitReadingView
+
+**Conversion section:**
+- Renders inline with the letter body, not as a separate modal or page break
+- Nerin-voiced locked copy (see Journey 3 §10.3)
+- Primary CTA opens Polar embedded subscription checkout
+- Soft dismiss collapses the section in place; letter body remains visible
+
+**Accessibility:** `role="main"` on letter container. Conversion CTA has clear `aria-label`. Screen readers read the conversion section as part of the letter flow.
+
+---
+
+#### CirclePersonCard
+
+**Purpose:** Full-width card on the Circle page representing one person in the user's Circle. Not a grid tile — individual weight.
+
+**Props:**
+- `person: { name: string, archetype: string, oceanCode: string, connectedSince: Date, lastShared?: Date }`
+- `onView: () => void` — navigates to relationship letter page
+
+**Visual:**
+- Full-width (not grid), generous vertical spacing
+- Person's name prominent
+- Archetype + OCEAN code (GeometricSignature mini + letters)
+- Duration line: *"Understanding each other since [Month Year]"*
+- "Last shared" recency signal (if available): *"Last shared: [relative time]"* — presence, not activity
+- "View your dynamic →" link to relationship letter page
+- Warm, intimate treatment — not a contact card, not a social profile
+
+**Intimacy Principle compliance:**
+- **No** avatar grid — full-width card per person
+- **No** follower/friend count
+- **No** sort/filter controls
+- **No** "last active" online indicator
+- **No** profile view counter
+- "Last shared" celebrates presence of mutual understanding moments (letter reads, portrait sends, shared notes), NOT a streak or activity graph
+
+**States:**
+- Default (mutual sharing active)
+- Partner has stopped sharing (soft label: "[Name] is no longer sharing with you. Your shared history remains.")
+- Partner deleted account (label: "[Name] has left. Your letters remain as history.")
+
+**Accessibility:** Entire card is a single large clickable region with `aria-label` summarizing the relationship.
+
+---
+
+#### InviteCeremonyCard (static, on Circle and Me)
+
+**Purpose:** The always-appended invite ceremony card at the bottom of the Circle list and inside Me → Your Circle section. Entry point into `InviteCeremonyDialog`.
+
+**Props:**
+- `placement: "circle-bottom" | "me-section" | "weekly-letter-inline"`
+- `onOpen: () => void` — opens InviteCeremonyDialog
+
+**Visual:**
+- Full-width card, same width as person cards on Circle
+- Warm, Nerin-voiced short teaser: *"Invite someone you care about →"*
+- No count, no "invite 3 more friends to unlock" gimmick
+- Subtle icon or visual that signals "this is about a relationship", not "this is a share button"
+
+**Usage:** Bottom of `/circle`. Inside Me → Your Circle section. Inside the Sunday weekly letter relational beat inline variant.
+
+**Accessibility:** `<button>` with full card surface clickable. `aria-label="Invite someone you care about into your Circle"`.
+
+---
+
+#### InviteCeremonyDialog
+
+**Purpose:** The invite ceremony modal dialog that presents the locked ceremony copy, captures optional name, and offers three share methods. Single most load-bearing conversion component in the relationship flywheel.
+
+**Props:**
+- `isOpen: boolean`
+- `onClose: () => void`
+- `onInviteSent: (method: "qr" | "link" | "native", inviteId: string) => void`
+- `presetName?: string` — when opened from a public profile, pre-fills the name field
+
+**Structure (scrollable dialog, mobile-first):**
+- Heading: "INVITE SOMEONE YOU CARE ABOUT"
+- Locked ceremony copy (see Journey 7 §10.7 for the full text — copy is NOT editable without design review)
+- Name field: optional, placeholder "Their name (optional)"
+- Three share buttons:
+  - "Share a QR to scan" → opens QR share drawer (uses existing share QR infrastructure, no credits)
+  - "Copy a link to send" → copies invite link, Sonner toast "Link copied"
+  - "Share via…" → native Web Share API share sheet
+- Soft close (X or tap outside) — no guilt language
+
+**Built on:** shadcn `Dialog` (scrollable). TanStack Form for the name field.
+
+**Copy audit:** The ceremony copy is locked from the design thinking session. Any change requires a new design review. `InviteCeremonyDialog` imports the copy from a single source file that is marked `@readonly` and gated by CODEOWNERS on design review.
+
+**States:**
+- Default (copy + name field + three buttons)
+- Name typed (buttons enabled)
+- Sharing via QR (QR visible)
+- Sharing via link (toast shown, dialog auto-dismisses after brief confirm)
+- Sharing via native (native share sheet open)
+- Closed / dismissed
+
+**Accessibility:** `aria-modal="true"`. Focus trapped. Close always visible. Semantic heading hierarchy for the ceremony copy (heading, paragraphs, share buttons as `<button>`).
+
+---
+
+#### InviteLandingPage (route: `/invite/$inviteId`)
+
+**Purpose:** The invitee-side landing page when someone accepts an invite link. Shows the inviter's framing, the QR consent contract, and the Accept / Not now decision.
+
+**Route-level composition, not a library component.** Lives in `apps/front/src/routes/`.
+
+**Structure:**
+- "You've been invited by [Inviter name or 'someone']"
+- Framing: "They want to understand the dynamic between you."
+- Explanation of the 30-min conversation with Nerin
+- Promise: "When you finish, you'll both get a letter about your relationship."
+- **QR consent disclosure (prominent):**
+  - "Accepting means you share personality scores with [Inviter] forever (until revoked)."
+  - "Nerin uses ongoing conversation data to keep your relationship letter current."
+  - "You'll receive an annually updated letter on the anniversary of accepting."
+  - "Revocable at any time from Me → Your Circle → [Inviter's name] → Stop sharing."
+- Buttons: `[Accept]` `[Not now]`
+
+**State transitions on Accept:**
+- Not logged in → redirect to `/signup?invite=$inviteId`
+- Logged in, no assessment → create connection record + redirect to `/chat` (Journey 1)
+- Logged in, assessment complete → instant connection, Section B data grid populates, Section A letter generation queues, redirect to `/circle/$inviterPersonId`
+
+**Accessibility:** Consent disclosure is a labelled `<section>` with clear heading. Accept button has descriptive `aria-label`.
+
+---
+
+#### RelationshipLetterPage (route: `/circle/$personId`)
+
+**Purpose:** The living relational space page for one specific relationship. Not a component — a route-level composition of multiple components.
+
+**Sections composed (top to bottom):**
+1. `RelationshipLetterSectionA` — This year's letter (letter format, ritual entry)
+2. `RelationshipLetterSectionB` — Real-time data grid (traits, facets, overlap)
+3. `RelationshipLetterSectionC` — Letter history timeline
+4. `RelationshipLetterSectionD` — (post-MVP) How you're both doing (D1 free, D2-D4 subscriber)
+5. `RelationshipLetterSectionE` — Things you've learned about each other (shared notes)
+6. `RelationshipLetterSectionF` — Your next letter countdown
+
+**First-visit ritual screen:** Intercepts first load via a wrapping `RelationshipLetterRitualGate` component that shows the ritual screen before Section A. Subsequent visits bypass by default; a "Read Together Again" button in the header re-enters the ritual gate.
+
+**Letter generating state:** Section A renders in a `PortraitReadingView`-style generating state with OceanSpinner + "Nerin is writing your letter..." until generation completes.
+
+**BottomNav visibility:** Hidden during the ritual screen; visible after the user taps Start and enters the sections.
+
+---
+
+#### RelationshipLetterSectionA (Letter Format)
+
+**Purpose:** Renders the annual "This year's letter" from Nerin about the relationship in letter format — same visual language as `PortraitReadingView`.
+
+**Props:**
+- `letterContent: string` — Nerin's generated letter
+- `generationState: "generating" | "ready" | "failed"`
+- `letterYear: number`
+
+**Structure:**
+- Max-width 720px, warm background, letter typography
+- Warm narrative content, render via react-markdown
+- "— Nerin" sign-off at the bottom
+- Same typography + reading experience as `PortraitReadingView`
+
+**Free for both users.** No gating, no partial visibility.
+
+**Accessibility:** Semantic `<article>` with `<h1>` for the year header. Letter body as paragraphs.
+
+---
+
+#### RelationshipLetterSectionB (Real-Time Data Grid)
+
+**Purpose:** Side-by-side traits, facets, and overlap comparison with complementarity framing (not competitive comparison).
+
+**Props:**
+- `userA: { name: string, traits: TraitScores, facets: FacetScores, archetype: string }`
+- `userB: { name: string, traits: TraitScores, facets: FacetScores, archetype: string }`
+
+**Visual:**
+- Table-like structure with two columns (one per user)
+- Shared OCEAN letters highlighted as a band across both columns
+- Each trait row has a short interpretive framing generated at letter-generation time
+- Differences framed as "rhythm" not "deficit" — no competitive scoring language
+
+**Update behavior:** Derive-at-read. Pulls latest facet scores from both users at render time. No cached/stale data grid.
+
+**Free for both users.**
+
+**Accessibility:** Proper table semantics with `<th>` for trait names. Screen readers can compare row-by-row.
+
+---
+
+#### RelationshipLetterSectionC (Letter History Timeline)
+
+**Purpose:** Vertical timeline of past annual letters, showing the multi-year relationship biography.
+
+**Props:**
+- `letterHistory: Array<{ year: number, letterId: string, generatedAt: Date, isNext?: boolean }>`
+
+**Structure:**
+- Vertical list, year-by-year
+- Each entry: year label + small excerpt + link to that year's letter
+- Next year's letter shown as queued ("Your 2027 letter (coming this February)") with disabled state — visible but unread
+- Creates perpetual return anticipation
+
+**Free for both users.**
+
+**Accessibility:** `<ol>` (ordered list) with year headings. Next-year entry has `aria-disabled="true"`.
+
+---
+
+#### RelationshipLetterSectionE (Shared Notes)
+
+**Purpose:** User-owned shared journal where both users can add short observations about each other. Attributed per entry, no likes, no reactions.
+
+**Props:**
+- `sharedNotes: Array<{ noteId: string, authorId: string, authorName: string, content: string, createdAt: Date }>`
+- `onAddNote: (content: string) => void`
+- `onDeleteNote: (noteId: string) => void` — author-only
+
+**Structure:**
+- Vertical feed of notes, attributed to each user
+- Input field at the bottom for adding a new note
+- Delete option on hover/long-press for the author's own notes only
+- No likes, no hearts, no reactions, no threaded replies
+
+**Visibility:** Shared between the two connected users only. Never visible on public profile or to third parties.
+
+**Free for both users. Zero LLM cost** — user-generated content only.
+
+**Accessibility:** `<article>` per note with author and timestamp.
+
+---
+
+#### RelationshipLetterSectionF (Your Next Letter Countdown)
+
+**Purpose:** Anticipation anchor at the bottom of the relationship letter page. Shows the upcoming annual regeneration date and a Nerin-voiced line about learning more.
+
+**Props:**
+- `connectionAnniversary: Date`
+- `nextRegenerationDate: Date`
+
+**Visual:**
+- Soft countdown display (e.g., "Your next letter: February 14, 2027")
+- Nerin-voiced line: *"Nerin is already learning more about both of you."*
+- Subtle, not a banner, not a CTA
+
+**No "notify me" button** — notification is automatic on regeneration. This section is pure anticipation anchor.
+
+**Accessibility:** `aria-live="polite"` for the countdown (if it changes during page lifetime — unlikely).
+
+---
+
+#### MePageSection (layout primitive)
+
+**Purpose:** Consistent section wrapper for the Me page's 7 sections (Identity Hero, Your Portrait, Your Growth, Your Public Face, Your Circle preview, Subscription, Account link).
+
+**Props:**
+- `title: string`
+- `children: ReactNode`
+- `action?: { label: string, onClick: () => void }` — optional inline action
+- `isConditional?: boolean` — e.g., Your Growth section only renders if mood history exists
+
+**Structure:**
+- Section heading
+- Content area
+- Optional "View all →" or similar action link
+- Consistent vertical rhythm between sections
+
+**Usage:** Me page only. Not a general-purpose section component.
+
+**Accessibility:** Semantic `<section>` with heading.
+
+---
+
+#### ReturnSeedSection (first Me page visit only)
+
+**Purpose:** The return seed section at the bottom of the full results/Me page on the FIRST post-assessment visit only. Contains Nerin's message + notification permission request in Nerin's voice.
+
+**Props:**
+- `userName?: string`
+- `onRequestPermission: () => Promise<boolean>` — triggers browser notification permission API
+
+**Structure:**
+- Nerin's message: *"Tomorrow, I'll ask how you're doing. Come check in with me."*
+- Permission button, Nerin-voiced: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"*
+- Two buttons: `[Yes, send me a quiet note]` `[Not right now]`
+- On "Yes" → triggers browser permission API → if granted, schedules first daily notification for the next day at default time (MVP: 7pm; post-MVP: personality-typed)
+- On "Not right now" → daily loop still works via organic return, no lock-in
+
+**Visibility:** Renders **only on the first Me page visit** (after the post-assessment transition in Journey 1). Subsequent visits do not show this section. The first-visit flag is stored server-side, not in localStorage.
+
+**Tone rule:** This component is where the Nerin-voice vs system-voice distinction matters most. Every string must be Nerin-voiced. NO "Enable notifications", NO "Allow notifications for the best experience", NO generic permission copy.
+
+**Accessibility:** `role="region"` with labelled heading. Permission button is a clear `<button>` with descriptive label.
+
+---
+
+#### SubscriptionPitchSection / SubscriptionValueSummary
+
+**Purpose:** Me page subscription section — two variants based on user's subscription state.
+
+**Free user variant (SubscriptionPitchSection):**
+- Props: `onSubscribe: () => void`
+- Headline: *"Unlock Nerin's full attention"*
+- Short description of MVP perks: conversation extension + bundled first-extension portrait regeneration
+- Soft CTA: *"Learn more →"* → opens subscription details (post-MVP: pricing modal; MVP: inline expand with Polar embed)
+- **NOT** a feature grid or pricing comparison
+- Refers to weekly letter conversion moment as the primary conversion path: "Nerin will also ask you at the end of your next Sunday letter"
+
+**Subscriber variant (SubscriptionValueSummary):**
+- Props: `subscriber: { since: Date, extensionUsed: boolean, portraitRegenerated: boolean }`
+- Headline: *"You and Nerin"* — subscription status visible without shouting
+- Value summary: "Subscribed since [Month Year]"
+- If extension not yet used: primary CTA *"Extend your conversation with Nerin →"* (triggers extension flow)
+- If extension used: subtle note *"You extended your conversation on [date]. Your portrait was regenerated on the same day."*
+- Management link (gear → `/settings` or inline): *"Manage subscription →"*
+
+**Accessibility:** Clear semantic structure. Subscription state announced on load for screen readers.
+
+---
+
+#### MoodCalendarView (route: `/today/calendar`)
+
+**Purpose:** Separate view for looking back at past check-ins. Not on Today by default — Today is ephemeral.
+
+**Props:**
+- `moodHistory: Array<{ date: Date, mood: MoodOption | null, noteExcerpt?: string }>`
+- `rangeDays: number` — defaults to 14
+
+**Visual:**
+- 14-day grid of mood emojis
+- Empty dots for days without check-ins (no shaming)
+- Tap on a past day → shows the full `JournalEntry` for that day
+- No streak counter, no "days in a row", no percentage
+- No "share your calendar" button (Intimacy Principle — this is private)
+
+**Accessibility:** Grid structure with `role="grid"` and row/column labels.
+
+---
 
 ### 11.5 Route-Level Compositions (Not Library Components)
 
@@ -2516,31 +4159,58 @@ Page layouts that compose library components with data-fetching concerns. Live i
 
 | Composition | Route | Composes |
 |-------------|-------|----------|
-| **RelationshipAnalysisPage** | `/relationship/:id` | PortraitSpineRenderer (relationship) + OceanCodeStrand ×2 (side-by-side) + PersonalityRadarChart (comparison mode) + EvolutionBadge + framing text |
-| **PublicProfilePage** | `/profile/:id` | Framing line ("[Name] dove deep with Nerin — here's what surfaced") + archetype name/description + GeometricSignature + OceanCodeStrand + ConversationCTA + trait bars + RelationshipCTA (logged-in) |
-| **ResultsPage** | `/results` | ArchetypeHeroSection + GeometricSignature + OceanCodeStrand + PersonalityRadarChart + TraitBand/FacetScoreBar + PersonalPortrait or PortraitUnlockButton + QRDrawer + CreditBalance |
+| **HomePage** | `/` | HeroSection, ConversationFlow, ChatBubble, ComparisonCard, ResultPreviewEmbed, TraitStackEmbed, Nerin preview (FR63), portrait excerpt (FR62) — load-bearing because anonymous path is removed |
+| **ChatPage** | `/chat` | ChatConversation, DepthMeter + DepthMeterMilestones, NerinMessage, ChatInputBarShell, EvidenceCard. Authenticated from turn 1. `BottomNav` hidden. |
+| **PortraitReadingView route** | `/results/$sessionId?view=portrait` | `PortraitReadingView` (extended with generating state) + end-of-letter link. First portrait read destination. `BottomNav` hidden. |
+| **ResultsPage / Me (first visit)** | `/results/$sessionId` | Identity hero (ArchetypeHeroSection + GeometricSignature + OceanCodeStrand + PersonalityRadarChart) + inline PersonalPortrait + Your Public Face section + invite ceremony card + subscription pitch + **ReturnSeedSection** (first visit only). `BottomNav` visible. |
+| **TodayPage** | `/today` | BottomNav + CheckInForm (pre-check-in) or JournalEntry + MoodDotsWeek + QuietAnticipationLine + LibraryArticleCard (rate-limited) + WeeklyLetterCard (Sundays). Default authenticated landing. |
+| **MoodCalendarView** | `/today/calendar` | BottomNav + MoodCalendarView component. Separate view for looking back. |
+| **WeeklyLetterReadingView route** | `/today/week/$weekId` | `WeeklyLetterReadingView` with tier-aware rendering. `BottomNav` hidden. Focused reading. |
+| **MePage** | `/me` | BottomNav + MePageSection ×7: Identity Hero, Your Portrait (inline re-read), Your Growth (conditional), Your Public Face (ProfileVisibilityToggle + share card), Your Circle (preview with View all →), SubscriptionPitchSection or SubscriptionValueSummary, Account (gear → `/settings`) |
+| **CirclePage** | `/circle` | BottomNav + CirclePersonCard (full-width, one per connected person) + InviteCeremonyCard (always at bottom). Empty state: "Big Ocean is made for the few people you care about." |
+| **RelationshipLetterPage** | `/circle/$personId` | RelationshipLetterRitualGate (first visit only) + Section A (`RelationshipLetterSectionA`) + Section B + Section C + Section D (post-MVP) + Section E + Section F. `BottomNav` hidden during ritual, visible after. |
+| **InviteLandingPage** | `/invite/$inviteId` | Inviter framing + ceremony explanation + QR consent contract + Accept / Not now buttons. No auth gate — renders for all visitors; Accept flow handles auth routing. |
+| **PublicProfilePage** | `/public-profile/$id` | Framing line + archetype name/description + GeometricSignature + OceanCodeStrand + ConversationCTA + trait bars + InviteIntoCircleCTA (logged-in visitors). SSR. `BottomNav` hidden. |
+| **SettingsPage** | `/settings` | Account admin: email, password, notification preferences, notification permission revoke, data export, delete account. `BottomNav` visible. Accessed via gear icon on Me. |
 
-**Layout slot reservation:** Results page, public profile, and relationship analysis layouts must **reserve UI slots** for Phase 6 components (EvolutionBadge, CreditBalance) during Phase 1-2 development. Invisible placeholders ensure lifecycle components drop in cleanly without layout redesign.
+**Hidden BottomNav routes:** `/chat`, `/results/$sessionId?view=portrait`, `/today/week/$weekId`, `/circle/$personId?ritual=true`, `/public-profile/$id`, unauthenticated routes.
+
+**Authenticated default landing:** First post-assessment visit → `/me`. All subsequent visits → `/today`. Tracked via a server-side `has_visited_me_once` flag on the user record.
 
 ### 11.6 Implementation Roadmap
 
 | Phase | Components | Unlocks | Priority |
 |-------|-----------|---------|----------|
-| **1: Core Identity** | GeometricSignature, OceanCodeStrand | Results page, public profile, archetype card — used everywhere | Highest — blocks all visual surfaces |
-| **2: Portrait** | PortraitSpineRenderer, PortraitUnlockButton, PWYWCurtainModal | Portrait delivery + PWYW monetization (Journey 1 + 3) | High — core monetization |
-| **3: Conversation** | DepthMeterMilestones, ConversationCTA | Conversation experience + conversion funnel (Journey 1 + 5) | High — core experience + acquisition |
-| **4: Public Profile** | ProfileVisibilityToggle, RelationshipCTA | Viral surface + sharing loop (Journey 5) | Medium — growth mechanics |
-| **5: Relationship** | QRDrawer, RitualScreen, PersonalityRadarChart extension | Relationship analysis flow (Journey 2) | Medium — second monetization |
-| **6: Lifecycle** | EvolutionBadge, CreditBalance | Returning user + credit economics (Journey 4) | Lower — retention features |
+| **1: Core Identity (already mostly built)** | GeometricSignature, OceanCodeStrand, PersonalityRadarChart | Shared visual identity across all surfaces | Highest — blocks every surface |
+| **2: Assessment onboarding tunnel (mostly built)** | ChatConversation, DepthMeter + DepthMeterMilestones, NerinMessage, ChatInputBarShell, EvidenceCard | Assessment Journey 1 | High — core experience |
+| **3: Post-assessment transition** | `PortraitReadingView` extension (generating state), end-of-letter link, `ReturnSeedSection` | Journey 1 ending + Phase 5→6 bridge | **Highest — load-bearing for retention** |
+| **4: Three-space nav shell** | `BottomNav`, `/today` / `/me` / `/circle` route composition, routing default-landing logic | Entire three-space product shell | Highest — foundational |
+| **5: Today page** | `CheckInForm`, `MoodDotsWeek`, `JournalEntry`, `QuietAnticipationLine`, `LibraryArticleCard`, `WeeklyLetterCard` | Journey 2 Daily Silent Journal | High — retention engine |
+| **6: Me page** | `MePageSection`, `SubscriptionPitchSection` / `SubscriptionValueSummary`, inline `PersonalPortrait` re-read, public face controls | Me page (low-frequency identity space) | High — post-assessment identity sanctuary |
+| **7: Circle page + invite ceremony** | `CirclePersonCard`, `InviteCeremonyCard`, `InviteCeremonyDialog`, `InviteLandingPage` route | Journey 7 Invite Ceremony + Circle | High — viral flywheel |
+| **8: Weekly letter** | `WeeklyLetterReadingView`, Sunday 6pm generation job, push notification wiring, conversion copy component | Journey 3 Weekly Letter + Journey 8 Subscription Conversion | **Highest — primary revenue path** |
+| **9: Relationship letter** | `RelationshipLetterPage` route, Section A/B/C/E/F components, ritual gate | Journey 6 Relationship Letter Flow | Medium — viral deepening |
+| **10: Subscription flow** | Polar embedded checkout integration, `SubscriptionPitchSection` conversion trigger, conversation extension flow, automatic portrait regeneration bundling | Journey 8 + conversation extension | High — monetization |
+| **11: Mood calendar** | `MoodCalendarView`, 14-day grid with past entry detail | Journey 2 look-back view | Low — enhancement |
+| **12: Settings** | `/settings` route with email, password, notification permissions, delete account | Account management | Low — table stakes |
+| **13: Post-MVP depth layer** | `NerinMarginNote`, mini-dialogue chat flow, personality-typed notification scheduling, prescriptive weekly letter layer, Section D D1-D4, portrait gallery, Coach agent | Post-MVP subscriber perks | Not MVP |
+
+**Retirements this migration:** `ChatAuthGate`, `PortraitUnlockButton`, `PWYWCurtainModal`, `RelationshipCreditsSection`, `CreditBalance`, `InvitationBottomSheet`, `PortraitWaitScreen`, `QRDrawer` (as credit flow — may be repurposed for invite QR share if the mechanics are compatible), dashboard components from §15.
 
 ### 11.7 Implementation Notes
 
 - **Satori compatibility** is a hard constraint for GeometricSignature and all 15 ocean shapes. Test in Satori during shape development, not after.
-- **iOS Safari testing** budgeted for PWYWCurtainModal (scroll behavior) and any component using `position: fixed` with scroll.
-- **Mobile viewport audit** required for public profile above-the-fold content (ConversationCTA hero variant on 375×667).
-- **`useQRToken` hook** extracts QR lifecycle logic from QRDrawer — easier to test and maintain.
-- **Sonner** added to shadcn component set for unified toast notifications across the app.
-- **Vincent's portrait** pre-rendered at build time — static content, never changes, no client-side parsing.
+- **PortraitReadingView generating state** is load-bearing for Journey 1's emotional arc. Budget explicit test coverage for the transition from generating → ready and for the end-of-letter link rendering after scroll.
+- **ReturnSeedSection first-visit flag** must be server-side (user record), not localStorage, to survive device changes and sign-outs.
+- **BottomNav visibility logic** is driven by route metadata — each route exports a `hideBottomNav?: boolean` flag, and the layout root checks it. No per-component conditional rendering.
+- **Nerin-voice vs system-voice audit** required for: ReturnSeedSection, notification permission request, daily notification copy, Sunday weekly letter push notification copy, subscription conversion copy, InviteCeremonyDialog copy. One PR reviewer owns this audit (copy review gate).
+- **Weekly letter generation job** runs Sunday 6pm local time per user. Cron infrastructure + local-time handling required. Generation produces both free and subscriber content in one LLM call.
+- **Polar embedded checkout** is reused for subscription flow. Subscription product at €9.99/mo, one product, no plan selector. Apple Pay / Google Pay priority for one-gesture payment.
+- **Frontend API rule compliance:** All data fetching uses the typed Effect `HttpApiClient` with `@workspace/contracts`. New endpoints required: daily check-in (POST), weekly letter (GET), relationship letter (GET), invite ceremony (POST/GET), subscription state (GET).
+- **TanStack Form compliance:** `CheckInForm`, `InviteCeremonyDialog` name field, `RelationshipLetterSectionE` shared notes input, settings page — all use TanStack Form + shadcn form components per project forms rule.
+- **Sonner** used for transient confirmations ("Check-in saved", "Link copied", "Invite sent"). Never used for emotionally-weighted state changes (letter ready, subscription active — those update in-place).
+- **Invite ceremony copy is locked** — imports from a single source file gated by CODEOWNERS on design review. Runtime A/B testing of ceremony copy is explicitly forbidden.
+- **Kitchen sink update required (per CLAUDE.md):** Every new component in `packages/ui` must have a demo in `/dev/components`. This migration adds ~15 new components — `/dev/components` must be updated alongside component implementation.
 
 ## 12. UX Consistency Patterns
 
@@ -3162,242 +4832,431 @@ Carries emotional weight, not just action description.
 - **Suppression:** Before sending, verify the user hasn't already taken the action (resumed conversation, purchased portrait, etc.). Don't send if action already completed.
 - **Unsubscribe:** One-click unsubscribe per email category. CAN-SPAM / GDPR compliant.
 
-## 15. Dashboard Specification
+## 15. Three-Space Page Specifications (Today / Me / Circle)
 
-### 15.1 Dashboard Purpose
+> **Retired:** The previous §15 Dashboard Specification (built around `/dashboard`, `DashboardIdentityCard`, `DashboardPortraitCard`, `DashboardRelationshipsCard`, `DashboardCreditsCard`, and the `/profile` route) has been retired in full. The dashboard concept is dead. The authenticated product shell is now the **three-space model** (Today / Me / Circle) with a persistent `BottomNav` and no `/dashboard` route. See §Core User Experience → Three-Space Navigation Model for the architectural rationale.
 
-The dashboard (`/dashboard`) is the returning user's **single home base** — the surface that answers "what do I have, and what can I do next?" It consolidates what was previously split across `/dashboard` and `/profile` into one cohesive view. The `/profile` route is removed; all user-facing state lives here.
+### 15.0 Retirement Notice
 
-**Design principle:** The dashboard is a *hub*, not a destination. Each card connects to a deeper surface (results, relationship analysis, public profile) — the dashboard shows *status and links*, not full content. Portrait status, for example, is accessed via the results page, not duplicated here.
+**Retired components (delete):**
+- `apps/front/src/routes/dashboard.tsx`
+- `apps/front/src/routes/profile.tsx`
+- `components/dashboard/DashboardIdentityCard.tsx`
+- `components/dashboard/DashboardPortraitCard.tsx`
+- `components/dashboard/DashboardRelationshipsCard.tsx`
+- `components/dashboard/DashboardCreditsCard.tsx`
+- `components/dashboard/DashboardEmptyState.tsx`
+- `components/profile/AssessmentCard.tsx`
+- `components/profile/EmptyProfile.tsx`
 
-**Current state (implemented):** A 2-column grid with Identity Card (archetype + OCEAN code + GeometricSignature), Portrait Card, Relationships Card, and Credits Card. Empty state for users without a completed assessment.
+**Route redirect:** `/dashboard` → 301 redirect to `/today` for any bookmarked links.
 
-**Target state:** Merge profile's in-progress assessment handling into the dashboard, remove the Portrait Card (portrait accessed via results), add a public profile link to the Identity Card, and delete the `/profile` route entirely.
+**Nav cleanup:** Remove "Dashboard" and "Profile" links from `Header.tsx`, `UserNav.tsx`, `MobileNav.tsx`. Replace desktop nav with account dropdown (gear → `/settings`) and mobile nav with the new `BottomNav` component.
 
-### 15.2 Current Implementation (Built)
+**Data-testid migration:** Existing e2e tests referencing `data-testid="dashboard-page"`, `data-testid="dashboard-identity-card"`, `data-testid="dashboard-archetype-name"` must be updated to the new `data-testid="today-page"`, `data-testid="me-page"`, `data-testid="circle-page"`, etc. **Do not reuse the `dashboard-` prefix** for new testids.
 
-The dashboard (`/dashboard`) and profile (`/profile`) currently exist as separate routes. The dashboard is the richer page; the profile will be absorbed into it and deleted.
+### 15.1 Today Page Specification (`/today`)
 
-**Dashboard route** (`apps/front/src/routes/dashboard.tsx`):
+**Purpose:** Daily ephemeral companion page. The default landing for every authenticated visit after the first post-assessment visit. Low-friction daily habit surface. BeReal philosophy: one daily action, content gated behind the user's own deposit, static after check-in.
 
-| Component | File | What It Does |
-|-----------|------|-------------|
-| `dashboard.tsx` | `routes/dashboard.tsx` | Route with auth guard, fetches sessions, results, portrait status, relationships, credits |
-| `DashboardIdentityCard` | `components/dashboard/DashboardIdentityCard.tsx` | Archetype name + OCEAN code with tooltips + GeometricSignature + "View Full Results" CTA |
-| `DashboardPortraitCard` | `components/dashboard/DashboardPortraitCard.tsx` | Portrait unlock/generation status (**to be removed** — portrait accessed via results) |
-| `DashboardRelationshipsCard` | `components/dashboard/DashboardRelationshipsCard.tsx` | List of relationship analyses with status badges + "Read Analysis" links |
-| `DashboardCreditsCard` | `components/dashboard/DashboardCreditsCard.tsx` | Credit balance + purchase CTA + QR drawer |
-| `DashboardEmptyState` | `components/dashboard/DashboardEmptyState.tsx` | Empty state: "Start Your Conversation" CTA → `/chat` |
+**Not a dashboard. Not a feed.** Today is ephemeral — yesterday's state doesn't live here; the mood calendar is a separate view (`/today/calendar`).
 
-**Profile route** (`apps/front/src/routes/profile.tsx`) — **to be deleted:**
+#### 15.1.1 Target Sections
 
-| Component | File | What It Does |
-|-----------|------|-------------|
-| `profile.tsx` | `routes/profile.tsx` | Route with auth guard, fetches sessions via `useListAssessments(true)` |
-| `AssessmentCard` | `components/profile/AssessmentCard.tsx` | Single card: status badge, GeometricSignature (if completed), progress bar (if in-progress), date, action buttons |
-| `EmptyProfile` | `components/profile/EmptyProfile.tsx` | Empty state: MessageCircle icon + "No assessments yet" + "Start Your Assessment" CTA |
+**Pre-check-in state (user hasn't checked in today):**
 
-**Current dashboard layout (built):**
-```
-┌─────────────────┬─────────────────┐
-│  Identity Card  │  Portrait Card  │  ← sm:grid-cols-2
-│                 │  (TO REMOVE)    │
-├─────────────────┴─────────────────┤
-│  Relationships Card (span 2)      │
-├───────────────────────────────────┤
-│  Credits Card (span 2)            │
-└───────────────────────────────────┘
-```
+| Order | Element | Component | Details |
+|-------|---------|-----------|---------|
+| 1 | Nerin-voiced prompt | `CheckInForm` header | MVP: one default prompt. Post-MVP: personality-typed per user |
+| 2 | Mood selection | `CheckInForm` body | 5 mood options rendered as large tappable emojis |
+| 3 | Optional note field | `CheckInForm` body | `Textarea` with placeholder "One note, if you want" |
+| 4 | Save button | `CheckInForm` footer | Disabled until mood selected |
+| 5 | Week-so-far dots | `MoodDotsWeek` | 7 dots, today empty, past days filled from check-in history |
+| 6 | Bottom nav | `BottomNav` | Persistent Today / Me / Circle tabs |
 
-**Profile-only data to absorb:** Assessment in-progress state (progress bar showing `messageCount / freeTierMessageThreshold`, "Continue" CTA → `/chat?sessionId=...`).
+**Post-check-in state (user has checked in today) — FREE TIER:**
 
-**Data currently available:** `SessionSummary { id, createdAt, updatedAt, status, messageCount, oceanCode5?, archetypeName? }` + `freeTierMessageThreshold` + `GetResultsResponse { archetypeName, oceanCode5, traits, publicProfileId, shareableUrl, isPublic }`.
+| Order | Element | Component | Details |
+|-------|---------|-----------|---------|
+| 1 | User's entry (journal format) | `JournalEntry` | Mood emoji + note text on a shared page, NOT a chat bubble |
+| 2 | Week-so-far dots (today filled) | `MoodDotsWeek` | 7 dots, today now filled |
+| 3 | Quiet anticipation line | `QuietAnticipationLine` | *"Nerin will write you a letter about your week on Sunday."* |
+| 4 | Library article slot (rate-limited) | `LibraryArticleCard` | 2-3/week max, never on Sundays |
+| 5 | Ghost subscriber section (post-MVP) | Faint outline of `NerinMarginNote` + mini-dialogue entry | Visible but not clickable for free users |
+| 6 | Sunday weekly letter inline card (Sundays only) | `WeeklyLetterCard` | Top of page on Sundays, auto-dismisses after read |
+| 7 | Bottom nav | `BottomNav` | Persistent |
 
-**Data attributes to preserve:** `data-testid="dashboard-page"`, `data-testid="dashboard-identity-card"`, `data-testid="dashboard-archetype-name"`.
+**Post-check-in state — PAID TIER (post-MVP, not MVP):**
 
-### 15.3 Target Dashboard Sections
+| Order | Element | Component |
+|-------|---------|-----------|
+| 1 | User's entry | `JournalEntry` |
+| 2 | Nerin's recognition (margin note) | `NerinMarginNote` (generated by LLM) |
+| 3 | "Tell me more →" mini-dialogue entry | Triggers chat format mini-dialogue (post-MVP) |
+| 4 | Today's Focus / micro-action | Post-MVP only |
+| 5 | Week-so-far dots | `MoodDotsWeek` |
+| 6 | Library article slot | `LibraryArticleCard` |
+| 7 | Sunday weekly letter card | `WeeklyLetterCard` |
+| 8 | Bottom nav | `BottomNav` |
 
-**Target layout (2-column grid):**
-```
-┌─────────────────┬─────────────────┐
-│  Identity Card  │  Credits Card   │  ← sm:grid-cols-2
-│  + public link  │                 │
-├─────────────────┴─────────────────┤
-│  Relationships Card (span 2)      │
-└───────────────────────────────────┘
-```
+#### 15.1.2 State-Dependent Behavior
 
-**Mobile stack order:** Identity → Credits → Relationships (single column).
+| User State | Today Page Shows |
+|-----------|------------------|
+| No assessment started | Redirect to `/chat` (authenticated user without assessment shouldn't be on /today) |
+| Assessment in progress | Redirect to `/chat?sessionId=...` with "Pick up where you left off" |
+| Assessment complete, no check-in today, weekday | Pre-check-in state |
+| Assessment complete, checked in today, weekday | Post-check-in state (free tier) |
+| Assessment complete, checked in today, Sunday + weekly letter ready | Post-check-in state + `WeeklyLetterCard` at top |
+| Assessment complete, no check-ins this week (Mon-Sun), Sunday | Pre-check-in state (still offered) + reminder that weekly letter needs ≥3 check-ins |
+| Subscribed (post-MVP) | Paid tier journal format with `NerinMarginNote` + mini-dialogue |
 
-**Identity Card (above the fold):**
-
-| Order | Element | Details |
-|-------|---------|---------|
-| 1 | Archetype name + GeometricSignature | The user's identity mark — large, prominent |
-| 2 | OCEAN code with tooltips | Interactive tooltips on each letter showing trait name + level |
-| 3 | Public profile link | Small external-link icon next to archetype name → `/public-profile/$publicProfileId`. Only shown when `publicProfileId` exists (profile has been shared). Subtle — not a primary CTA |
-| 4 | "View Full Results" CTA | Links to `/results/$sessionId` — this is where portrait, traits, and full details live |
-
-**When assessment is in-progress (no completed session):** The Identity Card area shows a progress state instead of archetype/OCEAN:
-- Progress bar (`messageCount / freeTierMessageThreshold`)
-- "Continue your conversation" CTA → `/chat?sessionId=...`
-- No archetype, no OCEAN code, no public profile link (these don't exist yet)
-
-**Below the fold — Your big-ocean world:**
-
-| Section | Content | Visibility |
-|---------|---------|-----------|
-| **Relationship analyses** | List of all relationship analyses — newest first, older marked "previous version" (EvolutionBadge). Each card shows: partner name, archetype, date, status | After first analysis |
-| **Relationship credits** | CreditBalance component — credits remaining + purchase CTA + QR drawer | Always (after assessment complete) |
-| **Subscription upsell (Post-MVP)** | Subtle CTA for subscribers: Coach agent, conversation extension, Growth Journal. Not shown in MVP | Post-MVP |
-
-**Removed from dashboard (accessed via results page instead):**
-- ~~Portrait section~~ — portrait unlock/status lives on the results page (`/results/$sessionId?view=portrait`)
-- ~~Personality snapshot (mini radar)~~ — full trait visualization lives on results page
-- ~~Archetype card / share preview~~ — sharing actions live on results page
-
-### 15.4 State-Dependent Dashboard Behavior
-
-The dashboard adapts based on the user's assessment state:
-
-| User State | Identity Card Shows | Other Cards |
-|-----------|-------------------|-------------|
-| No assessment started | `DashboardEmptyState`: "Start Your Conversation" CTA → `/chat` | Hidden (no data) |
-| Assessment in progress | Progress bar (`messageCount / threshold`) + "Continue your conversation" → `/chat?sessionId=...` | Credits Card (if applicable) |
-| Assessment complete | Archetype name + GeometricSignature + OCEAN code + public profile link (if shared) + "View Full Results" → `/results/$sessionId` | Credits Card + Relationships Card |
-| Extension in progress (Post-MVP) | Same as complete, plus "Continue your extension" CTA (subscription feature) | Credits Card + Relationships Card |
-
-### 15.5 Flow Diagram
+#### 15.1.3 Flow Diagram
 
 ```mermaid
 flowchart TD
-    A["User logs in"] --> B{Has assessment?}
-    B -->|No| C["Empty state: 'Start Your Conversation'
-    CTA → /chat"]
-    B -->|Yes| D{Assessment status?}
+    A[User opens app / taps notification] --> B{Authenticated?}
+    B -->|No| C[Redirect to homepage]
+    B -->|Yes| D{First post-assessment visit?}
+    D -->|Yes| E[Redirect to /me for first-visit Me page + ReturnSeedSection]
+    D -->|No| F[Land on /today]
 
-    D -->|In progress| E["Identity Card: progress bar
-    (messageCount / threshold)
-    CTA: 'Continue your conversation' → /chat?sessionId=...
-    Credits Card (if applicable)"]
-    D -->|Complete| F["Identity Card: archetype + OCEAN + signature
-    + public profile link (if shared)
-    + 'View Full Results' → /results"]
+    F --> G{Checked in today?}
+    G -->|No| H[Pre-check-in state]
+    G -->|Yes| I[Post-check-in state]
 
-    F --> G{Has relationship analyses?}
+    H --> J[CheckInForm: prompt + 5 mood + note field]
+    J --> K{User taps save?}
+    K -->|Yes| L[Save check-in → transition to post-check-in]
+    K -->|No, closes| M[No entry, tomorrow try again]
 
-    G -->|No| H["Credits Card: balance + purchase CTA
-    Relationships Card: empty state"]
-    G -->|Yes| I["Credits Card: balance + QR drawer
-    Relationships Card: list (newest first)"]
+    L --> I
 
-    %% Post-MVP: subscription upsell
-    H --> J["(Post-MVP) Subscription CTA:
-    Coach agent, conversation extension,
-    Growth Journal — for subscribers only"]
-    I --> J
+    I --> N{Tier?}
+    N -->|Free MVP| O[JournalEntry + QuietAnticipationLine + MoodDotsWeek + LibraryArticleCard + ghost subscriber section]
+    N -->|Paid post-MVP| P[JournalEntry + NerinMarginNote + Tell me more mini-dialogue + Today's Focus + MoodDotsWeek + LibraryArticleCard]
+
+    O --> Q{Is today Sunday + weekly letter ready?}
+    P --> Q
+    Q -->|Yes| R[WeeklyLetterCard at top → tap to /today/week/$weekId]
+    Q -->|No| S[Static state, user closes app]
 ```
 
-### 15.6 Relationship Analysis List
-
-The relationship section is a primary feature of the dashboard — it gives returning users a way to revisit any past analysis.
-
-| Element | Details |
-|---------|---------|
-| Card content | Partner's archetype name + GeometricSignature (mini) + date + "View analysis" link |
-| Card link | Each card links to `/relationship/:id` — the full relationship analysis result page |
-| Ordering | Newest first |
-| Versioning | EvolutionBadge on analyses based on outdated results (FK check: newer result exists for either user) |
-| Empty state | "Still waters. Start a relationship analysis with someone who matters." + QR explanation |
-| QR access | "Generate QR" button → opens QRDrawer |
-| Maximum shown | All analyses — no pagination for MVP (unlikely to exceed 10-20) |
-
-### 15.7 Loading & Skeleton States
+#### 15.1.4 Loading & Skeleton States
 
 | Section | Skeleton |
 |---------|----------|
-| Identity Card (above fold) | Large rounded rect (signature) + 2 text lines (name, code) + button-shaped rect |
-| Credits Card | Card-shaped rect with badge placeholder |
-| Relationship list | 2-3 card-shaped rects stacked |
+| CheckInForm | Prompt text line + 5 gray circle mood placeholders + textarea placeholder + disabled save button |
+| JournalEntry | Mood emoji placeholder + 2-3 text lines |
+| MoodDotsWeek | 7 gray circles |
+| LibraryArticleCard | Card-shaped rect with 2 text lines |
+| WeeklyLetterCard | Full-width card rect with headline placeholder |
 
-All skeletons use `animate-pulse` with `bg-muted`. Skeleton renders server-side to avoid layout shift.
+All skeletons use `animate-pulse` with `bg-muted`. Skeleton renders during TanStack Query initial load.
 
-### 15.8 Error States
+#### 15.1.5 Error States
 
 | Section | Error Display | Recovery |
 |---------|--------------|----------|
-| Full page data fetch fails | ErrorBanner: "Something went wrong loading your dashboard" | Retry button (refetches query) |
-| Relationship list fails | "Couldn't load your relationship analyses" | Retry link. Rest of dashboard works |
-| Credit balance fails | Badge shows "—" | Retry on next page visit |
+| Full page data fetch fails | ErrorBanner: "Something slipped. One moment." | Auto-retry, then manual retry button |
+| Check-in save fails | Inline toast "Couldn't save your check-in. Try again?" | Retry button; draft preserved locally |
+| Week dots fetch fails | Show empty dots | Silent fail, retry on next load |
+| Library article fetch fails | Hide article slot | Silent fail |
+| Weekly letter card fetch fails | Hide card | Silent fail |
 
-Per-section error boundaries — one section crashing never takes down the dashboard.
+Error boundaries per section — one section crashing never takes down Today.
 
-### 15.9 Animation & Transitions
+#### 15.1.6 Animation & Transitions
 
 | Element | Animation | Duration | Trigger |
 |---------|-----------|----------|---------|
-| GeometricSignature entrance | Scale 0→1 with stagger per shape | 400ms, 80ms stagger | Page load |
-| Section entrance | Fade-in + slide-up (opacity 0→1, translateY 12→0) | 500ms, cubic-bezier(.16,1,.3,1) | IntersectionObserver (threshold 0.1) |
-| Quick action state change | Cross-fade between CTA variants | 200ms | Data update |
-| Relationship card entrance | Staggered fade-in | 300ms, 60ms stagger per card | List load |
+| Mood selection | Subtle scale + bounce on tap | 200ms | Tap |
+| Save button enable | Fade from disabled to enabled | 150ms | Mood selected |
+| Pre → post check-in transition | Cross-fade + slight vertical slide | 400ms | Save success |
+| MoodDotsWeek today dot fill | Fill in with gentle pulse | 300ms | Post-check-in transition |
+| QuietAnticipationLine entry | Fade in | 300ms | Post-check-in transition |
+| WeeklyLetterCard entry (Sunday) | Gentle fade + rise | 500ms | Page load on Sunday with letter ready |
 
-All animations gated by `prefers-reduced-motion: no-preference`.
+All animations gated by `prefers-reduced-motion: no-preference`. No aggressive animations — Today is a calm surface.
 
-### 15.10 Responsive Behavior
+#### 15.1.7 Responsive Behavior
 
 | Viewport | Layout |
 |----------|--------|
-| Mobile (< 640px) | Single column: Identity Card → Credits Card → Relationships Card. All full-width, stacked |
-| Tablet/Desktop (≥ 640px) | 2-column grid: Identity Card (col 1) + Credits Card (col 2), Relationships Card (span 2). Max-width 1024px container |
+| Mobile (< 640px) | Single column, full-width. BottomNav at bottom with safe-area-inset-bottom padding. Max content width equals viewport |
+| Tablet (640-1024px) | Single column, centered, max-width 640px. BottomNav remains at bottom |
+| Desktop (≥ 1024px) | Single column, centered, max-width 720px (same as letter reading view). BottomNav replaced with top nav tabs (Today / Me / Circle) — desktop variant of BottomNav |
 
-### 15.11 Navigation
+#### 15.1.8 Data Model
 
-| Element | Details |
-|---------|---------|
-| Route | `/dashboard` — the only authenticated home surface. `/profile` route is **deleted** |
-| Header (desktop) | Logo + "Dashboard" nav link + User nav (avatar dropdown). No "Profile" link |
-| Header (mobile) | Hamburger → sheet: Dashboard, Settings, Sign Out. No "Profile" link |
-| Nav highlight | "Dashboard" link in header is active |
-| Post-auth redirect | New users → `/chat`. Returning users with assessment → `/dashboard` |
-| User nav dropdown | Dashboard → `/dashboard`, Settings → `/settings`, Sign Out. Profile link removed |
-
-### 15.12 Data Model
-
-The dashboard composes data from multiple existing hooks (no single dashboard endpoint):
+The Today page composes data from multiple TanStack Query hooks:
 
 | Hook | Data | Purpose |
 |------|------|---------|
-| `useAuth()` | `user` (name, email, id) | Page header greeting, credits userId |
-| `useListAssessments()` | `sessions[]`, `freeTierMessageThreshold` | Find latest session, detect in-progress vs completed |
-| `useGetResults(sessionId)` | `archetypeName`, `oceanCode5`, `traits[]`, `publicProfileId` | Identity Card content + public profile link |
-| `useRelationshipAnalysesList()` | `analyses[]` | Relationships Card |
-| `useCredits()` | `availableCredits` | Credits Card |
+| `useAuth()` | `user` | Authentication check |
+| `useTodayCheckIn(userId, date)` | Check-in record for today (or null) | Determines pre- vs post-check-in state |
+| `useWeekCheckIns(userId, weekId)` | Array of check-ins for current week | `MoodDotsWeek` |
+| `useLibraryArticleForToday(userId)` | Matched article (or null) | `LibraryArticleCard` |
+| `useWeeklyLetter(userId, weekId)` | Weekly letter summary (or null) | `WeeklyLetterCard` on Sundays |
+| `useTodayPrompt(userId)` | Personality-typed prompt for today | `CheckInForm` header |
+| `useSubscriptionState(userId)` | Free / subscriber | Determines free vs paid post-check-in layout |
 
-**Key data flows:**
-- `publicProfileId` comes from the results response (`GetResultsResponse`) — available only for completed assessments that have been shared. Used for the external-link icon on the Identity Card.
-- Assessment in-progress state uses `sessions[0].messageCount / freeTierMessageThreshold` for the progress bar.
-- Portrait status is **not fetched** on the dashboard — it lives on the results page.
+**New endpoints required (contracts package):**
+- `POST /api/today/check-in` — save daily check-in
+- `GET /api/today/check-in?date=:date` — fetch check-in for date
+- `GET /api/today/week?weekId=:weekId` — fetch week's check-ins
+- `GET /api/today/prompt?date=:date` — fetch personalized prompt
+- `GET /api/today/library-article` — fetch matched library article
 
-### 15.13 Implementation Notes
+#### 15.1.9 Implementation Notes
 
-- **Merge, don't rebuild:** The dashboard already exists with Identity, Relationships, and Credits cards. The work is: remove Portrait Card, add public profile link to Identity Card, absorb in-progress state from profile, delete `/profile` route.
-- **Data fetching:** Multiple TanStack Query hooks (see §15.12). No single dashboard endpoint needed — existing APIs cover all required data.
-- **Component reuse:** GeometricSignature, OceanCodeStrand — from shared components. CreditBalance, EvolutionBadge — in dashboard components.
-- **Empty states:** `DashboardEmptyState` for no assessment. Each section (relationships, credits) has its own empty state per §12.4 conventions.
-- **Error boundaries:** Per-section error boundaries. One section failing doesn't crash the dashboard.
-- **Preserve data-testid:** Existing `data-testid` attributes on dashboard components must not be removed (used by e2e tests).
-- **Profile cleanup:** Delete `apps/front/src/routes/profile.tsx`, `components/profile/AssessmentCard.tsx`, `components/profile/EmptyProfile.tsx`. Remove "Profile" link from `Header.tsx`, `UserNav.tsx`, `MobileNav.tsx`.
+- **Default landing is `/today`** for all authenticated users after their first post-assessment visit. First-visit flag stored server-side on user record.
+- **Redirect `/dashboard` → `/today`** — single 301 redirect route.
+- **Check-in idempotency:** Second check-in for the same day overwrites the first (with soft confirm "Update today's entry?").
+- **Draft preservation:** If network fails during save, preserve draft locally and auto-retry on reconnect.
+- **No streak counter anywhere.** `MoodDotsWeek` is the only progress visual.
+- **BottomNav visibility:** Visible on `/today` and `/today/calendar`, hidden on `/today/week/$weekId`.
+- **Ghost subscriber section:** Renders as a faint outlined placeholder in the free tier showing "what paid users see" (NerinMarginNote + Tell me more). Not clickable. Increases subscription awareness without nagging.
 
-### 15.14 Implementation Gap (Current → Target)
+### 15.2 Me Page Specification (`/me`)
+
+**Purpose:** Persistent identity space. Low-frequency but high-emotion visits. Identity sanctuary where users re-read their portrait, manage their public face, control their subscription, and see a preview of their Circle. **First-visit destination post-assessment.**
+
+**Not a feed, not a dashboard.** Me is a scrollable identity page composed of 7 sections, each with clear purpose and no redundancy.
+
+#### 15.2.1 Target Sections (top to bottom)
+
+| Order | Section | Component | Details |
+|-------|---------|-----------|---------|
+| 1 | **Identity Hero** | `MePageSection` + `ArchetypeHeroSection` + `GeometricSignature` + `OceanCodeStrand` + `PersonalityRadarChart` + `ConfidenceRingCard` | Archetype name, OCEAN code, radar, confidence. Always visible. Primary visual anchor. |
+| 2 | **Your Portrait** | `MePageSection` + inline `PersonalPortrait` | Re-read Nerin's letter in context. Post-MVP: portrait gallery with regeneration ceremony. |
+| 3 | **Your Growth** | `MePageSection` + `MoodCalendarView` preview (link to `/today/calendar`) + pattern observations | Conditional: only renders when mood history exists. Post-MVP: "Who you're becoming" + delta annotations on radar + growth arc narrative. |
+| 4 | **Your Public Face** | `MePageSection` + `ProfileVisibilityToggle` + share card preview + shareable link + copy button | Preview of what strangers see on `/public-profile/$id`. Toggle to go public. Share archetype card. **NO view counts, NO sign-up attribution metrics (Intimacy Principle).** |
+| 5 | **Your Circle** (preview) | `MePageSection` + 2-3 `CirclePersonCard` (truncated) + "View all →" to `/circle` + `InviteCeremonyCard` (static) | Small preview linking to full Circle page. Always includes invite ceremony card. |
+| 6 | **Subscription** | `MePageSection` + `SubscriptionPitchSection` or `SubscriptionValueSummary` | Free: pitch ("Unlock Nerin's full attention"). Subscriber: value summary + conversation extension CTA. |
+| 7 | **Account** | Small link at the bottom: gear icon → `/settings` | Admin: email, password, delete. Not a full section. |
+| 8 | **ReturnSeedSection** (first visit only) | `ReturnSeedSection` | Nerin's message + Nerin-voiced notification permission request. **Renders only on first post-assessment visit.** |
+
+#### 15.2.2 First Visit vs Subsequent Visits
+
+| Visit | Behavior |
+|-------|----------|
+| **First post-assessment visit** | User lands here after the PortraitReadingView end-of-letter link ("There's more to see →"). Full page renders + **ReturnSeedSection at bottom**. Sets `has_visited_me_once = true` flag server-side. |
+| **All subsequent visits** | Full page renders, ReturnSeedSection hidden. Subsequent visits are low-frequency; most users return via `/today`, not `/me`. |
+
+**No first-visit Me divergence.** The Me page has one canonical layout — only the ReturnSeedSection is conditional. No separate "first-visit Me" component tree.
+
+#### 15.2.3 State-Dependent Behavior
+
+| User State | Me Page Shows |
+|-----------|---------------|
+| No assessment started | Redirect to `/chat` |
+| Assessment in progress | Redirect to `/chat?sessionId=...` |
+| Assessment complete, first visit | Full page + ReturnSeedSection |
+| Assessment complete, returning | Full page (no ReturnSeedSection) |
+| Free user | SubscriptionPitchSection in section 6 |
+| Subscriber | SubscriptionValueSummary in section 6 + "Extend your conversation" CTA if extension not yet used |
+| Subscriber, extension used | Value summary shows "You extended on [date]. Portrait regenerated on the same day." |
+| Has mood history | Your Growth section renders with mood calendar preview |
+| No mood history yet (Day 0) | Your Growth section hidden or shows empty-state placeholder |
+| Has Circle members | Your Circle shows 2-3 person cards + View all link |
+| Empty Circle | Your Circle shows empty state + invite ceremony card prominent |
+
+#### 15.2.4 Loading & Skeleton States
+
+| Section | Skeleton |
+|---------|----------|
+| Identity Hero | Large archetype name placeholder + radar chart placeholder + 5 ocean shape placeholders |
+| Your Portrait | Letter-format skeleton (section header + paragraphs) |
+| Your Growth | Calendar preview skeleton + observation text lines |
+| Your Public Face | Toggle + card preview skeleton |
+| Your Circle | 2-3 person card skeletons + invite card placeholder |
+| Subscription | Headline + description skeleton |
+
+#### 15.2.5 Error States
+
+| Section | Error Display | Recovery |
+|---------|--------------|----------|
+| Full page fetch fails | ErrorBanner at page top | Retry button |
+| Portrait fetch fails | Inline "Portrait temporarily unavailable — retry" in Your Portrait section | Retry link; rest of page works |
+| Circle preview fetch fails | Empty state fallback | Silent |
+| Subscription state fetch fails | Default to free tier pitch | Reconcile on next load |
+
+Per-section error boundaries.
+
+#### 15.2.6 Animation & Transitions
+
+| Element | Animation | Duration | Trigger |
+|---------|-----------|----------|---------|
+| Identity Hero entrance | Fade + slight rise | 500ms | Page load |
+| GeometricSignature shapes | Stagger in | 80ms per shape | Hero load |
+| Section reveal on scroll | Fade in + slide up | 400ms | IntersectionObserver threshold 0.1 |
+| ReturnSeedSection entrance (first visit only) | Slower fade + gentle glow on permission button | 800ms | Scroll reaches bottom |
+| Subscription section state change | Cross-fade pitch ↔ value summary | 300ms | Subscription state change |
+
+All animations gated by `prefers-reduced-motion`.
+
+#### 15.2.7 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| Mobile (< 640px) | Single column, full-width sections. Safe-area padding for BottomNav. |
+| Tablet (640-1024px) | Single column, centered, max-width 720px. |
+| Desktop (≥ 1024px) | Single column, centered, max-width 720px. Top nav tabs replace BottomNav. |
+
+Me is NOT a multi-column dashboard. Even on desktop, it's a single-column scroll.
+
+#### 15.2.8 Data Model
+
+| Hook | Data | Purpose |
+|------|------|---------|
+| `useAuth()` | `user` | Authentication |
+| `useGetResults(sessionId)` | Archetype, OCEAN, traits, facets, publicProfileId, confidence | Identity Hero |
+| `usePortrait(userId)` | Portrait letter | Your Portrait |
+| `useMoodCalendarPreview(userId)` | Last 14 days summary | Your Growth |
+| `usePublicProfileState(userId)` | Is public, shareable URL, card image | Your Public Face |
+| `useCircle(userId)` | First 3 Circle members | Your Circle preview |
+| `useSubscriptionState(userId)` | Free / subscribed, extensionUsed, portraitRegenerated, subscribedSince | Subscription section |
+| `useHasVisitedMeOnce(userId)` | Boolean | ReturnSeedSection conditional |
+
+**New endpoints required:**
+- `GET /api/me` — aggregated Me page data (optional optimization)
+- `POST /api/me/mark-first-visit` — set `has_visited_me_once = true`
+- `GET /api/subscription/state` — current subscription state
+- `POST /api/subscription/extend-conversation` — trigger extension + bundled portrait regen
+
+#### 15.2.9 Implementation Notes
+
+- **ReturnSeedSection is conditional on server-side flag** — localStorage is insufficient because it doesn't survive device changes.
+- **Notification permission request is Nerin-voiced** — copy must pass the Nerin-voice audit (§11.7 Implementation Notes).
+- **Subscription section is a control center, not a marketing wall** — after subscription, it becomes a value summary + conversation extension CTA. Never an upsell banner.
+- **Portrait renders inline via `PersonalPortrait`** — not via `PortraitReadingView` (that's for first-read focused reading only).
+- **First-visit flag:** Server sets `has_visited_me_once = true` on the first Me page view after assessment completion. ReturnSeedSection renders only when this flag is false.
+- **No `/profile` route exists** — Your Public Face section is the control center; the actual public profile lives at `/public-profile/$id`.
+
+### 15.3 Circle Page Specification (`/circle`)
+
+**Purpose:** The few people the user cares about. Full-width person cards, not a grid of avatars. The invite ceremony card is always at the bottom. Intimacy Principle enforced end-to-end: no counts, no sort, no search, no recommendations.
+
+**The scroll length itself is honest feedback about circle size.** A user with 2 Circle members sees a short page. A user with 8 sees a longer page. No "X connections" metric anywhere.
+
+#### 15.3.1 Target Sections (top to bottom)
+
+| Order | Element | Component | Details |
+|-------|---------|-----------|---------|
+| 1 | Header framing | Plain text heading | "The few people you care about" — no subtitle, no count |
+| 2 | Circle person list | `CirclePersonCard` × N (one per connected person) | Full-width cards, organic order (accept order), no sorting |
+| 3 | Invite ceremony card | `InviteCeremonyCard` with `placement="circle-bottom"` | Always appended at the bottom |
+| 4 | Bottom nav | `BottomNav` | Persistent |
+
+#### 15.3.2 Empty State
+
+| Element | Content |
+|---------|---------|
+| Illustration | Minimal — a subtle ocean pattern or geometric element, no pictures of people |
+| Headline | "Big Ocean is made for the few people you care about." |
+| Body | "This is where they'll live — the ones you understand deeply and want to keep understanding more." |
+| CTA | `InviteCeremonyCard` prominent, centered |
+
+**No "invite 5 friends to unlock" gimmicks.** The empty state teaches the value system.
+
+#### 15.3.3 State-Dependent Behavior
+
+| User State | Circle Page Shows |
+|-----------|------------------|
+| No assessment started | Redirect to `/chat` |
+| Assessment in progress | Redirect to `/chat?sessionId=...` |
+| Assessment complete, empty Circle | Empty state with prominent invite ceremony card |
+| Assessment complete, Circle has members | Person cards (organic order) + invite ceremony card at bottom |
+| Partner has stopped sharing | Their `CirclePersonCard` shows the soft label "No longer sharing with you. Your shared history remains." |
+| Partner deleted account | Their card shows "Has left. Your letters remain as history." |
+
+#### 15.3.4 Flow Diagram
+
+```mermaid
+flowchart TD
+    A[User taps Circle tab in BottomNav] --> B{Has assessment?}
+    B -->|No| C[Redirect to /chat]
+    B -->|Yes| D{Circle empty?}
+    D -->|Yes| E[Empty state: 'Big Ocean is made for the few people you care about' + prominent InviteCeremonyCard]
+    D -->|No| F[Render CirclePersonCards in organic order]
+
+    F --> G[User taps a person card]
+    G --> H[Navigate to /circle/$personId → Journey 6 Relationship Letter Flow]
+
+    F --> I[User scrolls to bottom]
+    I --> J[InviteCeremonyCard → opens InviteCeremonyDialog → Journey 7]
+
+    E --> J
+```
+
+#### 15.3.5 Loading & Skeleton States
+
+| Section | Skeleton |
+|---------|----------|
+| Person cards | 2-3 full-width card placeholders with name + signature + archetype lines |
+| Invite ceremony card | Card placeholder at the bottom |
+
+#### 15.3.6 Error States
+
+| Section | Error Display | Recovery |
+|---------|--------------|----------|
+| Full list fetch fails | "Couldn't load your Circle right now." | Retry |
+| Single person card fetch fails | Card shows "Couldn't load [Name] — retry" | Retry link per card; rest of Circle works |
+
+#### 15.3.7 Animation & Transitions
+
+| Element | Animation | Duration | Trigger |
+|---------|-----------|----------|---------|
+| Person card entrance | Staggered fade + rise | 60ms stagger per card | Page load |
+| New person added | Card fades in at top after invite accepted | 500ms | WebSocket or refetch |
+| Partner stops sharing | Card label cross-fades | 300ms | State change |
+
+No competitive animations (heart counts, activity indicators). Calm scroll.
+
+#### 15.3.8 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| All viewports | Single column, full-width cards. Max-width 720px on desktop. |
+
+**No multi-column grid at any viewport.** Intimacy Principle rule: full-width cards, individual weight.
+
+#### 15.3.9 Data Model
+
+| Hook | Data | Purpose |
+|------|------|---------|
+| `useAuth()` | `user` | Authentication |
+| `useCircle(userId)` | Array of connected people with archetype, OCEAN, connectedSince, lastShared | Person card list |
+| `useCirclePersonState(userId, personId)` | Mutual sharing state, partner deletion state | Per-card state labels |
+
+**New endpoints required:**
+- `GET /api/circle` — list of connected Circle members with their public-facing data
+- `GET /api/circle/$personId/state` — mutual sharing state
+- `POST /api/circle/$personId/stop-sharing` — revoke sharing
+
+#### 15.3.10 Implementation Notes
+
+- **Organic order only** — order of acceptance, not alphabetical, not recency, not "active first". No sort options.
+- **No search bar**. Users know who's in their Circle; search implies a large list.
+- **Person cards are full-width** — even on desktop at max-width 720px, cards are full-width within the column. Never a 2-column or 3-column grid.
+- **"Last shared" is a recency signal, not a streak** — shows when the last mutual moment happened (letter read, portrait send, shared note added). No penalty, no shaming for inactivity.
+- **Intimacy Principle enforcement in code:** The component props and endpoints must NOT expose "circle size" or "count" fields. Access those values only through internal logic, never render them to the user.
+
+### 15.4 Cross-Space Implementation Gap (Current → Target)
 
 | Area | Current | Target | Work Required |
 |------|---------|--------|---------------|
-| Portrait Card | `DashboardPortraitCard` on dashboard | Removed — portrait accessed via results page | Delete component, remove from grid |
-| Public profile link | Not present | External-link icon on Identity Card → `/public-profile/$publicProfileId` | Add icon + conditional link to `DashboardIdentityCard`, pass `publicProfileId` from results |
-| In-progress state | Only on `/profile` (progress bar + "Continue" CTA) | Handled in dashboard empty/identity area | Add progress bar + Continue CTA when latest session is in-progress |
-| `/profile` route | Exists as separate route | Deleted | Delete route + profile components, update nav |
-| Navigation | Header/UserNav/MobileNav have "Profile" link | "Profile" link removed | Remove from Header.tsx, UserNav.tsx, MobileNav.tsx |
-| Grid layout | 2-col: Identity + Portrait, Relationships (span 2), Credits (span 2) | 2-col: Identity + Credits, Relationships (span 2) | Reorder grid, adjust column spans |
+| Dashboard route | `/dashboard` exists with DashboardIdentityCard etc | Retired | Delete route + all dashboard components + update nav |
+| Profile route | `/profile` exists | Retired | Delete route + profile components |
+| Today page | Doesn't exist | `/today` is default authenticated landing | New route + CheckInForm, MoodDotsWeek, JournalEntry, QuietAnticipationLine, LibraryArticleCard, WeeklyLetterCard components |
+| Me page | Overlaps with dashboard identity card | Full 7-section scroll + ReturnSeedSection first-visit | New `/me` route composition; mostly reuses existing ArchetypeHeroSection, PersonalPortrait, ProfileVisibilityToggle |
+| Circle page | Doesn't exist | `/circle` with CirclePersonCard list + invite ceremony card | New route + CirclePersonCard, InviteCeremonyCard, InviteCeremonyDialog components |
+| Settings route | Partial — some settings in user menu | `/settings` with account admin | Consolidate existing account actions + add notification permission control |
+| Bottom nav | Doesn't exist | BottomNav persistent on /today, /me, /circle | New BottomNav component + layout integration |
+| Default landing | `/dashboard` after login | `/today` (or `/me` first visit) | Redirect logic in auth routing |
+| Notification permission | Not collected | Collected via ReturnSeedSection in Nerin's voice | New permission request flow tied to browser API |
+| Mood calendar | Doesn't exist | `/today/calendar` | New MoodCalendarView component |
 
 ---
 
@@ -3406,6 +5265,10 @@ The dashboard composes data from multiple existing hooks (no single dashboard en
 ### 16.1 Homepage Purpose
 
 The homepage is the primary conversion surface for organic visitors — people who Google "big ocean personality," land from SEO, or arrive without a shared card context. Unlike public profiles (which convert via someone else's results), the homepage must sell the experience cold.
+
+**⚠️ Load-bearing since anonymous path removed.** All users must sign up and verify email before turn 1 of the assessment (FR50/50a/50b). Cold visitors cannot experience Nerin before committing to signup. The homepage is now doing the sales work that the anonymous conversation used to do — Nerin preview (FR63) and portrait excerpt (FR62) are the primary conversion content, not scroll decoration. Trade-off: lower top-of-funnel conversion, higher middle-of-funnel quality (Headspace / BetterUp precedent).
+
+**Important: the homepage is NOT where subscription conversion happens.** The portrait is free. The relationship letter is free. The silent daily journal is free. The Sunday weekly letter is free. The subscription conversion moment lives inside the Sunday weekly letter at Week 3+ (see §10.8 Journey 8). The homepage sells the experience, not the paywall.
 
 **Current state:** A 14-beat conversational narrative between Nerin, a skeptical user, and Vincent (founder). Scroll-driven, with embedded interactive previews (trait explorer, horoscope vs. portrait comparison, radar chart). Uses a DepthScrollProvider + DepthMeter to track scroll progress.
 
@@ -3502,7 +5365,7 @@ The following areas need design attention:
 |---------|---------|---------|-----------|
 | Headline | "Not a personality quiz. A conversation." | **New: transformation-oriented hook.** Must land for zero-context visitors. No test references. Leads with what the portrait *does to you*, not what the method *is*. Exact copy TBD — brainstorming direction: something about discovering a part of yourself you've never been able to articulate | FR59: no test references. FR60: transformation-oriented |
 | Subtitle | "A portrait of who you are that no test has ever given you." | **New: one-line clarity.** "A 15-turn conversation with an AI that writes you a personal letter about who you are (~30 minutes)." — concrete, specific, immediately understandable | FR59: communicate what it is in 3 seconds |
-| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · PAY WHAT YOU WANT" — surfaces pricing transparency immediately | FR65: PWYW as trust signal |
+| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · NO CREDIT CARD" — surfaces zero-cost commitment immediately. Signup is still required (email verification) but the experience is free; subscription is optional and lives in the weekly letter, not on the homepage | Anonymous path retired; PWYW retired — the signal is "no money on the table" rather than "pay what you want" |
 | Primary CTA | "Begin Your Dive ↓" (scroll-down) | **Single CTA:** "Start your conversation" → `/chat`. No scroll-down alternative. No "See how it works." One action | FR61: single primary CTA |
 | Secondary CTA | None (proposed in previous spec) | **Removed.** No competing CTAs. Visitors who need convincing scroll; the page content converts them. The CTA reappears as sticky bar (mobile) and at page bottom | FR61 |
 | OCEAN shapes | Animated breathing shapes | Keep — aligns with GeometricSignature design language | §16.5 preserve |
@@ -3531,7 +5394,7 @@ The following areas need design attention:
 | Step | Fear Addressed | Content |
 |------|---------------|---------|
 | 1 | "Will this be awkward?" (process anxiety) | **It feels like a conversation, not a test.** No quiz. No checkboxes. Nerin asks about your life — your routines, your relationships, what you care about. Most people are surprised by how natural it feels. ~30 minutes. |
-| 2 | "Is it worth ~30 minutes?" (time commitment) | **You'll get something no test can produce.** A personal letter from Nerin about who you are — not generic descriptions, but patterns from YOUR conversation. Your OCEAN code, your archetype, your scores. Pay what you want, starting at €1. |
+| 2 | "Is it worth ~30 minutes?" (time commitment) | **You'll get something no test can produce.** A personal letter from Nerin about who you are — not generic descriptions, but patterns from YOUR conversation. Your OCEAN code, your archetype, your scores, a shareable archetype card. All free. |
 | 3 | "What if I don't like what it says?" (self-exposure fear) | **It's a mirror, not a judgment.** Nerin describes patterns and tensions — things you'll recognize. Nothing clinical, nothing labeling. And it's private — only you see it unless you choose to share. |
 
 **Design:** Three cards or stacked sections, scannable in 5 seconds. Each addresses a real visitor question, not a product feature. Tone: warm, direct, reassuring.
@@ -3562,7 +5425,7 @@ The following areas need design attention:
 | 3 | Nerin | **Portrait excerpt — proof of output quality.** A real paragraph from a Nerin portrait. Specific, personal, emotionally resonant. Shows what you'll get, not describes it. This is the "I want to know what it would say about ME" moment | Moved from old 8 (FR62: within 40%) |
 | 4 | Nerin | **Nerin being Nerin — a pattern observation.** Not pitching. A demonstration of conversational depth: Nerin noticing something specific about someone's behavior that feels startlingly perceptive. Shows what the conversation *feels like* | New (FR63) |
 | 5 | User | Reacts — "how did you notice that?" or equivalent | New |
-| 6 | Nerin | **The founder reveal.** Vincent's personal story — why he built this, what Nerin's letter did for him. Humanizes the product. Includes PWYW transparency: "pay what you want, starting at €1" | Compressed from old 10/10b (FR65) |
+| 6 | Nerin | **The founder reveal.** Vincent's personal story — why he built this, what Nerin's letter did for him. Humanizes the product. Includes zero-cost reassurance: "The whole thing is free. Nerin writes you a letter, you get your archetype, you can share it, you can invite someone into your Circle — no paywall." | Compressed from old 10/10b |
 | 7 | User | The converting line — "I want to know what mine would say" | Old 13 |
 | 8 | Nerin | **CTA close.** "Just a conversation." Single CTA | Old 14 |
 
@@ -3571,7 +5434,7 @@ The following areas need design attention:
 **Key structural changes:**
 - Portrait excerpt at Beat 3 (~33% through) instead of Beat 8 (~57%) — FR62 met
 - Nerin depth preview at Beat 4 — FR63 met
-- PWYW at Beat 6 — FR65 met
+- Zero-cost reassurance at Beat 6 (replacing the old PWYW transparency beat)
 - Removed test-comparison framing entirely — FR59 met
 - Reduced trait machinery to zero (moved to results page where it belongs) — brainstorming #61
 
@@ -3599,33 +5462,35 @@ The following areas need design attention:
 - Nerin's observation should be 2-3 sentences max — specific enough to feel real, general enough that multiple visitor types recognize the depth
 - No explanation of methodology. Just the observation landing.
 
-#### G. PWYW Transparency (FR65)
+#### G. Zero-Cost Reassurance (replaces old PWYW Transparency)
 
-**Purpose:** Surface pricing before the CTA so visitors know what they're getting into. PWYW is a trust-builder, not a liability.
+**Purpose:** Cold visitors need to know up front that the full assessment + portrait + relationship letter + daily journal + Sunday weekly letter experience is free. No paywall, no hidden cost, no "pay what you feel it's worth." The subscription exists (€9.99/mo) but lives inside the Sunday weekly letter conversion moment at Week 3+, not on the homepage.
 
 **Placement:** Integrated into Beat 6 (founder reveal) and the hero tagline.
 
 **Content direction:**
-- Hero tagline: "~30 MIN · FREE · PAY WHAT YOU WANT"
-- Beat 6 (Vincent): "Your results — OCEAN code, archetype, scores — are free. The portrait Nerin writes for you is pay-what-you-want, starting at €1. Most people pay around €5."
-- The average payment amount is social proof — it communicates value, adoption, and generosity simultaneously (brainstorming #53)
+- Hero tagline: "~30 MIN · FREE · NO CREDIT CARD"
+- Beat 6 (Vincent): "The whole thing is free. Nerin writes you a letter. You get your archetype, your OCEAN code, your scores. You can share your card. You can invite someone you care about and get a letter about your dynamic. No paywall. No pay-what-you-feel. Just free."
+- If the visitor eventually subscribes, it'll be inside the Sunday weekly letter at Week 3+ — Nerin asking for more — not here.
 
-**Design:** Not a pricing table. Woven into Vincent's personal story as a natural aside. The tone is confidence, not justification.
+**Design:** Not a pricing table, not a subscription mention. Woven into Vincent's personal story as a natural aside. The tone is confidence, not justification. **The homepage does NOT mention the €9.99/mo subscription.** That conversation belongs inside the weekly letter, where Nerin has earned the right to ask.
+
+**Retired content:** Previous PWYW messaging ("pay what you want", "starting at €1", "most people pay around €5") is fully retired. The monetization story has changed — the portrait is free, and the subscription conversation happens inside the Sunday weekly letter, not on the homepage.
 
 #### H. Multi-Persona Considerations (FR66)
 
 **Purpose:** The homepage must work for visitors with different motivations without requiring a single narrative arc.
 
 **Brainstorming personas:**
-1. **Zero-context visitor** (Inès from Journey 6) — needs to understand what this is in 3 seconds
-2. **Invited friend** (Marc from Journey 2) — already has social proof, needs a clear path forward
+1. **Zero-context visitor** (someone who discovered big-ocean via a shared archetype card) — needs to understand what this is in 3 seconds
+2. **Invited friend** (someone pulled in via Journey 7 Invite Ceremony) — already has social proof via the inviter's framing, needs a clear path forward
 3. **Social media curious** — saw a clip or archetype card, wants fun, low-friction energy
 4. **Therapy-seeker** — going through something, emotionally open, needs to feel safe
 
 **How the compressed arc serves all four:**
 - **Beat 1 (hook):** A weighted, provocative opening creates different reactions for each persona. The therapy-seeker thinks "yes." The fun-seeker thinks "ooh." The zero-context visitor thinks "what is this?" — and scrolls to find out. One line, four doors
 - **Beat 3 (portrait excerpt):** Proof of quality. The zero-context visitor sees what they'll get. The invited friend sees their partner's experience validated. The therapy-seeker sees emotional depth. The fun-seeker sees something surprisingly personal
-- **Beat 6 (founder + PWYW):** The zero-context visitor's last friction (cost) is removed. The invited friend is reassured. The therapy-seeker connects with vulnerability. The fun-seeker sees the price is trivial
+- **Beat 6 (founder + zero-cost reassurance):** The zero-context visitor's last friction (cost) is removed — the whole thing is free. The invited friend is reassured. The therapy-seeker connects with Vincent's vulnerability. The fun-seeker sees there's no paywall at all
 - **How It Works (fear-resolving):** Addresses the three universal fears regardless of entry motivation
 
 **For invited friends specifically:** If a visitor arrives with a referral parameter (from QR flow or shared link), the homepage should feel relevant even though their primary conversion path is the QR accept screen. The compressed, non-test-frame arc ensures the homepage doesn't feel like a mismatch if they land here first.
@@ -3655,7 +5520,7 @@ flowchart TD
     I --> J
     J -->|No| K["Sign up → /verify-email → verify → /chat"]
     J -->|Yes, no assessment| L["/chat — start conversation"]
-    J -->|Yes, assessment complete| M["/dashboard"]
+    J -->|Yes, assessment complete| M["/today (default landing) — three-space world"]
 ```
 
 ### 16.8 Loading & Error States
@@ -3678,7 +5543,7 @@ flowchart TD
 | Tag | Content |
 |-----|---------|
 | `og:title` | "big ocean — [Updated to match new hero headline, no test references]" |
-| `og:description` | "A 15-turn conversation (~30 minutes) with an AI that writes you a personal letter about who you are. Free results. Pay what you want for the portrait." |
+| `og:description` | "A 15-turn conversation (~30 minutes) with an AI that writes you a personal letter about who you are. Free — assessment, portrait, archetype, relationship letters, weekly check-ins. No paywall." |
 | `og:image` | Hero visual or branded card (not an archetype card — generic brand image) |
 | `<title>` | "big ocean — Personality portrait through conversation" |
 | `<meta description>` | "A 15-turn conversation (~30 minutes) with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science." |
@@ -3709,7 +5574,7 @@ flowchart TD
 |------|---------|--------|---------------|
 | **Hero headline** | "Not a personality quiz. A conversation." | Transformation-oriented hook, no test references (FR59, FR60) | Rewrite headline + subtitle in HeroSection. Copy TBD |
 | **Hero subtitle** | "A portrait of who you are that no test has ever given you." | "A 15-turn conversation with an AI that writes you a personal letter about who you are (~30 minutes)." | Text update in HeroSection |
-| **Hero tagline** | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · PAY WHAT YOU WANT" (FR65) | Text update in HeroSection |
+| **Hero tagline** | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · NO CREDIT CARD" — signup required but zero-cost experience | Text update in HeroSection |
 | **Hero CTA** | "Begin Your Dive ↓" (scroll-down) | Single "Start your conversation" → `/chat` (FR61) | Replace scroll CTA with nav link |
 | **Scroll indicator** | Bouncing chevron | Remove | Delete ScrollIndicator component usage |
 | **Beat compression** | 14 beats | ~8 beats (FR62 portrait at 40%) | Reorder ConversationFlow beats, remove 5-6 beats, add 2 new beats |
@@ -3717,7 +5582,9 @@ flowchart TD
 | **Nerin depth preview** | None | New beat showing Nerin observation (FR63) | New ChatBubble content with bold headline |
 | **Test-comparison framing** | ComparisonCard at Beat 4 | Remove (FR59) | Remove ComparisonCard from flow |
 | **Trait explorer** | TraitStackEmbed at Beat 6 | Remove from homepage (move to results page) | Remove TraitStackEmbed from flow |
-| **PWYW in founder beat** | Vincent reveals portrait, no pricing | Add PWYW transparency + average payment (FR65) | Update Beat 6 content |
+| **Zero-cost reassurance in founder beat** | Vincent reveals portrait, no pricing | Add zero-cost reassurance ("The whole thing is free. No paywall.") — replaces old PWYW transparency ask | Update Beat 6 content |
+| **Subscription on homepage** | None | **Explicitly do not mention subscription on homepage.** €9.99/mo conversation lives inside the Sunday weekly letter at Week 3+, not here | Enforce in copy review — no "subscribe" copy on homepage |
+| **Anonymous path reference** | Tagline says "NO ACCOUNT" (false — signup required post-FR50) | "NO CREDIT CARD" — honest about signup, honest about zero cost | Tagline + any body copy references |
 | **Sticky bottom CTA** | None | Mobile-only sticky bar after scrolling past hero | New `StickyConversionBar` component, IntersectionObserver |
 | **"How It Works"** | None | 3-step fear-resolving section (FR64) | New `HowItWorks` component |
 | **Archetype Gallery** | None | 3-4 example archetype cards | New `ArchetypeGalleryPreview` component |
@@ -3981,134 +5848,146 @@ Public profiles are SEO-critical — server-rendered with unique URLs, structure
 
 ---
 
-## 18. Results Page Specification
+## 18. Results / Me Page Specification
 
-This section consolidates all results page specifications previously distributed across §7 (Defining Experience), §9 (Design Direction), §10.1 (Journey 1), §10.3 (Journey 3: PWYW), §10.4 (Journey 4: Returning), §11 (Component Strategy), and §12-13 (Patterns & Accessibility).
+This section consolidates all `/results/$sessionId` full-page specifications. The **first portrait read** happens in the focused `PortraitReadingView` at `/results/$sessionId?view=portrait` — that flow is documented in §10.1 Journey 1. This section covers the **full results / Me page** that the user lands on after the focused reading's "There's more to see →" link (first visit) or when they navigate to Me directly (subsequent visits).
 
-### 18.1 Results Page Purpose
+**Important terminology:** In the three-space architecture, this page IS the Me page (§15.2). The `/results/$sessionId` route and the `/me` route converge — they render the same page composition. `$sessionId` is a URL param for backward compatibility; the first-visit vs subsequent-visit divergence is controlled by the server-side `has_visited_me_once` flag, not by the route.
 
-The results page (`/results/:assessmentSessionId`) is the private, personal payoff — the surface that delivers on 30-45 minutes of conversation with Nerin. It's the emotional peak of the product and the bridge to every downstream action: portrait reveal, sharing, and relationship analysis. Post-MVP, it also bridges to conversation extension via subscription.
+### 18.1 Results / Me Page Purpose
 
-**Design principle:** The results page is designed for the user's personal insight experience. No conversion pressure, no sharing CTAs above the fold. The data earns the share — if results resonate, the user will want to share without being asked.
+The full results / Me page is the **personal identity sanctuary** — the surface users return to when they want to re-read their portrait in context, manage their public face, see their Circle preview, or control their subscription. It is NOT where the first portrait read happens — that's the focused `PortraitReadingView` (§11.4 PortraitReadingView extended + §10.1 Journey 1).
+
+**Design principle:** The page is designed for both the emotional first-visit moment (Nerin just wrote you a letter; here's the return seed bridging you into Day 1) AND the low-frequency returning visit (scroll through identity hero, re-read portrait inline, check Circle, manage subscription). Both experiences share the same layout — only the `ReturnSeedSection` is conditional on the first-visit flag.
+
+**No conversion pressure.** The portrait is free. There is no PWYW gate. The subscription pitch is a soft section midway down the page (§15.2), not a modal. Primary subscription conversion lives in the Sunday weekly letter (§10.3 Journey 3 + §20).
 
 ### 18.2 Current Implementation (Built)
 
 **Route:** `apps/front/src/routes/results/$assessmentSessionId.tsx`
-**Shell:** `apps/front/src/routes/results.tsx` (handles 24-hour session resumption from localStorage)
+**Shell:** `apps/front/src/routes/results.tsx`
 **Orchestrator:** `apps/front/src/components/results/ProfileView.tsx` — CSS grid layout composing all sections.
 
-| Component | File | Section |
-|-----------|------|---------|
-| `ArchetypeHeroSection` | `components/results/ArchetypeHeroSection.tsx` | Hero: archetype name, GeometricSignature, OCEAN code, confidence, description |
-| `PersonalPortrait` | `components/results/PersonalPortrait.tsx` | Full portrait markdown (generating/failed states) |
-| `PortraitUnlockButton` | `components/results/PortraitUnlockButton.tsx` | "Unlock your portrait" CTA with breathing animation → opens PWYW checkout |
-| `PortraitReadingView` | `components/results/PortraitReadingView.tsx` | Full-screen immersive reading mode |
-| `OceanCodeStrand` | `components/results/OceanCodeStrand.tsx` | OCEAN code legend with trait icons + connecting line |
-| `PersonalityRadarChart` | `components/results/PersonalityRadarChart.tsx` | 5-point radar with trait scores |
-| `ConfidenceRingCard` | `components/results/ConfidenceRingCard.tsx` | Confidence ring + message count metadata |
-| `TraitCard` | `components/results/TraitCard.tsx` | Per-trait card: shape, score, percentage, confidence, level |
-| `DetailZone` | `components/results/DetailZone.tsx` | Expandable facet breakdown for selected trait |
-| `EvidencePanel` | `components/results/EvidencePanel.tsx` | Evidence quotes from conversation for selected facet |
-| `ShareProfileSection` | `components/results/ShareProfileSection.tsx` | Privacy toggle + copy link |
-| `RelationshipCard` | `components/relationship/RelationshipCard.tsx` | Relationship analysis state + sent invitations |
-| `RelationshipCreditsSection` | `components/results/RelationshipCreditsSection.tsx` | Credits balance + purchase CTA + invitation form |
-| `ArchetypeShareCard` | `components/sharing/archetype-share-card.tsx` | Card preview (9:16 + 1:1) + download/share |
-| `QuickActionsCard` | `components/results/QuickActionsCard.tsx` | 3 actions: resume chat, view public profile, download report |
-| `ResultsAuthGate` | `components/ResultsAuthGate.tsx` | Unauthenticated gate with preview (blurred archetype, deterministic OCEAN code from session hash) |
+| Component | File | Status |
+|-----------|------|--------|
+| `ArchetypeHeroSection` | `components/results/ArchetypeHeroSection.tsx` | Keep — Identity Hero section |
+| `PersonalPortrait` | `components/results/PersonalPortrait.tsx` | Keep — inline portrait re-read on Me |
+| `PortraitReadingView` | `components/results/PortraitReadingView.tsx` | **Extended** — add generating state (§11.4) |
+| `OceanCodeStrand` | `components/results/OceanCodeStrand.tsx` | Keep |
+| `PersonalityRadarChart` | `components/results/PersonalityRadarChart.tsx` | Keep |
+| `ConfidenceRingCard` | `components/results/ConfidenceRingCard.tsx` | Keep |
+| `TraitCard` | `components/results/TraitCard.tsx` | Keep |
+| `DetailZone` | `components/results/DetailZone.tsx` | Keep |
+| `EvidencePanel` | `components/results/EvidencePanel.tsx` | Keep |
+| `ShareProfileSection` | `components/results/ShareProfileSection.tsx` | Keep — Your Public Face section |
+| `ArchetypeShareCard` | `components/sharing/archetype-share-card.tsx` | Keep |
+| `ResultsAuthGate` | `components/ResultsAuthGate.tsx` | Keep — simplified: anonymous path removed, so teaser state is less load-bearing; keep for deep-linked results URLs |
+| `PortraitUnlockButton` | `components/results/PortraitUnlockButton.tsx` | **RETIRE** — portrait is free, no unlock state |
+| `PWYWCurtainModal` | (deleted) | **RETIRE** — PWYW retired |
+| `RelationshipCreditsSection` | `components/results/RelationshipCreditsSection.tsx` | **RETIRE** — credits retired |
+| `RelationshipCard` | `components/relationship/RelationshipCard.tsx` | **Repurpose** — becomes Circle person card with updates (§11.4a CirclePersonCard) |
+| `QuickActionsCard` | `components/results/QuickActionsCard.tsx` | **Retire or repurpose** — most actions now live in `BottomNav` three-space navigation |
+| `PortraitWaitScreen` | `components/PortraitWaitScreen.tsx` | **RETIRE** — replaced by `PortraitReadingView` generating state |
+| `ReturnSeedSection` | — | **NEW** (§11.4a) — first-visit conditional |
+| `SubscriptionPitchSection` / `SubscriptionValueSummary` | — | **NEW** (§11.4a) — tier-aware subscription section |
+| `InviteCeremonyCard` | — | **NEW** (§11.4a) — invite ceremony entry in Your Circle section |
 
-### 18.3 Page Layout — 10-Section Grid
+### 18.3 Page Layout — 7-Section Me Page Scroll (no more 10-section grid)
 
-The results page uses a CSS grid layout (`ProfileView.tsx`) with progressive disclosure:
+The 10-section grid is retired. The new layout is a single-column 7-section scroll aligned with the Me page spec (§15.2). See §15.2.1 for the full section order. Summary:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ 1. ARCHETYPE HERO (full-width)                      │
-│    Archetype name (display-size) + GeometricSignature│
-│    OCEAN code letters (colored) + confidence pill    │
-│    Archetype description + background shapes         │
-│    Scroll indicator ↓                                │
+│ 1. IDENTITY HERO                                    │
+│    ArchetypeHeroSection + GeometricSignature        │
+│    + OceanCodeStrand + PersonalityRadarChart        │
+│    + ConfidenceRingCard                              │
 ├─────────────────────────────────────────────────────┤
-│ 2. PORTRAIT SECTION (full-width)                    │
-│    PersonalPortrait (full) OR PortraitUnlockButton   │
-│    Rainbow accent bar (all 5 trait colors)           │
+│ 2. YOUR PORTRAIT (inline re-read)                   │
+│    PersonalPortrait rendered inline                  │
+│    (Portrait is FREE — no unlock state)              │
 ├─────────────────────────────────────────────────────┤
-│ 3. OCEAN CODE STRAND (full-width)                   │
-│    5 trait icons with vertical connecting line       │
-│    Trait level descriptions + spectrum explanation   │
-├──────────────────────┬──────────────────────────────┤
-│ 4a. RADAR CHART      │ 4b. CONFIDENCE RING          │
-│    5-point polygon   │     Overall confidence %      │
-│    Gradient fill     │     Message count metadata    │
-├──────────────────────┴──────────────────────────────┤
-│ 5a. TRAIT CARDS — Row 1 (3 cards)                   │
-│    [Openness] [Conscientiousness] [Extraversion]     │
-│    Each: shape + score + % + confidence + level      │
+│ 3. YOUR GROWTH (conditional)                        │
+│    MoodCalendarView preview + pattern observations   │
+│    Only renders when mood history exists             │
 ├─────────────────────────────────────────────────────┤
-│ 5b. DETAIL ZONE (if trait from row 1 selected)      │
-│    Facet breakdowns for selected trait               │
-│    → click facet → EvidencePanel overlay             │
+│ 4. YOUR PUBLIC FACE                                 │
+│    ShareProfileSection (ProfileVisibilityToggle     │
+│    + shareable link + archetype card preview)        │
+│    NO view counts, NO sign-up metrics (Intimacy)    │
 ├─────────────────────────────────────────────────────┤
-│ 5c. TRAIT CARDS — Row 2 (2 cards)                   │
-│    [Agreeableness] [Neuroticism]                     │
+│ 5. YOUR CIRCLE (preview)                            │
+│    2-3 CirclePersonCard (truncated)                  │
+│    + "View all →" link to /circle                    │
+│    + InviteCeremonyCard (always)                    │
 ├─────────────────────────────────────────────────────┤
-│ 5d. DETAIL ZONE (if trait from row 2 selected)      │
-│    Facet breakdowns for selected trait               │
+│ 6. SUBSCRIPTION                                     │
+│    SubscriptionPitchSection (free)                   │
+│    OR SubscriptionValueSummary (subscriber)          │
 ├─────────────────────────────────────────────────────┤
-│ 6. SHARE PROFILE SECTION (full-width)               │
-│    Privacy toggle (Switch) + copy shareable link     │
-│    Gradient background                               │
+│ 7. ACCOUNT                                          │
+│    Small gear icon link → /settings                  │
 ├─────────────────────────────────────────────────────┤
-│ 7. RELATIONSHIP CARD (full-width)                   │
-│    Relationship analysis state + invitation list     │
-├─────────────────────────────────────────────────────┤
-│ 8. RELATIONSHIP CREDITS (full-width)                │
-│    Credit balance + purchase CTA + invitation form   │
-├─────────────────────────────────────────────────────┤
-│ 9. ARCHETYPE SHARE CARD (full-width)                │
-│    Card preview (9:16 + 1:1) + download + share     │
-├─────────────────────────────────────────────────────┤
-│ 10. QUICK ACTIONS (full-width)                      │
-│    Resume Conversation | View Public Profile |       │
-│    Download Report (disabled)                        │
+│ 8. RETURN SEED (FIRST VISIT ONLY)                   │
+│    ReturnSeedSection — Nerin's message               │
+│    + Nerin-voiced notification permission request   │
 └─────────────────────────────────────────────────────┘
 ```
 
+**BottomNav visible** on this page (unlike the focused `PortraitReadingView` which hides it).
+
+**No 2-column grid.** Even on desktop, the page is a single-column scroll at max-width 720px to match the letter reading view typography width and preserve the identity sanctuary feel.
+
+**Retired sections:**
+- ~~Section 2 Portrait with `PortraitUnlockButton` state~~ — portrait is free, renders inline
+- ~~Section 7 Relationship Card + Section 8 Relationship Credits~~ — replaced by Section 5 Your Circle preview
+- ~~Section 10 Quick Actions~~ — navigation lives in `BottomNav` three-space model
+
 ### 18.4 Progressive Disclosure Model
 
-The results page reveals content in layers — from emotional impact to scientific depth to social actions:
+The Me page reveals content in layers, from identity peak to social actions to subscription:
 
 | Layer | Sections | What It Delivers | Scroll Position |
 |-------|----------|-----------------|-----------------|
-| **Identity** | Hero + Portrait | Archetype name, visual identity, Nerin's letter | Above the fold |
-| **Scientific** | OCEAN Strand + Radar + Traits | Data validation — "this is really me" | First scroll |
-| **Evidence** | DetailZone + EvidencePanel | Conversation-linked proof | On interaction (click trait → click facet) |
-| **Social** | Share + Relationship + Card | Sharing, comparison, download | Below the fold |
-| **Actions** | Quick Actions | Resume chat, public profile, report | Bottom |
+| **Identity peak** | Identity Hero + Your Portrait | Archetype, visual identity, Nerin's letter re-read inline | Above the fold |
+| **Growth** | Your Growth (conditional) | Mood calendar preview, pattern observations | First scroll |
+| **Evidence** | DetailZone + EvidencePanel (triggered by Identity Hero trait cards) | Conversation-linked proof | On interaction |
+| **Social** | Your Public Face + Your Circle | Public profile control, Circle preview, invite ceremony | Below the fold |
+| **Subscription** | Subscription section | Pitch (free) or value summary (subscriber) | Deeper scroll |
+| **Admin** | Account gear | Settings entry | Bottom |
+| **First visit only: Return Seed** | ReturnSeedSection | Nerin's message + notification permission | Very bottom, first visit |
 
 ### 18.5 Portrait Section States
 
-The portrait section is the emotional centerpiece. It has multiple states depending on payment and generation status:
+The portrait section is rendered inline via `PersonalPortrait`. It has the following states:
 
 | State | What Renders | Behavior |
 |-------|-------------|----------|
-| **Portrait ready (paid)** | `PersonalPortrait` — full markdown, rainbow accent bar | Click → `PortraitReadingView` (immersive, no UI chrome) via `?view=portrait` |
-| **Generating (paid)** | `PortraitWaitScreen` — loading state | "Nerin is writing..." + skeleton pulse |
-| **Not purchased** | `PortraitUnlockButton` — evocative button with breathing animation | Tap → opens Polar checkout (`createThemedCheckoutEmbed`) |
-| **Generation failed** | Inline error + retry button | Retry re-triggers generation (no re-charge) |
-| **No portrait yet** | Not shown | Assessment not yet complete |
+| **Portrait ready** | `PersonalPortrait` — full markdown, rainbow accent bar | Default state after generation. Inline, not behind any gate. |
+| **Generating** | Inline skeleton + Nerin-voiced line | For post-assessment users whose portrait is still generating — should be rare because focused reading view handles generating state upstream. |
+| **Generation failed** | Inline error + retry button | Retry re-triggers generation. No payment involved. |
+| **No portrait yet** | Not shown | Assessment not yet complete — user should be on `/chat`, not here. |
+
+**No "not purchased" state.** Portrait is free. No `PortraitUnlockButton`. No PWYW gate.
+
+**Portrait reading mode (separate route):** `/results/$sessionId?view=portrait` is the **focused reading view**, not a modal on this page. It's a full-viewport route that hides `BottomNav` and renders the letter full-screen. Tapping the portrait on the Me page opens this route for a distraction-free re-read.
 
 **Portrait status polling** (`usePortraitStatus` hook): Polls `GET /api/portrait/:sessionId/status` every 2s while generating. Stops on "ready", "failed", or "none".
 
-### 18.6 PWYW Modal Flow (see also §10.3)
+### 18.6 Post-Assessment Transition Flow (Replaces Old PWYW Modal Flow)
 
-The PWYW flow is the monetization conversion moment. Full details in Journey 3 (§10.3). Summary of the results page integration:
+The old §18.6 PWYW Modal Flow is retired. The post-assessment flow is documented in §10.1 Journey 1. Summary of the transition path that lands a user on this page:
 
-1. **Auto-open:** PWYW modal auto-opens after brief delay on first results page visit (user absorbs free results first)
-2. **Modal content:** Bridge + congratulations → founder's letter (3-4 sentences) → Vincent's portrait (full length) → "Unlock your portrait" CTA
-3. **Polar checkout:** Stacks on top of PWYW modal. Default €5, minimum €1. Apple Pay / Google Pay / card
-4. **On success:** Both modals close → portrait generates → skeleton → portrait reveals
-5. **On skip:** "Maybe later" closes modal. PortraitUnlockButton persists in portrait section. No guilt
-6. **Re-entry:** Tapping PortraitUnlockButton re-opens PWYW modal at any time
+1. **Closing exchange** at `/chat`: Nerin's distinct closing (FR12) + user-voiced button *"Show me what you found →"* appears below the closing message. Input field fades.
+2. **Navigate to focused reading:** Button tap → direct navigation to `/results/$sessionId?view=portrait` (NOT to this full results page first).
+3. **PortraitReadingView generating state:** `OceanSpinner` + Nerin-voiced line *"Nerin is writing your letter..."*. No other content visible.
+4. **Letter fades in:** Full-screen, max-width 720px, warm background, letter typography. User reads uninterrupted. **Emotional peak.**
+5. **End-of-letter link:** At the bottom of PortraitReadingView, warm link *"There's more to see →"*.
+6. **Navigate to full Me page:** `/results/$sessionId` — this page. Identity hero + inline portrait (re-read in context) + Your Public Face + Your Circle preview (empty + invite ceremony card) + subscription pitch + Account.
+7. **First-visit: ReturnSeedSection at bottom.** Nerin's message + notification permission in Nerin's voice.
+8. **Day 1+:** User returns. Default landing is `/today`, not here.
+
+**No modal.** No PWYW curtain. No payment. No auto-opening overlay. The portrait is free and the subscription conversion moment lives in the Sunday weekly letter at Week 3+.
 
 ### 18.7 Trait Card Interaction Flow
 
@@ -4133,51 +6012,69 @@ TraitCard (click) → DetailZone expands below the clicked row
 | Hook | Endpoint | When | Polling |
 |------|----------|------|---------|
 | `useGetResults(sessionId)` | `GET /api/assessment/:sessionId/results` | Page load | No — single fetch, cached |
-| `usePortraitStatus(sessionId)` | `GET /api/portrait/:sessionId/status` | After results load | Every 2s while "generating" |
+| `usePortraitStatus(sessionId)` | `GET /api/portrait/:sessionId/status` | After results load, only if portrait not ready | Every 2s while "generating" |
 | `useTraitEvidence(sessionId, trait)` | Evidence endpoint | On trait card click | No |
 | `useFacetEvidence(sessionId, facet)` | Evidence endpoint | On facet click | No |
 | `useToggleVisibility()` | `PATCH /api/public-profile/:id/visibility` | On toggle | Mutation |
-| `useRelationshipState()` | Relationship endpoint | On mount | Every 5s while "generating" |
-| `useCredits()` | Credits endpoint | On mount | No |
+| `useCirclePreview(userId)` | `GET /api/circle?limit=3` | On mount | No |
+| `useSubscriptionState(userId)` | `GET /api/subscription/state` | On mount | No |
+| `useHasVisitedMeOnce(userId)` | `GET /api/me/has-visited-once` | On mount | No |
+| `useMarkFirstVisit()` | `POST /api/me/mark-first-visit` | On first-visit Me page render | Mutation |
+| `useRequestNotificationPermission()` | Browser Notification API + `POST /api/notifications/subscribe` | On ReturnSeedSection button tap | Mutation |
+
+**Retired hooks:**
+- ~~`useCredits()`~~ — credits retired
+- ~~`useRelationshipState()` (as old credit model)~~ — replaced by `useCirclePreview`
 
 ### 18.9 Auth Gate (`ResultsAuthGate`)
 
-Unauthenticated users hitting a results URL see a teaser experience:
+**Reduced relevance since anonymous path removed.** All assessment users are authenticated from turn 1 (FR50). The only scenario where `ResultsAuthGate` fires is deep-linked results URLs from unauthenticated sessions (e.g., shared links, logged-out browsers visiting old bookmarks).
 
 | Element | Details |
 |---------|---------|
-| Blurred archetype name | Generates deterministic teaser OCEAN code from sessionId hash |
-| GeometricSignature | Rendered from teaser code |
-| 24-hour localStorage window | Unauthenticated users can view for 24h after assessment completion |
-| Auth modes | "teaser" (preview), "signup", "signin" |
+| Behavior on deep link | Show a minimal teaser with blurred archetype + "Sign in to see your full results" CTA |
+| 24-hour localStorage window | **Retired** — anonymous path is gone, no localStorage session resumption needed |
+| Auth modes | "signin" only (no "teaser with preview" mode — that was for the anonymous flow) |
+| Implementation | Simplified: check auth → if unauthenticated, show "Sign in to continue" with redirect back to `/results/$sessionId` on success |
 
 ### 18.10 Screen States
 
-| State | Results Page | Portrait Section | PWYW Modal |
-|-------|-------------|-----------------|------------|
-| Results loading | Skeleton (all sections) | Not shown | Not yet |
-| Results loaded | Fully visible | Depends on portrait state (§18.5) | Auto-opens after delay (first visit) |
-| PWYW modal open | Dimmed behind modal | Not shown | Open — scrollable |
-| Polar modal open | Dimmed | Not shown | Open — Polar stacked on top |
-| Payment success | Fully visible | Loading skeleton | Closes (both) |
-| Portrait generating | Fully visible | Skeleton + "Nerin is writing..." | Closed |
-| Portrait delivered | Fully visible | Spine-format letter | Closed |
-| Portrait failed | Fully visible | "Failed" + retry | Closed |
-| Skipped PWYW | Fully visible | PortraitUnlockButton | Closed |
-| Portrait reading mode | Hidden (full-screen takeover) | `PortraitReadingView` fills viewport | — |
+| State | Me Page | Portrait Section | Notes |
+|-------|---------|-----------------|-------|
+| Results loading | Skeleton (all sections) | Not shown | Initial fetch |
+| Results loaded, portrait ready | Fully visible | `PersonalPortrait` inline | Standard state |
+| Results loaded, portrait generating | Fully visible | Inline skeleton + "Nerin is writing..." | Rare — focused reading view handles generating state upstream |
+| Results loaded, portrait failed | Fully visible | Inline error + retry | Retry re-generates |
+| First visit (has_visited_me_once = false) | Fully visible | `PersonalPortrait` inline | ReturnSeedSection at bottom |
+| Subsequent visit (has_visited_me_once = true) | Fully visible | `PersonalPortrait` inline | ReturnSeedSection hidden |
+| Portrait reading mode | Not applicable — user navigates to `/results/$sessionId?view=portrait` which is a different route | — | `BottomNav` hidden |
+| Free user | Fully visible | `PersonalPortrait` | SubscriptionPitchSection in subscription slot |
+| Subscriber | Fully visible | `PersonalPortrait` | SubscriptionValueSummary + conversation extension CTA |
+| Unauthenticated deep link | `ResultsAuthGate` | Not shown | "Sign in to see your full results" |
+
+**Retired states:**
+- ~~PWYW modal open / Polar modal stacked~~ — no PWYW
+- ~~Payment success / Payment fails~~ — no portrait payment
+- ~~Skipped PWYW with PortraitUnlockButton~~ — no unlock state
 
 ### 18.11 Error States
 
 | Component/Section | Error Display | Recovery | Page Impact |
 |-------------------|--------------|----------|-------------|
-| Full results fetch | ErrorBanner: "Something went wrong" | Retry button | Entire page blocked |
-| Portrait section | "Something went wrong loading your portrait" + retry | Retry in-place | Rest of page works |
-| Portrait generation | "Generation failed" + retry | Retry (no re-charge) | Rest of page works |
+| Full results fetch | ErrorBanner: "Something slipped. One moment." | Auto-retry then manual retry button | Entire page blocked |
+| Portrait section | Inline "Something went wrong loading your portrait" + retry | Retry in-place | Rest of page works |
+| Portrait generation | Inline "Generation failed" + retry | Retry re-triggers — no payment involved | Rest of page works |
 | Trait evidence | Sonner toast | Auto-retry once | DetailZone shows skeleton |
-| QR drawer | Drawer closes, Sonner toast | Re-open drawer | Results page works |
 | Share link copy | Sonner toast: "Couldn't copy link" | Manual URL selection | — |
-| Payment fails | Error in Polar modal | Retry or change method | — |
+| Circle preview fetch | Hide Circle section gracefully | Retry on next visit | Rest of page works |
+| Subscription state fetch | Default to free tier pitch | Reconcile on next load | Subscription section shows pitch even if user is subscribed (temporarily) |
+| Notification permission denied | No error — daily loop still works via organic return | N/A | ReturnSeedSection marks "Maybe later" |
+| Notification permission error (browser API fails) | Inline: "Couldn't set up notifications. You can enable them later in Settings." | Retry button | ReturnSeedSection remains visible |
 | Offline/network | SSR content stays visible. Dynamic features disabled | Reconnect | Static content readable |
+
+**Retired error cases:**
+- ~~Payment fails~~
+- ~~QR drawer errors~~ — QR drawer is retired for credit flow; new invite QR share uses a simpler share drawer
 
 ### 18.12 Responsive Behavior
 
@@ -4214,23 +6111,596 @@ Unauthenticated users hitting a results URL see a teaser experience:
 
 | Element | Details |
 |---------|---------|
-| Route | `/results/:assessmentSessionId` |
-| Auth | Required — redirects to login if unauthenticated (except 24h teaser window) |
-| Header | Standard authenticated header |
-| Back navigation | → `/chat` (if conversation in progress) or `/dashboard` (if complete) |
-| Portrait reading mode | `?view=portrait` URL param. Back button returns to results grid |
-| Quick action links | Resume conversation → `/chat?sessionId=...`, Public profile → `/public-profile/:id`, Download report → disabled (placeholder) |
+| Route | `/results/$sessionId` (and alias `/me` which composes the same page — see §15.2) |
+| Auth | Required — unauthenticated deep links show simplified `ResultsAuthGate` |
+| Header | Standard authenticated header + `BottomNav` at the bottom (three-space tabs) |
+| Back navigation | `BottomNav` replaces "back" button. User navigates laterally to Today, Me, Circle. |
+| Portrait focused reading | `/results/$sessionId?view=portrait` — separate route with `PortraitReadingView`, hides `BottomNav`, full-screen letter format |
+| First-visit redirect | After focused reading end-of-letter link ("There's more to see →"), lands here with `has_visited_me_once = false` → ReturnSeedSection visible |
+| Subsequent visits | Default landing is `/today`, not here. User reaches Me via `BottomNav` Me tab. ReturnSeedSection hidden. |
+| Section 5 links | Your Circle preview links to `/circle` for the full Circle page |
+| Section 7 link | Account gear → `/settings` |
+| Subscription section CTAs | Free: inline pitch with "Learn more →" (post-MVP: inline expand). Subscriber: "Extend your conversation with Nerin →" (triggers extension flow + bundled portrait regen) |
+
+**Retired:**
+- ~~`/dashboard` redirect on back~~ — dashboard retired
+- ~~Quick Actions row~~ — replaced by `BottomNav`
+- ~~24h teaser localStorage window~~ — anonymous path retired
 
 ### 18.16 Key Cross-References
 
 This specification consolidates content from:
-- §7.5-7.7 — Four-beat experience, portrait as emotional peak, monetization architecture
+- §7.5-7.7 — Four-beat + Bridge experience, portrait as emotional peak, monetization architecture
 - §9.2 — Chosen design direction, component reuse matrix
 - §9.3 — Portrait spine structure
 - §9.4 — Chart and data visualization direction
-- §10.1 — Journey 1 results page touchpoints
-- §10.3 — Journey 3 PWYW flow (complete flow diagram and modal spec)
-- §10.4 — Journey 4 returning user results experience
-- §11.4-11.5 — Component specs (PortraitSpineRenderer, PortraitUnlockButton, PWYWCurtainModal, etc.) and route composition
+- **§10.1 — Journey 1 First-Timer Flow** (post-assessment transition, closing button, focused reading, end-of-letter link, return seed)
+- **§10.4 — Journey 4 Returning User Flow** (three-space return, default landing on /today)
+- **§15.2 — Me Page Specification** (the Me page IS this results page; both routes converge)
+- §11.4 — Component specs (`PortraitReadingView` extended with generating state, `ReturnSeedSection`, `SubscriptionPitchSection`, `SubscriptionValueSummary`, inline `PersonalPortrait`)
+- §11.4a — New three-space components (`BottomNav`, `InviteCeremonyCard`, `CirclePersonCard` preview)
 - §12.1-12.7 — Feedback patterns, navigation, modals, empty states, button hierarchy, transitions
 - §13.1-13.4 — Responsive strategy, breakpoints, accessibility, testing
+
+---
+
+## 19. Relationship Letter Page Specification
+
+### 19.1 Purpose
+
+The relationship letter page (`/circle/$personId`) is the **living relational space** for one specific relationship. Not a one-time generated artifact — a place where Léa and Marc (or any pair) go to experience their dynamic together over time, with an annual regeneration ritual at its center (Spotify Wrapped model).
+
+**Design principle:** The page is *lived in*, not read once. Section A (this year's letter) is the emotional center; Section B (real-time data grid) is the ongoing intelligence; Section C (letter history) compounds into a multi-year relationship biography. The letter is **free for everyone** — gating the highest-emotion moment destroys the viral flywheel.
+
+**Entry points:**
+- Circle page → tap a `CirclePersonCard` → "View your dynamic →"
+- Invite acceptance (Journey 7) → after both users complete assessments → notification → direct entry
+- Annual regeneration (Year 1+) → notification → direct entry with ritual re-entry
+- Me page → Your Circle preview → tap a person
+
+**See also:** §10.6 Journey 6 (flow + architectural rationale), §11.4a components (RelationshipLetterSectionA-F), §10.7 Journey 7 (how users arrive here via the invite ceremony).
+
+### 19.2 Current Implementation (Built)
+
+Limited. The current codebase has `RelationshipCard` and an older `/relationship/:id` route that reflected the retired relationship-analysis credit model. That route is being repurposed.
+
+| Component | File | Status |
+|-----------|------|--------|
+| `RelationshipCard` | `components/relationship/RelationshipCard.tsx` | **Reuse** for Circle person card with updates |
+| `/relationship/:id` route | `routes/relationship.$id.tsx` | **Retire** — replace with `/circle/$personId` |
+| Old relationship analysis page | — | **Retire** — replace with new multi-section relationship letter page |
+
+**Data available:** Existing `relationship_analysis` table continues to power Section A and Section B. Internal data model **stays as `relationship_analysis`** — only user-facing copy changes to "relationship letter" / "letter about your dynamic." This reduces rename scope and preserves existing foreign keys.
+
+### 19.3 Target Page Layout
+
+**Scroll structure (top to bottom):**
+
+```
+┌─────────────────────────────────────────┐
+│  Ritual Screen (first visit only)       │  ← RelationshipLetterRitualGate
+│  "Read this together when you can       │
+│   sit with it"                           │
+│  [Start]                                 │
+└─────────────────────────────────────────┘
+              ↓ (user taps Start)
+┌─────────────────────────────────────────┐
+│  Section A — This Year's Letter          │  ← RelationshipLetterSectionA
+│  Letter format, max-width 720px          │
+│  Warm background, letter typography      │
+│  Free for both users                     │
+│  — Nerin                                 │
+├─────────────────────────────────────────┤
+│  Section B — Where You Are Right Now    │  ← RelationshipLetterSectionB
+│  Real-time data grid                     │
+│  Traits, facets, overlap                 │
+│  Complementarity framing                 │
+│  Updates automatically                   │
+│  Free                                    │
+├─────────────────────────────────────────┤
+│  Section C — Letter History              │  ← RelationshipLetterSectionC
+│  Vertical timeline of past letters       │
+│  Multi-year biography                    │
+│  "Your 2027 letter (coming February)"    │
+│  Free                                    │
+├─────────────────────────────────────────┤
+│  Section D — How You're Both Doing       │  ← Post-MVP only
+│  (MVP: collapsed / ghosted)              │
+│  D1: Mood trends (free, opt-in)          │
+│  D2-D4: Subscriber-only                  │
+├─────────────────────────────────────────┤
+│  Section E — Things You've Learned       │  ← RelationshipLetterSectionE
+│  Shared notes, attributed per entry     │
+│  No likes, no reactions                  │
+│  Free                                    │
+├─────────────────────────────────────────┤
+│  Section F — Your Next Letter            │  ← RelationshipLetterSectionF
+│  Annual regeneration countdown           │
+│  "Nerin is already learning more..."    │
+│  Free                                    │
+└─────────────────────────────────────────┘
+```
+
+**BottomNav visibility:** Hidden during ritual screen; visible after user taps Start and enters the sections.
+
+### 19.4 Section Details
+
+#### Section A — This Year's Letter
+
+| Element | Detail |
+|---------|--------|
+| Component | `RelationshipLetterSectionA` |
+| Visual | Same as `PortraitReadingView`: max-width 720px, warm background, letter typography |
+| Content | Nerin's generated narrative about the relationship — parts that click, parts that clash, unspoken rhythms, a side of yourself that only shows up around them |
+| Ritual gate | First visit: `RelationshipLetterRitualGate` wraps this section with "Read this together when you can sit with it" screen |
+| Re-read | "Read Together Again" button in header re-enters ritual gate |
+| Cost | Free for both users |
+| Generation | One LLM call per year per relationship. Nerin-voiced tight prompt with both users' facets, archetypes, and evidence |
+| Sign-off | "— Nerin" |
+
+#### Section B — Where You Are Right Now (Real-Time Data Grid)
+
+| Element | Detail |
+|---------|--------|
+| Component | `RelationshipLetterSectionB` |
+| Visual | Two-column data grid (one column per user) with side-by-side traits, facets, overlap highlighted |
+| Framing rule | **Complementarity, not comparison.** "Rhythm" not "differences". "How you fit together" not "who's higher". No competitive scoring language. |
+| Shared OCEAN letters | Highlighted as a band across both columns |
+| Per-row framing | Each trait row has a short interpretive framing generated at letter-generation time (not real-time) |
+| Update behavior | **Derive-at-read.** Pulls latest facet scores from both users at render time. No cached/stale data grid. |
+| Cost | Free for both users |
+
+#### Section C — Letter History
+
+| Element | Detail |
+|---------|--------|
+| Component | `RelationshipLetterSectionC` |
+| Visual | Vertical timeline, year-by-year |
+| Entries | Past annual letters ("Your 2026 letter", "Your 2027 letter") + next year's letter as a disabled/queued entry ("Your 2027 letter (coming this February)") |
+| Purpose | Creates perpetual return anticipation. Multi-year biography compounds into irreplaceable moat by Year 3+ |
+| Letter excerpt | Each entry shows a small excerpt of that year's letter + link to the full letter |
+| Cost | Free for both users |
+
+#### Section D — How You're Both Doing (Post-MVP)
+
+**MVP: section is collapsed or shown as a faint "Coming soon" placeholder.** Post-MVP adds the following:
+
+| Sub-section | Detail | MVP/Post-MVP |
+|-------------|--------|--------------|
+| D1 — Mood trends side by side | 14-day emoji grid for both users. Only mood emoji shown, never note text. Requires mutual opt-in. | **Post-MVP free** (for both, when mutually opted in) |
+| D2 — Nerin's relational observations | Pattern-level framings about the shared dynamic. Always about "you two" or "your rhythm," never about one person as a problem. | **Post-MVP subscriber-only, per user** |
+| D3 — "Take care of" suggestions | Directional, personality-informed coaching. Each user sees their own "For [name]" suggestion only. Never see the suggestion written about you for your partner. | **Post-MVP subscriber-only, per user** |
+| D4 — Alignment patterns | Gentle noticing cards, not actionable. "You've shared 4 weeks in rhythm." | **Post-MVP subscriber-only, per user** |
+| D5 — Gentle check-ins and prompts | **DEFERRED** pending user testing. Risk of feeling prescriptive/invasive. Ship D1-D4 first, validate, then revisit. | **Deferred** |
+
+**Harm reduction rules for Section D (post-MVP):**
+- Observations are ALWAYS about the dynamic, NEVER about the individual
+- No observation characterizes the partner negatively
+- Suggestions are always collaborative framings ("you two"), never diagnostic
+- Directional suggestions are specific and actionable, never generic empathy advice
+- Users can flag "this doesn't fit" to improve calibration
+- Nerin never singles out one person as the problem
+- Framing rule: **"dynamics not deficits, no blame, no one is the problem"**
+
+#### Section E — Things You've Learned About Each Other
+
+| Element | Detail |
+|---------|--------|
+| Component | `RelationshipLetterSectionE` |
+| Visual | Vertical feed of notes, attributed to each user |
+| Add entry | Input field at the bottom for adding a new note |
+| Delete | Author-only, on hover/long-press |
+| No reactions | No likes, no hearts, no reaction emoji, no threaded replies. Accumulates into shared memory over years. |
+| Visibility | Shared between the two connected users only. Never visible on public profile or to third parties. |
+| Cost | Free. Zero LLM cost — user-generated content. |
+
+#### Section F — Your Next Letter
+
+| Element | Detail |
+|---------|--------|
+| Component | `RelationshipLetterSectionF` |
+| Visual | Soft countdown + Nerin-voiced line |
+| Countdown display | "Your next letter: [Month Day, Year]" |
+| Nerin-voiced line | *"Nerin is already learning more about both of you."* |
+| No "notify me" button | Notification is automatic on regeneration; this section is pure anticipation anchor. |
+| Cost | Free. |
+
+### 19.5 Annual Regeneration Model
+
+**Letter regeneration is annual only, not on-demand.** Critical rule.
+
+| Element | Detail |
+|---------|--------|
+| Trigger | Automatic on connection anniversary (one year after QR accept / invite ceremony completion) |
+| Approval | **None required.** Original QR consent covers all future regenerations (see §10.7 Journey 7). Notification is the mechanism. |
+| Notification | Both users notified: *"Your [Year] letter from Nerin is ready"* — Nerin-voiced, not system voice |
+| Letter history | Old letters preserved in Section C forever — never deleted, never overwritten |
+| Ritual re-entry | First read of new letter enters the ritual gate ("Read this together when you can sit with it") |
+| Cost | ~1 LLM call per relationship per year — negligible at scale |
+| Year 3+ moat | Letter history compounds into a multi-year relationship biography that no competitor can retroactively build |
+
+**Annual letter is FREE for everyone.**
+- Highest-emotion moment must not be gated
+- Spotify Wrapped precedent: free to all, drives retention and virality
+- Free users experiencing the annual letter with a subscribed partner creates natural subscription pull (asymmetric visibility → Section D post-MVP)
+
+**Post-MVP:** First annual regeneration kicks in at Year 1 Q4 when first-cohort relationships approach their one-year anniversary. Build the regeneration job before that window.
+
+### 19.6 Privacy Contract
+
+**What CAN cross users (between Léa and Marc):**
+- Mood emoji selections (5 options only, D1 post-MVP with mutual opt-in)
+- Daily presence (did they check in today? — D1 post-MVP)
+- Nerin's interpretive framings about the shared dynamic (Sections A, D2-D4 post-MVP)
+- "Take care of" suggestions directed at self (D3 post-MVP, informed by partner's profile but never revealing partner's raw data)
+- Pattern observations about the relationship (Sections A, D2-D4 post-MVP)
+- Shared notes (Section E — user-chosen visibility)
+- Facet and trait scores (derived into Section B framings)
+
+**What NEVER crosses users:**
+- Note text from daily check-ins
+- Pattern details about the individual
+- Mini-dialogue content from Today (post-MVP)
+- Private portrait regeneration insights
+- Any raw evidence strings from the assessment
+
+**The principle:** Nerin observes both users' data. Nerin's output is *interpretive framings*, not raw data. Nerin is the abstraction layer — everything flows through Nerin's voice, nothing flows raw between users.
+
+### 19.7 Loading & Skeleton States
+
+| Section | Skeleton |
+|---------|----------|
+| Ritual screen | Heading + Start button placeholder |
+| Section A | Letter-format skeleton (title + 4-6 paragraphs in max-width 720px container) |
+| Section B | Two-column data grid skeleton (trait rows with bar placeholders) |
+| Section C | 2-3 timeline entry placeholders + "next letter" queued state |
+| Section E | 2-3 shared note card placeholders + empty input at bottom |
+| Section F | Countdown placeholder + one Nerin-voiced line |
+
+**Section A generating state:** `OceanSpinner` + "Nerin is writing your letter..." — same visual language as `PortraitReadingView` generating state. Never shown as a generic loading spinner.
+
+### 19.8 Error States
+
+| Section | Error Display | Recovery |
+|---------|--------------|----------|
+| Full page fetch fails | ErrorBanner: "Something slipped. One moment." | Retry button |
+| Section A letter generation fails | Inline in Section A container: "Nerin is still writing your letter. We'll let you know when it's ready." | Auto-retry silently; user notified by email when ready |
+| Section B data grid fetch fails | Skeleton + "Refreshing your dynamic..." retry | Auto-retry; Section A remains readable |
+| Section C letter history fetch fails | Silent — show empty timeline | Retry on next visit |
+| Section E shared notes fetch fails | "Couldn't load your shared notes" | Retry link |
+| Partner has stopped sharing | Section A + existing history preserved; future updates disabled | Clear message: "[Name] is no longer sharing with you. Your shared history remains visible." |
+| Partner deleted account | Section A + existing history preserved as read-only | Clear message: "[Name] has left. Your letters remain as history." |
+| Annual regeneration fails | Current letter remains visible; user notified of delay in Nerin's voice via email | Retry next day automatically |
+
+### 19.9 Animation & Transitions
+
+| Element | Animation | Duration | Trigger |
+|---------|-----------|----------|---------|
+| Ritual screen → Section A | Full-screen fade out + Section A fade in | 800ms | Start button tap |
+| Section A letter fade-in | Slow fade + slight rise | 600ms | Letter ready (after generating state) |
+| Section B data grid entrance | Staggered fade | 80ms per row | Scroll into view |
+| Section C letter history entrance | Vertical fade-in | 300ms | Scroll into view |
+| Section E new note add | Gentle fade-in at bottom of feed | 300ms | Note submit success |
+| Section F countdown tick | Subtle pulse (if countdown updates during page lifetime) | 200ms | Time update |
+| Annual regeneration arrival (real-time, if open) | Current Section A fades → Nerin-voiced line "Nerin has written a new letter" → ritual re-entry | 1s + ritual | WebSocket or refetch |
+
+All animations gated by `prefers-reduced-motion`.
+
+### 19.10 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| Mobile (< 640px) | Single column, full-width. Section A letter max-width equals viewport. Section B data grid stacks rows vertically with two columns per row. BottomNav at bottom (hidden during ritual). |
+| Tablet (640-1024px) | Single column, centered, max-width 720px. Section A uses full 720px. Section B data grid side-by-side columns. |
+| Desktop (≥ 1024px) | Single column, centered, max-width 720px. Section A letter same as portrait reading view. BottomNav replaced with top nav tabs. |
+
+### 19.11 Data Model
+
+| Hook | Data | Purpose |
+|------|------|---------|
+| `useAuth()` | `user` | Authentication |
+| `useRelationshipLetter(userId, personId)` | Section A letter content, generation state, letter year | Section A |
+| `useRelationshipDataGrid(userId, personId)` | Both users' facets, traits, overlap framings | Section B (derive-at-read) |
+| `useLetterHistory(userId, personId)` | Array of past annual letters + next queued | Section C |
+| `useSharedNotes(userId, personId)` | Array of shared notes attributed per author | Section E |
+| `useNextLetterDate(userId, personId)` | Date of next annual regeneration | Section F |
+| `useSharingState(userId, personId)` | Mutual sharing state, deletion state | Error states |
+| `useHasRitualBeenSeen(userId, personId)` | Boolean for first-visit ritual gate | Ritual gate |
+
+**New endpoints required:**
+- `GET /api/circle/$personId/letter` — Section A letter content + generation state
+- `GET /api/circle/$personId/data-grid` — derive-at-read Section B data
+- `GET /api/circle/$personId/letter-history` — past annual letters
+- `GET /api/circle/$personId/shared-notes` — Section E notes
+- `POST /api/circle/$personId/shared-notes` — add shared note
+- `DELETE /api/circle/$personId/shared-notes/$noteId` — author-only delete
+- `POST /api/circle/$personId/mark-ritual-seen` — dismiss ritual gate for subsequent visits
+- `POST /api/circle/$personId/read-together-again` — re-enter ritual mode
+
+### 19.12 Implementation Notes
+
+- **Copy audit rule:** User-facing copy must say "relationship letter" / "letter about your dynamic." Internal data model stays as `relationship_analysis`. This is a copy-only migration on the existing data.
+- **Ritual gate first-visit flag:** Server-side, not localStorage. Stored per relationship per user (so Léa's ritual seen state doesn't affect Marc's).
+- **Section A visual reuse:** Reuses `PortraitReadingView`'s letter format container. Consider extracting a `LetterReadingContainer` primitive shared by portrait, weekly letter, and relationship letter Section A.
+- **Section B update cadence:** Derive-at-read pulls latest facets. No WebSocket invalidation needed for MVP — next visit will reflect new facets.
+- **Section E zero LLM cost:** User-generated content only. No LLM calls for shared notes.
+- **Section D implementation waits for Year 1 Q4+** since D1 requires mood tracking history, D2-D4 require subscription infrastructure + harm reduction review. MVP ships with sections A, B, C, E, F only.
+- **No on-demand regeneration button.** Annual regeneration is the only path. No "regenerate now" CTA for subscribers — that would violate the Spotify Wrapped model.
+- **Revoke sharing:** User can revoke from Me → Your Circle → person card → "Stop sharing". Revocation does NOT delete history; both users retain their shared letter history as read-only. Future Section A and Section B updates stop.
+
+### 19.13 Implementation Gap (Current → Target)
+
+| Area | Current | Target | Work Required |
+|------|---------|--------|---------------|
+| Route | `/relationship/:id` (old credit model) | `/circle/$personId` (living space) | New route, delete old |
+| Ritual screen | Exists for old relationship analysis | `RelationshipLetterRitualGate` wrapper for Section A first visit | Rebuild with first-visit flag logic + Read Together Again entry point |
+| Section A | Exists as spine-format portrait renderer | `RelationshipLetterSectionA` letter format | Rebuild as letter format reusing portrait reading view typography |
+| Section B | OCEAN comparison table | `RelationshipLetterSectionB` real-time data grid with complementarity framing | New component + derive-at-read endpoint |
+| Section C | Didn't exist | `RelationshipLetterSectionC` letter history timeline | New component + endpoint |
+| Section D | Didn't exist | **Post-MVP** — collapsed placeholder for MVP | Defer |
+| Section E | Didn't exist | `RelationshipLetterSectionE` shared notes | New component + endpoints |
+| Section F | Didn't exist | `RelationshipLetterSectionF` countdown | New component + computed field |
+| Annual regeneration job | Didn't exist | Cron job at anniversary per connection | Build for Year 1 Q4+ timeline |
+| QR consent contract | Partial | Full disclosure at invite accept (§10.7) | Update InviteLandingPage |
+| Copy migration | "Relationship analysis" in user-facing copy | "Relationship letter" / "letter about your dynamic" | Search-and-replace on user-facing copy only; data model unchanged |
+
+---
+
+## 20. Weekly Letter Specification
+
+### 20.1 Purpose
+
+The Sunday weekly letter from Nerin is a Sunday-evening artifact that summarizes the user's week of check-ins, mood patterns, and personality insights. It is a **letter from Nerin**, not a weekly report — same warm typography and reading experience as the portrait.
+
+**Strategic role:** The single most important subscription conversion moment in the product. The three-act story lands here (Act 1 Day 0-7 build habit, Act 2 Weeks 2-3 show the gap, Act 3 Week 3+ natural unlock). The free version must feel COMPLETE and satisfying on its own — not a preview, not cripple-ware.
+
+**Delivery:** Sunday 7pm local time per user. Push notification + email fallback + inline card on Today page top on Sundays. Focused reading route at `/today/week/$weekId`.
+
+**See also:** §10.3 Journey 3 (flow + locked copy), §11.4a components (`WeeklyLetterReadingView`, `WeeklyLetterCard`), §10.8 Journey 8 (subscription conversion mechanic).
+
+### 20.2 Current Implementation (Built)
+
+**None.** This is new work.
+
+The codebase currently has no weekly letter generation job, no `weekly_summaries` table, no `/today/week/$weekId` route, and no weekly letter notification wiring. All infrastructure for this feature is new.
+
+### 20.3 Target Architecture
+
+#### 20.3.1 Nerin Output Grammar — Three Visual Formats
+
+The weekly letter establishes the **third leg** of Nerin's output visual grammar:
+- **Journal format** (margin notes, shared-page feel) → daily check-in recognition on Today (post-MVP paid)
+- **Letter format** (focused reading, max-width 720px, warm body font) → **portrait, weekly letter, annual relationship letter**
+- **Chat format** (chat bubbles) → subscriber mini-dialogue on Today (post-MVP)
+
+Users learn to read each format in the appropriate emotional register. The weekly letter is always **letter format**.
+
+#### 20.3.2 Timing
+
+| Element | Detail |
+|---------|--------|
+| Generation time | Sunday 6pm local time per user (per-user cron / scheduler) |
+| Delivery time | Sunday 7pm local time per user |
+| Buffer | One hour between generation and delivery for retries |
+| Trigger condition | User has ≥3 check-ins that week |
+| Fallback (1-2 check-ins) | Generate a short "Nerin noticed you checked in a few times" letter. Warm, no guilt. |
+| No letter (0 check-ins) | No summary generated. No notification. No shame. Next week tries again. |
+
+#### 20.3.3 Route
+
+| Route | Purpose |
+|-------|---------|
+| `/today/week/$weekId` | Focused reading view for the weekly letter. Hides `BottomNav`. Same visual language as `PortraitReadingView`. |
+| Entry points | Push notification tap, email fallback link, inline `WeeklyLetterCard` on `/today` top |
+
+#### 20.3.4 Notification
+
+| Element | Detail |
+|---------|--------|
+| Push copy | *"Your week with Nerin is ready"* — possessive, personal, Nerin's voice. NOT "weekly report available". |
+| Email fallback | Sent if push permission not granted, or as secondary channel |
+| Inline card | `WeeklyLetterCard` on `/today` top on Sundays (auto-dismisses after read) |
+
+### 20.4 Content Structure
+
+#### 20.4.1 Free Version Contents
+
+**Critical rule:** The free version must feel **COMPLETE and satisfying on its own.** Not a preview, not a cripple-ware teaser. A full descriptive artifact the user is glad to receive.
+
+| Order | Element | Description |
+|-------|---------|-------------|
+| 1 | Date range header | "[Month Day] — [Month Day]" for the week |
+| 2 | Personalized opening | *"Dear [name],"* — fall back to "Dear you" if no name |
+| 3 | Week narrative | 2-3 paragraphs observing the pattern of the week, referencing specific mood selections, personality-informed framing |
+| 4 | Visual mood shape | 7-day dot grid as a small secondary element (not the center) |
+| 5 | "What stood out" beat | One specific observation that makes it warm and seen |
+| 6 | Nerin's sign-off | "— Nerin" |
+| 7 | Conversion pitch (Week 3+ only) | Locked copy, Nerin-voiced, inline with sign-off |
+
+#### 20.4.2 Subscriber Version Contents (Free + Additional Sections)
+
+The subscriber version is generated in the **same LLM call** as the free version, producing both outputs together. If a user converts mid-week, next Sunday's subscriber letter is already waiting — no regeneration delay.
+
+| Order | Element | Description | Free | Subscriber |
+|-------|---------|-------------|------|-----------|
+| 1 | Date range header | Week range | ✅ | ✅ |
+| 2 | Personalized opening | "Dear [name]" | ✅ | ✅ |
+| 3 | Week narrative | 2-3 paragraphs (descriptive) | ✅ | ✅ |
+| 4 | Visual mood shape | 7-day dot grid | ✅ | ✅ |
+| 5 | "What stood out" beat | One specific observation | ✅ | ✅ |
+| 6 | Nerin's sign-off | "— Nerin" | ✅ | ✅ |
+| 7 | **"For the week ahead"** | Prescriptive focus statement + one concrete micro-action | — | ✅ |
+| 8 | **"Zooming out"** | Cross-week pattern detection observations | — | ✅ |
+| 9 | **Relational beat** | (If partner in Circle + mood sharing opted in + both subscribed) Observations about how partners' weeks looked relative to each other | — | ✅ (post-MVP) |
+| 10 | **Library article link** | Contextually selected from SEO library based on this week's theme | — | ✅ |
+| 11 | **Reflective prompt** | Single open question to sit with until next week | — | ✅ |
+
+**Translation:** Free = descriptive letter. Paid = descriptive letter + prescriptive coaching layer + pattern detection + resources. These are **genuinely different artifacts**, not the same artifact split in half.
+
+### 20.5 Conversion Mechanic (Week 3+ Free Version)
+
+End of free version, from Week 3 onwards, the conversion pitch appears inline with the sign-off (not a page break):
+
+```
+— Nerin
+
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+
+I have more I want to say about
+what comes next.
+
+With a subscription, I can write
+you a fuller letter each week —
+with what to try, what patterns
+I'm seeing across weeks, and what
+I think might help in the week
+ahead.
+
+[Unlock Nerin's full weekly letter — €9.99/mo →]
+
+[Not right now]
+```
+
+**Design principles for the conversion ending (LOCKED):**
+1. Nerin's voice, not system voice — "I have more I want to say"
+2. Concretely names what's missing ("what to try, what patterns, what might help")
+3. Framed as Nerin wanting to tell the user more, not as paywall
+4. "Not right now" is soft dismiss — returns next Sunday with same framing
+5. No aggressive retention nag, no escalating prompts
+6. Conversion section flows from sign-off, NOT a separate page break into pricing
+
+**Soft dismiss:** Collapses the conversion section in place. Letter body remains visible. No retention wall, no "are you sure?" modal, no exit survey. Returns next Sunday with the same framing.
+
+**Primary CTA:** Opens Polar embedded subscription checkout (see §10.8 Journey 8 for full conversion flow).
+
+### 20.6 Three-Act Conversion Landing
+
+| Act | Week | Conversion State |
+|-----|------|------------------|
+| **Act 1 — Build the habit** | Day 0-7 | No weekly letter yet. Silent journal daily deposits. Zero subscription mention. |
+| **Act 1.5 — First Sunday** | Week 1 | First full weekly letter. Free version complete. Conversion line NOT shown (trust too thin). |
+| **Act 2 — Show the gap** | Weeks 2-3 | Weekly letter arrives with conversion line. Felt gap accumulates. Some conversion. |
+| **Act 3 — Natural unlock** | Week 3+ | Cumulative felt gap + accumulated trust = natural conversion moment. Primary conversion window. |
+
+**Why Week 3+ is the sweet spot:** Week 1 is too early (still evaluating Nerin). Week 2 is "could be a fluke" (needs one more data point). Week 3 is when habit is real, trust is earned, and the gap is felt. Beyond Week 4+ — if user hasn't converted, subsequent Sundays reset the opportunity with the same framing.
+
+**Week 1 special treatment:** The conversion line is hidden from the first weekly letter. User experiences only the descriptive letter on Week 1. Conversion line appears starting Week 2, becomes load-bearing Week 3+.
+
+### 20.7 Loading & Skeleton States
+
+| State | Display |
+|-------|---------|
+| Sunday 6pm (generation running) | User not aware — background job |
+| Sunday 7pm (delivery fires) | Notification + inline card on /today appear |
+| Reading route opened, letter not yet ready | `OceanSpinner` + Nerin-voiced line "Nerin is writing your letter..." — same visual language as `PortraitReadingView` generating state |
+| Letter ready, rendering | Letter fades in, full-screen max-width 720px |
+| Letter not generated (<3 check-ins) | Soft state: "No letter this week — Nerin needs a few deposits to write with" + link back to `/today` |
+| Letter fetch fails | Inline error: "Nerin is still writing. We'll let you know when it's ready." |
+
+**Never show a generic loading spinner** for the weekly letter. The wait is part of the emotional experience.
+
+### 20.8 Error Recovery
+
+| Failure | Recovery |
+|---------|----------|
+| LLM generation fails at Sunday 6pm | Retry up to 3 times silently. Fall back to "this week in dots" visual if persistent. Never show error to user. |
+| Push notification delivery fails | Email fallback fires. Inline card on next /today visit. |
+| User opens route before generation completes | Show `OceanSpinner` + Nerin-voiced line; poll until ready. |
+| Relational beat LLM context missing | Omit that section gracefully; rest of letter intact. |
+| Subscription conversion tap fails (Polar error) | Clear error inline; dismiss button still works; letter remains readable. |
+| User unsubscribes mid-read | Current letter remains complete for this read; next week arrives as free version. |
+
+### 20.9 Edge Cases
+
+| Case | Behavior |
+|------|----------|
+| User skipped all check-ins this week | No summary generated. No notification. No shame. |
+| User has 1-2 check-ins | Generate a short "Nerin noticed you checked in a few times" letter. Warm, no guilt. |
+| User just subscribed mid-week | Their next weekly letter is the full subscriber version (already generated alongside free at 6pm). |
+| User just cancelled mid-billing | Full version continues until end of billing period, then free version. |
+| User has no name set | Fall back to "Dear you" or omit personalized opening gracefully. |
+| User's timezone changed mid-week | Generate based on their current timezone at generation time. |
+| Generation succeeds after Sunday 6pm cutoff (late check-in) | Still generate and deliver — late is OK. |
+| User opens the route for a past week | Show that week's letter if it exists; "No letter this week" otherwise. |
+| Week 1 first letter | Conversion line hidden. Descriptive letter only. |
+
+### 20.10 Responsive Behavior
+
+| Viewport | Layout |
+|----------|--------|
+| Mobile (< 640px) | Focused reading, full viewport. Letter content at viewport width with comfortable padding. |
+| Tablet (640-1024px) | Focused reading, max-width 720px, centered, warm background. |
+| Desktop (≥ 1024px) | Focused reading, max-width 720px, centered, warm background. Same as portrait reading view. |
+
+All breakpoints hide BottomNav. Focused reading is the whole viewport.
+
+### 20.11 Data Model
+
+**New table:** `weekly_summaries`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `user_id` | uuid | FK to users |
+| `week_id` | text | ISO week identifier (e.g., "2026-W15") |
+| `week_start_date` | date | First day of the week |
+| `week_end_date` | date | Last day of the week |
+| `content_free` | text | Free version letter body (markdown) |
+| `content_subscriber` | text | Subscriber version letter body (markdown, generated alongside free) |
+| `generation_status` | enum | `pending`, `generating`, `ready`, `failed`, `skipped` |
+| `generated_at` | timestamp | When generation completed |
+| `read_at_free` | timestamp | When user first read the free version (for auto-dismiss card) |
+| `read_at_subscriber` | timestamp | When user first read the subscriber version |
+| `check_in_count` | int | Number of check-ins that week |
+| `includes_conversion_pitch` | boolean | Whether the free version included the Week 3+ conversion pitch |
+
+**Generation job:** Runs at Sunday 6pm local time per user (via per-user cron or scheduled job queue). Generates both `content_free` and `content_subscriber` in one LLM call with a tight prompt + rich user context (facets, archetype, evidence, week's check-ins, pattern signals).
+
+**New endpoints:**
+- `GET /api/today/week/$weekId` — fetch weekly letter content based on user's tier
+- `POST /api/today/week/$weekId/mark-read` — set `read_at_*` timestamp for auto-dismiss
+- `GET /api/today/week/$weekId/status` — polling endpoint for generating state
+
+### 20.12 Cost Model
+
+| Tier | Per-user weekly letter cost | Notes |
+|------|---------------------------|-------|
+| Free | ~$0.02-0.08 per week ($0.08-0.32/month) | One LLM call per week at Haiku pricing |
+| Subscriber | ~$0.08-0.20 per week ($0.32-0.80/month) | Same call produces both outputs; subscriber output is slightly richer |
+
+**NFR7a satisfied:** Free-tier total ongoing cost ~$0.02-0.08/month including daily silent journal (which is $0 — no LLM) + weekly letter. Well within the "approach $0/month" target, achieved through product design (silent daily fork), not template shortcuts.
+
+**Subscriber margin:** Gross margin at €9.99/mo is 93-97%, slightly below the original 96-98% target but healthy and with ample room for LLM cost increases.
+
+### 20.13 Implementation Notes
+
+- **LLM for everything Nerin says.** No template engine for weekly summaries. Same rule as daily check-in recognition and portrait generation.
+- **Both versions generated together.** One LLM call produces `content_free` and `content_subscriber` sections with a tight prompt. Cost is slightly higher per call but operationally simpler and enables instant mid-week subscription activation.
+- **Sunday 6pm generation is per-user, not global.** Requires timezone-aware job scheduling. Consider a worker that iterates user timezones and fires per user at their local 6pm.
+- **Push notification wiring:** Needs service worker registration + subscription storage + FCM/APNs or Web Push. Budget for setup in Phase 8.
+- **Email fallback:** Uses existing transactional email infrastructure (SendGrid / Postmark / etc). Subject line: "Your week with Nerin is ready" — same as push copy.
+- **Inline card auto-dismiss:** `WeeklyLetterCard` on /today queries `read_at_free` or `read_at_subscriber` to show "Read →" vs "Re-read →" state.
+- **No template engine.** Previously proposed template-based weekly summaries were rejected as over-engineering. Rich user context dominates LLM output.
+- **Conversion pitch visibility rule:** `includes_conversion_pitch = (week_number >= 3 AND user_tier == 'free')`. Week 1 and Week 2 free users do NOT see the conversion pitch — only the descriptive letter with sign-off.
+- **Route auth:** `/today/week/$weekId` requires authentication. Uses the same auth pattern as other three-space routes.
+- **Generating state polling:** If user opens the route before the letter is ready (rare — generation completes 1 hour before delivery), show `OceanSpinner` + Nerin-voiced line and poll `GET /api/today/week/$weekId/status` every 3-5 seconds until ready.
+- **Nerin-voice audit:** All copy in the weekly letter notification, CTA, and conversion pitch must pass the Nerin-voice review (see §11.7). One PR reviewer owns this audit.
+- **Soft dismiss behavior:** "Not right now" collapses the conversion section via CSS `max-height` + opacity transition. Letter body remains visible. User can scroll through the letter again without the conversion pitch re-appearing until next Sunday.
+
+### 20.14 Implementation Gap (Current → Target)
+
+| Area | Current | Target | Work Required |
+|------|---------|--------|---------------|
+| `weekly_summaries` table | Doesn't exist | Full schema with free + subscriber content | Migration + Drizzle schema + seed |
+| Generation job | Doesn't exist | Per-user Sunday 6pm scheduler | Build worker / scheduler, LLM prompt, rich context builder |
+| LLM prompt template | Doesn't exist | Tight prompt with facets, archetype, evidence, week's check-ins, pattern signals | Author prompt, iterate with real user data |
+| Route | Doesn't exist | `/today/week/$weekId` | New route + component composition |
+| `WeeklyLetterReadingView` component | Doesn't exist | Focused reading view, tier-aware | Build component reusing letter format primitive |
+| `WeeklyLetterCard` inline card | Doesn't exist | Top of `/today` on Sundays | Build component + auto-dismiss logic |
+| Push notification wiring | Doesn't exist | Sunday 7pm delivery with Nerin-voiced copy | Service worker + Web Push API + subscription storage |
+| Email fallback | Partial (transactional emails exist) | "Your week with Nerin is ready" | Add weekly letter email template |
+| Conversion pitch component | Doesn't exist | Inline conversion section with Polar checkout | Build component + integrate Polar embed |
+| Three-act logic | Doesn't exist | `includes_conversion_pitch` calculation | Build week-number calculator |
+| Edge case handling | Doesn't exist | Skipped weeks, 1-2 check-ins fallback, late check-ins | Build in generation job logic |
+
+---

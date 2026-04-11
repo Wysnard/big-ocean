@@ -3,10 +3,19 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-04-07'
+lastUpdated: '2026-04-11'
 lastConsolidated: '2026-04-05 — unified all satellite architecture docs into this single authoritative file'
-adrsTotal: 42
-adrsAdded: ['ADR-22 through ADR-30 (post-completion)', 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)', 'ADR-39 through ADR-42 (Post-MVP design-now-build-later: conversations table rename, agent architecture, personality context, subscription billing)']
+lastDeltaUpdate: '2026-04-11 — reconciled against PRD 2026-04-11: three-space navigation, silent daily journal, weekly letter pipeline, post-assessment focused reading, MVP subscription billing, Nerin Output Grammar, knowledge library SSR, cost ceiling. Added ADR-43 through ADR-50. Edited ADR-3/7/8/9/10/11/12/15 for PRD alignment. Superseded ADR-23 (dashboard). Global 25→15 exchange count update.'
+adrsTotal: 50
+adrsAdded:
+  - 'ADR-22 through ADR-30 (post-completion)'
+  - 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)'
+  - 'ADR-39 through ADR-42 (Post-MVP design-now-build-later: conversations table rename, agent architecture, personality context, subscription billing)'
+  - 'ADR-43 through ADR-50 (2026-04-11 PRD delta — three-space nav, silent journal, weekly letter, focused reading, MVP subscription billing, Nerin output grammar, knowledge library SSR, cost ceiling)'
+adrsSuperseded:
+  - 'ADR-5, ADR-17, ADR-18, ADR-19, ADR-21 → Director Model (ADR-30 through ADR-38)'
+  - 'ADR-23 (Dashboard/Profile Consolidation) → ADR-43 (Three-Space Navigation, 2026-04-11)'
+  - 'ADR-42 (Post-MVP Subscription Billing design-now-build-later) → PROMOTED TO MVP as ADR-47 (2026-04-11)'
 satelliteDocsConsolidated:
   - 'architecture-director-model.md → ADR-31 through ADR-38'
   - 'architecture-conversation-pacing.md → Historical Appendix A'
@@ -16,7 +25,7 @@ satelliteDocsConsolidated:
 workflowType: 'architecture'
 project_name: 'big-ocean'
 user_name: 'Vincentlay'
-date: '2026-03-15'
+date: '2026-04-11'
 ---
 
 # big-ocean System Architecture
@@ -31,7 +40,17 @@ This is a self-contained architecture document. All content from previously sepa
   - Evidence-only ConversAnalyzer → Facet-first coverage analyzer → Nerin Director → Nerin Actor
   - `coverage_targets` / `director_output` exchange persistence
 - **Platform architecture:** ADR-1 through ADR-16, ADR-22 through ADR-30
-- **Post-MVP design decisions (design now, build later):** ADR-39 through ADR-42 — conversations table rename, agent type architecture, personality context pattern, subscription billing
+- **MVP product world (added 2026-04-11 from PRD 2026-04-11 delta):** ADR-43 through ADR-50
+  - ADR-43: Three-Space Navigation (supersedes ADR-23)
+  - ADR-44: Silent Daily Journal + Mood Calendar
+  - ADR-45: Weekly Letter Pipeline
+  - ADR-46: Post-Assessment Focused Reading Transition
+  - ADR-47: MVP Subscription Billing (promotes ADR-42)
+  - ADR-48: Nerin Output Grammar (three visual registers)
+  - ADR-49: Knowledge Library SSR Architecture
+  - ADR-50: Cost Ceiling Architecture
+- **Post-MVP design decisions (design now, build later):** ADR-39 through ADR-41 — conversations table rename, agent type architecture, personality context pattern. ADR-42 promoted to ADR-47 MVP.
+- **Superseded by 2026-04-11 delta:** ADR-23 (Dashboard/Profile Consolidation) — replaced by ADR-43 (Three-Space Navigation)
 - **Historical pacing pipeline:** ADR-5, 17-19, 21 (marked `[SUPERSEDED]`) + Historical Appendix A
 - **Historical conversation evolution:** Historical Appendix B
 
@@ -46,7 +65,7 @@ Reading rule: Trust the non-superseded ADRs in this document. Superseded ADRs an
 This consolidated architecture covers the complete big-ocean system across all implemented and planned epics:
 
 #### 1. Conversational Assessment Engine (Epics 1-4, 9-11, 23, 27-29)
-- Auth-gated 25-exchange conversation with Nerin (Claude Haiku via LangChain)
+- Auth-gated 15-exchange conversation with Nerin (Claude Haiku via LangChain) — subscribers can extend with +15 exchanges (FR10, FR25)
 - Evidence-only ConversAnalyzer (Haiku, per-message, three-tier fail-open) runs BEFORE Nerin Director
 - Four-step conversation runtime: evidence extraction → coverage analysis → Nerin Director brief → Nerin Actor response
 - Coverage analyzer is facet-first, not domain-first: it returns one `primaryFacet`, three `candidateDomains`, and a phase (`opening` | `exploring` | `closing`)
@@ -68,28 +87,32 @@ This consolidated architecture covers the complete big-ocean system across all i
 - **Deferred:** Shadow scoring (topic avoidance detection), adaptive technique selection, meta-evidence from conversation dynamics
 
 #### 3. Portrait & Results (Epics 11-12)
-- Full portrait (Sonnet 4.6, async after PWYW payment, queue-based fire-once generation)
+- Full portrait (Sonnet 4.6, **free for every user**, generated on assessment completion, queue-based fire-once generation — see ADR-46 for the post-assessment focused reading transition)
   - Sources from **conversation evidence v2** (authoritative, not finalization evidence)
   - Depth-adaptive prompt (RICH/MODERATE/THIN based on evidence density, `finalWeight >= 0.36` threshold)
   - 16,000 max tokens (includes thinking + response), temperature 0.7
   - Portrait rating endpoint (`POST /portrait/rate`) for quality research
 - Archetype lookup: in-memory registry + component-based generation fallback
 - ADR-7: archetype metadata derived at read-time, not stored in DB
+- First subscriber extension automatically regenerates the portrait (bundled, ADR-11 + ADR-47). Prior portrait preserved as "previous version" via derive-at-read version detection
 
 #### 4. Monetization (Epic 13)
 - Polar.sh as merchant-of-record (EU VAT, CNIL-compliant)
-- PWYW portrait unlock (minimum €1), relationship credits (€5/single, €15/5-pack)
+- MVP subscription: €9.99/mo recurring via Polar checkout (ADR-47). Subscription unlocks conversation extension (+15 exchanges) + bundled first-extension portrait regeneration. No PWYW portrait, no relationship credits
 - Append-only purchase_events event log — capabilities derived from events
-- 8 event types covering purchases, grants, consumption, refunds
+- Subscription event types (`subscription_started`, `subscription_renewed`, `subscription_cancelled`, `subscription_expired`) now live in MVP (promoted from ADR-42)
+- Legacy PWYW/credit event types (`portrait_unlocked`, `credit_purchased`, `credit_consumed`, `free_credit_granted`) retained in the enum for historical events only — not written by new purchase flows
 
-#### 5. Relationship Analysis (Epic 14)
-- QR token model: credit-based QR code generation → scan → accept/refuse
+#### 5. Relationship Letters (Epic 14)
+- **User-facing term:** "relationship letter" (letter-format Nerin output, ADR-48). Internal data model retains `relationship_analyses` table name for code compatibility
+- QR token model: QR code generation → scan → accept/refuse
 - QR token lifecycle: generate on drawer open, 6h TTL, auto-regenerate hourly, poll every 60s, invalidate on accept
-- Cross-user data access with two-step consent chain
-- Relationship analysis: Sonnet LLM comparing both users' facet data + evidence
+- **Free and unlimited** — no credit consumption on accept (FR33). Every completed relationship letter is a zero-cost user acquisition
+- Cross-user data access with two-step consent chain; accept = ongoing consent for annual regeneration post-MVP (FR30, FR35a)
+- Relationship letter: Sonnet LLM comparing both users' facet data + evidence, letter-format prompt
 - `relationship_qr_tokens` + `relationship_analyses` tables (FKs to `assessment_results` for both users)
-- Archive model: all analyses preserved, newest primary, older marked "previous version" via derive-at-read
-- List endpoint: `GET /api/relationship/analyses` returns all analyses with version status
+- Letter History: all letters preserved as a multi-year relationship biography; MVP ships a single letter per relationship; annual regeneration post-MVP (FR35a)
+- List endpoint: `GET /api/relationship/analyses` returns all letters with version status
 
 #### 6. Growth & Protection (Epic 15)
 - Archetype card sharing (server-side Satori JSX → SVG → PNG)
@@ -101,12 +124,16 @@ This consolidated architecture covers the complete big-ocean system across all i
 | NFR | Requirement | Implementation |
 |-----|-------------|----------------|
 | Latency | Nerin response <2s P95 | Streaming remains fast, but the live path is now evidence → Director → Actor; sub-2s is a target, not a guarantee |
-| Cost | ~$0.20 per assessment (free tier) | Evidence + Director + Actor per turn; Sonnet remains optional for Director and required for paid portrait / relationship analysis |
+| Cost (per assessment) | ~€0.30 / assessment | Evidence + Director + Actor per turn; Sonnet remains optional for Director and required for portrait / relationship letter generation |
+| Cost (per portrait) | ~€0.20–0.40 | Sonnet 4.6, 16k max tokens |
+| Cost (free-tier ongoing, NFR7a) | ~$0.02–0.08 / user / month | Silent daily check-ins (ADR-44, zero LLM calls) + free weekly letter (ADR-45, ~$0.02–0.05 / user / week) |
+| Cost (subscriber ongoing, NFR7a) | ~$0.35–0.75 / subscriber / month | Conversation extension + bundled first-extension portrait regeneration. Yields 93–97% gross margin on €9.99/mo subscription |
+| Cost ceiling (NFR7b) | Circuit breaker: >3× weekly-letter cost / 24h | See ADR-50 |
 | Resilience | ConversAnalyzer non-fatal, Redis fail-open | Retry-once-then-skip, fail-open pattern |
 | Concurrency | No duplicate message processing | pg_try_advisory_lock per session |
 | Privacy | Default-private profiles, explicit sharing | RLS, URL privacy, consent chains |
 | Idempotency | Finalization safe to retry | Three-tier guards (result exists → evidence exists → full run) |
-| Async reliability | Portrait/analysis generation recoverable | Placeholder-row + lazy retry via staleness detection |
+| Async reliability | Portrait/letter generation recoverable | Placeholder-row + lazy retry via staleness detection |
 
 ### Technical Constraints & Dependencies
 
@@ -135,13 +162,15 @@ This consolidated architecture covers the complete big-ocean system across all i
 
 ### Cross-Cutting Concerns
 
-1. **Cost tracking & rate limiting** — Redis fixed-window with fail-open, advisory locks, daily budget caps
+1. **Cost tracking & rate limiting** — Redis fixed-window with fail-open, advisory locks, daily budget caps, global free-tier circuit breaker (ADR-50)
 2. **Error architecture** — Schema.TaggedError in contracts, plain Error in domain repos, propagation without remapping
-3. **Async generation pattern** — Queue-based fire-once generation for portraits (Effect Queue + worker fiber); placeholder-row + forkDaemon + lazy retry for relationship analyses
-4. **Derive-at-read** — Trait scores, OCEAN codes, archetypes, capabilities — never store what can be computed
-5. **Consent & access control** — Auth-gated conversation (email collected before first turn), session ownership verification, two-step consent for cross-user data (QR token model)
-6. **Transactional email** — Resend for drop-off re-engagement, Nerin check-in, deferred portrait recapture (3 email types, one-shot each)
-7. **LLM prompt architecture** — Five distinct agents with separate prompts, model tiers, and resilience strategies. Nerin is split into a Director (strategy) and Actor (voice). ConversAnalyzer is evidence-only and three-tier fail-open.
+3. **Async generation pattern** — Queue-based fire-once generation for portraits (Effect Queue + worker fiber, triggered on assessment completion); placeholder-row + forkDaemon + lazy retry for relationship letters; per-user cron-triggered generation for weekly letters (ADR-45)
+4. **Derive-at-read** — Trait scores, OCEAN codes, archetypes, capabilities, subscription entitlements — never store what can be computed
+5. **Consent & access control** — Auth-gated conversation (email collected before first turn), session ownership verification, two-step consent for cross-user data (QR token model), ongoing consent for relationship letter regeneration (FR30)
+6. **Transactional email** — Resend for drop-off re-engagement, Nerin check-in, subscription conversion nudge (3 email types, one-shot each) + weekly-letter push-notification email fallback (ADR-12)
+7. **LLM prompt architecture** — Five distinct agents with separate prompts, model tiers, and resilience strategies. Nerin is split into a Director (strategy) and Actor (voice). ConversAnalyzer is evidence-only and three-tier fail-open. Nerin Output Grammar governs format-specific prompt composition for chat/letter/journal registers (ADR-48).
+8. **Three-space navigation** — Today/Me/Circle as the authenticated hub-and-spoke model; `/chat` is an onboarding tunnel outside the three-space world (ADR-43). Replaces `/dashboard` (ADR-23 superseded).
+9. **Intimacy Principle** — Architectural guardrail for Circle: no count metrics, no sort/search/directory, no follower/fan semantics, no profile-view counters. See Anti-Patterns section.
 
 ## Technology Stack
 
@@ -234,10 +263,11 @@ flowchart LR
 | Nerin Director | Claude Sonnet / Haiku | Every message after evidence extraction | Reads full conversation + coverage targets and writes a creative-director brief | Fatal (mapped to `AgentInvocationError`) |
 | Nerin Actor | Haiku 4.5 | Every message after Nerin Director | Voices the brief as the user-facing Nerin response | Fatal |
 | ConversAnalyzer | Haiku 4.5 | Every user message, **before Nerin Director** (sequential, not parallel) | Evidence-only extraction — **single source of truth** for scoring, coverage, portraits, and relationship analysis | Three-tier: strict ×3 → lenient ×1 → neutral defaults |
-| Full Portrait | Sonnet 4.6 | Once after PWYW payment | Deep narrative from conversation evidence v2 | Placeholder + lazy retry |
-| Relationship Analysis | Sonnet 4.6 | Once on QR token accept | Cross-user comparison | Placeholder + lazy retry |
+| Full Portrait | Sonnet 4.6 | Once on assessment completion (free — FR21); regenerated on first subscriber conversation extension (bundled — FR23, ADR-11) | Deep narrative from conversation evidence v2 | Placeholder + lazy retry |
+| Relationship Letter | Sonnet 4.6 | Once on QR token accept (free — FR33); annual regeneration post-MVP (FR35a) | Cross-user comparison in letter format | Placeholder + lazy retry |
+| Weekly Letter | Sonnet 4.6 (free) / Sonnet 4.6 with extended prompt (subscriber) | Once per user per week on Sunday 6pm local (ADR-45) if ≥3 check-ins | Week narrative from mood + note entries + personality context | Idempotent cron, retry on failure |
 
-**Per-assessment LLM budget (free tier):** Evidence + Director + Actor on each turn. Sonnet remains optional for the Director and is always used for portraits / relationship analysis.
+**Per-assessment LLM budget:** Evidence + Director + Actor on each turn (~€0.30 per 15-exchange assessment). Sonnet remains optional for the Director and is always used for portraits / relationship letters / weekly letters.
 
 **Critical pipeline ordering change:** ConversAnalyzer runs BEFORE Nerin Director, and Nerin Director runs BEFORE Nerin Actor. There is no separate user-state extraction call. The Director reads conversational energy and pressure from the message history itself. This makes the live runtime a 3-call sequential path (evidence → Director → Actor).
 
@@ -342,7 +372,7 @@ flowchart TB
 - `computeGovernorOutput(territory, E_target, domainScores, ...)` — intent + observation gating
 - `buildSystemPrompt(governorOutput, catalog)` — 2-layer prompt composition
 
-**Cold-start (turn 1):** `cold-start-perimeter` selection from top-scored territories. **Turns 2-24:** argmax from five-term scorer. **Turn 25:** close intent (best observation wins).
+**Cold-start (turn 1):** `cold-start-perimeter` selection from top-scored territories. **Turns 2 to N-1:** argmax from five-term scorer. **Turn N (final):** close intent (best observation wins). _Note: during the pacing era N was 25; the live Director model uses N=15 (FR1)._
 
 **Full specification:** See Historical Appendix A (formerly `architecture-conversation-pacing.md`).
 
@@ -370,16 +400,16 @@ Two patterns exist for async LLM generation:
 
 **Pattern A: Queue-based fire-once (portraits)**
 
-Webhook → `Queue.offer` → worker fiber → LLM → insert portrait row on outcome.
+Trigger → `Queue.offer` → worker fiber → LLM → insert portrait row on outcome.
 
-1. **Webhook** — Polar `onOrderPaid` inserts purchase event, then offers job to `PortraitJobQueue` (Effect Queue)
+1. **Trigger** — Assessment completion (`generate-results` use-case) offers a job to `PortraitJobQueue` (Effect Queue). Subscription extension completion offers a second job with `replaces_portrait_id` metadata so the new portrait supersedes the old one as "previous version" (FR23, ADR-11).
 2. **Worker fiber** — Long-lived `Effect.forever` loop takes from queue, calls `generateFullPortrait` with `Effect.retry({ times: 2 })`, inserts portrait row with content (success) or `failedAt` (failure)
-3. **Client polls** — TanStack Query `refetchInterval` while `generating`, stops on `ready`/`failed`
-4. **Status derivation** — Read-only: `portrait?.content` → ready, `portrait?.failedAt` → failed, `purchaseEvent && !portrait` → generating, else → none
-5. **Reconciliation** — If purchase exists but no portrait row, queues a new job (covers webhook failures)
+3. **Client polls** — TanStack Query `refetchInterval` while `generating`, stops on `ready`/`failed`. The post-assessment focused-reading view (ADR-46) is the primary consumer.
+4. **Status derivation** — Read-only: `portrait?.content` → ready, `portrait?.failedAt` → failed, `assessment_result && !portrait` → generating, else → none
+5. **Reconciliation** — If the assessment result exists but no portrait row, queues a new job (covers trigger failures)
 6. **Manual retry** — Deletes failed portrait row, queues new job
 
-**Used by:** Full portrait generation.
+**Used by:** Full portrait generation (free on assessment completion; bundled regeneration on first subscriber extension).
 
 **Queue bridge:** `PortraitJobQueue` (`Context.Tag` wrapping `Queue.Queue<PortraitJob>`) is created as a Layer, shared between `BetterAuthLive` (webhook offers) and the worker fiber (takes). `Queue.offer` is self-contained and works from Promise context via `Effect.runPromise`.
 
@@ -414,43 +444,70 @@ betterAuth({
 
 **Customer sync:** `externalId = userId` — Polar customer created automatically on signup with Better Auth user ID as external identifier. Webhook receives `order.customer.externalId` to route purchases.
 
-**Webhook handler (`onOrderPaid`):** Lives inside Better Auth Polar plugin. Uses plain Drizzle (not Effect) for purchase event insert, then bridges to Effect via `PortraitJobQueue`:
-- Insert purchase event (`onConflictDoNothing` for idempotency)
-- For portrait-triggering purchases: find completed session, `Queue.offer` to `PortraitJobQueue` (bridges Promise→Effect via `Effect.runPromise(Queue.offer(...))`)
-- On first `portrait_unlocked` event: also insert `free_credit_granted` event (only if no prior `free_credit_granted` exists for this user) — this is the "PWYW >= EUR1 → free EUR5 credit" conversion nudge
+**Webhook handler (`onOrderPaid` + subscription events):** Lives inside Better Auth Polar plugin. Uses plain Drizzle (not Effect) for purchase event insert:
+- Insert purchase event (`onConflictDoNothing` for idempotency, `polar_subscription_id` UNIQUE for correlation)
+- **Subscription events (MVP, ADR-47):** `subscription_started`, `subscription_renewed`, `subscription_cancelled`, `subscription_expired` — inserted on the corresponding Polar webhook. No portrait job triggered by subscription start.
+- **First extension entitlement check:** When the user activates their first conversation extension (`activate-conversation-extension.use-case.ts`), the completion of the new extended session triggers a `Queue.offer` to `PortraitJobQueue` with `replaces_portrait_id` metadata (FR23).
 - Portrait generation runs in a background worker fiber, not from the webhook callback
 
+**Legacy PWYW/credits flow (removed in MVP):**
+- Prior versions routed `portrait_unlocked` webhooks to `Queue.offer`, granted free credits on first portrait purchase, and consumed credits on QR accept. The MVP replaces all three paths: portrait is free on completion (ADR-3 + ADR-46), relationship letters are free and unlimited (ADR-10), and subscription billing (ADR-47) is the only paid surface. Legacy event types remain in the enum for historical row reads only — no new writes.
+
 **Database hooks:**
-- `user.create.after` — accepts pending QR invitations (no credit grant — credit is granted on first portrait purchase)
+- `user.create.after` — accepts pending QR invitations (no credit consumption — relationship letters are free)
 - `session.create.after` — no longer needed for session linking (sessions always have userId)
 
 **Product mapping:** Polar product IDs (from config) → internal event types:
-- `polarProductPortraitUnlock` → `portrait_unlocked`
-- `polarProductRelationshipSingle` → `credit_purchased` (1 unit)
-- `polarProductRelationship5Pack` → `credit_purchased` (5 units)
-- `polarProductExtendedConversation` → `extended_conversation_unlocked`
+- `polarProductSubscriptionMonthly` → `subscription_started` / `subscription_renewed` / `subscription_cancelled` / `subscription_expired` (routed by event type)
+- _(Legacy, retained in config for historical correlation only — not mapped to any live checkout flow)_ `polarProductPortraitUnlock` → `portrait_unlocked`, `polarProductRelationshipSingle` → `credit_purchased`, `polarProductRelationship5Pack` → `credit_purchased`, `polarProductExtendedConversation` → `extended_conversation_unlocked`
 
 ### ADR-9: Append-Only Purchase Events
 
-**Decision:** Immutable `purchase_events` event log. Capabilities derived from events, never stored as mutable state.
+**Decision:** Immutable `purchase_events` event log. Capabilities derived from events, never stored as mutable state. Subscription status is derived at read time from the event stream (ADR-47 promotes ADR-42 to MVP).
 
-**8 event types:** `free_credit_granted`, `portrait_unlocked`, `credit_purchased`, `credit_consumed`, `extended_conversation_unlocked`, `portrait_refunded`, `credit_refunded`, `extended_conversation_refunded`
+**MVP event types (live writes):**
+- `subscription_started` — Polar `subscription.created` webhook
+- `subscription_renewed` — Polar `subscription.renewed` webhook
+- `subscription_cancelled` — Polar `subscription.cancelled` webhook (user cancelled, still active until period end)
+- `subscription_expired` — Polar `subscription.expired` webhook or cron reconciliation
 
-**Credit formula:** `available = COUNT(free_credit_granted + credit_purchased) × units - COUNT(credit_consumed)`
+**Legacy event types (retained in enum, no new writes):** `free_credit_granted`, `portrait_unlocked`, `credit_purchased`, `credit_consumed`, `extended_conversation_unlocked`, `portrait_refunded`, `credit_refunded`, `extended_conversation_refunded`. These remain in the pgEnum so historical rows (pre-MVP pilot) continue to deserialize, and their capability derivation still works if any production rows exist. No live MVP write path uses them.
 
-**Constraints:** INSERT-only, corrections via compensating events (refunds). `polar_checkout_id` UNIQUE for idempotent webhook processing.
+**Subscription entitlement (derive-at-read):**
 
-### ADR-10: QR Token Relationship Model
+```typescript
+getSubscriptionStatus(userId): "active" | "cancelled_active" | "expired" | "none"
+// cancelled_active = cancelled but still within paid period
 
-**Decision:** Replace invitation link model with QR token model. Users generate ephemeral QR codes to initiate relationship analyses.
+isEntitledTo(userId, feature: SubscriptionFeature): boolean
+// Returns true if subscription is active or cancelled_active
+
+type SubscriptionFeature =
+  | "conversation_extension"  // MVP
+  // Post-MVP Phase 1b/2a features — see ADR-47
+  | "coach_agent" | "journal_agent" | "career_agent"
+  | "daily_llm_recognition" | "mini_dialogue"
+  | "prescriptive_weekly_letter" | "portrait_gallery"
+  | "section_d_relational" | "subsequent_portrait_regen"
+```
+
+**Constraints:** INSERT-only, corrections via compensating events. `polar_checkout_id` UNIQUE for idempotent webhook processing. `polar_subscription_id` UNIQUE on subscription events for lifecycle correlation.
+
+### ADR-10: QR Token Relationship Letter Model
+
+**Updated 2026-04-11:** Relationship letters are free and unlimited (FR33). Credit consumption removed from the accept path. User-facing term is "relationship letter" (ADR-48 letter format); table and field names retain `relationship_analyses` for code compatibility. Adds Letter History versioning support (FR29, FR35) and post-MVP annual regeneration hook (FR35a).
+
+**Decision:** Replace invitation link model with QR token model. Users generate ephemeral QR codes to initiate a free relationship letter.
 
 **QR token lifecycle:**
-1. User A opens relationship drawer → `POST /api/relationship/qr/generate` creates token (6h TTL)
+1. User A opens the Circle invite ceremony drawer → `POST /api/relationship/qr/generate` creates token (6h TTL)
 2. QR code displayed in drawer, auto-regenerates hourly
 3. User A's client polls `GET /api/relationship/qr/:token/status` every 60s → `valid | accepted | expired`
 4. User B scans QR → `/relationship/qr/:token` route → auth gate + assessment completion check
-5. User B accepts (`POST /qr/:token/accept`) → consume credit, invalidate token, create analysis placeholder, fork daemon
+5. User B accepts (`POST /qr/:token/accept`) → invalidate token, create letter placeholder, fork daemon. **No credit consumption** — free for both users
 6. User B refuses (`POST /qr/:token/refuse`) → token stays valid, no notification to User A
+
+**Ongoing consent (FR30):** Accepting is a single informed-consent gate that also authorizes ongoing data sharing for annual regeneration (FR35a, post-MVP). Consent is revocable from settings — revoking stops future regeneration but does not retroactively delete existing letters. The consent record is captured on the `relationship_analyses` row at accept time (`accepted_at`, `ongoing_consent_granted_at`).
 
 **New table: `relationship_qr_tokens`:**
 
@@ -473,37 +530,47 @@ betterAuth({
 | ADD | `user_b_result_id` FK → `assessment_results` |
 | KEEP | `user_a_id`, `user_b_id` FK → `user` |
 
-**Relationship analysis archive model:** All analyses are preserved. The newest is primary; older entries are marked "previous version" via derive-at-read. Version detection: at read time, check if `assessment_results` has a newer row for either `user_a_id` or `user_b_id`. If yes, the analysis is "previous version." Same pattern as EvolutionBadge for portraits. Shared utility: `isLatestResult(resultId, userId) → boolean`.
+**Letter History model (FR29, FR35):** All relationship letters are preserved forever as a multi-year biography. MVP ships a single letter per relationship, created on QR accept. Post-MVP annual regeneration (FR35a, Year 1 Q4) adds new rows while preserving prior ones. Version detection at read time: the newest row is "this year's letter"; older rows appear in the Letter History section ordered by `generated_at` desc. The `isLatestResult(resultId, userId)` utility still drives "previous version" marking when either user re-takes the assessment via subscription extension.
 
-**New use-cases:** `generate-qr-token`, `get-qr-token-status`, `accept-qr-invitation`, `refuse-qr-invitation`, `list-relationship-analyses`
+**Relationship letter page surface** (FR29): MVP ships sections A (This Year's Letter), B (Where You Are Right Now — side-by-side real-time data, derive-at-read), C (Letter History, single entry in MVP), and D1 (user-owned shared notes). Post-MVP subscriber Section D (D2 relational observations, D3 "take care of" suggestions, D4 alignment patterns) is gated via `isEntitledTo(userId, "section_d_relational")`. Privacy contract for Section D: Nerin is the abstraction layer — raw evidence strings and note text never cross users (FR32a).
 
-**Removed:** `relationship_invitations` table, invitation endpoints, `InvitationBottomSheet` component, invitation-specific card states (`pending-sent`, `pending-received`, `declined`)
+**New use-cases:** `generate-qr-token`, `get-qr-token-status`, `accept-qr-invitation` (free), `refuse-qr-invitation`, `list-relationship-analyses`, `regenerate-relationship-letter` (post-MVP, annual)
+
+**Removed:** `relationship_invitations` table, invitation endpoints, `InvitationBottomSheet` component, invitation-specific card states (`pending-sent`, `pending-received`, `declined`), credit consumption logic
 
 ### ADR-11: Conversation Extension Model
 
-**Decision:** Conversation extension creates a new `assessment_session` row linked to the original via `parent_session_id` FK.
+**Updated 2026-04-11:** Assessment length is 15 exchanges (FR1). Extensions add +15 exchanges. First extension bundles portrait regeneration (FR23). Director re-initialization replaces pacing-era state init (Director reads history + evidence natively — the pacing pipeline is gone, ADR-35/36).
+
+**Decision:** Conversation extension creates a new `assessment_session` row linked to the original via `parent_session_id` FK (renamed to `parent_conversation_id` per ADR-39).
 
 **Schema change:** `assessment_sessions` gains `parent_session_id` (nullable FK → `assessment_sessions`).
 
 **Extension behavior:**
-- New session starts from exchange 1 (of 25) but initializes the pacing pipeline from the prior session's last user state (final exchange's smoothed energy, comfort, drain values)
-- Loads all prior evidence from the parent session for coverage computation
+- New session starts from exchange 1 (of 15), adding +15 new exchanges on top of the prior session's 15
+- **Director re-initialization (FR25):** The Director receives the prior session's full conversation history plus all prior evidence. The coverage analyzer computes `steeringSignal` over the combined evidence set so extension turns target facets that remained weak after session 1. No separate user-state init — the Director reads conversational energy and pressure natively from the message history (ADR-35, ADR-36)
 - Nerin references "themes and patterns" from prior evidence, not specific exchanges
-- On completion (exchange 25), generates a new `assessment_results` row from combined evidence of both sessions
-- Prior portrait's `assessment_result_id` points to older result → "previous version"
-- Prior relationship analyses' `user_X_result_id` points to older result → "previous version"
-- User must repurchase portrait + relationship re-analysis after extension
+- On completion (exchange 15 of the new session), generates a new `assessment_results` row from combined evidence of both sessions
+- Prior portrait's `assessment_result_id` points to older result → "previous version" (derive-at-read, FR73)
+- Prior relationship letters' `user_X_result_id` points to older result → "previous version"
+- **First extension — bundled portrait regeneration (FR23, MVP):** On completion of the first extended session per subscriber, `generate-results` triggers `Queue.offer` to `PortraitJobQueue` with `replaces_portrait_id` metadata. New portrait is generated automatically at no additional cost beyond the subscription. Prior portrait remains visible as "previous version" on the Me page.
+- **Subsequent extensions — portrait regeneration (FR23a, Post-MVP Phase 2a):** Mechanism deferred. Likely bundled per-extension or quota-based. When implemented, lives in ADR-74 (portrait gallery).
+- **Relationship letters are NOT re-generated on extension** in MVP — they remain free and the MVP ships a single letter per relationship (FR35). Prior letters become "previous version" via derive-at-read but no new letter is generated. Post-MVP annual regeneration (FR35a) is orthogonal to conversation extension.
 
-**New use-case:** `activate-conversation-extension` — verifies `extended_conversation_unlocked` purchase event, creates new session with parent link
+**New use-case:** `activate-conversation-extension` — verifies `isEntitledTo(userId, "conversation_extension")` via subscription derive-at-read (ADR-9, ADR-47), creates new session with parent link. No per-extension purchase event needed — entitlement is subscription-scoped.
 
 ### ADR-12: Email Infrastructure (Resend)
 
 **Decision:** Resend as transactional email provider with React Email for templates.
 
-**Three email types for MVP:**
+**Three transactional email types for MVP (FR76, NFR27):**
 1. **Drop-off re-engagement** — "You and Nerin were talking about [last territory]..." Sent once after session inactive for X hours. One email only, then silence.
 2. **Nerin check-in** — ~2 weeks post-assessment. References tension/theme from portrait. Nerin-voiced. One email only.
-3. **Deferred portrait recapture** — "Nerin's portrait is waiting for you." Sent to users who skipped PWYW. Sent once after X days.
+3. **Subscription conversion nudge** — Sent to engaged free users (≥3 return visits or ≥1 relationship letter) highlighting subscription value. Nerin-voiced, one email only. _Replaces the pre-MVP "deferred portrait recapture" email type which became obsolete when portraits became free (FR21)._
+
+**Weekly-letter delivery (FR89, ADR-45):** Not a one-shot transactional email. Primary delivery is push notification ("Your week with Nerin is ready"). **Email fallback:** users without push notification permission receive a weekly-letter email instead — same copy, link goes to `/today/week/$weekId`. This is a recurring delivery pathway, not a lifecycle email, and is accounted separately in free-tier cost budgets (ADR-50).
+
+**Relationship letter ready notification (FR36, NFR27):** Triggered when a relationship letter is ready (initial generation in MVP; annual regeneration post-MVP). Push first with email fallback, <5 min SLA.
 
 **Last conversation topic derivation:** No new column needed. The re-engagement email template queries the last `assessment_exchange` row's selected territory field for the session. The territory name from the catalog provides the "last conversation topic."
 
@@ -515,14 +582,18 @@ betterAuth({
 
 ### ADR-13: Portrait Reconciliation
 
-**Decision:** On status poll, if a `portrait_unlocked` purchase event exists but no portrait row exists, queue a generation job.
+**Updated 2026-04-11:** Portrait generation is no longer purchase-triggered (ADR-3, FR21 — portrait is free). Reconciliation now checks the assessment-result side: if an `assessment_results` row exists but no corresponding portrait row, queue a generation job.
 
-**Implementation:** Reconciliation logic in `reconcile-portrait-purchase.use-case.ts`, called from `getPortraitStatus` when status is "generating" (purchase exists but no portrait row):
-1. Does `portrait_unlocked` event exist for this user?
-2. Does a portrait row exist?
+**Decision:** On status poll, if an `assessment_results` row exists but no portrait row exists for that result, queue a generation job.
+
+**Implementation:** Reconciliation logic in `reconcile-portrait-generation.use-case.ts` (renamed from `reconcile-portrait-purchase.use-case.ts`), called from `getPortraitStatus` when status is "generating" (assessment result exists but no portrait row):
+1. Does an `assessment_results` row exist for this user?
+2. Does a portrait row exist with `assessment_result_id` matching the latest result?
 3. If (1) yes and (2) no → `Queue.offer` to `PortraitJobQueue`
 
-This covers the "browser closed mid-payment" or "webhook Queue.offer failed" edge case.
+This covers the "server crashed mid-generation" or "worker fiber missed the enqueue" edge case. The same pattern applies to first-extension portrait regeneration (ADR-11): if the extension finished but the new portrait row is missing, reconciliation re-queues with `replaces_portrait_id` metadata.
+
+**Historical note:** The original reconciliation watched for `portrait_unlocked` purchase events from the PWYW era. That event is now legacy (ADR-9). The reconciliation logic was rewritten but the use-case file name may still carry the old suffix until the implementation lands.
 
 ### ADR-14: Fail-Open Resilience
 
@@ -534,7 +605,7 @@ This covers the "browser closed mid-payment" or "webhook Queue.offer failed" edg
 
 **Decision:** Authentication required before the conversation starts. The `/chat` route redirects unauthenticated users to `/login?redirectTo=/chat`. Landing page (`/`) and public profiles (`/public-profile/:id`) remain fully unauthenticated.
 
-**Flow:** Landing page (unauth) → `/chat` → auth gate (redirect to login/signup) → return to `/chat` → start assessment (authenticated) → 25 messages → generate results → results page.
+**Flow:** Landing page (unauth) → `/chat` → auth gate (redirect to login/signup) → verify email (ADR-24) → return to `/chat` → start assessment (authenticated) → **15 exchanges** (FR1) → closing message + "Show me what you found →" button (FR93) → `/results/$sessionId?view=portrait` focused reading (ADR-46) → `/me` (first visit) / `/today` (subsequent visits) via three-space navigation (ADR-43).
 
 **Why:** Auth-gating before the first turn collects email upfront, enabling automated recapture for interrupted sessions (drop-off re-engagement emails). This converts the save-and-resume problem from "lost anonymous user" to "delayed user with a nudge." The UX spec explicitly chose higher upfront friction for better retention.
 
@@ -551,7 +622,7 @@ This covers the "browser closed mid-payment" or "webhook Queue.offer failed" edg
 
 **Auth middleware change:** Assessment group switches from `OptionalAuthMiddleware` to `AuthMiddleware` (or auth required on `start` endpoint at minimum).
 
-**Auth gates (from UX spec, updated per ADR-24):**
+**Auth gates (from UX spec, updated per ADR-24 and ADR-43):**
 
 | Route | Unauthenticated (incl. unverified) | Auth'd, no assessment | Auth'd, assessment complete |
 |-------|----------------|------|------|
@@ -559,10 +630,17 @@ This covers the "browser closed mid-payment" or "webhook Queue.offer failed" edg
 | `/public-profile/:id` | Full access | Full access | Full access + relationship CTA |
 | `/verify-email` | Verify-email page (post-signup) | N/A (already verified) | N/A |
 | `/chat` | → sign up | Start/resume conversation | Resume or extension CTA |
-| `/dashboard` | → sign up | Empty state or in-progress: progress bar + "Continue" CTA | Full dashboard (identity, credits, relationships) |
-| `/results` | → sign up | → `/chat` | Results page |
-| `/relationship/:id` | → sign up | → `/chat` | Analysis (if participant) |
+| `/today` | → sign up | → `/chat` | Today page (daily check-in, mood calendar, weekly letter inline card) |
+| `/me` | → sign up | → `/chat` | Me page (portrait, identity hero, radar, Public Face, subscription pitch, Circle preview) |
+| `/circle` | → sign up | → `/chat` | Circle page (people you care about, relationship letters, invite ceremony) |
+| `/results/$sessionId?view=portrait` | → sign up | → `/chat` | Portrait focused-reading view (ADR-46) |
+| `/results/$sessionId` | → sign up | → `/chat` | Full Me-page-style results surface |
+| `/today/week/$weekId` | → sign up | → `/chat` | Weekly letter focused-reading view (ADR-45, ADR-46) |
+| `/settings` | → sign up | → `/chat` | Account admin: email, password, data export, delete |
+| `/relationship/:id` | → sign up | → `/chat` | Relationship letter (if participant) |
 | QR URL | Login/sign up → return to accept screen | "Complete assessment first" | Accept screen |
+
+_`/dashboard` is removed (ADR-23 superseded by ADR-43)._
 
 **Unverified users:** Treated as unauthenticated. Better Auth's `requireEmailVerification: true` prevents session creation for unverified accounts, so route-level `beforeLoad` auth checks naturally redirect them. See ADR-24 for full details.
 
@@ -739,14 +817,15 @@ assessment_exchange (
 
 **Cross-Component Dependencies:**
 ```text
-User message → ConversAnalyzer v2 (energy+telling+evidence) → E_target → Scorer → Selector → Governor → Prompt Builder → Nerin → save exchange
-Assessment complete → compute results (derive-at-read) → redirect to results page
-Polar checkout closes → Better Auth webhook → purchase event + placeholder → forkDaemon → polling → "ready"
-First portrait purchase → onOrderPaid inserts portrait_unlocked + free_credit_granted (conditional) + Queue.offer → worker generates portrait → free relationship credit
-QR scan → accept → consume credit → placeholder row → forkDaemon → polling → both users see analysis
-User signup → Polar customer created (externalId = userId) → accepts pending QR invitations (no credit grant)
-Conversation extension purchase → new assessment_session (parent_session_id FK) → 25 exchanges → new assessment_results → prior portrait/analyses become "previous version"
-Status poll → reconcile-portrait-purchase: if portrait_unlocked event but no portrait row → Queue.offer to worker
+User message → Evidence extraction → Coverage analyzer → Nerin Director → Nerin Actor → save exchange (live runtime)
+Assessment complete (15 exchanges) → compute results (derive-at-read) → Queue.offer(PortraitJobQueue) → worker generates portrait (free, FR21) → client polls focused reading view (/results/$sessionId?view=portrait, ADR-46) → "ready"
+User signs up → email verification → Polar customer created (externalId = userId) → accepts pending QR invitations (no credit grant)
+Polar subscription checkout → Better Auth subscription webhook → insert subscription_started event (ADR-47)
+Subscriber activates conversation extension → isEntitledTo(userId, "conversation_extension") check → new assessment_session (parent_session_id FK) → 15 new exchanges → new assessment_results → [first extension only] Queue.offer(PortraitJobQueue, replaces_portrait_id=prior) → bundled portrait regen (FR23) → prior portrait/letters become "previous version"
+QR scan → accept (free, FR33) → placeholder row → forkDaemon → polling → both users see relationship letter (letter format, ADR-48)
+User submits daily check-in → zero LLM calls → save to daily_check_ins → render 7-day grid (<500ms, FR68, ADR-44)
+Sunday 6pm local (per-user cron) → if ≥3 check-ins this week → generate weekly letter → save to weekly_summaries → push notification (email fallback) → user reads at /today/week/$weekId (ADR-45, FR86-92)
+Status poll → reconcile-portrait: if assessment_results exists but no portrait row → Queue.offer to worker
 ```
 
 ## Implementation Patterns & Consistency Rules
@@ -854,13 +933,35 @@ import { describe, expect, it } from "@effect/vitest";  // AFTER vi.mock
 
 - Adding business logic in handlers
 - Remapping errors in use-cases or handlers
-- Storing derived values (trait scores, archetypes, capabilities)
+- Storing derived values (trait scores, archetypes, capabilities, subscription status)
 - Using `as any` without comment explaining why
 - Importing from `__mocks__/` paths
 - Creating centralized test layers
 - Adding `.js` extensions to imports
 - Storing archetype metadata in DB (use pure function derivation)
 - Using `facet_evidence` or `finalization_evidence` tables (deprecated — use `conversation_evidence`)
+- **Intimacy Principle anti-patterns (Circle surface, ADR-43 / Innovation #9):**
+  - Adding count metrics to Circle ("X connections", "Y relationships", follower count) — violates FR98
+  - Adding sort options, search, directory, or recommendations to Circle — organic order only (FR97)
+  - Using follower/friend/fan/network language anywhere user-facing — use "people you care about"
+  - Adding profile view counters, sign-up attribution visible to the user, or any other reach metric
+  - Rendering Circle cards as a grid of avatars instead of full-width cards with individual weight
+  - Creating a hard cap on Circle size (culture through design, not rules)
+  - Showing "streak" or "activity" metrics on Circle that would shame low-activity relationships
+- **Silent daily journal anti-patterns (ADR-44):**
+  - Making an LLM call in the free-tier daily check-in write path (FR68 requires zero LLM calls, <500ms render)
+  - Rendering a "thank you" or any Nerin recognition on free check-in submit — silent deposit only
+  - Cross-user exposure of note text (notes never cross users, FR72, FR32a)
+- **Nerin Output Grammar anti-patterns (ADR-48):**
+  - Using a template engine for any text Nerin says — LLM generation everywhere Nerin speaks (Innovation #11)
+  - Reusing the chat-format prompt for letter/journal contexts — each format has its own prompt composition
+  - Adding a new Nerin-voice surface without specifying which of the three registers it belongs to
+- **Subscription billing anti-patterns (ADR-9, ADR-47):**
+  - Creating a `subscriptions` table or any stored subscription state — always derive from `purchase_events` (source of truth)
+  - Writing new `portrait_unlocked`, `credit_purchased`, `credit_consumed`, or `free_credit_granted` events — these are legacy (MVP uses subscription events only)
+  - Gating portrait behind any paywall (FR21 — portrait is free)
+  - Consuming credits on QR accept (FR33 — relationship letters are free and unlimited)
+  - Middleware-level subscription checks — entitlement is use-case level (`isEntitledTo`)
 - **Pacing pipeline anti-patterns:**
   - Creating 0-10 or 0-100 intermediate scales (all values are [0,1] — no normalization step exists)
   - Adding coverage pressure to E_target (coverage belongs in territory policy, not user-state pacing)
@@ -967,15 +1068,31 @@ big-ocean/                                    # Monorepo root
 │       └── src/
 │           ├── router.tsx                    # TanStack Router config
 │           ├── routeTree.gen.ts              # Auto-generated route tree
-│           ├── routes/                       # File-based routing
+│           ├── routes/                       # File-based routing (ADR-43 three-space model)
 │           │   ├── __root.tsx                # Root layout
 │           │   ├── index.tsx                 # Landing page (/)
-│           │   ├── chat/index.tsx            # Conversation (/chat)
-│           │   ├── results.tsx               # Results layout (/results)
-│           │   ├── results/$assessmentSessionId.tsx  # Results detail
-│           │   ├── public-profile.$publicProfileId.tsx  # Public profiles
-│           │   ├── relationship/$analysisId.tsx  # Relationship view
-│           │   ├── relationship/qr/$token.tsx # QR accept/refuse screen
+│           │   ├── chat/index.tsx            # Assessment onboarding tunnel (/chat) — outside three-space world
+│           │   ├── today/                    # Today space (ADR-44 daily journal + ADR-45 weekly letter)
+│           │   │   ├── index.tsx             # /today — daily check-in, mood calendar, weekly letter inline card
+│           │   │   └── week.$weekId.tsx      # /today/week/$weekId — weekly letter focused reading (ADR-45)
+│           │   ├── me/
+│           │   │   └── index.tsx             # /me — persistent identity (portrait, archetype, radar, Public Face, subscription pitch, Circle preview)
+│           │   ├── circle/
+│           │   │   └── index.tsx             # /circle — people you care about (Intimacy Principle-compliant)
+│           │   ├── settings/
+│           │   │   └── index.tsx             # /settings — account admin (email, password, export, delete, consent revoke)
+│           │   ├── results.tsx               # Results layout
+│           │   ├── results/$assessmentSessionId.tsx  # Full results surface + ?view=portrait focused-reading variant (ADR-46)
+│           │   ├── public-profile.$publicProfileId.tsx  # Public profiles (unauth SSR, FR103)
+│           │   ├── relationship/$analysisId.tsx  # Relationship letter (letter format, ADR-48)
+│           │   ├── relationship/qr/$token.tsx # QR accept/refuse screen (free accept, FR33)
+│           │   ├── library/                  # Knowledge library (ADR-49, SSR, SEO-critical)
+│           │   │   ├── archetype.$slug.tsx   # 81 archetype pages
+│           │   │   ├── trait.$slug.tsx       # 5 trait explainers
+│           │   │   ├── facet.$slug.tsx       # 30 facet explainers
+│           │   │   ├── science.$slug.tsx     # 10-20 Big Five science articles
+│           │   │   └── guides.$slug.tsx      # 50-100 relationship/career guides
+│           │   ├── verify-email.tsx          # Post-signup email verification (ADR-24)
 │           │   ├── login.tsx / signup.tsx     # Auth pages
 │           │   └── 404.tsx
 │           ├── components/                   # Feature-organized components
@@ -1221,14 +1338,22 @@ big-ocean/                                    # Monorepo root
 | Frontend Domain | Route | Key Components | API Dependencies |
 |----------------|-------|----------------|-----------------|
 | Landing | `/` | HeroSection, ConversationFlow, HowItWorks, ArchetypeGalleryPreview, home/* | None (ArchetypeGallery fetches archetype data) |
-| Chat | `/chat` | TherapistChat, ChatInputBarShell, DepthMeter, EvidenceCard | assessment.*, evidence.* |
-| Results | `/results/$id` | ProfileView, TraitCard, ArchetypeCard, PersonalPortrait, ConfidenceRingCard, DetailZone | profile.results, portrait.*, evidence.* |
-| Dashboard | `/dashboard` | DashboardIdentityCard (+ public profile link), DashboardInProgressCard, DashboardRelationshipsCard, DashboardCreditsCard, DashboardEmptyState | assessment.*, profile.*, relationship.*, credits.* |
+| Chat (onboarding tunnel) | `/chat` | TherapistChat, ChatInputBarShell, DepthMeter, EvidenceCard, PostAssessmentTransitionButton ("Show me what you found →") | assessment.*, evidence.* |
+| Portrait reading (ADR-46) | `/results/$id?view=portrait` | PortraitReadingView (generating state → letter fade-in, max-width 720px, warm bg), "There's more to see →" link | portrait.status, profile.results |
+| Results (full surface) | `/results/$id` | ProfileView, TraitCard, ArchetypeCard, PersonalPortrait, ConfidenceRingCard, DetailZone, ReturnSeedCard (first-visit only, FR96) | profile.results, portrait.*, evidence.* |
+| Today (ADR-43, ADR-44, ADR-45) | `/today` | TodayPage, DailyCheckInForm (mood + note + visibility), MoodCalendar7DayGrid, WeeklyLetterAnticipationCard, WeeklyLetterReadyInlineCard, NerinDailyPrompt | daily.checkIn, daily.calendar, weekly.summary |
+| Weekly letter reading | `/today/week/$weekId` | WeeklyLetterReadingView (shares shell with PortraitReadingView), conversion CTA (Nerin-voiced) | weekly.summary |
+| Me (ADR-43) | `/me` | MePage, IdentityHero, ArchetypeCard, RadarChart, PersonalPortrait, PortraitVersionList (FR73), YourPublicFaceSection, SubscriptionPitchCard, CirclePreview, MoodCalendarFullView, GearIconLink → /settings | profile.results, portrait.status, subscription.status, circle.preview, daily.calendar |
+| Circle (ADR-43) | `/circle` | CirclePage, CirclePersonCard (full-width, no metrics), InviteCeremonyDialog, EmptyStateCard (teaches Intimacy Principle) | circle.list, relationship.qr |
+| Settings | `/settings` | SettingsPage (email, password, data export, delete, ongoing-consent revocation for relationship letters) | auth/*, profile.delete, relationship.consent |
 | Public Profile | `/public-profile.$id` | ProfileView (read-only) | profile.public |
-| Relationship | `/relationship/$id` | RelationshipCard | relationship.analysis |
-| QR Accept | `/relationship/qr/$token` | QR accept/refuse screen (archetype card, confidence rings, credit balance) | relationship.qr |
-| Auth | `/login`, `/signup` | login-form, signup-form | auth/* |
+| Relationship Letter | `/relationship/$id` | RelationshipLetterPage: Section A (This Year's Letter, letter format), Section B (Where You Are Right Now real-time), Section C (Letter History), Section D1 (shared notes), [post-MVP] Section D2-D4 (subscriber-gated) | relationship.analysis, relationship.notes |
+| QR Accept | `/relationship/qr/$token` | QR accept/refuse screen (initiator name, archetype card, confidence rings, ongoing-consent disclaimer per FR30). No credit balance (letters free) | relationship.qr |
+| Auth | `/login`, `/signup`, `/verify-email` | login-form, signup-form, verify-email page | auth/* |
+| Knowledge Library (ADR-49) | `/library/archetype/$slug`, `/library/trait/$slug`, `/library/facet/$slug`, `/library/science/$slug`, `/library/guides/$slug` | KnowledgeArticleLayout, Schema.org JSON-LD, AssessmentCTA | content.library (static generation) |
 | Sharing | (server route) | archetype-card-template (Satori JSX) | OG card generation |
+
+_`/dashboard` and the `Dashboard*Card` component family are removed (ADR-23 superseded by ADR-43)._
 
 **Data Boundaries:**
 
@@ -1300,36 +1425,48 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
    save assessment_results → redirect to results page
    ```
 
-3. **Portrait purchase flow:**
+3. **Portrait generation flow (ADR-3 free, ADR-46 focused reading):**
    ```text
-   Polar checkout → webhook → Better Auth onOrderPaid → insert purchase_event →
+   Assessment completion (15 exchanges) → generate-results use-case creates assessment_results row →
    Queue.offer(PortraitJobQueue) → worker fiber takes job →
    Sonnet 4.6 generation (retry x2) → INSERT portrait row (content on success, failedAt on failure) →
-   Client polls GET /portrait/status (read-only)
+   User navigates to /results/$sessionId?view=portrait (FR93 button) →
+   Client polls GET /portrait/status (read-only) → fade-in letter format on ready
    ```
 
-4. **Relationship flow (QR token model):**
+3a. **Subscription flow (ADR-47 MVP):**
    ```text
-   User A opens drawer → POST /qr/generate (6h TTL, auto-regenerate hourly) → display QR code →
-   User B scans → /relationship/qr/:token route → auth gate + assessment check →
-   POST /qr/:token/accept (consume credit, invalidate token) →
-   placeholder + forkDaemon → Sonnet comparison → both users see analysis
+   User taps "Subscribe" on /me → Polar embedded checkout (€9.99/mo) →
+   Better Auth Polar plugin receives subscription.created webhook →
+   insert subscription_started purchase_event → isEntitledTo flips for user →
+   Feature surfaces unlocked: conversation_extension (+15 exchanges, FR10)
+   ```
+
+4. **Relationship letter flow (QR token model, free — ADR-10 updated 2026-04-11):**
+   ```text
+   User A opens invite ceremony dialog on /circle → POST /qr/generate (6h TTL, auto-regenerate hourly) → display QR code →
+   User B scans → /relationship/qr/:token route → auth gate + assessment check + ongoing-consent disclaimer (FR30) →
+   POST /qr/:token/accept (NO credit consumption — free, FR33) → invalidate token →
+   placeholder row + forkDaemon → Sonnet letter-format generation (ADR-48) → both users see relationship letter
    Polling: GET /qr/:token/status every 60s → valid | accepted | expired
    ```
 
-5. **Conversation extension flow:**
+5. **Conversation extension flow (MVP — subscription, ADR-11 + ADR-47):**
    ```text
-   Purchase extended_conversation_unlocked → activate-conversation-extension use-case →
+   Subscriber taps "Extend conversation" → activate-conversation-extension use-case →
+   isEntitledTo(userId, "conversation_extension") check passes (ADR-9 derive-at-read) →
    new assessment_session (parent_session_id = prior session) →
-   Director model starts a new 25-exchange session with prior messages/evidence visible for continuity →
-   25 new exchanges → new assessment_results row →
-   prior portrait + relationship analyses become "previous version" (derive-at-read FK comparison)
+   Director model starts a new 15-exchange session with prior messages + evidence visible for continuity →
+   15 new exchanges → new assessment_results row →
+   FIRST extension: Queue.offer(PortraitJobQueue, replaces_portrait_id=prior) → bundled portrait regen (FR23) →
+   prior portrait + relationship letters become "previous version" (derive-at-read FK comparison)
    ```
 
-6. **Portrait reconciliation flow:**
+6. **Portrait reconciliation flow (ADR-13, updated 2026-04-11):**
    ```text
-   Status poll with userId → get-portrait-status checks portrait_unlocked event exists but no portrait row →
+   Status poll with userId → get-portrait-status checks assessment_results row exists but no portrait row →
    Queue.offer(PortraitJobQueue) → worker fiber generates → polling picks up
+   (Same path applies to first-extension regeneration: if extension session completed but new portrait row missing → re-queue with replaces_portrait_id)
    ```
 
 ### File Organization Patterns
@@ -1745,9 +1882,11 @@ New CSS rules in `packages/ui/src/styles/globals.css`:
 - **Never use raw `string` for trait/letter props** — always use `TraitLevel` or `TraitName` const unions
 - **Never duplicate the hieroglyph SVG data** — single source of truth in `OCEAN_HIEROGLYPHS`
 
-### ADR-23: Dashboard/Profile Consolidation
+### ADR-23: Dashboard/Profile Consolidation `[SUPERSEDED by ADR-43 — Three-Space Navigation]`
 
-**Decision:** Merge the `/profile` route into `/dashboard` and delete `/profile` entirely. The dashboard becomes the single authenticated home surface.
+> **Note (2026-04-11):** This ADR described the pre-three-space pivot where `/dashboard` absorbed `/profile`. PRD FR19 / FR101–FR103 remove `/dashboard` entirely in favor of the Today/Me/Circle model. Dashboard components (`DashboardIdentityCard`, `DashboardInProgressCard`, `DashboardRelationshipsCard`, `DashboardCreditsCard`, `DashboardEmptyState`) are deleted. The in-progress assessment card and identity card are re-homed on `/me` under the Me page architecture. Credits card is deleted entirely (free portrait + free relationship letters = no credit surface). This ADR is retained for design lineage. See ADR-43 for the live navigation model.
+
+**Decision (superseded):** Merge the `/profile` route into `/dashboard` and delete `/profile` entirely. The dashboard becomes the single authenticated home surface.
 
 **What changes:**
 - `/profile` route deleted — all user-facing state (identity, in-progress assessment, relationships, credits) lives on `/dashboard`
@@ -1817,7 +1956,7 @@ emailVerification: {
 | Route | Unverified behavior |
 |-------|-------------------|
 | `/verify-email` | Verify-email page: "Check your inbox" message + resend button |
-| `/dashboard`, `/chat`, `/results`, `/relationship/:id` | Redirect to `/verify-email` (unverified = unauthenticated, Better Auth returns no session) |
+| `/today`, `/me`, `/circle`, `/settings`, `/chat`, `/results`, `/relationship/:id` | Redirect to `/verify-email` (unverified = unauthenticated, Better Auth returns no session). Per ADR-43, `/dashboard` no longer exists. |
 | `/`, `/public-profile/:id` | Accessible (no auth required) |
 | `/login` (unverified user logs in) | Better Auth returns 403 + auto-resends verification email (`sendOnSignIn: true`). Login form catches 403 and redirects to `/verify-email` |
 
@@ -2720,9 +2859,9 @@ getEvidenceByDomain(userId, domain): Evidence[] // e.g., "work", "relationships"
 
 **What's shared:** Data access (repositories, derive-at-read). **What's not shared:** Data interpretation, formatting, prompt construction.
 
-### ADR-42: Subscription Billing — Extend Purchase Events with Recurring Types
+### ADR-42: Subscription Billing — Extend Purchase Events with Recurring Types `[PROMOTED TO MVP as ADR-47 — 2026-04-11]`
 
-_Added 2026-04-07. Source: innovation-strategy-2026-04-06.md._
+_Added 2026-04-07. Source: innovation-strategy-2026-04-06.md. **Promoted 2026-04-11:** PRD 2026-04-11 pulled subscription into MVP scope; the full live decision is in ADR-47. This ADR is retained for design lineage — it documents the "design now, build later" design thinking that became the MVP architecture._
 
 **Decision:** Extend the existing `purchase_events` append-only log with subscription event types. Subscription status derived at read time from events. No new tables.
 
@@ -2757,11 +2896,418 @@ type SubscriptionFeature =
   | "complete_portrait"
 ```
 
-**Feature gating:** Use-case level, not middleware. Each agent use-case checks `isEntitledTo` before creating a conversation. Consistent with how PWYW check works today.
+**Feature gating:** Use-case level, not middleware. Each agent use-case checks `isEntitledTo` before creating a conversation. Consistent with how subscription entitlement works in MVP (ADR-47).
 
 **No new tables.** Subscription state derived from `purchase_events`. `polar_subscription_id` on events enables correlation across the subscription lifecycle.
 
 **Performance note:** If read performance degrades with event volume, add a materialized view — not a separate table. The event log remains the source of truth.
+
+---
+
+## MVP-Added Architecture Decisions (ADR-43 through ADR-50)
+
+_Added 2026-04-11. Source: PRD revision 2026-04-11 (design-thinking 2026-04-09 absorbed). These ADRs cover the three-space product world, silent daily journal, weekly letter pipeline, post-assessment focused-reading transition, MVP subscription billing, Nerin Output Grammar, knowledge library, and cost-ceiling architecture. Together with edits to ADR-3, 7, 8, 9, 10, 11, 12, 15, and the supersession of ADR-23, these align the architecture with FR1–FR103 and NFR7a/NFR7b._
+
+### ADR-43: Three-Space Navigation Model
+
+**Supersedes:** ADR-23 (Dashboard/Profile Consolidation).
+**Source:** PRD FR19, FR101, FR102, FR103, Innovation #10.
+
+**Decision:** The authenticated product is organized around three spaces — **Today** (ephemeral daily companion), **Me** (persistent identity), and **Circle** (people you care about) — plus a thin `/settings` route for account admin. `/dashboard` and all `Dashboard*Card` components are deleted. `/chat` is an onboarding tunnel outside the three-space world.
+
+**Routing contract:**
+
+| Route | Purpose | Landing rule |
+|-------|---------|--------------|
+| `/today` | Daily companion — silent check-in (ADR-44), 7-day mood grid, weekly-letter inline card (ADR-45) | Default landing after first post-assessment visit |
+| `/me` | Persistent identity — portrait, identity hero, radar, scores, Public Face control, subscription pitch, Circle preview, mood calendar, portrait versions (FR73) | Landing for the **first** post-assessment visit (portrait reveal) |
+| `/circle` | People you care about — relationship letters, invite ceremony. Intimacy Principle enforced | On-demand |
+| `/settings` | Account admin — email, password, data export, delete, ongoing-consent revocation. Accessed via gear icon on `/me` | On-demand |
+| `/chat` | Onboarding tunnel — pre-assessment, 15-exchange conversation, resume, extension entry. NOT part of the three-space bottom nav | On-demand (post-signup + verification redirect) |
+| `/results/$sessionId?view=portrait` | Focused portrait reading (ADR-46) | Redirect from `/chat` post-assessment (FR93) |
+| `/results/$sessionId` | Full results surface (used as an alternative Me-page view) | Landed from focused-reading "There's more to see →" link (FR95) |
+| `/today/week/$weekId` | Weekly letter focused reading (ADR-45, ADR-46) | From push notification / inline card tap |
+
+**Landing logic (TanStack Router `beforeLoad`):**
+
+```text
+beforeLoad on authenticated root:
+  if !session → /login?redirectTo=...
+  if !emailVerified → /verify-email
+  if !hasCompletedAssessment → /chat
+  if firstVisitPostAssessment(user) → /me  (portrait reveal, FR93-96)
+  else → /today                            (subsequent visits)
+```
+
+`firstVisitPostAssessment` is derived at read time from the presence of any `user_visit_log` row after the assessment completion timestamp (or any bearer of "first visit" state stored on the user row — implementation choice). No new route table.
+
+**Deleted components:** `DashboardIdentityCard`, `DashboardInProgressCard`, `DashboardRelationshipsCard`, `DashboardCreditsCard`, `DashboardEmptyState`, `DashboardPortraitCard`, `use-profile.ts` hook (if it had been revived for dashboard).
+
+**Re-homed components:** The in-progress assessment card from `/dashboard` moves to `/me` as an "Assessment In Progress" card state when the user lands on `/me` before completing the assessment (edge case: they abandoned mid-conversation and return via `/me`). Identity card content (archetype + OCEAN code + public profile link) is absorbed into the Me page IdentityHero component.
+
+**New components:** `TodayPage`, `MePage`, `CirclePage`, `SettingsPage`, `PortraitVersionList` (FR73), `YourPublicFaceSection`, `SubscriptionPitchCard`, `CirclePreview`, `CirclePersonCard` (full-width, no metrics — FR97), `InviteCeremonyDialog` (FR99), `DailyCheckInForm` (ADR-44), `MoodCalendar7DayGrid`, `MoodCalendarFullView` (FR70), `WeeklyLetterAnticipationCard`, `WeeklyLetterReadyInlineCard`, `WeeklyLetterReadingView` (ADR-45), `PortraitReadingView` (ADR-46), `PostAssessmentTransitionButton` (FR93), `ReturnSeedCard` (FR96).
+
+**Why:** Linear "home → chat → results → done" creates post-assessment churn. A hub-and-spoke model with three distinct return reasons creates a habit loop. See Innovation #10 in the PRD for the full bet.
+
+**Intimacy Principle enforcement (Circle only — Innovation #9, FR97, FR98):** See Anti-Patterns. Brief: no count metrics, no sort/search/directory, no follower language, no profile-view counters, full-width cards only, organic order only. This is an architectural guardrail, not just a UX note — any code that tries to render a "X connections" badge is a regression.
+
+### ADR-44: Silent Daily Journal + Mood Calendar
+
+**Source:** PRD FR67–FR72, NFR7a (free-tier silent daily).
+
+**Decision:** Daily check-ins are a **silent journal** in MVP: mood + optional note + visibility selector, stored with zero LLM calls, rendered as a journal view within 500ms. Post-MVP subscriber features (daily LLM recognition FR69, mini-dialogue FR69a) plug into this surface without changing the write path.
+
+**Invariants:**
+1. **Zero LLM calls on write.** The daily check-in write path does not call any LLM repository. This is an architectural invariant — `vi.mock` any LLM repo in the check-in tests and the tests must still pass.
+2. **<500ms render.** The full Today page (form + 7-day grid + anticipation line) must render within 500ms on the first paint after submit.
+3. **Notes never cross users.** Note text is stored per user and is never embedded in any cross-user payload — not in relationship letters (Section D1 shared notes are a separate user-authored artifact, not check-in notes), not in Section D2-D4 (post-MVP, abstracted through Nerin — FR32a), not in weekly-letter cross-user beats.
+
+**Data model:**
+
+```sql
+CREATE TYPE daily_check_in_visibility AS ENUM ('private', 'inner_circle', 'public_pulse');
+CREATE TYPE daily_check_in_mood AS ENUM ('struggling', 'low', 'neutral', 'good', 'great');
+
+CREATE TABLE daily_check_ins (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          uuid NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  local_date       date NOT NULL,       -- user's local date (per timezone)
+  mood             daily_check_in_mood NOT NULL,
+  note             text,                -- optional, max 2000 chars
+  visibility       daily_check_in_visibility NOT NULL DEFAULT 'private',
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, local_date)          -- one check-in per user per local day
+);
+CREATE INDEX daily_check_ins_user_created_idx ON daily_check_ins (user_id, created_at DESC);
+```
+
+- `local_date` is stored pre-computed at write time (server reads user timezone from profile) so the weekly-letter cron (ADR-45) can filter by calendar week cheaply.
+- `UNIQUE (user_id, local_date)` — one check-in per day. Re-submission updates the existing row (upsert).
+- `visibility` is enforced at read time per FR71/FR72: `public_pulse` is post-MVP and hidden in MVP queries.
+
+**Repository contract:**
+
+```typescript
+interface DailyCheckInRepository {
+  upsert(input: {
+    userId: UserId
+    localDate: LocalDate
+    mood: Mood
+    note?: string
+    visibility: Visibility
+  }): Effect.Effect<DailyCheckIn, DailyCheckInRepoError>
+
+  listForWeek(userId: UserId, weekStartLocal: LocalDate): Effect.Effect<DailyCheckIn[], DailyCheckInRepoError>
+
+  listForMonth(userId: UserId, monthStartLocal: LocalDate): Effect.Effect<DailyCheckIn[], DailyCheckInRepoError>
+}
+```
+
+**Use-cases:** `submit-daily-check-in.use-case.ts` (zero LLM), `get-today-page.use-case.ts` (returns latest check-in + 7-day grid + weekly anticipation state), `get-mood-calendar.use-case.ts`.
+
+**Post-MVP subscriber features (ADR-47 entitlement-gated):**
+- **FR69 daily recognition:** A separate `generate-daily-recognition.use-case.ts` runs post-write (fire-and-forget via `forkDaemon`), calls a tight Haiku prompt with the user's top-3 facets + note + pattern signals (streak, silence break), writes to a `daily_recognitions` table. Not in MVP.
+- **FR69a mini-dialogue:** Opens a scoped 3-5 exchange conversation with `conversation_type = 'journal'` (ADR-39 metadata pattern), uses Journal agent (ADR-40). Not in MVP.
+
+**Frontend rendering (FR68):** Submit → local optimistic update → server upsert → grid re-render from local state. No round-trip for the anticipation card state. The <500ms acceptance criterion is satisfied by treating the submit as a client-side state change with background persistence.
+
+### ADR-45: Weekly Letter Pipeline
+
+**Source:** PRD FR86–FR92, FR89 (push+email), FR90 (route), NFR7a cost envelope.
+
+**Decision:** The weekly letter is a per-user, per-week LLM-generated letter triggered by a timezone-aware cron. It is free for all users (MVP), gated by a ≥3 check-ins/week threshold, delivered via push notification with email fallback, and read at `/today/week/$weekId` in the same reading-view shell as the portrait focused-reading view (ADR-46).
+
+**Data model:**
+
+```sql
+CREATE TABLE weekly_summaries (
+  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id            uuid NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  week_id            text NOT NULL,         -- ISO week in user local tz, e.g. "2026-W15"
+  week_start_local   date NOT NULL,
+  week_end_local     date NOT NULL,
+  content            text,                  -- LLM-generated letter body; NULL while generating
+  generated_at       timestamptz,
+  failed_at          timestamptz,
+  llm_cost_cents     integer,
+  UNIQUE (user_id, week_id)                 -- idempotent per user+week
+);
+CREATE INDEX weekly_summaries_user_week_idx ON weekly_summaries (user_id, week_start_local DESC);
+```
+
+**Scheduling:**
+- **Cron:** A single system cron fires every 15 minutes (or hourly, tuned per cost budget). It queries users whose local time is between 18:00 and 18:15 on Sunday in their timezone and who have not yet received a weekly letter for the current `week_id`.
+- **Per-user timezone:** User's timezone is read from their profile (captured on signup/first assessment). Default to UTC if missing.
+- **Gate:** Count `daily_check_ins` where `local_date` falls in `week_start_local..week_end_local`. Skip if count < 3 (FR86 — no summary, no notification, no shame messaging).
+- **Idempotency:** `UNIQUE (user_id, week_id)` ensures double-cron runs don't duplicate. The generation worker uses `INSERT ... ON CONFLICT DO NOTHING RETURNING *` to claim the slot atomically before calling the LLM.
+- **Backfill:** On cron miss (downtime, deploy gap), the next cron tick picks up any users whose Sunday 18:00 has passed but have no row for the current week. No retroactive generation beyond the current week.
+
+**Generation:**
+- **LLM call:** Sonnet 4.6 with the letter-format prompt (ADR-48). Input: user's facets, traits, archetype, top evidence strings, week's check-ins (mood + note + dates), and persona context.
+- **Prompt variants (FR87 vs FR88):** MVP ships **only the free prompt**. The subscriber prescriptive version (FR88) is post-MVP Phase 1b and uses the same LLM call with additional prompt sections — not a separate call. Entitlement gate: `isEntitledTo(userId, "prescriptive_weekly_letter")` selects the prompt variant.
+- **Cost envelope (NFR7a):** ~$0.02–0.05 per user per week. This is the only LLM touchpoint in the free-tier weekly loop; combined with silent daily check-ins (ADR-44) it keeps free-tier ongoing cost at ~$0.02–0.08/user/month.
+
+**Delivery (FR89):**
+- **Primary:** Push notification via web push (service worker) with copy "Your week with Nerin is ready." Deep-links to `/today/week/$weekId`.
+- **Fallback:** Users without push permission receive an email (ADR-12). Same copy and link.
+- **Inline card:** On Sunday once the letter is ready, the Today page anticipation card (FR68a) is replaced by a "Your week with Nerin is ready" inline card that links to the reading view.
+
+**Reading view (FR90):** `/today/week/$weekId` uses `WeeklyLetterReadingView`, which shares component structure with `PortraitReadingView` (ADR-46) — same letter-format shell (max-width 720px, warm background, focused reading). Ends with the conversion CTA (FR91, Nerin-voiced).
+
+**Edge cases (FR92):** (a) <3 check-ins → no summary, no notification; (b) user subscribed mid-week → next Sunday gets the full subscriber version; (c) user cancelled → subscriber version continues until end of billing period, then free version.
+
+**Implementation location:**
+- `packages/domain/src/repositories/weekly-summary.repository.ts`
+- `packages/infrastructure/src/repositories/weekly-summary.drizzle.repository.ts`
+- `apps/api/src/use-cases/generate-weekly-summary.use-case.ts`
+- `apps/api/src/use-cases/run-weekly-summary-cron.use-case.ts` — invoked by cron runner
+- `packages/domain/src/constants/nerin-weekly-letter-prompt.ts` — letter-format prompt (ADR-48)
+
+**Cron runner:** Railway cron or in-process Effect fiber schedule. Decision deferred to implementation, but the use-case is cron-runner-agnostic — it accepts a "now" parameter for testability.
+
+### ADR-46: Post-Assessment Focused Reading Transition
+
+**Source:** PRD FR93, FR94, FR95, FR96, FR21 (free portrait).
+
+**Decision:** On assessment completion, `/chat` ends with Nerin's closing exchange and a single `"Show me what you found →"` button that navigates to `/results/$sessionId?view=portrait`. The portrait reading view handles a generating state with a centered OceanSpinner, then fades in the letter when ready. The full results surface (`/results/$sessionId` without query param) is reached via a "There's more to see →" link at the bottom. First Me page visit displays a return seed and notification permission moment in Nerin's voice.
+
+**Route variants:**
+
+| Route | View | When |
+|-------|------|------|
+| `/results/$sessionId?view=portrait` | `PortraitReadingView` — generating state or letter-format fade-in, max-width 720px, warm background, distraction-free | Post-assessment transition (FR93), portrait re-read from Me page |
+| `/results/$sessionId` | Full `ProfileView` — inline portrait, identity hero, radar, facet scores, Public Face section, subscription pitch | Reached from focused reading "There's more to see →" (FR95), or direct link |
+
+**Generating state contract:**
+
+```typescript
+// PortraitReadingView state machine
+type PortraitReadingState =
+  | { status: "generating"; copy: "Nerin is writing your letter..." }
+  | { status: "ready"; content: string }
+  | { status: "failed"; retryAction: () => void }
+```
+
+- The generating state shows only the OceanSpinner + the single Nerin-voiced line. No header, no navigation chrome, no progress percentage.
+- The transition to `ready` is a fade-in animation on the letter content — not an instant replacement.
+- The component polls `GET /portrait/status` using TanStack Query `refetchInterval` (ADR-7 Pattern A).
+- The shared reading shell is reused by `WeeklyLetterReadingView` (ADR-45) — same 720px max width, warm background, letter format.
+
+**Return seed (FR96):** On the first `/me` visit (derived from a `first_me_visit_at` timestamp on the user row or a `user_visit_log` entry), render a `ReturnSeedCard` at the bottom of the Me page with:
+1. Nerin-voiced copy: *"Tomorrow, I'll ask how you're doing. Come check in with me."*
+2. A Nerin-voiced notification permission request: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* — NOT a system "Enable notifications" prompt.
+3. On grant: schedule the first daily prompt notification for the next day at a profile-appropriate time (high-C morning, high-O afternoon — one default, user can change later in settings).
+4. On deny: the relationship still works, the user opens the app themselves, no lock-in.
+
+**Implementation location:**
+- `apps/front/src/routes/results/$assessmentSessionId.tsx` — handles both `?view=portrait` and the full view
+- `apps/front/src/components/portrait/PortraitReadingView.tsx`
+- `apps/front/src/components/weekly/WeeklyLetterReadingView.tsx` (shares shell)
+- `apps/front/src/components/me/ReturnSeedCard.tsx`
+- `apps/front/src/components/chat/PostAssessmentTransitionButton.tsx`
+
+### ADR-47: MVP Subscription Billing (Promotes ADR-42)
+
+**Source:** PRD FR10, FR21, FR23, FR25, FR47, FR49, FR101. **Promotes** ADR-42 (Post-MVP) to MVP scope.
+
+**Decision:** A €9.99/mo recurring Polar subscription is the only paid surface in MVP. The subscription unlocks exactly two perks: **conversation extension (+15 exchanges)** and **bundled first-extension portrait regeneration**. All other AI intelligence (portrait, weekly letter, relationship letter) is free. Subscription events (`subscription_started`, `subscription_renewed`, `subscription_cancelled`, `subscription_expired`) are written live to `purchase_events` (ADR-9). Subscription status and feature entitlement are derived at read time — no `subscriptions` table.
+
+**Polar product configuration:**
+- Single recurring product `polarProductSubscriptionMonthly` at €9.99/mo
+- Better Auth Polar plugin subscribes to `subscription.created`, `subscription.updated`, `subscription.cancelled`, `subscription.expired` webhooks
+- Each webhook inserts the corresponding purchase event via the existing plain-Drizzle path (ADR-8)
+
+**MVP entitlement map:**
+
+```typescript
+type SubscriptionFeature =
+  | "conversation_extension"        // MVP — FR10, FR25
+
+  // Post-MVP Phase 1b (subscription-gated features)
+  | "daily_llm_recognition"         // FR69
+  | "mini_dialogue"                 // FR69a
+  | "prescriptive_weekly_letter"    // FR88
+  | "confidence_milestones"         // FR75
+  | "section_d_relational"          // FR32a
+
+  // Post-MVP Phase 2a
+  | "portrait_gallery"              // FR74
+  | "subsequent_portrait_regen"     // FR23a
+  | "coach_agent" | "journal_agent" | "career_agent"  // ADR-40
+```
+
+**Entitlement check (derive-at-read):**
+
+```typescript
+// packages/domain/src/utils/subscription-entitlement.ts
+export const isEntitledTo = (events: PurchaseEvent[], feature: SubscriptionFeature): boolean => {
+  const status = getSubscriptionStatus(events)
+  if (status === "active" || status === "cancelled_active") return true
+  return false
+}
+
+export const getSubscriptionStatus = (events: PurchaseEvent[]): SubscriptionStatus => {
+  // Walk subscription events for the latest polar_subscription_id
+  // Return "active" | "cancelled_active" | "expired" | "none"
+}
+```
+
+Both are pure functions over the event stream. No DB state. Consistent with ADR-6 derive-at-read.
+
+**Feature gating:** Use-case level, never middleware. Each use-case that requires entitlement calls `isEntitledTo` at the start:
+
+```typescript
+// activate-conversation-extension.use-case.ts
+export const activateConversationExtension = (input) =>
+  Effect.gen(function* () {
+    const eventsRepo = yield* PurchaseEventRepository
+    const events = yield* eventsRepo.findByUserId(input.userId)
+    if (!isEntitledTo(events, "conversation_extension")) {
+      return yield* Effect.fail(new SubscriptionRequired({ feature: "conversation_extension" }))
+    }
+    // ... proceed to create new session
+  })
+```
+
+**Bundled first-extension portrait regeneration (FR23):** On completion of the first extended session per subscriber, `generate-results` detects `isFirstExtensionForSubscriber(userId)` (pure function over prior results + events) and triggers `Queue.offer(PortraitJobQueue, { replaces_portrait_id: priorPortraitId })`. The worker writes the new portrait with the new assessment_result_id; derive-at-read marks the prior portrait as "previous version."
+
+**Cancellation UX (FR47):** Self-service cancellation via Better Auth Polar plugin's customer portal. Cancellation sets `subscription_cancelled` event but keeps entitlement until the billing period end (`cancelled_active` state). On period end, `subscription_expired` event fires and entitlement flips to `none`.
+
+**What stays unchanged from ADR-42:** The design of event types, polar_subscription_id correlation, materialized-view performance note. The only change is timing — ADR-42 said "design now, build later"; ADR-47 says "build now, MVP."
+
+**Error type:** `SubscriptionRequired` added to `contracts/src/errors.ts` as `Schema.TaggedError`. Frontend catches this and surfaces the subscription pitch (Me page `/me` subscription section).
+
+### ADR-48: Nerin Output Grammar — Three Visual Registers
+
+**Source:** PRD Innovation #11, FR87 letter format, FR68 journal format, FR69a chat format, NFR7a cost framing ("LLM-everywhere-Nerin-speaks, no template engine").
+
+**Decision:** Nerin's voice uses three distinct visual registers — **chat**, **letter**, **journal** — each with its own prompt composition and rendering shell. Every surface where Nerin speaks uses LLM generation with rich user context (facets, archetype, evidence, pattern signals). No template engine is used for Nerin's voice. Templates are reserved for notification copy, UI labels, system messages, and email subject lines.
+
+**Three registers:**
+
+| Register | Surface | Prompt composition | Visual shell |
+|---|---|---|---|
+| **Chat** | `/chat` assessment conversation (ADR-31 Director + ADR-33 Actor), `/chat` post-MVP "Tell me more →" mini-dialogue (FR69a) | Director brief → Actor with `NERIN_PERSONA + ACTOR_VOICE_RULES + ACTOR_BRIEF_FRAMING` | `ChatConversation` / `MessageBubble` |
+| **Letter** | Portrait (ADR-46), weekly letter (ADR-45), annual relationship letter (ADR-10 / FR35a) | `NERIN_PERSONA + {context}` where `{context}` = `PORTRAIT_CONTEXT` / `WEEKLY_LETTER_CONTEXT` / `RELATIONSHIP_LETTER_CONTEXT` | `PortraitReadingView` / `WeeklyLetterReadingView` / `RelationshipLetterPage` — shared shell (max-width 720px, warm background, focused reading) |
+| **Journal** | Today page daily recognition (post-MVP, FR69) | `NERIN_PERSONA + JOURNAL_RECOGNITION_CONTEXT` (short, 2-3 sentences, pattern-signal-aware) | Inline journal card on `/today` |
+
+**Format-specific prompt composition rules:**
+
+1. **`NERIN_PERSONA` is shared.** All three registers import the same persona module (`packages/domain/src/constants/nerin-persona.ts`). This is Nerin's character.
+2. **Format suffix is unique per register.** Each register composes a different `{format-context}` module appended after `NERIN_PERSONA`. The format-context module teaches the LLM the output shape (letter vs chat vs short recognition), the voice rhythm for that register, and the anti-patterns specific to it (a letter never asks a follow-up question; a chat response never addresses "Dear [name]").
+3. **No cross-register reuse of output.** A portrait letter cannot be reused as a chat message. A journal recognition cannot become a weekly letter fragment. Each surface generates its own output.
+4. **Templates live outside Nerin's voice.** Push notification copy ("Your week with Nerin is ready") is a template. Email subject lines are templates. Button labels are templates. Anything Nerin says is generated by an LLM call.
+
+**Cost justification (NFR7a):** The "LLM-everywhere-Nerin-speaks" rule is the product design lever that enables 93–97% subscriber margins. Because daily check-ins are silent (ADR-44), the only ongoing LLM spend is the weekly letter, which is a single rich-context call per user per week. Scaling Nerin voice to more surfaces stays cheap as long as surface cadence is weekly or less.
+
+**File map:**
+
+```
+packages/domain/src/constants/
+  nerin-persona.ts                      # Shared persona (all registers)
+  nerin-actor-prompt.ts                 # Chat register (ADR-33)
+  nerin-director-prompt.ts              # Chat register — Director (ADR-31)
+  nerin-director-closing-prompt.ts      # Chat register — closing variant
+  nerin-portrait-context.ts             # Letter register — portrait
+  nerin-weekly-letter-prompt.ts         # Letter register — weekly letter (NEW, ADR-45)
+  nerin-relationship-letter-prompt.ts   # Letter register — relationship letter (NEW, ADR-10 rename)
+  nerin-journal-recognition-prompt.ts   # Journal register — post-MVP daily recognition
+```
+
+**Anti-patterns (already listed in main Anti-Patterns section):** template engine for Nerin's voice, cross-register prompt reuse, new Nerin surface without declaring a register.
+
+### ADR-49: Knowledge Library SSR Architecture
+
+**Source:** PRD FR78–FR83, NFR26 (SEO), Homepage/Acquisition Strategy.
+
+**Decision:** The knowledge library is a server-rendered set of content pages organized in four tiers — archetype definitions (81), trait/facet explainers (35), Big Five science (10–20), relationship/career guides (50–100). Content is authored as MDX in the repo, rendered via TanStack Start SSR with Schema.org structured data, and deployed with the app. Each page includes a single CTA to the free assessment.
+
+**Route tree:**
+
+```
+/library                          # Index page (all tiers)
+/library/archetype/$slug          # 81 archetype definition pages (FR79)
+/library/trait/$slug              # 5 trait explainers (FR80)
+/library/facet/$slug              # 30 facet explainers (FR80)
+/library/science/$slug            # 10-20 Big Five science articles (FR81)
+/library/guides/$slug             # 50-100 relationship/career guides (FR82)
+```
+
+**Content storage:** MDX files in `apps/front/src/content/library/` organized by tier. Each file has frontmatter: `title`, `description`, `slug`, `tier`, `schemaType`, `cta`. Human-edited; relationship/career guides (Tier 4) may start as AI-generated drafts then human-edited (FR82).
+
+_Rationale for MDX-in-repo vs DB:_ (a) SSR builds are static — MDX compiles at build time, zero DB reads per request, (b) content versioning and review flow via Git (PR review), (c) no CMS needed for MVP, (d) deploy cadence aligned with content updates is fine for this volume. If Tier 4 guide count grows past ~200 or editorial workflow requires non-engineer editors, migrate to a CMS (Contentful, Sanity, etc.) or a DB-backed table in Phase 2.
+
+**Schema.org structured data:** Each route injects JSON-LD based on tier:
+- Archetype pages: `Article` + `Person`-like structured data (archetype as a defined concept)
+- Trait/facet pages: `DefinedTerm` + `EducationalOccupationalCredential` (scientific definitions)
+- Science articles: `ScholarlyArticle`
+- Guides: `Article`
+
+All pages include `BreadcrumbList` and an `Offer` (free assessment CTA).
+
+**Sitemap (FR83):** Generated at build time by a build script that walks `apps/front/src/content/library/` and emits URLs. Public profiles (opt-in, FR40) and homepage are also included. Weekly auto-refresh on deploy.
+
+**SEO performance targets:** Lighthouse SEO audit >90 per FR79. All pages SSR, LCP <1.5s. Images optimized via Sharp/AVIF at build time.
+
+**CTA injection:** Every page renders an `AssessmentCTA` component above the footer. Component copy is tier-sensitive (archetype: "Discover your archetype in 30 minutes"; science: "See the Big Five in action — free assessment") but the underlying component is shared.
+
+**No authentication on library pages.** Pages are indexable, shareable, and function as top-of-funnel acquisition. `noindex` is NOT set on library routes (contrast with `/chat`, `/results`, `/me` which are `noindex`, per FR SEO rules).
+
+**Tier-1 first 10 pages pre-launch (acquisition strategy):** Before general launch, the 10 highest-traffic archetype slugs are published and indexed. The remaining 71 archetype pages, trait/facet explainers, and guides ship progressively. This is a content cadence decision, not an architectural one — the route tree supports all pages from day 1.
+
+**File map:**
+- `apps/front/src/routes/library/*.tsx` — route handlers
+- `apps/front/src/content/library/**/*.mdx` — content files
+- `apps/front/src/components/library/KnowledgeArticleLayout.tsx` — shared article shell
+- `apps/front/src/components/library/AssessmentCTA.tsx` — CTA component
+- `apps/front/src/lib/schema-org.ts` — JSON-LD builders per tier
+- `apps/front/scripts/build-sitemap.ts` — sitemap generator
+
+### ADR-50: Cost Ceiling Architecture
+
+**Source:** PRD NFR7a (cost targets), NFR7b (circuit breaker), FR55–FR58 (cost guard).
+
+**Decision:** Three cost budgets govern all LLM spend: (1) per-session budget (existing, unchanged), (2) per-user monthly budget (new, per tier), (3) global 24-hour free-tier circuit breaker (new, >3× expected weekly-letter cost). All three are tracked via Redis with fail-open (ADR-14). Breaches trigger graceful degradation, never mid-session blocks (FR56).
+
+**Budgets (NFR7a):**
+
+| Budget | Scope | Default | Applies to |
+|---|---|---|---|
+| Per-session | Session boundary, existing (ADR-29 `sessionCostLimitCents`) | 2000 cents | Assessment + extension sessions (new or ongoing) |
+| Free-tier monthly per-user | Rolling 30-day window | $0.10/user/month (target: $0.02-0.08) | Free users — weekly letter is the only LLM surface |
+| Subscriber monthly per-user | Rolling 30-day window | $1.00/subscriber/month (target: $0.35-0.75) | Subscribers — weekly letter + conversation extension + portrait regen |
+| Global free-tier daily (legacy) | 24h rolling, existing (ADR-29 `globalDailyAssessmentLimit`) | 100 assessments/day | Assessment starts |
+| **Circuit breaker (NFR7b, NEW)** | 24h rolling window | **>3× expected weekly-letter cost** ≈ 3 × (weeklyLetterCostCents × estimatedActiveUsersPerDay) | Triggers automated rate limiting on ALL free-tier LLM surfaces (weekly letter, any future free LLM surface) |
+
+**Circuit breaker trigger math:**
+
+```text
+expectedDailyFreeLLMCost = (activeUsers × avgWeeklyLetterCostCents) / 7
+threshold = 3 × expectedDailyFreeLLMCost
+actualCost24h = SUM(llm_cost_cents FROM weekly_summaries WHERE generated_at > NOW() - INTERVAL '24 hours')
+
+if actualCost24h > threshold:
+  → Emit alert (structured log + external alerting hook)
+  → Enable rate limiting: pause weekly-letter cron for free-tier users
+  → Subscriber generation continues (paid, not rate-limited)
+```
+
+The threshold is deliberately coarse — 3× is a blast-radius check, not a fine-grained budget. Fine-grained cost control lives in the per-session and per-user budgets.
+
+**Implementation:**
+- Budget tracking: `cost-guard.redis.repository.ts` gains `trackUserMonthlyLLMCost(userId, centsIncrement, tier)` and `checkUserMonthlyBudget(userId, tier)`.
+- Circuit breaker: New `global-cost-circuit-breaker.use-case.ts` runs as a periodic check (every 15 minutes, same cadence as weekly cron) and flips a Redis `free_tier_llm_paused` flag.
+- Weekly cron respect: `run-weekly-summary-cron.use-case.ts` checks the circuit breaker flag before generating for free users. Subscribers are not gated.
+- Alert path: Structured log event `cost_circuit_breaker_tripped` with threshold, actual cost, window. External alerting (Sentry, Slack) wires into the log pipeline.
+
+**Observability:**
+- Per-session cost logged on session completion (NFR28, existing)
+- Per-user monthly cost aggregated from `weekly_summaries.llm_cost_cents` + `assessment_results.total_llm_cost_cents` (new column, optional) — computed at read time, not stored
+- Circuit breaker state exposed via `GET /health/cost-guard` for ops visibility
+
+**Interaction with ADR-14 (fail-open):** If Redis is unavailable, cost tracking degrades fail-open — the weekly letter still generates (user experience preserved) and a degraded-mode alert fires. This is consistent with ADR-14 but has a cost-risk tradeoff: sustained Redis outage during viral spike could blow the budget. Accepted risk; alerting makes it visible within minutes.
+
+**What this does NOT cover:** Per-request rate limiting on external APIs (Anthropic). Those are governed by Anthropic's own rate limits and Effect retry policies (ADR-14). This ADR is about **spend**, not **throughput**.
 
 ---
 

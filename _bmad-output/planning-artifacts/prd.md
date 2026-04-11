@@ -1,7 +1,9 @@
 ---
-stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
-lastEdited: '2026-04-09'
+stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
+lastEdited: '2026-04-11'
 editHistory:
+  - date: '2026-04-11'
+    changes: 'Design thinking 2026-04-09 integration. Source: _bmad-output/design-thinking-2026-04-09.md. MAJOR RESTRUCTURE. (1) Executive Summary: added three-space architecture (Today/Me/Circle), Intimacy Principle as brand DNA, updated JTBD table so Jobs 4 and 5 are served in MVP via free weekly letter and silent daily journal, updated business model to reflect MVP subscription = conversation extension + bundled first-extension portrait regeneration. (2) Success Criteria: added Day 7 return >40%, Day 30 retention >25%, Sunday weekly letter open rate >60%, daily silent check-in rate >30%, "companion not test" qualitative metric. Updated cost targets to reflect silent-free / LLM-weekly model ($0.02-0.08 free, $0.35-0.75 subscriber). (3) Product Scope: completely rewrote MVP feature list (three-space nav, silent journal, free weekly letter, relationship letter with data grid, Circle + invite ceremony, post-assessment transition, subscription flow). Rewrote Free vs Paid table. Updated Phase 1b and Phase 2a to reflect where paid features actually land. (4) Innovation section: added Intimacy Principle (#9), Three-Space Navigation (#10), Nerin Output Grammar (#11) subsections. (5) User Journeys: rewrote Journey 1 ending with post-assessment focused reading transition (Show me what you found → portrait reading view → Me page → return seed). Rewrote Journey 7 as silent daily journal / Phase 5→6 bridge. Deleted old Journey 8 (Portrait Evolution, Phase 1b) and replaced with new Journey 8 (Subscription Conversion at Week 3 — Léa extends the conversation). Updated Journey Requirements Summary. (6) FRs: relabeled FR10/23/25/49 from post-MVP to MVP subscription. Rewrote FR19 (dashboard → three-space nav). Tightened FR21 (portrait is free, no conversion gate). Rewrote FR23 (first extension → automatic portrait regen bundled, no purchase). Added FR23a (subsequent extensions post-MVP). Rewrote FR25 (Director model re-init + bundled first portrait). Rewrote FR28-FR37 as relationship letter (living space, real-time data grid, annual regeneration model, Section D post-MVP, QR ongoing consent). Added FR29a, FR32a (post-MVP Section D), FR35a (post-MVP annual regeneration). Unbundled FR47 (MVP = extension + first portrait regen only; post-MVP cross-references). Replaced FR67-FR72 with silent journal fork (FR67 check-in form, FR68 silent deposit, FR68a anticipation line, FR69/FR69a post-MVP LLM recognition and mini-dialogue, FR70 mood calendar, FR71 three-level note visibility, FR72 privacy). Tightened FR73 (storage only in MVP), deferred FR74 (gallery) and FR75 (confidence milestones) to post-MVP. Added FR86-FR92 (weekly summary generation, content structure, push notification, focused route, conversion CTA, edge cases). Added FR93-FR96 (post-assessment transition: closing button, portrait reading generating state, end-of-letter link, return seed + notification permission). Added FR97-FR100 (Circle, Intimacy Principle enforcement, invite ceremony reward-first copy, invite placement). Added FR101-FR103 (three-space navigation routing, bottom nav + /settings, public profile separation). (7) NFRs: rewrote NFR7 removing Sonnet/Haiku model name leakage. Rewrote NFR7a with new unit economics (no longer requires template-based responses, cost optimization via silent daily design). Tightened NFR7b circuit breaker threshold.'
   - date: '2026-04-09'
     changes: 'Innovation strategy v2 integration. Source: innovation-strategy-2026-04-08.md. (1) Revenue model overhaul: killed PWYW + credits, portrait now free, relationship analysis fully free, single revenue stream = subscription at €9.99/mo. Three-layer flywheel: Discovery (free) → Relationship (free, growth engine) → Daily practice (subscription). (2) Repositioning: personality front door + self-care engine. (3) Realistic revenue expectations: €10-30K year 1, €50-150K year 2. (4) Updated success metrics, market analysis, competitive benchmarking. (5) Added therapist B2B wedge, acquisition strategy, pre-mortem. (6) New features: mood diary/check-in, mood calendar, portrait gallery. (7) FR overhaul: FR21/FR33 updated, removed credit FRs, added mood diary FRs (FR67-FR72), portrait evolution FRs (FR73-FR75). (11) Validation fixes: wrote Journey 7 (mood diary) and Journey 8 (portrait evolution) for FR67-75 traceability. Tightened homepage FRs (FR59, FR60, FR64, FR66) with testable acceptance criteria. Unbundled FR47 with FR cross-references. Fixed NFR7 implementation leakage. Improved FR24, FR27, FR55, FR57, FR75 measurability. Added FR76-FR77 (transactional emails). Fixed stale credit references in Journey 2.'
   - date: '2026-04-06'
@@ -15,6 +17,7 @@ editHistory:
   - date: '2026-03-23'
     changes: 'Dashboard/profile merge: removed "profile" as separate page type in Web App Requirements, updated FR19 to include public profile link on dashboard'
 inputDocuments:
+  - "design-thinking-2026-04-09.md (three-space architecture, Intimacy Principle, silent journal fork, weekly letter as subscription conversion moment, relationship letter living space, post-assessment focused reading transition, lean MVP scope with conversation extension + first-portrait regen as sole paid perks)"
   - "innovation-strategy-2026-04-08.md (revenue model overhaul, three-layer flywheel, market analysis, therapist B2B, realistic projections)"
   - "innovation-strategy-2026-04-06.md (strategic repositioning, subscription model, agent platform, disruption vectors)"
   - "architecture.md (consolidated, 2026-03-15)"
@@ -79,19 +82,19 @@ classification:
     - "Portrait quality drives trust in relationship analysis"
     - "Satisfied user becomes ambassador, recruits their people"
   monetization:
-    free: "15-exchange assessment + portrait + OCEAN code + archetype + trait/facet scores + shareable public profile + relationship analysis (unlimited) + mood diary + mood calendar"
-    subscription: "€9.99/mo — unlimited conversations, specialized agents, coaching, portrait regeneration, growth insights, weekly/monthly focus, confidence milestone notifications"
-    philosophy: "Data INPUT is free. AI INTELLIGENCE on that data is paid. Relationship analysis is free because every analysis = potential new user acquisition"
+    free_mvp: "15-exchange assessment + portrait + OCEAN code + archetype + trait/facet scores + three-space navigation (Today/Me/Circle) + silent daily journal + mood calendar + free weekly descriptive letter from Nerin + relationship letter (static + real-time data grid + letter history) + Circle + invite ceremony + shareable public profile + archetype card sharing"
+    subscription_mvp: "€9.99/mo — two MVP perks only: conversation extension with Nerin (+15 exchanges, Director model re-initialization from prior state), and automatic portrait regeneration bundled with the first extension per subscriber (no additional purchase). All other paid features (daily LLM recognition, mini-dialogue, prescriptive weekly letter layer, portrait gallery, Section D relational observations, annual letter regeneration, coach agent) are post-MVP"
+    philosophy: "Data INPUT is free. Nerin's voice is free in MVP at two touchpoints (portrait, weekly descriptive letter) — the retention engine. Subscription buys more conversation with Nerin, nothing else in MVP. Post-MVP paid depth layer unlocks daily LLM, mini-dialogue, prescriptive weekly layer, portrait evolution, relational intelligence. Relationship letter is free because every letter = potential new user acquisition"
   growthHorizons:
-    Phase1a_MVP: "Assessment → portrait → relationship analysis (free, unlimited) → social sharing → subscription paywall"
-    Phase1b: "Mood diary/check-in (free), mood calendar, portrait gallery, mobile wrapper, retention validation"
-    Phase2a: "Coach agent + subscription launch, pattern detection, monthly reflection"
+    Phase1a_MVP: "Three-space product world: assessment → post-assessment focused reading → Me → daily silent journal → Sunday weekly letter → relationship letter + Circle → subscription conversion moment inside weekly letter (conversation extension + first portrait regen)"
+    Phase1b: "Add paid depth layer: daily LLM recognition, mini-dialogue, prescriptive weekly letter layer, mobile wrapper, personality-typed notification scheduling, retention validation"
+    Phase2a: "Coach agent + portrait gallery + Section D relational observations (D2/D3/D4), pattern detection, monthly reflection"
     Phase2b: "Agent expansion (Relationship, Career), cross-agent intelligence, smart nudges"
-    Phase2c: "Annual portrait ritual (Personality Wrapped)"
+    Phase2c: "Annual relationship letter regeneration (Spotify Wrapped model, Year 1 Q4 at first-cohort anniversary)"
   growthModel:
     acquisition: "Relationship analysis invites (primary, free = zero friction), archetype card sharing, SEO knowledge library (archetypes, traits, facets, Big Five science, relationship/career guides — 175-235 pages), launch blitz (Product Hunt, HN, Reddit)"
     conversion: "Portrait self-recognition proves quality → subscription CTA for ongoing value. Personality front door for acquisition, self-care engine for retention"
-    retention: "Subscription — specialized agents, mood diary coaching, portrait regeneration, confidence growth, weekly/monthly focus"
+    retention: "Three-space product world (daily silent journal, Sunday weekly letter from Nerin, relationship letter, Circle) as the free habit loop. Subscription (conversation extension + first portrait regen in MVP) deepens the Nerin relationship. Post-MVP paid depth: daily LLM recognition, mini-dialogue, prescriptive weekly layer, portrait gallery, Section D relational intelligence."
     ambassador: "Satisfied users recruit their people for free relationship analysis"
     viral: "Combined K ≈ 0.20-0.25 (archetype sharing + relationship invite loop). Negative-CAC: users invite new users for free"
   b2bOptionality: "Team management, group dynamics, therapist pre-screening tool"
@@ -113,7 +116,11 @@ big-ocean is a personality-aware life companion platform built on the Big Five f
 
 **Target users:** Psychology-curious adults (25-40) who find traditional personality tests generic and want deeper, personalized insight they can share and use to understand their relationships — and eventually, ongoing personality-aware guidance for life navigation.
 
-**Differentiator:** "You don't have to explain yourself." The only product where an AI already understands who you are before you ask for help. ChatGPT requires self-awareness to produce good advice; big-ocean does the self-awareness work for you through the assessment. This combines guided conversational UX, LLM-powered adaptive assessment, social sharing (archetype cards, public profiles), structured 2-person relationship analysis, and a personality-aware companion layer (post-MVP). The assessment experience IS the marketing — conversation quality drives self-recognition, self-recognition drives sharing, sharing drives growth.
+**Differentiator:** "You don't have to explain yourself." The only product where an AI already understands who you are before you ask for help. ChatGPT requires self-awareness to produce good advice; big-ocean does the self-awareness work for you through the assessment. This combines guided conversational UX, LLM-powered adaptive assessment, social sharing (archetype cards, public profiles), structured 2-person relationship letters, and a personality-aware companion layer. The assessment experience IS the marketing — conversation quality drives self-recognition, self-recognition drives sharing, sharing drives growth.
+
+**Product shape: three-space architecture.** The authenticated product is organized around three spaces, not a dashboard: **Today** (ephemeral daily companion — silent journal check-in, mood calendar, weekly letter from Nerin), **Me** (persistent identity — portrait, archetype, scores, public face, subscription), and **Circle** (the few people you care about — relationship letters, invite ceremony). Assessment is an onboarding tunnel into this world, not a destination. `/today` is the default authenticated landing after first visit.
+
+**Brand DNA: the Intimacy Principle.** Big Ocean is built for a few people, not a crowd. No count metrics, no follower language, no search, no recommendations, no sorting. Every feature celebrates depth and duration of fewer relationships instead of breadth of network reach.
 
 **Jobs to be done:**
 
@@ -121,15 +128,15 @@ big-ocean is a personality-aware life companion platform built on the Big Five f
 |---|-----|-----|-----------|-----------|
 | 1 | "Help me understand why I am the way I am" | Assessment + Portrait (free) | Free (acquisition) | One-time |
 | 2 | "Help me navigate a specific situation" | NOT SERVED (post-MVP: Coach agent) | Subscription | Event-based return |
-| 3 | "Help me understand my relationship" | Relationship analysis (free) | Free (growth engine) | Occasional |
-| 4 | "Help me grow over time" | NOT SERVED (post-MVP: Growth Journal) | Subscription | Habitual return |
-| 5 | "Help me process what I'm feeling today" | NOT SERVED (Phase 1b: Mood diary) | Free recognition / Paid coaching | Daily return |
+| 3 | "Help me understand my relationship" | Relationship letter (free, static + real-time data grid) | Free (growth engine) | Occasional |
+| 4 | "Help me grow over time" | Weekly descriptive letter from Nerin (free) | Free + post-MVP paid layer | Habitual return |
+| 5 | "Help me process what I'm feeling today" | Silent daily journal + mood calendar (free) | Free MVP / Paid LLM recognition post-MVP | Daily return |
 
-Jobs 1 and 3 are served at MVP (both free — acquisition + growth). Job 5 arrives in Phase 1b (free recognition, paid coaching). Jobs 2 and 4 are where subscription revenue lives — the self-care companion layer that transforms big-ocean from a one-time assessment into a platform people return to. Positioning: personality front door for acquisition, self-care engine for retention.
+All five jobs are served at MVP. Jobs 1 and 3 anchor acquisition and growth. Job 5 is served via the **silent journal fork**: free users deposit mood + note into a calendar with no LLM response; Nerin's voice arrives in Sunday's descriptive weekly letter. Job 4 is the free weekly letter (descriptive). Jobs 2 and 4's paid depth layer is where post-MVP subscription revenue will live. Positioning: personality front door for acquisition, self-care engine for retention.
 
-**Business model:** Free assessment + portrait + relationship analysis (unlimited, free) as acquisition engine. Portrait is free — it's the "feel seen" moment that drives subscription conversion. Relationship analysis is free — every analysis = potential new user acquisition (zero friction growth). Revenue comes from subscription (€9.99/mo): unlimited conversations, specialized agents, coaching, portrait regeneration, growth insights. Three-layer flywheel: Discovery (free, acquisition) → Relationship (free, growth engine) → Daily practice (subscription, retention). See [Product Scope](#product-scope) for the staged A→B strategy and phase triggers. Realistic revenue expectations: €10-30K year 1, €50-150K year 2 — the patient flywheel, not a moonshot.
+**Business model:** Free assessment + portrait + relationship letter + silent daily journal + free weekly letter from Nerin as acquisition and habit engine. Portrait is free — it's the "feel seen" moment that drives conversion. Relationship letter is free — every letter = potential new user acquisition (zero friction growth). Revenue comes from subscription (€9.99/mo) which in MVP unlocks **conversation extension with Nerin** (+15 exchanges to continue the assessment) plus **automatic portrait regeneration on the first extension**. Post-MVP paid perks include daily LLM recognition, mini-dialogue, prescriptive weekly letter layer, portrait gallery, and relational observations. Three-layer flywheel: Discovery (free, acquisition) → Relationship (free, growth engine) → Daily practice (free habit → paid depth). See [Product Scope](#product-scope) for the staged A→B strategy and phase triggers. Realistic revenue expectations: €10-30K year 1, €50-150K year 2 — the patient flywheel, not a moonshot.
 
-**Current state:** Brownfield — hexagonal architecture, auth, CI/CD, cloud deployment, and infrastructure already built. Primary gaps: Nerin character quality (~40% → launch-ready) and homepage conversion (the homepage must communicate what the product is and why it's worth ~30 minutes to visitors with zero context — the product consistently exceeds expectations, but the homepage undersells the experience). The credibility chain (conversation → self-recognition → portrait revelation → trust → ambassador) requires every link to work at launch.
+**Current state:** Brownfield — hexagonal architecture, auth, CI/CD, cloud deployment, and infrastructure already built. Primary gaps: Nerin character quality (~40% → launch-ready), homepage conversion (load-bearing now that the anonymous path has been removed — cold visitors must commit to signup before experiencing Nerin), and the three-space navigation + weekly letter system (new surface area). The credibility chain (conversation → self-recognition → portrait revelation → trust → daily return → ambassador) requires every link to work at launch.
 
 ## Success Criteria
 
@@ -192,10 +199,17 @@ Jobs 1 and 3 are served at MVP (both free — acquisition + growth). Job 5 arriv
 - Portrait generation completes successfully >99%
 
 **Cost:**
-- Per-assessment cost (all LLM calls) stays within ~€0.30 budget for Haiku conversation + extraction
-- Per-portrait cost (Sonnet) stays within ~€0.20-0.40 (optimizable via spine+arc)
-- Free-tier ongoing cost per user approaches $0/month (template-based mood responses)
-- Subscriber ongoing cost: $0.35-0.60/month (96-98% gross margin at €9.99/mo)
+- Per-assessment cost (all LLM calls) stays within ~€0.30 budget
+- Per-portrait cost stays within ~€0.20-0.40 (optimizable via model routing)
+- Free-tier ongoing cost per user stays at ~$0.02-0.08/month (silent daily journal + one weekly letter LLM call)
+- Subscriber ongoing cost: ~$0.35-0.75/month in MVP (conversation extension + first-extension portrait regen), with 93-97% gross margin at €9.99/mo
+
+**Daily & weekly engagement (the "return" metric — new in this revision):**
+- Day 7 return rate post-assessment >40% — users come back for first Sunday weekly letter from Nerin
+- Day 30 retention >25% — daily silent journal habit + weekly letter rhythm established
+- Sunday weekly letter open rate >60% — users anticipate Nerin's voice
+- Silent daily check-in rate >30% of active users check in on any given day
+- Qualitative: users describe big-ocean as "a companion" or "a place" they return to, not "a personality test they took"
 
 ### Measurable Outcomes
 
@@ -214,6 +228,10 @@ Jobs 1 and 3 are served at MVP (both free — acquisition + growth). Job 5 arriv
 | Homepage bounce rate | <60% | Ongoing | Cold visitors stay long enough |
 | Homepage → sign-up conversion | >5% | Ongoing | Homepage messaging drives assessment starts |
 | Time to CTA click | <90s median | Ongoing | Messaging clarity |
+| Day 7 return rate (post-assessment) | >40% | Ongoing | First weekly letter pulls users back |
+| Day 30 retention | >25% | Ongoing | Daily journal + weekly letter habit |
+| Sunday weekly letter open rate | >60% | Ongoing | Weekly ritual lands |
+| Daily silent check-in rate | >30% of active users | Ongoing | Daily habit loop works |
 | MRR | €300-800 | Month 6 | Revenue trajectory |
 | MRR | €1,500-3,000 | Month 12 | Revenue sustainability |
 | MRR | €5,000-10,000 | Month 18 | Quit-job readiness |
@@ -264,13 +282,33 @@ Alternative: negotiate part-time (4-day week) at month 3 if finances allow — l
 
 ### MVP — Minimum Viable Product
 
-The full journey (conversation → results → portrait → relationship analysis → social sharing) must work at launch. The credibility chain requires every link.
+The full journey (conversation → portrait → three-space product world → daily habit → weekly letter → relationship letter → social sharing) must work at launch. The credibility chain requires every link, AND the product must have somewhere for users to return after the assessment — assessment is onboarding, companion is product.
 
 **Platform:** 15-exchange adaptive conversation with Nerin (dive master persona), Director model (evidence extraction → coverage analysis → Nerin Director → Nerin Actor), ConversAnalyzer v2 dual extraction, derive-at-read scoring (30 facets → 5 traits → OCEAN code → archetype).
 
-**Application:** Free results (OCEAN code, archetype, scores, public profile) + free portrait (Nerin's letter — acquisition conversion moment) + free relationship analysis (unlimited, 2-person — growth engine) + subscription paywall (€9.99/mo for ongoing value).
+**Product world (three-space architecture):**
+- **Today** — default authenticated landing. Silent daily journal (mood + optional note, no LLM response), mood calendar, inline weekly letter card on Sundays, contextually-surfaced library article (2–3/week)
+- **Me** — persistent identity page. Portrait, identity hero (archetype, OCEAN code, radar, confidence), public face control center, subscription pitch, Circle preview, gear icon → `/settings`
+- **Circle** — the few people you care about. Full-width person cards with archetype, OCEAN code, duration, "last shared" signal, "View your dynamic" link, invite ceremony at the bottom
 
-**Critical gap:** Nerin character quality (~40% → launch-ready). Dive master persona, encouragement system, "feel seen" moment accent, distinct memorable voice. Infrastructure already built (auth, hexagonal architecture, Railway, CI/CD).
+**Application:**
+- Free assessment + free portrait (Nerin's letter, focused-reading transition — the emotional peak)
+- Free silent daily journal + mood calendar
+- Free weekly letter from Nerin (Sunday 6pm, LLM-generated descriptive letter, push notification)
+- Free relationship letter (static letter + real-time data grid + letter history + "Your Next Letter" anticipation)
+- Free Circle with invite ceremony (reward-first copy, privacy-led)
+- Public profile + archetype card sharing (unauthenticated, SEO, SSR)
+- Homepage + pre-conversation onboarding (load-bearing for conversion since anonymous path removed)
+- Subscription flow (€9.99/mo) unlocking **conversation extension** (+15 exchanges to continue with Nerin, Director model re-initialization) and **automatic portrait regeneration on the first extension** — the sole paid perks in MVP
+
+**Critical gaps:**
+1. Nerin character quality (~40% → launch-ready) — dive master persona, encouragement system, "feel seen" accent, distinct memorable voice
+2. Three-space navigation + daily/weekly loop — new surface area replacing the old linear "home → chat → results → done" dead end
+3. Weekly letter generation pipeline — the retention engine AND the only subscription conversion moment in MVP
+4. Post-assessment focused-reading transition — protects the portrait's emotional weight
+5. Homepage conversion — cold visitors must commit to signup before experiencing Nerin
+
+Infrastructure already built: auth, hexagonal architecture, Railway, CI/CD, Drizzle migrations, Effect-ts HTTP API.
 
 See [Project Scoping & Phased Development](#project-scoping--phased-development) for detailed feature breakdown, post-MVP phases, and risk mitigation.
 
@@ -278,53 +316,56 @@ See [Project Scoping & Phased Development](#project-scoping--phased-development)
 
 Not "build a personality test" or "build an agent platform" — build A then B, sequenced with metric-based triggers.
 
-**Phase 1 (Prove the Foundation):** Launch assessment + portrait + relationship analysis. Prove the credibility chain works. Hit validation metrics.
-**Phase 2 (Build the Intelligence Layer):** Launch agent platform subscription. But DESIGN Phase 2 during Phase 1 so you can ship fast when triggers fire.
+**Phase 1 (Prove the Foundation):** Launch assessment + portrait + three-space companion world + weekly letter + relationship letter + subscription flow with conversation extension as the sole paid perk. Prove the credibility chain AND the daily/weekly habit loop work. Hit validation metrics.
+**Phase 2 (Build the Intelligence Layer):** Launch paid daily LLM recognition, mini-dialogue, prescriptive weekly letter layer, portrait gallery + regeneration, Section D relational observations, and coach agent. Design Phase 2 during Phase 1 so you can ship fast when triggers fire.
 
-The MVP focuses entirely on the first-time user experience — getting someone in, through the conversation, to their results and portrait. LTV is the subscription story that comes after.
+MVP focuses on both (a) the first-time user experience (assessment → portrait → emotional peak) and (b) the bridge that turns first-timers into daily users (return seed → silent journal → Sunday letter). Without the bridge, post-assessment churn is near-total.
 
 ### Free vs Paid Tiers
 
-| Layer | Free | Subscription (€9.99/mo) |
-|-------|------|------------------------|
-| Assessment (15 exchanges) | Yes | — |
-| Portrait (Nerin's letter) | Yes | — |
-| OCEAN code + archetype + scores | Yes | — |
-| Public profile + sharing | Yes | — |
-| Relationship analysis (unlimited) | Yes | — |
-| Mood diary + mood calendar | Yes (recognition) | + coaching + weekly/monthly focus |
-| Archetype card sharing | Yes | — |
-| Conversation extension | — | Included |
-| Coach agent | — | Included |
-| Growth Journal (deep sessions) | — | Included |
-| AI pattern analysis + monthly reflection | — | Included |
-| Portrait regeneration | — | Included |
-| Confidence milestone notifications | — | Included |
-| Complete portrait at 30/30 facets | — | Included |
+| Layer | Free (MVP) | Subscription (€9.99/mo, MVP) |
+|-------|------------|------------------------------|
+| 15-exchange assessment | ✅ | — |
+| Portrait (Nerin's letter) | ✅ | — |
+| OCEAN code + archetype + scores | ✅ | — |
+| Three-space navigation (Today/Me/Circle) | ✅ | — |
+| Silent daily journal + mood calendar | ✅ | — |
+| Weekly descriptive letter from Nerin | ✅ | — |
+| Relationship letter (static + real-time data grid) | ✅ | — |
+| Circle + invite ceremony | ✅ | — |
+| Public profile + archetype card sharing | ✅ | — |
+| **Conversation extension (+15 exchanges with Nerin)** | — | ✅ |
+| **Portrait regeneration on first extension** (bundled welcome) | — | ✅ |
+| *Post-MVP:* Daily LLM recognition from Nerin | — | ⏳ |
+| *Post-MVP:* "Tell me more" mini-dialogue | — | ⏳ |
+| *Post-MVP:* Prescriptive weekly letter layer ("For the week ahead", "Zooming out") | — | ⏳ |
+| *Post-MVP:* Subsequent portrait regenerations + portrait gallery | — | ⏳ |
+| *Post-MVP:* Section D relational observations (D2–D4) | — | ⏳ |
+| *Post-MVP:* Annual relationship letter regeneration | — | ⏳ Year 1 Q4 |
+| *Post-MVP:* Coach agent + specialized agents | — | ⏳ |
 
-**Principle:** Data INPUT is free. AI INTELLIGENCE on that data is paid. Portrait and relationship analysis are free because they are the acquisition and growth engines — the "feel seen" moment that converts users to subscribers. Every relationship analysis is a potential new user at zero cost. Revenue comes exclusively from subscription.
+**Principle:** Data INPUT is free. AI INTELLIGENCE on that data is mostly free in MVP (portrait, weekly descriptive letter, relationship letter) and gradually becomes paid depth post-MVP (daily recognition, prescriptive weekly layer, mini-dialogue, relational observations). The MVP paid hook is concrete and tied directly to the moment users love — keep talking to Nerin. Every relationship letter is a potential new user at zero cost. Subscription flows through the habit loop, not through portrait gating.
 
 ### Post-MVP Phases
 
-**Phase 1b — Validate Retention (1,000 → 10,000 users)**
-- Mood diary/check-in: BeReal-inspired daily prompt ("How are you feeling?") + mood select + optional text. Free: personality-informed recognition ("Your high Conscientiousness means unfinished tasks eat at you — that's your wiring, not weakness"). Paid: recognition + coaching + weekly/monthly focus
-- Mood calendar visualization (free) — shows patterns over time
-- Portrait gallery/timeline: each portrait stored as snapshot with confidence level. Progression visible through depth and accuracy
-- Confidence milestone notifications: dynamic thresholds (5-8% in 50-70% range, 10-15% above 80%). Delta insight hook: "The most surprising thing we learned since last time"
+**Phase 1b — Validate Retention + Add Paid Depth (1,000 → 10,000 users)**
+- Paid daily LLM recognition — subscriber check-ins trigger personalized Nerin recognition in journal format, tight LLM call with rich user context (facets, evidence, archetype, pattern signals like streak / silence break)
+- Subscriber "Tell me more" mini-dialogue — tapping on a recognition opens a 3–5 exchange scoped conversation with Nerin who reads the actual note
+- Prescriptive weekly letter layer for subscribers — "For the week ahead" focus + micro-action, "Zooming out" cross-week patterns, library article link, reflective prompt. Free version stays descriptive and complete
+- Mobile wrapper with push notifications (personality-typed trigger scheduling)
 - Post-assessment survey ("Would you talk to Nerin again?")
-- Mobile wrapper with push notifications
 - Viral loop optimization
-- Exit criteria (5 of 6): >3,000 assessments, viral coeff >0.5, check-in opt-in >25%, check-in Day 30 retention >40%, "talk to Nerin again" >40%, free→subscription conversion >3% sustained
+- Exit criteria (5 of 6): >3,000 assessments, viral coeff >0.5, daily check-in Day 30 retention >40%, Sunday weekly letter open rate >60%, "talk to Nerin again" >40%, free→subscription conversion >3% sustained
 
-**Phase 2a — Coach Agent + Subscription Launch**
+**Phase 2a — Coach Agent + Expanded Subscription**
 - Coach agent (beta 50-100 users first) — event-driven ("I have a situation")
-- Subscription (€9.99/mo)
-- Conversation extension (included in subscription)
+- Portrait gallery + portrait regeneration on subsequent conversation extensions (beyond the first-extension welcome bundle)
 - Pattern detection + monthly reflection
 - Growth Journal deep sessions
-- Life Events + Patterns dashboard sections
+- Life Events + Patterns sections on Me page
+- Section D — Relational observations (D2), "Take care of" suggestions (D3), Alignment patterns (D4). Per-subscriber, harm-reduction framing, dynamics-not-deficits rule
 - Crisis detection guardrails
-- Exit criteria: >200 subscribers, conversion >3%, M1 retention >70%, Coach NPS >50, reflection engagement >60%, MRR >€1,500
+- Exit criteria: >500 subscribers, conversion >3%, M1 retention >70%, Coach NPS >50, reflection engagement >60%, MRR >€5,000
 
 **Phase 2b — Agent Expansion**
 - Relationship agent (interpersonal dynamics)
@@ -340,7 +381,7 @@ The MVP focuses entirely on the first-time user experience — getting someone i
 
 ### Design Now, Build Later
 
-During Phase 1, design (don't build): conversation schema for multiple session types, agent type field on conversations, personality context injection pattern, per-agent session memory, subscription billing flow, crisis detection guardrails, daily check-in data model, mood diary data model, portrait versioning schema, confidence milestone notification system.
+During Phase 1, design (don't build): conversation schema for multiple session types, agent type field on conversations, personality context injection pattern, per-agent session memory, crisis detection guardrails, portrait gallery UI (storage is MVP per FR73), confidence milestone notification system, paid daily LLM recognition + mini-dialogue architecture (FR69, FR69a), prescriptive weekly letter layer (FR88), Section D relational observations (FR32a), annual relationship letter regeneration job (FR35a). The following previously-deferred items are now MVP: daily check-in data model, mood calendar, three-space navigation, weekly summary data model and generation job, subscription billing flow (for conversation extension), conversation extension mechanics.
 
 ## User Journeys
 
@@ -356,11 +397,17 @@ Around exchange 9, she hits a natural lull — novelty has worn off. (Note: the 
 
 **Climax:** Exchange 13. Nerin makes an observation about how Léa handles conflict at work vs with her partner — she avoids in one domain, confronts in the other. The pattern lands with emotional weight. During the conversation, Nerin has been teasing: he's seen things about her, and he wants to show her. The 75% milestone passes. She finishes the 15 exchanges genuinely curious about what Nerin has written.
 
-**Resolution:** Léa sees her OCEAN code, her archetype ("The Beacon"), her trait and facet scores. The scores feel right. Then Nerin's letter arrives — not a report, but a personal letter naming her core tension: creative ambition held in check by a need for external validation. No paywall — the portrait is free. The "feel seen" moment IS the conversion event. The post-portrait experience includes a subscription conversion moment (design deferred to UX). Léa screenshots her archetype card and sends it to three friends: "You have to try this."
+**Resolution — The Post-Assessment Transition:** Exchange 15 ends with Nerin's distinct closing — one last observation, warm and specific, and then the input field fades. A single button appears below: **"Show me what you found →"** in Léa's voice, like she's speaking to Nerin. She taps it.
 
-**Recovery beat — what if the portrait doesn't land?** If Léa reads the portrait and thinks "that's not me," the credibility chain breaks. Behavioral signals (no share, no return visit) capture this. The subscription (conversation extension + deeper sessions) becomes the recovery path — more exchanges produce better evidence, which produces a richer, more accurate letter from Nerin. Since portrait is free, there's no buyer's remorse — just a motivation gap to bridge.
+She lands on a focused reading view. Centered OceanSpinner, and one line in Nerin's voice: *"Nerin is writing your letter..."* No competing content. Nothing to click. Just waiting. Then the spinner resolves and the letter fades in — full screen, warm background, letter format, max-width 720px. She reads it uninterrupted. The emotional peak of the product. At the end of the letter, a small warm link: *"There's more to see →"*
 
-**Capabilities revealed:** Sign-up flow, 15-exchange conversation with Nerin, Director model (territory coverage, feel-seen moments), depth meter + progress milestones (25%/50%/75%), Nerin teasing portrait during conversation, results page (OCEAN code, archetype, scores), free portrait as Nerin's letter, subscription CTA post-portrait, behavioral proxy tracking, archetype card sharing, public profile as landing page.
+She taps and arrives at her Me page — her identity hero (archetype "The Beacon", OCEAN code, radar chart, confidence), the portrait inline for re-reading, her public face (default private), the subscription pitch (in this MVP: "Continue your conversation with Nerin — +15 exchanges + a new portrait"), and at the bottom, Nerin's voice one more time: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a Nerin-voiced notification permission request: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* Léa grants it. A first daily prompt is scheduled for tomorrow at a profile-appropriate time.
+
+Léa screenshots her archetype card and sends it to three friends: "You have to try this."
+
+**Recovery beat — what if the portrait doesn't land?** If Léa reads the portrait and thinks "that's not me," the credibility chain breaks. Behavioral signals (no share, no return visit) capture this. The conversation extension subscription becomes the recovery path — more exchanges produce better evidence, which produces a richer, more accurate letter from Nerin (bundled automatically on first extension). Since the initial portrait is free, there's no buyer's remorse — just a motivation gap to bridge.
+
+**Capabilities revealed:** Sign-up flow, 15-exchange conversation with Nerin, Director model (territory coverage, feel-seen moments), depth meter + progress milestones (25%/50%/75%), Nerin teasing portrait during conversation, closing exchange with "Show me what you found →" button (FR93), focused reading view with generating state (FR94), end-of-letter transition to full Me page (FR95), return seed with Nerin-voiced notification permission request (FR96), three-space product world with `/me` as first-visit landing (FR101), archetype card sharing, public profile as landing page.
 
 ### Journey 2: The Invited User — Marc
 
@@ -434,50 +481,58 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 **Capabilities revealed:** Homepage messaging (FR59), universal hook with ongoing value promise (FR60), single primary CTA (FR61), portrait excerpt as early proof (FR62), Nerin conversation preview showing character depth (FR63), fear-addressing content for process anxiety and time commitment (FR64), free-product transparency as trust signal (FR65), multi-persona content that works for zero-context visitors (FR66), founder story block (FR84), beyond-the-portrait self-care teaser (FR85).
 
-### Journey 7 (Phase 1b): The Daily Check-in — Léa
+### Journey 7: The Daily Return — Léa Becomes a Daily User
 
-**Who she is:** Same Léa, 3 weeks after completing her assessment. She subscribed after her portrait landed. It's a Tuesday morning, she woke up feeling off — restless, slightly irritable — and she can't pinpoint why.
+**Who she is:** Same Léa, 6 days after completing her assessment. The afterglow is fading. She's reread her portrait twice. She screenshot-shared it to three friends on Day 0. She accepted the notification permission Nerin asked for on Me page at the end of the post-assessment flow. Now it's Monday morning at 9:12am, and she's about to find out if Big Ocean is a one-time thing or something more.
 
-**The trigger:** Léa sees a notification: "How are you feeling today?" It's a simple daily prompt — not intrusive, more like a gentle knock. She opens the app.
+**The trigger:** A notification arrives: *"How are you feeling this morning?"* — quiet, no badge count, no urgency. Léa opens the app. She lands on the Today page — not the Me page, not results. Today is the default now.
 
-**The check-in:** Five mood options. She taps "Uneasy." An optional text field appears — she types: "Can't focus, everything feels urgent but nothing actually is." She submits.
+**The check-in:** Nerin's prompt sits at the top: *"How are you feeling this morning?"* Below it, five mood options. Seven week-dots — today empty, the other six empty too (first week). She taps "Uneasy" and types a short note: *"Can't focus, everything feels urgent but nothing actually is."* She taps Save.
 
-**The recognition (free):** Within seconds, a response appears — not from an LLM, but a template-based recognition tuned to her personality profile: "Your high Conscientiousness means unfinished tasks create a background hum of pressure. When everything feels urgent, it's often that hum getting louder — not the tasks themselves." Léa pauses. That's exactly it. The recognition doesn't solve anything — it names what's happening, and naming it is enough to take the edge off.
+**What happens next — silence, and a promise:** The page shifts. Her entry is anchored at the top in journal format — mood + note, clean typography, warm background. Below it, seven dots with today now filled. One quiet line beneath: *"Nerin will write you a letter about your week on Sunday."* No LLM response. No Nerin recognition. No "thank you for sharing." Just her own entry, the week dots, and the quiet anticipation of Sunday.
 
-**The coaching (subscription):** Because she's a subscriber, a second layer appears: an actionable coaching suggestion. "Try this: write down every 'urgent' thing. Cross out anything that won't matter Friday. The list usually shrinks by half." Below that, her weekly focus: "This week's theme: distinguishing real urgency from Conscientiousness noise."
+At first Léa is slightly disappointed — she expected Nerin to say something. But then the stillness lands differently. Nerin isn't hovering. The page feels like a private journal, not a feed. No engagement loop. She closes the app.
 
-**The pattern (over time):** Léa has been checking in for 3 weeks. She opens her mood calendar — a visual grid of her check-ins. She notices a pattern: every Monday and Tuesday she's "Uneasy" or "Tense." Wednesdays shift to "Focused." She'd never have spotted this without the calendar. The pattern becomes a conversation starter in her next Coach session.
+**Day 2, 3, 4.** She checks in most mornings. Some days she types a note, some days just the mood. The week dots fill in. Nothing happens day to day — and that's the point.
 
-**Why this matters strategically:** The daily check-in costs $0 for free users (template responses) and ~$0.05 for subscribers (LLM coaching). It creates a daily touchpoint that prevents churn — users who check in 3x/week have dramatically higher month-2 retention than those who don't. The mood calendar creates visible data that makes the subscription feel valuable. And the personality-informed recognition — even the free version — reinforces the "this thing understands me" feeling that drives word-of-mouth.
+**Sunday 7:03pm:** A notification arrives: *"Your week with Nerin is ready."* Léa opens it and lands on a focused reading view — the same visual language as her portrait. A letter. *"Dear Léa,"* it opens. Two paragraphs about the pattern of her week — not a report, an observation. Nerin names the Monday-Tuesday uneasiness, connects it to her high Conscientiousness and the way Sunday evening already anticipates Monday's unfinished tasks. The letter names a specific thing she said on Wednesday and calls back to it. It ends with Nerin's sign-off and one more line: *"I have more I want to say about what comes next."* Below that, a soft CTA — subscribe to unlock the fuller weekly letter, or "Not right now."
 
-**Capabilities revealed:** Daily mood check-in with 5-option selector + optional text (FR67), personality-informed recognition for free users (FR68), coaching suggestion + weekly focus for subscribers (FR69), mood calendar visualization (FR70), weekly digest for subscribers (FR71), mood data privacy (FR72).
+Léa reads the letter twice. She doesn't subscribe yet. She closes the app with a different feeling than Day 0 — not the revelation of the portrait, but the quiet recognition that Nerin noticed. Her streak of silence has paid off. She'll check in again tomorrow.
 
-### Journey 8 (Phase 1b): The Portrait Evolution — Marc
+**Why this matters strategically:** The silent fork is the Phase 5→6 bridge — the single most important retention mechanic in the product. 90% of post-assessment users churn inside a week if there's nothing to return to; the silent journal + weekly letter is the something. Free-tier LLM cost stays at ~$0.02–0.08/month per active user (one weekly letter call, no daily LLM). Nerin's voice becomes rare and precious — the weekly letter arrives with more weight because the user hasn't heard from Nerin since their portrait. Subscription conversion moves downstream to the fuller letter at Week 3+, exactly when trust has compounded.
 
-**Who he is:** Same Marc, 2 months after his first assessment. He subscribed because the relationship analysis with Léa was surprisingly good. He's had 3 additional conversations with Nerin since — each one deepening the personality model.
+**Capabilities revealed:** Three-space navigation with `/today` as default landing (FR101), silent daily check-in with mood + note (FR67, FR68), weekly anticipation line (FR68a), mood calendar (FR70), three-level note visibility (FR71), free weekly summary LLM generation (FR86, FR87), push notification + focused reading route (FR89, FR90), soft conversion CTA (FR91), scheduled daily prompt per personality profile (FR96), return seed → weekly letter bridge.
 
-**The trigger:** Marc receives a push notification: "Your personality confidence just crossed 75%. We've learned something new about how you handle change — it surprised us." The notification includes a single sentence — a delta insight that's specific enough to be intriguing.
+### Journey 8: Subscription Conversion at Week 3 — Léa Extends the Conversation
 
-**The gallery:** Marc opens the app and sees his portrait gallery — a timeline of snapshots. His first portrait sits at 52% confidence, written from 15 exchanges. Below it, a note: "Based on 25 of 30 facets." His current portrait: 75% confidence, 28 facets covered. He taps the first portrait and reads it side by side with the current one. The difference is visible — the early portrait described broad strokes; the current one names specific tensions and contradictions that feel precisely right.
+**Who she is:** Same Léa, 22 days post-assessment. She's been checking in most mornings (17/22 days). She's read three weekly letters from Nerin now — each one picking up threads from her check-ins, naming patterns, saying things about her that feel unmistakably seen. She's rereading her original portrait occasionally on her Me page. She's sent the archetype card to five friends by now.
 
-**The regeneration:** Marc taps "Regenerate portrait." Nerin writes a new letter — not an update to the old one, but a fresh narrative incorporating everything learned since. The old portrait stays in the gallery as a snapshot. The new one is richer, more nuanced, more him. He screenshots a paragraph and sends it to Léa: "Read this — it nailed something I've been trying to say for years."
+**The trigger:** Sunday 7pm, the third weekly letter arrives. This one notices something new: across three weeks, every time Léa's notes mention work, she uses control language — *"should", "need to", "have to"*. Nerin names it: *"You've been carrying the shape of obligation for three weeks. I'm curious what happens when you stop narrating your life as a list of things you owe."* It lands like a gut punch — true and unexpected.
 
-**Why this matters strategically:** Portrait evolution is the most underrated retention mechanic. Each regeneration proves that the subscription is delivering value — the portrait literally gets better. The gallery creates a visible record of growth that compounds switching cost. And the confidence milestone notifications are the perfect re-engagement trigger — they arrive at exactly the moment when the product has something new and specific to say.
+**The conversion moment:** At the end of the letter, the same soft CTA she's seen for three weeks: *"I have more I want to say about what comes next. With a subscription, I can write you a fuller letter each week — with what to try, what patterns I'm seeing across weeks, and what I think might help in the week ahead. Or: continue our conversation. Extend your 15 exchanges with another 15, and I'll write you a new portrait afterwards that reflects everything I've learned about you since."* Two options. One is the fuller weekly letter (post-MVP). The other, in this MVP, is *"Continue our conversation — €9.99/mo."*
 
-**Capabilities revealed:** Portrait gallery/timeline with versioned snapshots (FR73), subscriber portrait regeneration (FR74), confidence milestone push notifications with delta insight (FR75).
+Léa taps Continue. €9.99/mo, Polar embedded checkout. She subscribes. A moment later the app shows her the conversation extension entry: *"When you're ready, Nerin is waiting. She remembers everything."* Léa taps.
+
+**The extension:** The conversation resumes. The Director model has initialized from her prior session's final state and evidence — Nerin doesn't ask her what her name is or what she does for work. The first exchange picks up a thread from Week 1 that never fully developed. 15 more exchanges. New territory: how Léa handles responsibility, what she's avoiding in her career. New evidence, richer coverage.
+
+**The first-extension portrait regeneration:** At the end of the extended conversation, Nerin writes a new portrait — automatically, bundled with the first extension. Léa reads it in the same focused reading view she saw the first time. This portrait is different. It picks up everything the first one saw and adds layers: the career thread, the pattern of obligation, a specific tension between her creative ambition and the systems she builds to contain it. The first portrait stays in her Me page as "previous version." She has two letters from Nerin now. She screenshots a paragraph and sends it to her closest friend.
+
+**Why this matters strategically:** Conversion doesn't happen at the end of the assessment. It happens after the habit has compounded — after trust is earned, after three weekly letters have landed, after Nerin has already proven she notices things. The conversation extension is the strongest paid hook in MVP because it ties payment directly to the thing users already love (Nerin). The first-extension portrait regeneration is the payoff — a concrete, readable artifact users walk away with. This is Act 3 of the three-act conversion story: Day 0–7 build habit, Day 7–21 show the pattern, Day 21+ the natural unlock inside the weekly letter they already read.
+
+**Capabilities revealed:** Weekly summary with embedded conversion CTA (FR91), subscription flow via embedded checkout (FR47), conversation extension +15 exchanges (FR10), Director model re-initialization from prior session state (FR25), automatic portrait regeneration bundled with first extension (FR23), prior portrait preserved as "previous version" on Me page (FR25), Nerin voice continuity across portrait, weekly letter, and conversation extension.
 
 ### Journey Requirements Summary
 
 | Journey | Key Capabilities Revealed |
 |---------|--------------------------|
-| **Léa (First-Timer)** | Sign-up with email verification (FR50, FR50a, FR50b), conversation (FR1), Director model (FR3), depth meter + milestones (FR4, FR5), Nerin portrait teasing (FR6), results page (FR16), free portrait + subscription CTA (FR21), portrait as Nerin's letter (FR20), behavioral proxy tracking (FR24), archetype sharing (FR44, FR46), public profile landing (FR39) |
-| **Marc (Invited)** | QR flow (FR28), Director model adaptation for guarded users (FR3), early hook for skeptics (FR6), depth meter (FR4), relationship analysis (FR29), ritual suggestion screen (FR31), OCEAN code comparison (FR39), ambassador conversion (FR33) |
+| **Léa (First-Timer)** | Sign-up with email verification (FR50, FR50a, FR50b), conversation (FR1), Director model (FR3), depth meter + milestones (FR4, FR5), Nerin portrait teasing (FR6), free portrait as Nerin's letter (FR20, FR21), closing button + focused reading transition (FR93, FR94, FR95), return seed + notification permission (FR96), three-space landing (FR101), archetype sharing (FR44, FR46), public profile landing (FR39) |
+| **Marc (Invited)** | QR flow (FR28), Director model adaptation for guarded users (FR3), early hook for skeptics (FR6), depth meter (FR4), relationship letter — static + data grid (FR29), ritual suggestion (FR31), OCEAN code comparison (FR39), ambassador conversion (FR33) |
 | **Léa (Returning Subscriber, illustrative)** | Coach agent, personality-aware advice, cross-agent intelligence, event-driven return — no FRs yet (post-MVP) |
 | **Thomas (Profile Visitor)** | Public profile (FR39, FR42), OG tags (FR41), archetype as social object (FR46), OCEAN code comparison (FR39), CTA funnel (FR43) |
 | **Vincent (Founder)** | Admin monitoring (Nice-to-Have), completion funnel (FR24), dropout analytics (Nice-to-Have), steering compliance (FR3), cost tracking (FR55), viral metrics (Nice-to-Have) |
 | **Inès (Cold Visitor)** | Homepage messaging (FR59), universal hook with ongoing value (FR60), single CTA (FR61), portrait excerpt as proof (FR62), Nerin conversation preview (FR63), fear-addressing content (FR64), free-product transparency (FR65), multi-persona content (FR66), founder story (FR84), beyond-the-portrait self-care teaser (FR85) |
-| **Léa (Daily Check-in, Phase 1b)** | Mood check-in (FR67), personality-informed recognition (FR68), coaching + weekly focus (FR69), mood calendar (FR70), weekly digest (FR71), mood data privacy (FR72) |
-| **Marc (Portrait Evolution, Phase 1b)** | Portrait gallery/timeline (FR73), portrait regeneration (FR74), confidence milestone notifications (FR75) |
+| **Léa (Daily Return)** | Three-space navigation with `/today` default (FR101, FR102), silent daily check-in (FR67, FR68), weekly anticipation line (FR68a), note visibility levels (FR71), mood calendar (FR70), free weekly summary LLM generation (FR86, FR87), push notification + focused weekly letter route (FR89, FR90), soft conversion CTA (FR91), scheduled personality-typed daily prompt |
+| **Léa (Subscription Conversion at Week 3)** | Weekly letter embedded CTA (FR91), subscription flow via embedded checkout (FR47), conversation extension +15 (FR10), Director model re-initialization from prior state (FR25), automatic portrait regeneration on first extension (FR23), prior portrait preserved as "previous version" (FR25) |
 
 **Critical path:** Journeys 1→2 form the growth loop. The free portrait is the credibility moment; the subscription CTA is the monetization conversion moment. The relationship ritual transforms the product from individual tool to shared experience. Journey 5 ensures operational visibility.
 
@@ -556,6 +611,20 @@ The portrait is free — no paywall, no credit card. This is a deliberate strate
 **8. Relationship Analysis Ritual as Harm Reduction**
 The ritual screen (read together, discuss) and framing guardrails (dynamics not deficits, no blame) aren't just UX — they're a harm reduction mechanism for how personality data is consumed. Accurate personality intelligence will sometimes surface uncomfortable truths. The innovation is creating a container where difficult discoveries are productive rather than destructive.
 
+**9. The Intimacy Principle — Brand DNA**
+"Big Ocean is built for a few people, not a crowd." Every feature is audited against this rule: does it show "how many"? → probably wrong. Does it reward broad visibility over focused connection? → wrong. Does it use follower/fan/network language? → wrong. Does it celebrate depth and duration of fewer relationships? → right. Does it treat the user as a sovereign member of a small circle, not a node in a growth graph? → right. Implementation: no hard cap on Circle size (rules create resentment; culture through design), no count metrics anywhere user-facing (no "X connections", no profile view counters, no sign-up attribution shown to the user), no follower/friend language (use "people you care about"), no search, no recommendations, no directory of users, no sorting options on Circle (organic order only), each person rendered as a full-width card with individual weight (not a grid of avatars), empty state teaches the value system ("Big Ocean is made for the few people you care about"). This is a structural differentiator: every other consumer social product optimizes for reach. Big Ocean is the first built for intimacy.
+
+**10. Three-Space Navigation — Assessment Is Onboarding, Companion Is Product**
+The authenticated product is organized around three spaces, not a dashboard: **Today** (ephemeral daily — silent journal, mood calendar, weekly letter inline card on Sundays), **Me** (persistent identity — portrait, archetype, radar, public face, subscription, Circle preview), and **Circle** (the few people you care about — relationship letters, invite ceremony). `/dashboard` is removed. First-visit post-assessment lands on `/me` for portrait reveal; all subsequent visits default to `/today`. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. The architectural bet: linear "home → chat → results → done" is a dead end that creates post-assessment churn; a hub-and-spoke model with distinct return reasons creates a habit loop. This is what turns a one-time personality test into a daily companion.
+
+**11. Nerin Output Grammar — Three Visual Formats**
+Nerin's voice uses three distinct visual registers, each tied to an emotional context so users learn to read them differently:
+- **Journal format** (margin notes, shared-page feel): daily check-in recognition on Today (post-MVP paid)
+- **Letter format** (focused reading, max-width 720px, warm background): portrait, weekly summary, annual relationship letter — the highest-emotion Nerin moments all use this register
+- **Chat format**: subscriber "Tell me more" mini-dialogue on Today (post-MVP)
+
+Clean split. No template engine. Every place Nerin speaks uses LLM generation with rich user context (facets, archetype, evidence, pattern signals). Templates are reserved for notification copy, UI labels, and system messages — never for Nerin's voice.
+
 ### Disruption Vectors
 
 **1. Assessment-as-Onboarding Flip:** The entire $6-11B market treats assessment as the product. big-ocean treats it as onboarding — how the AI learns you. The product is everything after. The assessment AND portrait are free — competitor models (pay for results) can't compete with free.
@@ -594,7 +663,7 @@ The ritual screen (read together, discuss) and framing guardrails (dynamics not 
 
 big-ocean's unique position: the only product where the assessment experience IS the marketing AND the assessment is the onboarding for an ongoing relationship. The structural advantage is that conversation quality, sharing behavior, and growth are the same system — not separate concerns. The "don't have to explain yourself" factor is entirely new to the market.
 
-**Revenue model clarity:** MVP monetization is free — portrait and relationship analysis are acquisition and growth engines, funded by the founder's €1K/month investment. Revenue comes exclusively from subscription (€9.99/mo, post-Phase 1b triggers). Real cost data: assessment $0.30, portrait $0.20-0.40, subscriber ongoing $0.35-0.60/month. Gross margin per subscriber: 96-98%.
+**Revenue model clarity:** MVP ships a subscription flow (€9.99/mo) with exactly two paid perks: conversation extension and bundled first-extension portrait regeneration. All other AI intelligence is free in MVP (portrait, weekly descriptive letter, relationship letter) — funded by the founder's €1K/month runway and by the subscription revenue from early converters. Post-MVP adds the paid depth layer (daily LLM recognition, mini-dialogue, prescriptive weekly letter, portrait gallery, Section D). Real cost data: assessment ~€0.30, portrait ~€0.20-0.40, free-tier ongoing ~$0.02-0.08/month, subscriber ongoing ~$0.35-0.75/month (MVP). Gross margin per subscriber: 93-97%.
 
 ### Validation Approach
 
@@ -691,13 +760,13 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 
 ### MVP Strategy & Philosophy
 
-**MVP Approach:** End-to-end experience MVP — the full journey (conversation → results → portrait → relationship analysis → social sharing) must work at launch. No staged rollout. The credibility chain requires every link to be present for the growth loop to activate.
+**MVP Approach:** End-to-end experience MVP — the full journey (conversation → portrait focused reading → three-space product world → daily silent journal → Sunday weekly letter → relationship letter → Circle → subscription conversion at week 3+) must work at launch. No staged rollout. Assessment is onboarding; companion is product; both must ship together.
 
-**Resource:** Solo founder. Architecture (hexagonal, Effect-ts) and infrastructure (Railway, CI/CD) already built to minimize ops burden. Most infrastructure is in place — focus is on conversation engine quality and feature completion.
+**Resource:** Solo founder. Architecture (hexagonal, Effect-ts) and infrastructure (Railway, CI/CD) already built to minimize ops burden. Most infrastructure is in place — focus is on conversation engine quality, three-space navigation, daily/weekly loop, and post-assessment transition.
 
 ### MVP Feature Set (Phase 1)
 
-**Core User Journeys Supported:** All five MVP journeys (Léa first-timer, Marc invited, Thomas profile visitor, Vincent founder, Inès cold visitor) + one illustrative post-MVP journey (Léa returning subscriber)
+**Core User Journeys Supported:** All MVP journeys — Léa first-timer (post-assessment transition), Léa daily return (Phase 5→6 bridge), Léa subscription conversion at week 3, Marc invited (relationship letter), Thomas profile visitor, Vincent founder, Inès cold visitor. Plus one illustrative post-MVP journey (Léa returning subscriber with Coach agent).
 
 **Must-Have Capabilities:**
 
@@ -708,22 +777,24 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 | Nerin dive master persona + ocean metaphors | Character distinctiveness = memorability = sharing |
 | Depth meter + progress milestones (25%/50%/75%) | Prevents mid-conversation dropout |
 | Nerin portrait teasing during conversation | Builds anticipation for the payoff |
-| Results page (OCEAN code, archetype, scores) | Free tier value — the self-recognition moment |
-| Free portrait with subscription CTA | Portrait is the 'feel seen' moment; subscription CTA is the monetization conversion |
-| Portrait generation (Nerin's letter, Sonnet) | The payoff — the "worth it" moment. Portrait unlock uses a simple button ("Nerin has written something for you. Unlock your portrait."), not a visual envelope |
-| Behavioral proxy tracking (share rate, return visits) | Measures self-revelation via behavioral signals |
-| Public profile (default-private, shareable) | Top-of-funnel acquisition channel |
+| Post-assessment transition: closing button → focused reading view → Me page → return seed + notification permission (FR93-FR96) | Protects the portrait's emotional weight and bridges Phase 5→6 |
+| Portrait generation (Nerin's letter, high-capability LLM) | The payoff — the "worth it" moment, focused reading format |
+| Three-space navigation: Today / Me / Circle (FR101-FR103) | Replaces linear dead-end. Today is default landing; first visit lands on Me |
+| Today page with silent daily journal (FR67, FR68, FR68a) | Daily habit loop; free-tier $0 LLM cost; the Phase 5→6 bridge |
+| Mood calendar (FR70) + three-level note visibility (FR71) | Patterns become visible over time; intimacy-principle privacy |
+| Weekly summary from Nerin — free descriptive letter (FR86-FR92) | Sunday ritual; retention engine; single subscription conversion moment in MVP |
+| Me page — identity hero, portrait, public face, subscription pitch, Circle preview | Identity and sharing live here separately from daily return |
+| Circle page — full-width cards, invite ceremony (FR97-FR100) | Intimacy-principle enforcement; reward-first invite copy |
+| Relationship letter — static letter + real-time data grid + letter history + "Your Next Letter" anticipation (FR28-FR35) | Living relational space; free for all; annual regeneration post-MVP |
+| QR flow with ongoing consent (FR30) | Clarified: accept = ongoing data sharing for relationship letter + future annual regen |
+| Public profile (default-private, SSR, unauthenticated) | Top-of-funnel acquisition channel |
 | OG meta tags + archetype card image | Social sharing is the passive growth channel |
-| QR flow (drawer + scan/URL) | Relationship analysis requires connecting with someone |
-| Relationship analysis (2-person, both-complete trigger) | The growth engine — each QR scan = potential new user |
-| Ritual suggestion screen (Start button only, no skip) | Harm reduction + experience enhancement |
-| Per-relationship consent (accept gate) | Domain requirement — privacy |
-| Relationship analysis (free, unlimited) | Growth engine — every analysis = potential new user at zero cost |
-| Subscription billing integration | €9.99/mo subscription — single revenue stream |
-| Transactional emails via Resend (3 types: drop-off re-engagement, Nerin check-in ~2 weeks, subscription conversion nudge) | Brings users back — lifecycle triggers for retention and conversion |
-| Homepage conversion content (messaging, hook, portrait preview, fear-addressing, free-product transparency) | The product is better than the marketing — cold visitors need to understand the value in 3 seconds. Without a converting homepage, growth depends entirely on social sharing |
+| Subscription flow (€9.99/mo) via Polar embedded checkout | Unlocks conversation extension + first-extension portrait regen only in MVP |
+| Conversation extension (FR10, FR25) + bundled first portrait regen (FR23) | Sole paid perks in MVP; strong conversion hook tied to Nerin |
+| Transactional emails (3 types: drop-off re-engagement, Nerin check-in, subscription conversion nudge) | Lifecycle retention and conversion triggers |
+| Homepage conversion content (messaging, hook, portrait preview, fear-addressing, free-product transparency) | Load-bearing since anonymous path removed — cold visitors must commit to signup |
 | Auth (Better Auth) | Already built |
-| Cost guard (session-aware) + cost ceiling architecture | Prevents budget blowout. Free-tier cost ceiling critical before marketing — hard caps, circuit breaker for viral spikes |
+| Cost guard (session-aware) + cost ceiling architecture | Prevents budget blowout during viral events |
 
 **Nice-to-Have (post-MVP, pre-H2):**
 
@@ -739,13 +810,13 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 
 See [Product Scope — Post-MVP Phases](#post-mvp-phases) for detailed phase descriptions and exit criteria. Summary:
 
-**Phase 1b — Validate Retention (1,000 → 10,000 users):** Daily check-in (optional, free), mood timeline, mobile wrapper, post-assessment survey, viral loop optimization.
+**Phase 1b — Validate Retention + Add Paid Depth:** Paid daily LLM recognition (FR69), subscriber mini-dialogue (FR69a), prescriptive weekly letter layer (FR88), personality-typed notification scheduling, mobile wrapper, post-assessment survey, viral loop optimization.
 
-**Phase 2a — Coach Agent + Subscription:** Coach agent, subscription (€10/mo, €100/yr), conversation extension (subscription), pattern detection, monthly reflection, crisis detection.
+**Phase 2a — Coach Agent + Expanded Subscription:** Coach agent (beta 50-100 users first), portrait gallery + regeneration beyond first extension (FR74, FR23a), confidence milestone notifications (FR75), Section D relational observations (FR32a: D2, D3, D4), pattern detection, monthly reflection, crisis detection.
 
 **Phase 2b — Agent Expansion:** Relationship agent, Career agent, cross-agent intelligence, smart nudges, complete portrait at 30/30.
 
-**Phase 2c — Annual Ritual:** Annual portrait regeneration ("Personality Wrapped"), year-in-review dashboard.
+**Phase 2c — Annual Ritual (Year 1 Q4):** Annual relationship letter regeneration (FR35a) at first-cohort anniversary, "Personality Wrapped" year-in-review.
 
 ### Risk Mitigation Strategy
 
@@ -834,7 +905,7 @@ First B2B play — closest to existing product, warm leads available:
 
 ### Pre-Mortem: Five Ways Big Ocean Dies
 
-**Death 1 — LLM costs eat revenue.** Free-tier AI responses cost more than the free users are worth. Fix: template-based responses for free users (zero LLM cost for daily check-in), live AI only for subscribers. Breakeven requires free-user ongoing cost ≈ $0/month.
+**Death 1 — LLM costs eat revenue.** Free-tier AI responses cost more than the free users are worth. Fix: silent daily check-ins (zero LLM calls per FR68) plus one LLM-generated weekly descriptive letter per active user (FR87). Free-tier unit economics land at ~$0.02–0.08/user/month — well below sustainability threshold. Cost optimization comes from product design (silence is a feature), not from degraded generation quality.
 
 **Death 2 — Archetypes are forgettable.** Clinical descriptors don't trigger sharing. Need: short evocative names (1-2 words), distinct visual identity per archetype, cultural scaffolding. Design investment here has 100x ROI on virality.
 
@@ -853,7 +924,7 @@ First B2B play — closest to existing product, warm leads available:
 - Month 4: Product Hunt + HN + Reddit launch blitz. Iterate on beta feedback. 500-2,000 free users target
 
 **Phase 2: Grow & Learn (Month 5-9)**
-- Month 5-6: Analyze launch data, double down on working channel, therapist dashboard MVP if validated, first influencer outreach (10-20 asks), mood diary MVP, 20 library pages live (archetypes + traits + first science articles)
+- Month 5-6: Analyze launch data, double down on working channel, therapist dashboard MVP if validated, first influencer outreach (10-20 asks), paid daily LLM recognition and mini-dialogue Phase 1b rollout (FR69, FR69a), prescriptive weekly letter layer (FR88), 20 library pages live (archetypes + traits + first science articles)
 - Month 7-8: Iterate subscription value (add personality curriculum if churn high), second influencer/social wave
 - Month 9: Decision gate. Review all metrics. 30 library pages live. MRR target: €1,000-3,000
 
@@ -897,7 +968,7 @@ First B2B play — closest to existing product, warm leads available:
 - **FR7:** Nerin frames observations as invitations to explore — acknowledges user pushback, offers an alternative framing, and redirects to a different topic only if the user rejects the observation a second time. *Acceptance: when a test user contradicts Nerin's observation, Nerin (1) acknowledges the disagreement, (2) offers a reframed version or alternative, and (3) only changes topic if the user rejects again*
 - **FR8:** Nerin includes a "this is not therapy" framing in the greeting
 - **FR9:** Nerin never uses diagnostic language or characterizes third parties the user mentions. *Acceptance: across 10 test conversations, Nerin uses zero DSM terms or clinical labels, and never labels a person the user describes (e.g., never says "your mother sounds controlling" — only observes the user's experience of the relationship)*
-- **FR10:** *(Post-MVP — subscription)* Subscribers can extend their conversation (+15 exchanges) to continue with Nerin
+- **FR10:** *(Subscription — MVP)* Subscribers can extend their conversation (+15 exchanges) to continue with Nerin. Extension is the sole paid perk in MVP (alongside bundled first-extension portrait regeneration per FR23). *Acceptance: subscribed user can trigger one conversation extension per assessment result; extension creates a new conversation session initialized with the prior session's final state (FR25)*
 - **FR11:** Users can resume an abandoned conversation from where they left off
 - **FR12:** The conversation ends with a distinct closing exchange from Nerin before transitioning to results
 - **FR13:** Nerin transitions between territories using a connecting observation or question that references the prior topic when the Director model changes territory (distinct from general steering)
@@ -909,34 +980,39 @@ First B2B play — closest to existing product, warm leads available:
 - **FR16:** Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the results page
 - **FR17:** The system assigns one of 81 hand-curated archetypes based on the user's OCEAN code
 - **FR18:** The system presents all archetypes with positive, strength-based framing
-- **FR19:** Users can view a dashboard of their results, portrait, relationship analyses, and a link to their public profile
+- **FR19:** Authenticated users navigate the product through a three-space bottom navigation model — **Today** (ephemeral daily companion), **Me** (persistent identity page with portrait, archetype, scores, public face control, subscription pitch, Circle preview), and **Circle** (people they care about with relationship letters and invite ceremony). There is no `/dashboard` route. A thin `/settings` route contains account admin (email, password, data export, delete) accessed via a gear icon on the Me page
 
 ### Portrait
 
 - **FR20:** The system generates a narrative portrait written as a personal letter from Nerin using a high-capability LLM
-- **FR21:** Users receive their portrait (Nerin's letter) for free immediately after completing the assessment. A subscription conversion moment exists in the post-portrait experience — design deferred to UX specification
+- **FR21:** Users receive their portrait (Nerin's letter) for free immediately after completing the assessment. The portrait is the emotional peak — it is not gated by subscription, payment, or account upgrades. Subscription conversion does not happen inside the portrait reveal; it happens downstream in the weekly letter flow (FR91) and on the Me page subscription pitch
 - **FR22:** Users can view their portrait immediately after generation (no payment required)
 - **FR22a:** One portrait is generated per assessment result — free, no purchase required
-- **FR23:** *(Post-MVP — subscription)* Conversation extension produces a new assessment result. The subscriber can purchase a new portrait for that result — the new portrait incorporates observations derived from extended evidence not present in the original. The prior portrait remains attached to the prior result as "previous version"
+- **FR23:** *(Subscription — MVP)* The first conversation extension per subscriber automatically generates a new portrait at no additional cost beyond the €9.99/mo subscription. The new portrait incorporates observations derived from the extended evidence not present in the original. The prior portrait remains attached to the prior assessment result as "previous version" on the Me page. *Acceptance: a subscribed user who completes their first conversation extension sees a new portrait generated automatically without any additional purchase step; the original portrait remains visible as "previous version"*
+- **FR23a:** *(Post-MVP — subscription)* Subscribers can regenerate their portrait on conversation extensions beyond the first. Mechanism (bundled, separate purchase, or quota-based) deferred to Phase 2a
 - **FR24:** The system records share events (archetype card copy, profile link copy) and return-visit timestamps per portrait. Dashboard displays: share rate (shares / portrait views), 48-hour return rate (users who revisit within 48h / total portrait recipients)
-- **FR25:** *(Post-MVP — subscription)* Conversation extension creates a new assessment session. The Director model initializes from the prior session's final state and evidence. On completion, new assessment results are generated. The new result has no portrait until purchased separately (FR22a). The prior portrait and any relationship analyses based on the prior results become "previous version"
+- **FR25:** *(Subscription — MVP)* Conversation extension creates a new assessment session. The Director model initializes from the prior session's final state and evidence. On completion, new assessment results are generated. For the first extension per subscriber, a new portrait is generated automatically per FR23. For subsequent extensions, see FR23a. The prior portrait and any relationship letters based on the prior results become "previous version"
 - **FR26:** Portrait generation is asynchronous — users are notified when ready
 - **FR27:** The system retries portrait generation up to 3 times with exponential backoff (5s, 15s, 45s). If all retries fail, the user is notified within 5 minutes with an option to retry manually
 
 ### Relationship Analysis
 
-- **FR28:** Users can initiate a relationship analysis by opening a QR drawer; the other person scans the QR code or opens the contained URL
-- **FR29:** The system generates a 2-person relationship analysis when both users have completed their assessments. The analysis page contains two parts: (1) a **data grid** — analytical comparison of traits, facets, and scores between both users, and (2) a **unified narrative** — a celebratory, LLM-generated text describing the relationship dynamic between both profiles. Both parts are free
-- **FR30:** The QR accept screen shows the initiator's name, Accept and Refuse buttons, and a data-sharing disclaimer: accepting shares the user's trait and facet scores with the initiator for the purpose of generating the relationship analysis. Single consent gate — accepting is informed consent to data sharing
-- **FR31:** Users see a ritual suggestion screen before accessing the relationship analysis
-- **FR32:** The relationship analysis (both data grid and narrative) describes relational dynamics without blame language and without exposing individual vulnerability data. The narrative celebrates the relationship — it names dynamics and tensions as shared patterns, not individual deficits
-- **FR32a:** *(Post-MVP — subscription)* The relationship agent provides a personalized lens on the relationship through the requesting user's perspective only, using only that user's data. No additional consent needed — the agent reads the shared analysis + the requesting user's own personality data
-- **FR33:** Relationship analysis is free and unlimited. Every completed relationship analysis is a potential new user acquisition at zero cost — the growth engine
-- **FR34:** If one user deletes their account, the shared relationship analysis is deleted
-- **FR35:** Each relationship analysis is linked to both users' assessment results (not to invitations). All analyses are preserved as snapshots — the newest is primary, older ones are classified as "previous version." Version detection is derive-at-read: if newer assessment results exist for either user, the analysis is classified as "previous version." Users can view all their relationship analyses
-- **FR36:** Users receive an email notification when a relationship analysis they participated in is ready
+**Naming note:** User-facing copy uses "relationship letter" or "letter about your dynamic" instead of "relationship analysis" (continuous with Nerin's portrait, letter-format Nerin output grammar). The internal data model retains `relationship_analysis` naming for code compatibility.
+
+- **FR28:** Users can initiate a relationship letter by opening a QR drawer from the Circle page invite ceremony; the other person scans the QR code or opens the contained URL
+- **FR29:** The relationship letter page is a living relational space with the following sections: (1) **This Year's Letter** — warm narrative in letter format describing the relationship dynamic, entered through a "Read Together Again" ritual screen on first read, LLM-generated at letter-creation time, same visual language as the personal portrait, free for both users; (2) **Where You Are Right Now** — real-time data grid with side-by-side traits, facets, and overlap with complementarity framing, updated automatically from conversation data (derive-at-read), free; (3) **Letter History** — vertical timeline of all letters (single letter in MVP, grows with annual regeneration post-MVP), free; (4) **Your Next Letter** — anticipation anchor for the annual ritual ("Nerin is already learning more about both of you"), free; (5) **Things You've Learned About Each Other** — user-owned shared notes, attributed per entry, free. *Post-MVP Section D (D2 relational observations, D3 "take care of" suggestions, D4 alignment patterns) is subscriber-only and not in MVP scope.*
+- **FR29a:** The relationship letter is generated once when both users complete their assessments. The LLM call uses both users' facets, traits, archetype, and representative evidence strings to produce the narrative. Cost: ~1 LLM call per relationship (not per view).
+- **FR30:** The QR accept screen shows the initiator's name, Accept and Refuse buttons, and a data-sharing disclaimer: accepting means (1) sharing the user's trait and facet scores with the initiator for the purpose of generating the relationship letter, (2) ongoing data sharing — Nerin will use conversation data from both users to keep the relationship letter current and regenerate it on connection anniversary (post-MVP), (3) consent is revocable at any time from settings. Single consent gate — accepting is informed consent to ongoing data sharing, no per-action consent required
+- **FR31:** Users see a ritual suggestion screen before accessing the relationship letter for the first time. Subsequent visits bypass the ritual by default; a "Read Together Again" button re-enters the ritual mode
+- **FR32:** The relationship letter describes relational dynamics without blame language and without exposing individual vulnerability data. The narrative celebrates the relationship — it names dynamics and tensions as shared patterns, not individual deficits. Harm-reduction framing rule: "dynamics not deficits, no blame, no one is the problem"
+- **FR32a:** *(Post-MVP — subscription)* The relationship letter page renders Section D — subscriber-only per-user relational intelligence: D2 relational observations ("You've both been tense on Mondays for three weeks..."), D3 "take care of" suggestions (directional, personality-informed coaching for how to show up for the partner, reciprocal and simultaneous — each paying user sees their own "For [name]" suggestion only, never sees the suggestion written about them), and D4 alignment patterns (gentle noticing cards). Privacy contract: Nerin is the abstraction layer — observations always flow through Nerin's voice, never raw data between users. Note text from daily check-ins, individual pattern details, mini-dialogue content, and raw evidence strings NEVER cross users.
+- **FR33:** Relationship letters are free and unlimited. Every completed relationship letter is a potential new user acquisition at zero cost — the growth engine
+- **FR34:** If one user deletes their account, the shared relationship letter is deleted
+- **FR35:** Each relationship letter is linked to both users' assessment results (not to invitations). The MVP ships a single static letter per relationship generated at connection time. Post-MVP annual regeneration (FR35a) creates new letter snapshots while preserving prior versions forever as a multi-year relationship biography — "Your 2026 letter", "Your 2027 letter", etc. Users can view all letters in the Letter History section
+- **FR35a:** *(Post-MVP — Year 1 Q4)* The system automatically regenerates the relationship letter on the anniversary of the QR accept date. Both users receive a notification ("Your [year] letter from Nerin is ready"). Old letters are preserved in version history. Regeneration uses current conversation data from both users — no per-regeneration consent required because the original QR consent (FR30) covers ongoing use
+- **FR36:** Users receive a notification when a relationship letter they participated in is ready (initial generation in MVP; annual regeneration post-MVP)
 - **FR37:** The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up, verify their email, and complete their assessment before seeing the accept screen
-- **FR38:** *(Removed — relationship analysis is free and unlimited, no credit tracking needed)*
+- **FR38:** *(Removed — relationship letter is free and unlimited, no credit tracking needed)*
 
 ### Public Profile & Social Sharing
 
@@ -951,9 +1027,9 @@ First B2B play — closest to existing product, warm leads available:
 
 ### Subscription & Monetization
 
-- **FR47:** Users can subscribe at €9.99/mo via embedded checkout. Subscription unlocks premium features defined in FR10 (conversation extension), FR49 (conversation access), FR69 (coaching + weekly focus), FR71 (weekly digest), FR74 (portrait regeneration). Additional subscription features (specialized agents, growth insights, pattern analysis) are defined in Phase 2a scope — no FRs yet
-- **FR48:** *(Removed — relationship analysis is free, no credit purchase needed)*
-- **FR49:** *(Post-MVP — subscription)* Subscribers can access conversation extensions as part of their subscription
+- **FR47:** Users can subscribe at €9.99/mo via Polar embedded checkout. In MVP, the subscription unlocks exactly two perks: **conversation extension with Nerin** (FR10, FR25 — add +15 exchanges to the assessment with Director model re-initialization from prior session state) and **automatic portrait regeneration on the first extension** (FR23 — new portrait bundled, no additional payment). Post-MVP unlocks are defined in Phase 2a and include daily LLM recognition (FR69), mini-dialogue (FR69a), prescriptive weekly letter layer (FR88), subsequent portrait regenerations (FR23a), portrait gallery (FR74), confidence milestone notifications (FR75), and Section D relational observations (FR32a). *Acceptance: checkout completes in under 90 seconds from tap to confirmed subscription status; cancellation is self-service and effective at end of billing period*
+- **FR48:** *(Removed — relationship letter is free, no credit purchase needed)*
+- **FR49:** *(Subscription — MVP)* Subscribers have access to conversation extensions (FR10) as part of their subscription. Extension is unlimited for subscribers — they can re-extend on each extended assessment result as long as their subscription is active
 
 ### User Account & Privacy
 
@@ -999,20 +1075,54 @@ First B2B play — closest to existing product, warm leads available:
 - **FR76:** The system sends three types of lifecycle emails: (1) drop-off re-engagement — sent to users who abandoned mid-assessment, referencing their last conversation territory, (2) Nerin check-in — sent ~2 weeks post-assessment as a conversational follow-up from Nerin, (3) subscription conversion nudge — sent to engaged free users (≥3 return visits or ≥1 relationship analysis) highlighting subscription value
 - **FR77:** The system sends a notification email within 5 minutes when a relationship analysis the user participated in is ready
 
-### Mood Diary & Daily Check-in
+### Daily Check-in (Today Page)
 
-- **FR67:** Users can perform a daily mood check-in: mood selector (5 options) + optional text input
-- **FR68:** Free users receive a personality-informed recognition response (template-based, zero LLM cost): connecting their mood to their personality patterns
-- **FR69:** *(Subscription)* Subscribers receive recognition + actionable coaching suggestion + weekly/monthly focus statements (LLM-generated)
-- **FR70:** Users can view a mood calendar showing their check-in history and patterns over time
-- **FR71:** *(Subscription)* Subscribers receive a weekly digest: mood patterns + focus recommendation
-- **FR72:** Mood check-in data is stored per user and visible only to the user (and optionally to their therapist in B2B mode)
+**Architecture note:** The daily check-in is a **silent journal** for all users in MVP. Free users deposit mood + optional note with no LLM response. Paid users receive no different treatment on daily check-ins in MVP — daily LLM recognition (FR69) and "Tell me more" mini-dialogue (FR69a) are post-MVP subscriber features. The only Nerin touchpoint in the daily/weekly loop during MVP is the free weekly letter (FR86–FR92). This keeps free-tier LLM cost at ~$0.02–0.08/user/month (weekly letter only) and positions the subscription conversion story inside the weekly letter, not inside daily check-ins.
 
-### Portrait Evolution
+- **FR67:** Users can perform a daily check-in on the Today page consisting of (1) a personality-typed prompt from Nerin at the top, (2) a 5-option mood selector, (3) an optional note text field, and (4) a note visibility selector (Private / Inner circle / Public pulse)
+- **FR68:** When a user submits their daily check-in, the entry is saved to the mood calendar and displayed on the Today page in **journal format** — user's entry anchored at the top, 7-day dot grid with today filled, and a quiet anticipation line beneath: *"Nerin will write you a letter about your week on Sunday."* No LLM response, no Nerin recognition, no "thank you" message. Silent deposit. *Acceptance: a check-in submission triggers zero LLM calls and renders the journal view within 500ms*
+- **FR68a:** The Today page displays a quiet weekly anticipation line ("Nerin will write you a letter about your week on Sunday") whenever the user has checked in this week and the week is not yet Sunday. On Sunday after the weekly letter has generated, an inline card replaces the anticipation line with "Your week with Nerin is ready"
+- **FR69:** *(Post-MVP — subscription, Phase 1b)* Subscribers receive an LLM-generated Nerin recognition in journal format per check-in. The recognition is 2-3 sentences connecting the user's mood to their personality (top 3 facets, dominant traits, archetype, representative evidence strings) with no generic wellness language and no advice — pure observation. Tight LLM call (~$0.002-0.005 per call). The system includes lightweight pattern signals as prompt context — streak (consecutive check-ins), silence break (first check-in after >3-day gap) — with no separate rule engine
+- **FR69a:** *(Post-MVP — subscription, Phase 1b)* Subscribers can tap "Tell me more →" on a daily recognition to open a scoped 3-5 exchange mini-dialogue with Nerin, who reads the actual note and responds in chat format
+- **FR70:** Users can view a mood calendar showing their check-in history over time, rendered as a grid of dots with mood emoji selections and day markers. The calendar is visible on the Me page ("Your Growth" section, conditional on having any check-in history) and inline on Today as the "week-so-far" dot grid
+- **FR71:** Users choose note visibility per check-in: (1) **Private** (default) — only the user and Nerin see the note, (2) **Inner circle** — visible to consented people in Circle, (3) **Public pulse** (post-MVP) — mood emoji only on public profile, note hidden
+- **FR72:** Mood check-in data is stored per user and visible only to the user by default. Note text is never exposed across users. Inner-circle visibility requires the user to select that visibility level per check-in and the viewing user to be in the owner's Circle
 
-- **FR73:** Each portrait generation is stored as a versioned snapshot with its confidence level. Users can view a portrait gallery/timeline showing their progression
-- **FR74:** *(Subscription)* Subscribers can regenerate their portrait with updated data from new conversations — each regeneration creates a new snapshot
-- **FR75:** Users receive push notifications when their personality confidence level crosses defined thresholds: every 5-8 percentage points in the 50-70% range, every 10-15 percentage points above 80%. Each notification includes a delta insight — a single sentence describing the facet or pattern most changed since the previous milestone (e.g., "Your Agreeableness score shifted the most — here's what we found")
+### Portrait Versioning
+
+- **FR73:** Each portrait generation is stored as a versioned snapshot with its confidence level, creation date, and linked assessment result. MVP ships storage only. The portrait gallery UI is post-MVP (FR74)
+- **FR74:** *(Post-MVP — subscription, Phase 2a)* Subscribers can view a portrait gallery/timeline on the Me page showing all portrait versions with side-by-side comparison and a regeneration ceremony with wait screen. Portrait regeneration beyond the first extension (FR23a) lives here
+- **FR75:** *(Post-MVP — subscription, Phase 1b)* Users receive push notifications when their personality confidence level crosses defined thresholds: every 5-8 percentage points in the 50-70% range, every 10-15 percentage points above 80%. Each notification includes a delta insight — a single sentence describing the facet or pattern most changed since the previous milestone
+
+### Today Page & Weekly Letter from Nerin
+
+- **FR86:** The system generates a weekly summary every Sunday at 6pm local time (per user time zone) for each user who submitted ≥3 daily check-ins during that week. Users with 0-2 check-ins receive no summary and no notification — no shame messaging
+- **FR87:** The weekly summary is LLM-generated as a **letter from Nerin** using the letter format (focused reading, max-width 720px, warm background, same visual language as the portrait). The free version contains: (1) date range header, (2) personalized opening ("Dear [name]"), (3) week narrative — 2-3 paragraphs observing the pattern of the week and referencing specific mood selections and note content with personality-informed framing, (4) visual mood shape — 7-day dot grid as a small secondary element, (5) "What stood out" beat — one specific observation from the week's notes, (6) Nerin's sign-off. *Critical rule: the free version must feel complete and satisfying on its own — not a preview, not cripple-ware.* LLM cost: ~$0.02-0.05 per user per week
+- **FR88:** *(Post-MVP — subscription, Phase 1b)* The subscriber weekly summary is generated from the same LLM call as the free version with additional prescriptive sections: (1) **For the week ahead** — prescriptive focus statement + one concrete micro-action, (2) **Zooming out** — cross-week pattern detection observations, (3) **Relational beat** (if partner in circle and mood sharing opted in) — observations about how partners' weeks looked relative to each other, (4) **Library article link** — contextually-selected from the SEO knowledge library based on this week's theme, (5) **Reflective prompt** — single open question to sit with until next week
+- **FR89:** Users receive a push notification at weekly summary generation time with copy *"Your week with Nerin is ready."* Email fallback for users without push notification permission. An inline card also appears on the Today page top on Sundays when the summary is ready
+- **FR90:** The weekly summary is accessed at a dedicated focused reading route `/today/week/$weekId`. The reading view uses the same visual language and component shell as the portrait reading view (FR94). Entered from the Today inline card or the notification tap
+- **FR91:** The free weekly summary ends with a soft conversion CTA in Nerin's voice, not system voice: "I have more I want to say about what comes next. With a subscription, I can write you a fuller letter each week — with what to try, what patterns I'm seeing across weeks, and what I think might help in the week ahead. **Or: continue our conversation. Extend your 15 exchanges with another 15, and I'll write you a new portrait afterwards that reflects everything I've learned about you since.**" The primary MVP CTA is the conversation extension path (€9.99/mo subscription). A soft dismiss option ("Not right now") returns the user to Today with no escalation. The CTA reappears each Sunday with the same framing — no aggressive retention nag
+- **FR92:** Edge cases: (a) user with 0-2 check-ins that week → no summary, no notification, no shame message; (b) user just subscribed mid-week → next Sunday's summary is the full subscriber version; (c) user just cancelled → the subscriber version continues until end of billing period, then the free version
+
+### Three-Space Navigation
+
+- **FR101:** Authenticated users land on `/today` by default. First visit post-assessment lands on `/me` for portrait reveal (the emotional peak); all subsequent visits land on `/today`
+- **FR102:** The three-space bottom navigation (Today / Me / Circle) is the primary navigation model for authenticated users. `/dashboard` is removed. A thin `/settings` route contains account admin (email, password, data export, delete) accessed via a gear icon on the Me page. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel — users land in `/chat` from the pre-conversation onboarding after signup + verification
+- **FR103:** The public profile remains a separate unauthenticated SSR route (`/public-profile/$id`) distinct from the authenticated Me page (`/me`). Me page contains a "Your Public Face" section as the control center for the public profile route
+
+### Circle & Invite Ceremony
+
+- **FR97:** The Circle page displays people the user cares about as full-width cards ordered organically (no sorting, no search, no recommendations, no directory). Each card shows archetype, OCEAN code, duration ("understanding each other since February"), "last shared" recency signal celebrating moments of mutual understanding (relationship letter views, shared moments, portrait sends — not a streak, no shaming), and a "View your dynamic" link to the relationship letter page
+- **FR98:** The Circle page enforces the Intimacy Principle: no count metrics (no "X connections"), no follower/fan/network language, no profile view counters, no sign-up attribution shown to the user, no sorting options, no search, no user directory, no hard cap on circle size. Empty state copy teaches the value system: "Big Ocean is made for the few people you care about. This is where they'll live."
+- **FR99:** The invite ceremony dialog uses reward-first copy that leads with the letter (the reward) instead of the 30-minute conversation (the cost). Copy structure: (1) "Discover the dynamic between you," (2) concrete promise — "the parts that click, the parts that clash, and the unspoken rhythms you've been navigating," (3) self-reflexive hook — "a side of yourself that only shows up around them," (4) reframe cost as gift to invitee — "Their side: a 30-minute conversation with Nerin. No forms. No quizzes. Just someone curious about them," (5) privacy promise at send moment — "It stays between the two of you," (6) optional name field as intentionality ceremony, (7) QR / copy link / share via options
+- **FR100:** Invite placement: (a) Me page "Your Circle" section (static), (b) Circle page bottom of the list (static), (c) another user's public profile (contextual CTA per FR45), and (d) Nerin references the relational dimension inside the weekly summary on Sunday (highest-converting placement because it fires in the emotional state Nerin just created). User-facing copy uses "letter about your dynamic" or "relationship letter" — never "relationship analysis"
+
+### Post-Assessment Transition
+
+- **FR93:** At the end of the 15-exchange assessment, Nerin's distinct closing exchange (FR12) ends and the input field fades. A single button appears beneath the closing message: **"Show me what you found →"** — user-voiced (user speaking to Nerin), warm, keeps the conversation feel alive for one more beat. Tapping the button navigates the user to `/results/$sessionId?view=portrait` directly
+- **FR94:** The portrait reading view handles a **generating state**: a centered OceanSpinner with a single Nerin-voiced line ("Nerin is writing your letter...") and no other content visible. When the portrait is ready, the spinner resolves and the letter fades in — full-screen, distraction-free, max-width 720px, warm background, letter format
+- **FR95:** At the bottom of the portrait reading view, a warm link ("There's more to see →") navigates the user to `/results/$sessionId` (the full Me page with inline portrait, identity hero, radar, scores, Public Face section, and subscription pitch)
+- **FR96:** The first Me page visit displays a return seed at the bottom of the page in Nerin's voice: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a Nerin-voiced notification permission request: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* (NOT a system-voice "Enable notifications" prompt). Permission granted → schedule the first daily prompt for the next day at a profile-appropriate time (high-C morning, high-O afternoon) with one default time the user can customize later. Permission denied → relationship still works, the user opens the app themselves, no lock-in
 
 ## Non-Functional Requirements
 
@@ -1024,9 +1134,9 @@ First B2B play — closest to existing product, warm leads available:
 - **NFR4:** Chat page initial load <2s, subsequent interactions <200ms (client-side)
 - **NFR5:** Portrait generation completes within 60s (async — user notified, not waiting. Benchmark and adjust)
 - **NFR6:** Per-assessment LLM cost stays within ~€0.30 budget (cost-efficient LLM for conversation + extraction)
-- **NFR7:** Per-portrait LLM cost stays within ~€0.20-0.40 budget (high-capability LLM for generation, optimizable via model routing and structured generation pipeline)
-- **NFR7a:** Free-tier ongoing cost per user must approach $0/month. Mood diary recognition uses template-based responses (zero LLM cost). Live AI responses reserved for subscribers
-- **NFR7b:** Cost ceiling architecture: per-user token budgets, hard caps on free-tier LLM usage, circuit breaker for cost spikes during viral events
+- **NFR7:** Per-portrait LLM cost stays within ~€0.20-0.40 budget, optimizable via model routing
+- **NFR7a:** Free-tier ongoing cost per user stays at approximately $0.02-$0.08 per active user per month in MVP. Daily check-ins are silent (zero LLM calls per FR68); the only LLM touchpoint in the free-tier daily/weekly loop is the weekly letter at ~$0.02-$0.05 per user per week (FR87). Subscriber ongoing cost stays at approximately $0.35-$0.75 per subscriber per month in MVP (conversation extension + bundled first-extension portrait regeneration), yielding 93-97% gross margin against €9.99/mo subscription. Cost optimization comes from product design (silent free daily check-ins, LLM-everywhere-Nerin-speaks with rich user context, no template engine), not from degraded generation quality
+- **NFR7b:** Cost ceiling architecture: per-user token budgets, hard caps on free-tier LLM usage, circuit breaker for cost spikes during viral events. Budget threshold for circuit breaker: >3x expected weekly-letter cost within any 24h window triggers automated rate limiting with alerting
 
 ### Security & Privacy
 
