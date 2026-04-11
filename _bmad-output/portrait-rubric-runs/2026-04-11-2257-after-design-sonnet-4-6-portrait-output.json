@@ -1,0 +1,52 @@
+{
+	"portrait_id": "after-design-sonnet-4-6-portrait-output",
+	"rubric_version": "1.0",
+	"rubric_prompt_sha": "d4b42ede0e82e099308e4f67995a6663d372e9a8db4ec11928f1afd66660c6f8",
+	"timestamp": "2026-04-11T20:57:42Z",
+	"dimensions": {
+		"insight_beneath_observation": {
+			"score": 5,
+			"rationale": "The 'orphaned courage' frame is a genuine inferential move \u2014 it names a falsifiable gap between the reader's actions (years of pull-following) and self-image ('I just wish I had the bravery'), reframing them to themselves rather than restating what they said.",
+			"evidence": "There's a specific name I have for this gap. I call it the orphaned courage \u2014 the kind of bravery that exists in your actions but hasn't been claimed by your self-image."
+		},
+		"spine_coherence": {
+			"score": 5,
+			"rationale": "One reading \u2014 signal-following \u2014 compounds across every movement: signal literacy in work pivots, hyperfocus as obsession-with-pull, the social filter as 'same engine, different domain', orphaned courage as the unclaimed identity of the pull-follower, and big-ocean as the pull made visible.",
+			"evidence": "Same engine, different domain."
+		},
+		"arc_fidelity": {
+			"score": 3,
+			"rationale": "WARMTH BEFORE DEPTH is violated \u2014 the very first paragraph leads with the 'I will quit or get fired' quote, and the first sub-section explicitly names a 'shadow' ('when the signal is absent, nothing works\u2026 you drift'), running a mini strength\u2192shadow loop instead of letting the honesty arc span the whole portrait.",
+			"evidence": "The shadow is right there in the same ability: when the signal is absent, nothing works."
+		},
+		"coined_phrase_quality": {
+			"score": 4,
+			"rationale": "Two strong, prospective coinages \u2014 'signal literacy' and 'orphaned courage' \u2014 both portable and capable of changing how the reader sees ordinary moments going forward, but the portrait stops at two rather than the 2\u20134 sweet spot with cross-movement echo.",
+			"evidence": "signal literacy \u2014 a finely tuned ability to read what's genuinely calling you versus what just looks like it should."
+		},
+		"self_compelling": {
+			"score": 4,
+			"rationale": "The closing question ('what are you actually waiting for permission from?') and the orphaned-courage reframe leave the reader with a lens to return to, but the unresolved cost is partially diagnosed ('I don't think you can maintain that split indefinitely'), which softens the 'I am more interesting than I realized' pull toward 'I have a pattern I should examine'.",
+			"evidence": "So what are you actually waiting for permission from?"
+		},
+		"voice": {
+			"score": 4,
+			"rationale": "Mostly confident, warm, and specific in Nerin register, but slips into advisory/diagnostic mode in 'Where the Patterns Point' ('the mismatch at work won't resolve itself', 'I've seen this before') and Nerin-as-subject creeps in with 'I keep returning to' and 'I've seen a lot of people\u2026'.",
+			"evidence": "I've seen a lot of people build things on the side that express what their main life doesn't."
+		},
+		"emotional_stake": {
+			"score": 4,
+			"rationale": "Verbatim user language is anchored ('basically obsessed with one thing', 'moving blindfolded'), and the orphaned-courage observation lands with weight, but the cost is reframed as 'energy borrowed against the thing that matters' rather than named bare and unresolved, which dampens the 'she didn't look away' moment.",
+			"evidence": "Every hour spent in disengagement is energy borrowed against the thing that actually matters to you."
+		}
+	},
+	"overall_score": 4.1,
+	"overall_take": "A genuinely strong inferential portrait \u2014 'orphaned courage' is a real reading, not a summary, and the signal-following spine compounds cleanly across every section. The structural weakness is arc fidelity: the opening leads with the quitting quote and the first sub-section runs an explicit strength\u2192shadow loop, violating WARMTH BEFORE DEPTH and the SINGLE ARC rule.",
+	"flags": [
+		"WARMTH BEFORE DEPTH violated \u2014 opening leads with cost ('quit or get fired') and first sub-section explicitly names a 'shadow'",
+		"Mini strength\u2192shadow loop in 'You don't chase novelty' section violates SINGLE ARC",
+		"Unresolved cost is partially reframed/advised rather than left bare ('energy borrowed against', 'I don't think you can maintain that split')",
+		"No clear GAP \u2014 Nerin completes her thoughts throughout; no sentence trails into image instead of conclusion",
+		"Nerin-as-subject slips ('I keep returning to', 'I've seen a lot of people')"
+	]
+}

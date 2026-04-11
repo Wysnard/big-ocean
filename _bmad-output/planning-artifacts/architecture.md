@@ -3,15 +3,16 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-04-11'
+lastUpdated: '2026-04-12'
 lastConsolidated: '2026-04-05 — unified all satellite architecture docs into this single authoritative file'
-lastDeltaUpdate: '2026-04-11 — reconciled against PRD 2026-04-11: three-space navigation, silent daily journal, weekly letter pipeline, post-assessment focused reading, MVP subscription billing, Nerin Output Grammar, knowledge library SSR, cost ceiling. Added ADR-43 through ADR-50. Edited ADR-3/7/8/9/10/11/12/15 for PRD alignment. Superseded ADR-23 (dashboard). Global 25→15 exchange count update.'
-adrsTotal: 50
+lastDeltaUpdate: '2026-04-12 — incorporated problem-solution-2026-04-11.md (portrait pipeline rework). Added ADR-51 through ADR-54 (three-stage portrait pipeline, UserSummary at completion, direct Anthropic SDK carve-out, portrait observability + rubric). Edited ADR-3 (Full Portrait row split into Spine Extractor / Spine Verifier / Prose Renderer + UserSummary Generator), ADR-13 (per-stage failure semantics).'
+adrsTotal: 54
 adrsAdded:
   - 'ADR-22 through ADR-30 (post-completion)'
   - 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)'
   - 'ADR-39 through ADR-42 (Post-MVP design-now-build-later: conversations table rename, agent architecture, personality context, subscription billing)'
   - 'ADR-43 through ADR-50 (2026-04-11 PRD delta — three-space nav, silent journal, weekly letter, focused reading, MVP subscription billing, Nerin output grammar, knowledge library SSR, cost ceiling)'
+  - 'ADR-51 through ADR-54 (2026-04-12 portrait pipeline rework — three-stage Spine Extractor → Verifier → Prose Renderer, UserSummary at assessment completion with quote bank, direct Anthropic SDK carve-out for portrait calls, portrait observability + quality rubric skill)'
 adrsSuperseded:
   - 'ADR-5, ADR-17, ADR-18, ADR-19, ADR-21 → Director Model (ADR-30 through ADR-38)'
   - 'ADR-23 (Dashboard/Profile Consolidation) → ADR-43 (Three-Space Navigation, 2026-04-11)'
@@ -49,6 +50,11 @@ This is a self-contained architecture document. All content from previously sepa
   - ADR-48: Nerin Output Grammar (three visual registers)
   - ADR-49: Knowledge Library SSR Architecture
   - ADR-50: Cost Ceiling Architecture
+- **Portrait pipeline rework (added 2026-04-12 from problem-solution-2026-04-11.md):** ADR-51 through ADR-54
+  - ADR-51: Three-Stage Portrait Pipeline (Spine Extractor → Verifier → Prose Renderer)
+  - ADR-52: UserSummary at Assessment Completion (quote-bank compression, cross-cutting asset)
+  - ADR-53: Direct Anthropic SDK for Portrait (LangChain carve-out)
+  - ADR-54: Portrait Observability + Quality Rubric Skill
 - **Post-MVP design decisions (design now, build later):** ADR-39 through ADR-41 — conversations table rename, agent type architecture, personality context pattern. ADR-42 promoted to ADR-47 MVP.
 - **Superseded by 2026-04-11 delta:** ADR-23 (Dashboard/Profile Consolidation) — replaced by ADR-43 (Three-Space Navigation)
 - **Historical pacing pipeline:** ADR-5, 17-19, 21 (marked `[SUPERSEDED]`) + Historical Appendix A
@@ -256,18 +262,23 @@ flowchart LR
 
 ### ADR-3: LLM Agent Architecture
 
-**Decision:** Five distinct LLM agents with purpose-separated tiers. ConversAnalyzer evidence is the single source of truth for all scoring — no finalization re-analysis step. Nerin is split into a Director (strategy) and Actor (voice).
+**Decision:** Distinct LLM agents with purpose-separated tiers. ConversAnalyzer evidence is the single source of truth for all scoring — no finalization re-analysis step. Nerin is split into a Director (strategy) and Actor (voice). **Portrait generation is split into three stages (Spine Extractor → Spine Verifier → Prose Renderer)** fed by a pre-computed UserSummary generated at assessment completion. See ADR-51/52 for the full portrait pipeline spec.
 
 | Agent | Model | When | Purpose | Error Handling |
 |-------|-------|------|---------|---------------|
 | Nerin Director | Claude Sonnet / Haiku | Every message after evidence extraction | Reads full conversation + coverage targets and writes a creative-director brief | Fatal (mapped to `AgentInvocationError`) |
 | Nerin Actor | Haiku 4.5 | Every message after Nerin Director | Voices the brief as the user-facing Nerin response | Fatal |
 | ConversAnalyzer | Haiku 4.5 | Every user message, **before Nerin Director** (sequential, not parallel) | Evidence-only extraction — **single source of truth** for scoring, coverage, portraits, and relationship analysis | Three-tier: strict ×3 → lenient ×1 → neutral defaults |
-| Full Portrait | Sonnet 4.6 | Once on assessment completion (free — FR21); regenerated on first subscriber conversation extension (bundled — FR23, ADR-11) | Deep narrative from conversation evidence v2 | Placeholder + lazy retry |
+| UserSummary Generator | Haiku 4.5 | Once on assessment completion, before portrait kickoff (ADR-52) | Compresses raw conversation into a themed summary + verbatim `quoteBank` (20–40 entries) used by Spine Extractor in lieu of raw conversation | Fatal — missing UserSummary fails portrait kickoff |
+| Spine Extractor | Sonnet 4.6 with `thinking: { budget_tokens: 2048 }` | Stage A of portrait pipeline (ADR-51) | Reads UserSummary + facet scores → produces prescriptive `SpineBrief` JSON (insight, 6-beat arc, coined-phrase targets, verbatim anchors). Inference, not summary. | Bounded retry: Verifier-driven re-extraction, max 2 attempts |
+| Spine Verifier | Haiku 4.5 | Stage B of portrait pipeline (ADR-51) | Judges the SpineBrief against structural + specificity + insight-falsifiability checklist. Produces `SpineVerification` with `gapFeedback`. Brief-only input. | Verifier pass → Stage C; fail → re-extract once with gap feedback; second fail → ship best brief, log for audit |
+| Prose Renderer | Sonnet 4.6 (Phase 4a may swap to Haiku 4.5) | Stage C of portrait pipeline (ADR-51) | Renders `SpineBrief` + `PORTRAIT_CONTEXT` craft rules into 6-movement prose. **No UserSummary, no raw conversation** — brief is the sole user-state input. | Placeholder + lazy retry (reconciliation per ADR-13) |
 | Relationship Letter | Sonnet 4.6 | Once on QR token accept (free — FR33); annual regeneration post-MVP (FR35a) | Cross-user comparison in letter format | Placeholder + lazy retry |
 | Weekly Letter | Sonnet 4.6 (free) / Sonnet 4.6 with extended prompt (subscriber) | Once per user per week on Sunday 6pm local (ADR-45) if ≥3 check-ins | Week narrative from mood + note entries + personality context | Idempotent cron, retry on failure |
 
-**Per-assessment LLM budget:** Evidence + Director + Actor on each turn (~€0.30 per 15-exchange assessment). Sonnet remains optional for the Director and is always used for portraits / relationship letters / weekly letters.
+**Per-assessment LLM budget:** Evidence + Director + Actor on each turn (~€0.30 per 15-exchange assessment). Portrait pipeline targets **~$0.13–$0.14 per portrait** (Sonnet Spine Extractor + Haiku Verifier + Sonnet Prose Renderer + Haiku UserSummary amortized at completion). See ADR-51, ADR-54 for cost breakdown and ADR-50 for cost-ceiling interaction.
+
+**Portrait pipeline ordering:** (1) `ConversAnalyzer` feeds evidence across the assessment session. (2) On assessment completion, `UserSummary Generator` (Haiku) is enqueued and persisted before portrait kickoff. (3) `Spine Extractor` (Sonnet + small thinking budget) reads UserSummary + facet scores → JSON brief. (4) `Spine Verifier` (Haiku) scores the brief; on fail, Stage A re-runs once with `gapFeedback` appended. (5) `Prose Renderer` (Sonnet) renders the (final) brief into prose. **Brief-only contract at Stage C** is load-bearing — it forces Stage A to produce a self-sufficient brief and keeps Stage B free of user-state leakage.
 
 **Critical pipeline ordering change:** ConversAnalyzer runs BEFORE Nerin Director, and Nerin Director runs BEFORE Nerin Actor. There is no separate user-state extraction call. The Director reads conversational energy and pressure from the message history itself. This makes the live runtime a 3-call sequential path (evidence → Director → Actor).
 
@@ -584,12 +595,15 @@ type SubscriptionFeature =
 
 **Updated 2026-04-11:** Portrait generation is no longer purchase-triggered (ADR-3, FR21 — portrait is free). Reconciliation now checks the assessment-result side: if an `assessment_results` row exists but no corresponding portrait row, queue a generation job.
 
+**Updated 2026-04-12 (ADR-51):** Portrait generation is now a three-stage pipeline. Reconciliation still checks on the portrait-row side — the internal stage boundaries do not leak into the reconciliation contract — but the set of possible mid-generation crash points is larger. A crash can happen (a) before the `UserSummary` is persisted, (b) mid Spine Extraction, (c) between Extraction and Verification, (d) mid Prose Rendering. Reconciliation re-queues by enqueuing a fresh worker run that re-executes the full pipeline from whichever upstream artifact is already persisted.
+
 **Decision:** On status poll, if an `assessment_results` row exists but no portrait row exists for that result, queue a generation job.
 
 **Implementation:** Reconciliation logic in `reconcile-portrait-generation.use-case.ts` (renamed from `reconcile-portrait-purchase.use-case.ts`), called from `getPortraitStatus` when status is "generating" (assessment result exists but no portrait row):
 1. Does an `assessment_results` row exist for this user?
-2. Does a portrait row exist with `assessment_result_id` matching the latest result?
-3. If (1) yes and (2) no → `Queue.offer` to `PortraitJobQueue`
+2. Does a `user_summary` row exist for that assessment? If not, run UserSummary generation first (ADR-52).
+3. Does a portrait row exist with `assessment_result_id` matching the latest result?
+4. If (1) yes and (3) no → `Queue.offer` to `PortraitJobQueue`. The worker re-runs the full three-stage pipeline; per-stage intermediate artifacts (SpineBrief, SpineVerification) are not persisted across worker runs — they are recomputed, which is cheap relative to the Prose Renderer.
 
 This covers the "server crashed mid-generation" or "worker fiber missed the enqueue" edge case. The same pattern applies to first-extension portrait regeneration (ADR-11): if the extension finished but the new portrait row is missing, reconciliation re-queues with `replaces_portrait_id` metadata.
 
@@ -3308,6 +3322,422 @@ The threshold is deliberately coarse — 3× is a blast-radius check, not a fine
 **Interaction with ADR-14 (fail-open):** If Redis is unavailable, cost tracking degrades fail-open — the weekly letter still generates (user experience preserved) and a degraded-mode alert fires. This is consistent with ADR-14 but has a cost-risk tradeoff: sustained Redis outage during viral spike could blow the budget. Accepted risk; alerting makes it visible within minutes.
 
 **What this does NOT cover:** Per-request rate limiting on external APIs (Anthropic). Those are governed by Anthropic's own rate limits and Effect retry policies (ADR-14). This ADR is about **spend**, not **throughput**.
+
+---
+
+## Portrait Pipeline Rework (ADR-51 through ADR-54)
+
+These ADRs are the authoritative spec for the portrait generation rework described in `_bmad-output/problem-solution-2026-04-11.md`. They replace the single-shot Sonnet portrait generator that existed through the 2026-04-11 delta. ADR-3's LLM Agent table was edited in the same delta to reflect the new shape; ADR-13 was edited to note per-stage reconciliation semantics.
+
+### ADR-51: Three-Stage Portrait Pipeline — Spine Extractor → Verifier → Prose Renderer
+
+**Source:** `problem-solution-2026-04-11.md` (diagnosis → phased solution → Phase 3 spec).
+
+**Decision:** Replace the single-shot portrait generator with a three-stage pipeline: **(A) Spine Extractor** (Sonnet 4.6 + 2048 tokens extended thinking) produces a prescriptive `SpineBrief` JSON from the UserSummary (ADR-52) + facet scores. **(B) Spine Verifier** (Haiku 4.5) scores the brief against a structural + specificity + insight-falsifiability checklist and returns a `SpineVerification` with `gapFeedback`. **(C) Prose Renderer** (Sonnet 4.6, no thinking, temp ~0.5) renders the brief into 6-movement prose using `PORTRAIT_CONTEXT` craft rules. A bounded retry loop re-runs Stage A once with gap feedback if Verifier fails.
+
+**Problem being solved:**
+- The single 13K-token call conflated "decide the spine" and "write the prose" in one attention pass. Spine quality was produced by extended thinking; thinking was later removed to cut cost, and the "produce the spine" responsibility was silently left unowned → spine inconsistency across 9 sample portraits.
+- Observed cost ($0.30–$0.40/portrait) was driven by a two-layer retry cascade (internal `Effect.retry({ times: 2 })` + user-triggered retries on page revisit) with no per-attempt observability.
+- UX: user actively waits 2–3 minutes staring at a spinner. Perceived latency matters as much as total latency.
+
+**Pipeline shape:**
+
+```text
+UserSummary (pre-computed, ADR-52)
+        │
+        ▼
+┌────────────────────────────────────────────┐
+│ Stage A — Spine Extractor                  │
+│   Sonnet 4.6, thinking budget 2048 tok     │
+│   temp 0.3, direct @anthropic-ai/sdk       │
+│   Input:  UserSummary + facet scores +     │
+│           (on retry) gapFeedback           │
+│   Output: SpineBrief (JSON, schema below)  │
+└────────────────────────────────────────────┘
+        │
+        ▼
+┌────────────────────────────────────────────┐
+│ Stage B — Spine Verifier                   │
+│   Haiku 4.5, direct @anthropic-ai/sdk      │
+│   Input:  SpineBrief ONLY (no UserSummary) │
+│   Output: SpineVerification                │
+│     { passed, missingFields[],             │
+│       shallowAreas[], overallScore,        │
+│       gapFeedback }                        │
+└────────────────────────────────────────────┘
+        │
+    ┌───┴──── passed? ────┐
+    │ yes                 │ no (attempt 1 only)
+    │                     ▼
+    │         ┌──────────────────────┐
+    │         │ re-run Stage A with  │
+    │         │ gapFeedback appended │
+    │         └──────────────────────┘
+    │                     │
+    │                     ▼
+    │             (verify a 2nd time,
+    │              then ship regardless,
+    │              log failures)
+    ▼                     ▼
+┌────────────────────────────────────────────┐
+│ Stage C — Prose Renderer                   │
+│   Sonnet 4.6, NO thinking, temp 0.5        │
+│   Input:  SpineBrief + PORTRAIT_CONTEXT    │
+│           (NO UserSummary, NO raw convo)   │
+│   Output: 6-movement portrait prose        │
+└────────────────────────────────────────────┘
+        │
+        ▼
+persist portrait row
+```
+
+**SpineBrief schema (load-bearing contract — Stage C reads this and nothing else about the user):**
+
+```typescript
+interface SpineBrief {
+  // Central inference — every other field serves this.
+  insight: {
+    surfaceObservation: string;    // what the user explicitly says/does
+    underneathReading: string;     // the pattern driving them (the "reading")
+    bridge: string;                // reasoning citing specific quotes/moments
+    falsifiable: boolean;          // is underneathReading a claim that COULD be wrong?
+  };
+  thread: string;                  // one-sentence compression: "she X, but really she Y"
+  lens: string;                    // the framing that makes the underneath visible
+  arc: {                           // 6 beats — each must serve the insight, not decorate it
+    wonder: MovementBeat;
+    recognition: MovementBeat;
+    tension: MovementBeat;
+    embrace: MovementBeat;
+    reframe: MovementBeat;
+    compulsion: MovementBeat;
+  };
+  coinedPhraseTargets: Array<{
+    phrase: string;                // echoes the underneath, not the surface
+    rationale: string;
+    echoesIn: MovementName[];
+  }>;
+  ordinaryMomentAnchors: Array<{
+    moment: string;
+    verbatim?: string;             // literal user quote, plumbed from UserSummary.quoteBank
+    useIn: MovementName;
+    supportsInsight: boolean;
+  }>;
+  unresolvedCost: {
+    description: string;           // specific, un-reframed
+    verbatim?: string;
+  };
+  voiceAdjustments?: Array<{       // PENDING AUDIT — may be redundant with PORTRAIT_CONTEXT
+    movement: MovementName;
+    tone: string;
+  }>;
+}
+
+interface MovementBeat {
+  focus: string;                   // what this movement accomplishes FOR THE INSIGHT
+  openingDirection: string;
+  keyMaterial: string[];
+  endState: string;                // where this beat leaves the reader re: the insight
+}
+```
+
+**Three load-bearing fields** in the schema: `insight.underneathReading` (the interpretive claim that is the whole point of the spine), `insight.bridge` (the reasoning that grounds the claim in specific user material), and every `verbatim?` occurrence (what lets prose echo real user language without paraphrasing).
+
+**Verifier checklist (Stage B):** structural completeness, specificity (thread references concrete user material), ≥2 coined phrases each referenced in ≥2 movements, ≥1 verbatim anchor, unresolved cost named concretely and not reframed into a positive, per-movement focus distinctness, **insight distinctness** (surface and underneath are not rephrasings), **insight falsifiability** (underneath is not vague/universal), **bridge grounding** (cites specific quotes/moments), and **arc-serves-insight** (each beat is not interchangeable with a generic beat).
+
+**Retry budget:** Max 2 extraction attempts. On second failure, Stage C renders the best brief we have and the verification failure is logged for post-hoc analysis. No infinite loops. The internal `Effect.retry({ times: 2 })` on the old monolithic call is reduced to `{ times: 1 }` after Phase 1 first-attempt failure diagnosis is complete (see ADR-54).
+
+**Prose Renderer contract — brief-only:** Stage C receives `SpineBrief` + `PORTRAIT_CONTEXT` **only**. It does NOT receive `UserSummary`, raw conversation, facet scores, or evidence. This is load-bearing:
+1. It forces Stage A to produce a self-sufficient brief (if Stage B feels under-informed, the fix is to enrich the brief schema, not to leak user state into the renderer).
+2. It keeps the Prose Renderer prompt stable and small, which is where prompt caching lands cleanly (ADR-53).
+3. It makes the contract auditable — a human reading the brief can predict what prose is possible.
+
+`PORTRAIT_CONTEXT` (currently ~782 lines in `packages/domain/src/constants/nerin/portrait-context.ts`) is trimmed in Phase 3: the "FIND YOUR THREAD" section and spine-discovery instructions are removed because that responsibility has moved upstream to Stage A. Voice rules, craft requirements, and non-negotiables remain.
+
+**Cost model:**
+
+| Stage | Model | Expected cost/call |
+|---|---|---|
+| Spine Extractor | Sonnet 4.6 + 2048 thinking | ~$0.03 |
+| Spine Verifier | Haiku 4.5 | ~$0.005 |
+| Prose Renderer | Sonnet 4.6 | ~$0.09 |
+| **Total (happy path)** | | **~$0.13** |
+| Worst case (1 extraction retry) | | ~$0.16 |
+
+Compared to the pre-rework observed $0.30–$0.40/portrait: ~50–60% reduction.
+
+**Latency model:** Stage A ~15s (thinking included), Stage B ~3–5s, Stage C ~40s. Total ~55–65s P50, well under the 1-minute target. Streaming is explicitly **out of scope** (Phase 4b cut); perceived latency is addressed via ambient progress copy (ADR-54, `currentStage` field on `/portrait-status`).
+
+**Phase 4a variant (Haiku prose, optional):** After Phase 3 ships and rubric validates, Stage C can be parameterized via `PORTRAIT_PROSE_MODEL_ID`. Swapping to Haiku 4.5 drops total cost to ~$0.05/portrait. Gated on the quality rubric (ADR-54) showing voice/coined-phrase/self-compelling dimensions within 0.5 points of the Sonnet baseline.
+
+**Alternative considered: separate Verifier call vs internal self-check in Stage A.** Internal self-check was rejected — asking a model to grade its own work is the failure pattern this pipeline exists to escape. A separate Haiku call with a different prompt gives independent judgment at ~$0.005/call, which is negligible against the other stages.
+
+**Alternative considered: four-stage director-model architecture.** Rejected on the simplicity rule: the `SpineBrief`'s prescriptiveness already provides director-level constraint without needing a separate director LLM call. The user's refined simplicity principle (2026-04-11) is "don't replace an LLM call with a huge template or pipeline computation that mimics what an LLM is good at" — multiple LLM calls are fine when each does something only an LLM can do.
+
+**Alternative considered: parallel per-movement rendering.** Rejected on voice coherence risk — parallel calls cannot share a consistent voice across movement boundaries without post-hoc reconciliation that reintroduces complexity.
+
+**Implementation files (new):**
+
+- `packages/domain/src/types/spine-brief.ts` — `SpineBrief`, `MovementBeat`, `MovementName` types
+- `packages/domain/src/types/spine-verification.ts` — `SpineVerification` type
+- `packages/domain/src/repositories/spine-extractor.repository.ts` — Effect `Context.Tag`
+- `packages/domain/src/repositories/spine-verifier.repository.ts` — Effect `Context.Tag`
+- `packages/domain/src/constants/nerin/spine-extractor-prompt.ts` — Stage A prompt (inferential-depth framing)
+- `packages/domain/src/constants/nerin/spine-verifier-prompt.ts` — Stage B prompt (brief-only input, mechanical checklist)
+- `packages/domain/src/constants/nerin/prose-renderer-prompt.ts` — Stage C prompt ("brief as constraint, not script")
+- `packages/infrastructure/src/repositories/spine-extractor.claude.repository.ts` — direct SDK, Sonnet + thinking
+- `packages/infrastructure/src/repositories/spine-verifier.claude.repository.ts` — direct SDK, Haiku, structured output
+
+**Implementation files (edited):**
+
+- `packages/infrastructure/src/repositories/portrait-generator.claude.repository.ts` — refactored into pure Prose Renderer (brief-only input), direct SDK (ADR-53)
+- `apps/api/src/use-cases/generate-full-portrait.use-case.ts` — orchestrates the full three-stage pipeline with bounded retry; reads pre-computed `UserSummary` from assessment result
+- `packages/domain/src/constants/nerin/portrait-context.ts` — trim "FIND YOUR THREAD" section and spine-discovery instructions
+
+**Rollback:** `PORTRAIT_ARCHITECTURE=single|three-stage` feature flag keeps the pre-rework monolithic generator available for two release cycles post-ship.
+
+**Hard exit gate:** Every portrait, every rubric dimension, minimum score 3 (no 1s or 2s). Target median on spine-related dimensions: 4 across the 25-portrait corpus. "Insight beneath observation" dimension: ≥30% of portraits score 4 or 5. Verifier pass rate on first attempt ≥ 70%. If any fails, **stop and re-diagnose** — do not proceed to Phase 4a on a broken Phase 3.
+
+### ADR-52: UserSummary at Assessment Completion — Quote-Bank Compression
+
+**Source:** `problem-solution-2026-04-11.md` (Phase 2 — conversation compression).
+
+**Decision:** Generate a `UserSummary` artifact via Haiku 4.5 **at assessment-completion time** (not lazily at portrait generation time), persist it on the assessment result, and use it as the sole user-state input to the Spine Extractor (ADR-51). The summary contains an explicit `quoteBank` of 20–40 verbatim user phrases that is load-bearing: it is the minimum-viable alternative to RAG for plumbing literal user language through to prose rendering.
+
+**Problem being solved:**
+- Pre-rework portrait calls were ~50K input tokens, with raw conversation history + evidence contributing ~37K of that — the dominant input-cost driver.
+- Prompt caching on the 13K static prefix only addresses ~25% of input cost.
+- Other features beyond portrait (weekly letter, relationship letter, future surfaces) will also want compressed user state, making this a **cross-cutting asset** — a single investment that pays multiple features.
+
+**Schema:**
+
+```typescript
+interface UserSummary {
+  themes: string[];                      // abstracted patterns
+
+  notableMoments: Array<{                // ~10–15 entries
+    description: string;                 // natural-language framing
+    verbatim?: string;                   // literal quote if user said it
+    context: string;                     // brief situational framing
+  }>;
+
+  // CRITICAL: dedicated quote bank, SEPARATE from notableMoments.
+  // Target 20–40 entries. Haiku is instructed to OVER-preserve specific
+  // user language: any phrase that feels specific, unusual, or personally
+  // coded is a candidate. The quoteBank is the primary mechanism for
+  // plumbing literal user language into prose rendering without RAG.
+  quoteBank: Array<{
+    quote: string;                       // verbatim user text (≤ 40 words)
+    themeTag: string;                    // which theme this relates to
+    context: string;                     // brief situational framing
+  }>;
+
+  voiceCues: string[];                   // how they speak, metaphors they reach for
+  unresolvedTensions: string[];          // things resisting easy reframing
+}
+```
+
+**Target serialized size:** ~10–12K tokens. Down from ~37K raw conversation + evidence.
+
+**Load-bearing: `quoteBank` cap is enforced structurally, not in the prompt.** Haiku obeys JSON-schema / tool-use structural caps more reliably than prose instruction caps (`maxItems: 40`). Manual audit during Phase 2 exit gate: sample 3–5 UserSummary outputs and verify the quote bank contains specific, non-paraphrased user language. If coined-phrase rubric dimension regresses after rollout, the first diagnostic is "quote bank is not preserving enough user language" → revise the Haiku generator prompt before any pipeline change.
+
+**When it runs:** At assessment-completion time, in the completion use-case flow (`complete-assessment.use-case.ts` or equivalent), **before** portrait kickoff is enqueued. Portrait generation reads the pre-computed summary via the assessment result; failing fast if missing (should not occur under normal flow).
+
+**Why completion time, not portrait time:** Moving UserSummary generation out of the portrait critical path removes a serial Haiku call (~5–10s) from portrait latency and aligns with the cross-cutting-asset framing — the summary is a property of the user/assessment, not of the portrait. Other features (weekly letter, relationship letter) can read the same artifact without re-generating it.
+
+**Persistence:** New `user_summary` column (or table) on `assessment_result` via a new Drizzle migration (per the migration rule — never modify existing). Column is populated atomically with the assessment result transition to "complete."
+
+**Path A vs Path B fork (documented for posterity):** `problem-solution-2026-04-11.md` explicitly flags two options — Path A (this ADR: build UserSummary as a cross-cutting asset) and Path B (Spine Extractor reads raw conversation directly, no UserSummary). Path B ships faster (~1 week vs ~2) and avoids the "Haiku might quietly abstract away specificity" risk, but locks per-portrait cost at ~$0.24 vs Path A's ~$0.13, and defers UserSummary work that may have to happen anyway for other features. **This ADR commits to Path A.** If the `quoteBank` approach proves insufficient after 2 iterations on the Haiku prompt, the escape hatch is to fall back to Path B (raise per-portrait cost to ~$0.24, eliminate the abstraction layer). RAG infrastructure remains out of scope in both paths.
+
+**Implementation files (new):**
+- `packages/domain/src/types/user-summary.ts` — `UserSummary` type
+- `packages/domain/src/repositories/user-summary-generator.repository.ts` — Effect `Context.Tag`
+- `packages/infrastructure/src/repositories/user-summary-generator.claude.repository.ts` — Haiku 4.5 via direct SDK (ADR-53); prompt instructs over-preservation of the quote bank
+- `packages/infrastructure/src/db/drizzle/schema.ts` + new migration — persist `user_summary` on `assessment_result`
+
+**Implementation files (edited):**
+- `apps/api/src/use-cases/complete-assessment.use-case.ts` (or equivalent) — generate `UserSummary` before portrait kickoff
+- `apps/api/src/use-cases/generate-full-portrait.use-case.ts` — read pre-computed summary; fail fast if missing
+- `packages/infrastructure/src/repositories/portrait-generator.claude.repository.ts` — no longer reads raw conversation
+
+**Rollback:** Feature flag for raw-messages code path for one release cycle. Any rubric dimension dropping > 0.5 points triggers rollback.
+
+**Cross-cutting claimants (future users of this artifact):** Weekly letter (ADR-45), relationship letter (ADR-3, ADR-10), any future "personality context" surface. These are NOT part of this ADR's scope but motivate Path A over Path B.
+
+### ADR-53: Direct Anthropic SDK for Portrait Generation — LangChain Carve-Out
+
+**Source:** `problem-solution-2026-04-11.md` (Phase 1, Tier 1 #7).
+
+**Decision:** Refactor the portrait call chain (Spine Extractor, Spine Verifier, Prose Renderer, UserSummary Generator) to call Anthropic directly via `@anthropic-ai/sdk`, bypassing LangChain's `ChatAnthropic`. LangChain remains the client library for all other LLM surfaces (ConversAnalyzer, Nerin Director, Nerin Actor).
+
+**Problem being solved:**
+- LangChain is a level of indirection that **was suspected of hiding behaviors**: silent retries, silent extended-thinking defaults, prompt construction rewrites, response-content shape that is not directly inspectable. During root cause diagnosis of the 2–3 minute / $0.30–$0.40 portrait pipeline, it was unclear whether `response.content` was coming back as a string or as an array with thinking blocks — i.e. whether LangChain was silently enabling thinking.
+- The portrait rework depends on three capabilities that are first-class in `@anthropic-ai/sdk` and awkward in LangChain: **(1) prompt caching** via `cache_control: { type: "ephemeral" }` on the system prompt (~10–15% input-cost cut on the ~13K static prefix), **(2) controlled thinking budget** via `thinking: { type: "enabled", budget_tokens: 2048 }` on the Spine Extractor specifically, (3) transparent per-call observability (raw token usage including `cache_read_input_tokens`, response content block types, request-response pairs) that ADR-54's per-stage logging needs.
+
+**Scope of the carve-out:**
+
+| Surface | Client library | Rationale |
+|---|---|---|
+| **Portrait pipeline (ADR-51)** — Spine Extractor, Verifier, Prose Renderer | `@anthropic-ai/sdk` | Needs caching, thinking budget, transparent observability |
+| **UserSummary Generator (ADR-52)** | `@anthropic-ai/sdk` | Portrait path, benefits from same observability |
+| ConversAnalyzer | `@langchain/anthropic` | Unchanged — stable, Haiku, no caching need |
+| Nerin Director | `@langchain/anthropic` | Unchanged |
+| Nerin Actor | `@langchain/anthropic` | Unchanged |
+| Weekly Letter (ADR-45) | `@langchain/anthropic` | Unchanged (may revisit if same pain appears) |
+| Relationship Letter | `@langchain/anthropic` | Unchanged |
+
+This is a deliberate **mixed-client repository layout**, not a migration. LangChain is not wrong; it's wrong *for the portrait pipeline's specific requirements*.
+
+**Anti-pattern being rejected:** Wrapping `@anthropic-ai/sdk` calls behind a LangChain-shaped adapter "for consistency." The whole point of the carve-out is transparency — putting LangChain back on top re-introduces the opacity.
+
+**Implementation pattern (new repos in `packages/infrastructure/src/repositories/`):**
+
+```typescript
+// spine-extractor.claude.repository.ts (illustrative shape)
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({ apiKey });
+
+const response = await client.messages.create({
+  model: "claude-sonnet-4-6",
+  max_tokens: 4096,
+  temperature: 0.3,
+  thinking: { type: "enabled", budget_tokens: 2048 },
+  system: [
+    {
+      type: "text",
+      text: SPINE_EXTRACTOR_SYSTEM_PROMPT,
+      cache_control: { type: "ephemeral" },
+    },
+  ],
+  messages: [ /* user content */ ],
+});
+
+// Directly inspectable: response.content (array of content blocks),
+// response.usage (including cache_read_input_tokens, cache_creation_input_tokens),
+// response.stop_reason
+```
+
+**Package additions:**
+- `packages/infrastructure/package.json` — add `@anthropic-ai/sdk` (co-exists with existing `@langchain/anthropic`)
+
+**Feature flag for one-release-cycle rollback:** `PortraitGeneratorLangchainRepositoryLive` kept alongside the new direct-SDK implementation. On rollback, re-pin the layer. The legacy path is deleted after one clean release cycle — no perpetual dual maintenance.
+
+**Dead code removed in the same changeset** (surfaced during root cause verification):
+1. `portrait-generator.claude.repository.ts:59` — stale comment "with adaptive extended thinking" that contradicts actual code
+2. `portrait-generator.claude.repository.ts:42–54, 129–136` — vestigial `extractTextContent` helper and empty-content guard from a previous thinking-enabled mode
+3. `app-config.live.ts:57` — `portraitTemperature: 0.7` defined but never passed to `ChatAnthropic` (temperature was effectively the LangChain default). Wire up the config to the new direct-SDK call, default to 0.5
+4. `app-config.live.ts:82–84` — duplicate `portraitGeneratorModelId` config shadowing `portraitModelId` at line 55. Remove duplicate.
+
+**Interaction with CLAUDE.md frontend API rule:** The frontend-rule "always use typed Effect `HttpApiClient`" (CLAUDE.md) is about frontend → backend calls. It is **not** affected by this ADR, which governs backend → Anthropic calls.
+
+### ADR-54: Portrait Observability + Quality Rubric Skill
+
+**Source:** `problem-solution-2026-04-11.md` (Phase 0 — observability & hygiene; Quality Measurement Plan).
+
+**Decision:** Before any portrait pipeline change lands, add three things: **(1) per-stage structured logging** of token usage, duration, retry attempts, and raw response content structure; **(2) a portrait cost guard** at the retry boundary that fails fast if a worker run exceeds a ceiling; **(3) a `/portrait-rubric` Claude Code skill** scoring portraits on 7 dimensions and a frozen 25-portrait baseline from the existing `_llm-test-output/` corpus. No architectural change ships without the rubric confirming no regression.
+
+**Problem being solved:** Every solution decision was gated on data we didn't have — first-attempt failure rate, per-stage token budgets, what actually causes failures, rubric-driven quality comparison. Without observability, any "improvement" to the portrait pipeline is unfalsifiable.
+
+**Per-stage logging contract** (emitted from each stage's repository implementation):
+
+```typescript
+type PortraitStageLog = {
+  stage: "user_summary" | "spine_extraction" | "spine_verification" | "prose_rendering";
+  model_id: string;
+  attempt_number: number;                       // 1 or 2 for Stage A
+  tokens_in: number;
+  tokens_out: number;
+  thinking_tokens: number;                      // 0 unless Stage A extended thinking
+  cache_read_input_tokens: number;              // caching observability
+  cache_creation_input_tokens: number;
+  duration_ms: number;
+  stop_reason: string;
+  failure_reason: string | null;
+  response_content_type: "text" | "array_with_thinking_blocks" | "other";
+  timestamp: string;
+};
+```
+
+**Aggregate logging on portrait completion** (from `generate-full-portrait.use-case.ts`):
+
+```typescript
+type PortraitPipelineLog = {
+  portrait_id: string;
+  assessment_result_id: string;
+  total_cost_cents: number;
+  total_duration_ms: number;
+  stage_a_duration_ms: number;
+  stage_b_duration_ms: number;
+  stage_c_duration_ms: number;
+  verifier_first_attempt_passed: boolean;
+  verifier_final_outcome: "passed" | "failed_shipped_anyway";
+  outcome: "success" | "failed";
+};
+```
+
+**Per-stage breakdown (not aggregate) is load-bearing.** Aggregate totals hide drift source; if prose-renderer latency creeps up from 40s → 60s while Stage A stays flat, aggregate metrics would only tell us "portrait is slower" — useless for triage. Per-stage tells us where to look.
+
+**Portrait cost guard:**
+
+```text
+PORTRAIT_COST_CEILING_USD (config, default ~0.50)
+```
+
+Evaluated at the retry boundary in `generate-full-portrait.use-case.ts`. If a worker run accumulates cost > ceiling, fail fast — persist `failedAt` row, emit alert, stop the pipeline. Caps worst-case blast radius (the pre-rework pipeline was observed at up to 6 LLM calls per portrait = ~$1.14 worst case).
+
+**Interaction with ADR-50 Cost Ceiling Architecture:** ADR-50 governs the three system-level budgets (per-session, per-user monthly, global 24h circuit breaker). This portrait cost guard is a **per-run** guard at a tighter granularity — it prevents a single portrait run from burning through a month's per-user budget in one pathological session. The two are complementary, not redundant.
+
+**Portrait quality rubric (`/portrait-rubric` skill):** Seven dimensions, 1–5 Likert, Claude-as-judge. Packaged as a reusable Claude Code skill in `.claude/skills/portrait-rubric/`.
+
+1. **Insight beneath observation** — does the portrait name something the reader likely hadn't named themselves? Is the spine a reading, not a summary? *(Load-bearing — tests the inferential-depth corrective most directly)*
+2. **Spine coherence** — structural unity of the reading across the arc
+3. **Six-movement arc fidelity** — does the arc land each of Wonder → Recognition → Tension → Embrace → Reframe → Compulsion distinctly?
+4. **Coined-phrase quality** — are the coined phrases specific, portable, prospective?
+5. **Self-compelling** — does the reader want to return to this portrait unprompted?
+6. **Voice** — Nerin's confidant tone; warmth-before-depth; no clinical, flattery, or hedging
+7. **Emotional stake** — does the portrait matter to the reader, not just interest them?
+
+Rubric prompt defines each dimension concretely and provides 1/3/5 anchoring examples. Anchoring examples are refreshed quarterly from hand-curated best/worst production portraits to prevent rubric drift.
+
+**Baseline freeze:** Applied to all 25 portraits in `_llm-test-output/` corpus, output stored at `_bmad-output/portrait-rubric-baseline-2026-04-11.json`. Every phase's exit gate re-runs the rubric on regenerated portraits and compares against this frozen baseline. Any dimension regression > 0.5 points across 10+ portraits triggers rollback.
+
+**Production monitoring cadence:**
+
+| Cadence | Activity |
+|---|---|
+| Continuous | Per-portrait cost, per-stage latency, verifier pass rate — emitted from Phase 0 logging |
+| Weekly | Run `/portrait-rubric` on 10 most-recent production portraits; log dimension scores |
+| Monthly | Regenerate the 25-portrait test corpus; compare to frozen 2026-04-11 baseline; detect drift |
+| Quarterly | Hand-curate 5 best + 5 worst production portraits; refresh rubric anchoring examples |
+
+**Alert thresholds:**
+
+| Metric | Target | Alert |
+|---|---|---|
+| Per-portrait cost | ≤ $0.14 | > $0.18 sustained 48h |
+| Per-portrait total latency | ≤ 70s | > 120s sustained 48h |
+| Stage A latency p95 | ≤ 40s | > 60s |
+| Stage B latency p95 | ≤ 10s | > 20s |
+| Stage C latency p95 | ≤ 70s | > 90s |
+| Verifier pass rate, first attempt | ≥ 70% | < 60% sustained 1 week |
+| Verifier pass rate, any attempt | ≥ 95% | < 90% sustained 1 week |
+| First-attempt generation failure rate | ≤ 10% | > 20% sustained 48h |
+| Quote bank size (avg entries) | 20–40 | < 18 or > 50 |
+| Thinking tokens per Stage A call, p50 | ≤ 1500 | > 2000 sustained |
+| Rubric "insight beneath observation" median | ≥ 4 | < 3.5 on weekly sample |
+
+**Implementation files:**
+
+- `.claude/skills/portrait-rubric/` — rubric skill (prompt, dimension definitions, anchoring examples)
+- `_bmad-output/portrait-rubric-baseline-2026-04-11.json` — frozen baseline
+- Per-stage logging added to each new repository in ADR-51 and ADR-52
+- `generate-full-portrait.use-case.ts` — aggregate logging, cost guard
+- New config value `PORTRAIT_COST_CEILING_USD` in `app-config.live.ts`
+
+**Ambient progress indication** (paired Phase 3 UX enhancement, not streaming): `/portrait-status` endpoint gains a `currentStage` field (`user_summary` | `spine_extraction` | `spine_verification` | `prose_rendering` | `complete` | `failed`). Frontend rotates ambient narrative copy every ~5s based on stage + elapsed time — e.g. *"Nerin is finding her thread..." → "Nerin is sitting with your curiosity..." → "Nerin is writing the opening..."*. Turns the spinner into visible intentional progress. This is the **only** UX latency-mitigation retained from the problem-solution doc; streaming / progressive reveal (Phase 4b) was explicitly cut.
+
+**Observability principle:** *Production behavior is ground truth.* If rubric scores hold but users complain about portraits, the rubric is wrong and needs recalibration. If rubric scores drop but users don't notice, investigate whether the rubric is over-sensitive. The rubric is a tool, not a verdict.
 
 ---
 

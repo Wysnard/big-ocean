@@ -1,0 +1,41 @@
+{
+	"scanner": "execution-efficiency-prepass",
+	"script": "prepass-execution-deps.py",
+	"version": "1.0.0",
+	"skill_path": "/Users/vincentlay/Projects/big-ocean/.claude/skills/portrait-rubric",
+	"timestamp": "2026-04-11T20:42:05.571180+00:00",
+	"status": "warning",
+	"dependency_graph": {
+		"stages": [],
+		"hard_dependencies": {},
+		"soft_dependencies": {},
+		"cycles": [],
+		"transitive_redundancies": [],
+		"parallel_groups": []
+	},
+	"sequential_patterns": [
+		{
+			"file": "SKILL.md",
+			"type": "sequential-tool-calls",
+			"count": 3,
+			"issue": "3 sequential tool call steps found \u2014 check if independent calls can be parallel"
+		}
+	],
+	"issues": [
+		{
+			"file": "SKILL.md",
+			"severity": "medium",
+			"category": "sequential-tool-calls",
+			"issue": "3 sequential tool call steps found \u2014 check if independent calls can be parallel"
+		}
+	],
+	"summary": {
+		"total_issues": 1,
+		"by_severity": {
+			"critical": 0,
+			"high": 0,
+			"medium": 1,
+			"low": 0
+		}
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"scanner": "path-standards",
+	"script": "scan-path-standards.py",
+	"version": "2.1.0",
+	"skill_path": "/Users/vincentlay/Projects/big-ocean/.claude/skills/portrait-rubric",
+	"timestamp": "2026-04-11T20:41:59.709400+00:00",
+	"files_scanned": ["SKILL.md", "references/rubric-judge-prompt.md"],
+	"status": "pass",
+	"findings": [],
+	"assessments": {},
+	"summary": {
+		"total_findings": 0,
+		"by_severity": {
+			"critical": 0,
+			"high": 0,
+			"medium": 0,
+			"low": 0
+		},
+		"by_category": {
+			"double_prefix": 0,
+			"bare_bmad": 0,
+			"absolute_path": 0,
+			"relative_prefix": 0,
+			"bare_internal_path": 0,
+			"frontmatter": 0,
+			"structure": 0
+		},
+		"assessment": "Path standards scan complete"
+	}
+}

@@ -1,0 +1,84 @@
+{
+	"scanner": "prompt-craft-prepass",
+	"script": "prepass-prompt-metrics.py",
+	"version": "1.0.0",
+	"skill_path": "/Users/vincentlay/Projects/big-ocean/.claude/skills/portrait-rubric",
+	"timestamp": "2026-04-11T20:42:04.326554+00:00",
+	"status": "info",
+	"skill_md_summary": {
+		"line_count": 91,
+		"token_estimate": 1766,
+		"overview_lines": 0,
+		"table_count": 1,
+		"table_lines": 10,
+		"fenced_block_count": 1,
+		"fenced_block_lines": 18,
+		"section_count": 7
+	},
+	"prompt_health": {
+		"total_prompts": 0,
+		"prompts_with_config_header": 0,
+		"prompts_with_progression": 0
+	},
+	"aggregate": {
+		"total_files_scanned": 1,
+		"total_token_estimate": 1766,
+		"total_waste_patterns": 0,
+		"total_back_references": 0
+	},
+	"resource_sizes": {},
+	"files": [
+		{
+			"file": "SKILL.md",
+			"line_count": 91,
+			"token_estimate": 1766,
+			"sections": [
+				{
+					"level": 2,
+					"title": "Purpose",
+					"line": 8
+				},
+				{
+					"level": 2,
+					"title": "How to act",
+					"line": 16
+				},
+				{
+					"level": 2,
+					"title": "Input modes",
+					"line": 22
+				},
+				{
+					"level": 2,
+					"title": "Process",
+					"line": 34
+				},
+				{
+					"level": 2,
+					"title": "Output format",
+					"line": 49
+				},
+				{
+					"level": 2,
+					"title": "Scoring principles",
+					"line": 78
+				},
+				{
+					"level": 2,
+					"title": "Anchoring examples",
+					"line": 86
+				}
+			],
+			"table_count": 1,
+			"table_lines": 10,
+			"fenced_block_count": 1,
+			"fenced_block_lines": 18,
+			"waste_patterns": [],
+			"back_references": [],
+			"has_config_header": false,
+			"has_progression": false,
+			"overview_lines": 0,
+			"is_skill_md": true
+		}
+	]
+}
