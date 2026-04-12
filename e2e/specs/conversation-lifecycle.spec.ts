@@ -85,15 +85,6 @@ test.describe("Conversation Lifecycle", () => {
 		});
 
 		await test.step("results page renders with OCEAN code and archetype", async () => {
-			// Dismiss PWYW modal if present
-			const pwyw = page.getByTestId("pwyw-modal");
-			await pwyw.waitFor({ state: "visible", timeout: 5_000 }).catch(() => {});
-			if (await pwyw.isVisible()) {
-				await page.locator("[data-slot='dialog-close']").click();
-				await pwyw.waitFor({ state: "hidden", timeout: 5_000 });
-			}
-
-			// Wait for archetype hero (finalization may still be processing)
 			// Lazy finalization may still be in progress — use a generous timeout
 			await expect(page.getByTestId("archetype-hero-section")).toBeVisible({ timeout: 30_000 });
 

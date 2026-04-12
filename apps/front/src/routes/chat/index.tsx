@@ -87,8 +87,8 @@ export const Route = createFileRoute("/chat/")({
 		}
 
 		// Story 9.4: Verify session ownership after anonymous-to-authenticated transition.
-		// When an authenticated user navigates here with a sessionId (e.g., post-auth redirect
-		// from ChatAuthGate), verify the session was actually linked to their account.
+		// When an authenticated user navigates here with a sessionId (e.g., post-auth redirect),
+		// verify the session was actually linked to their account.
 		// If not (conflict — user already had a different session), redirect to their real session.
 		if (search.sessionId) {
 			try {

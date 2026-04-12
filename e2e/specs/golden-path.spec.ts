@@ -1,8 +1,6 @@
 import { randomBytes } from "node:crypto";
-import { POLAR_CONFIG } from "../e2e-env.js";
-import { getUserByEmail, seedFullPortrait } from "../factories/conversation.factory.js";
+import { seedFullPortrait } from "../factories/conversation.factory.js";
 import { expect, test } from "../fixtures/base.fixture.js";
-import { sendPolarWebhook } from "../helpers/webhook.helper.js";
 import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";
 
 const goldenEmail = `e2e-golden+${randomBytes(4).toString("hex")}@gmail.com`;
@@ -79,14 +77,6 @@ test("golden path: landing → signup → chat → results → share → public 
 		await page.waitForURL(/\/results\//, { timeout: 15_000 });
 	});
 
-	await test.step("dismiss PWYW modal if present", async () => {
-		const pwywModal = page.getByTestId("pwyw-modal");
-		if (await pwywModal.isVisible({ timeout: 3_000 }).catch(() => false)) {
-			await page.locator("[data-slot='dialog-close']").click();
-			await pwywModal.waitFor({ state: "hidden", timeout: 3_000 });
-		}
-	});
-
 	await test.step("assert archetype card is visible", async () => {
 		// Lazy finalization may still be in progress — use a generous timeout
 		await expect(page.getByTestId("archetype-hero-section")).toBeVisible({ timeout: 30_000 });
@@ -116,35 +106,9 @@ test("golden path: landing → signup → chat → results → share → public 
 		await expect(page.getByTestId("ocean-code")).toBeVisible();
 	});
 
-	await test.step("assert Polar checkout button is present", async () => {
-		// The PWYW modal auto-opens on first results page visit for users without a portrait.
-		// It may appear at any point during page rendering — wait for it and dismiss it.
-		const pwyw = page.getByTestId("pwyw-modal");
-		await pwyw.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
-		if (await pwyw.isVisible()) {
-			await page.locator("[data-slot='dialog-close']").click();
-			await pwyw.waitFor({ state: "hidden", timeout: 5_000 });
-		}
-
-		// Portrait unlock CTA triggers PWYW modal for full portrait
-		const portraitCta = page.getByTestId("portrait-unlock-cta");
-		await portraitCta.scrollIntoViewIfNeeded();
-		await expect(portraitCta).toBeVisible();
-	});
-
-	await test.step("simulate portrait purchase via Polar webhook", async () => {
-		const user = await getUserByEmail(goldenEmail);
-		if (!user) throw new Error("Golden path user not found for webhook");
-		await sendPolarWebhook(apiContext, {
-			productId: POLAR_CONFIG.productPortraitUnlock,
-			externalUserId: user.id,
-		});
-	});
-
 	await test.step("seed portrait content and verify it renders", async () => {
-		// The webhook created a portrait placeholder + purchase event.
-		// Portrait content generation is async via mock generator — seed content
-		// directly for deterministic test behavior.
+		// Portrait is free and auto-generated. Seed content directly for
+		// deterministic test behavior.
 		await seedFullPortrait(sessionId);
 		await page.reload();
 		await page.getByTestId("archetype-hero-section").waitFor({
@@ -194,27 +158,35 @@ test("golden path: landing → signup → chat → results → share → public 
 		await page.getByTestId("public-profile-cta").waitFor({ state: "visible" });
 	});
 
-	await test.step("navigate to dashboard via Quick Actions and verify identity card", async () => {
-		await page.goto(`/results/${sessionId}`);
-		// Dismiss PWYW modal if it appears on revisit
-		const pwywRevisit = page.getByTestId("pwyw-modal");
-		await pwywRevisit.waitFor({ state: "visible", timeout: 5_000 }).catch(() => {});
-		if (await pwywRevisit.isVisible()) {
-			await page.locator("[data-slot='dialog-close']").click();
-			await pwywRevisit.waitFor({ state: "hidden", timeout: 5_000 });
+	await test.step("chat page loads for completed session", async () => {
+		// For completed sessions, chat may show read-only messages or redirect to results.
+		// Wait for either chat-bubble (read-only mode) or redirect back to results.
+		const chatBubble = page.locator("[data-slot='chat-bubble']").first();
+		const loaded = await chatBubble
+			.waitFor({ state: "visible", timeout: 15_000 })
+			.then(() => true)
+			.catch(() => false);
+
+		if (loaded) {
+			// Chat input should NOT be visible for completed sessions
+			await expect(page.locator("[data-slot='chat-input']")).not.toBeVisible();
 		}
+
+		// Navigate back to results for the profile step
+		await page.goto(`/results/${sessionId}`);
 		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",
 			timeout: 15_000,
 		});
+	});
 
-		// Click "View Dashboard" in Quick Actions card
-		const dashboardLink = page
-			.locator("[data-slot='quick-actions-card']")
-			.getByRole("link", { name: "View Dashboard" });
-		await dashboardLink.scrollIntoViewIfNeeded();
-		await dashboardLink.click();
-		await page.waitForURL(/\/dashboard\/?$/, { timeout: 10_000 });
+	await test.step("dashboard shows identity card with archetype", async () => {
+		// Use client-side navigation via user nav dropdown (avoids auth race on cold page.goto)
+		const avatarButton = page.getByTestId("user-nav-avatar");
+		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
+		await avatarButton.click();
+		await page.getByRole("menuitem", { name: "Dashboard" }).click();
+		await page.waitForURL(/\/dashboard\/?$/);
 		await page.getByTestId("dashboard-identity-card").waitFor({
 			state: "visible",
 			timeout: 10_000,

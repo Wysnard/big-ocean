@@ -2,7 +2,7 @@
  * Portrait Section Orchestrator (Story 32-5)
  *
  * Renders the appropriate portrait display state within the results grid:
- * - "none": Unlock CTA (if onUnlock provided) or empty
+ * - "none": Nothing (portrait is free and auto-generated)
  * - "generating": Skeleton pulse with "Nerin is writing..." label
  * - "ready": Full portrait via PersonalPortrait component
  * - "failed": Error message with retry button
@@ -13,13 +13,11 @@ import { Button } from "@workspace/ui/components/button";
 import { Loader2, RefreshCw } from "lucide-react";
 import { memo } from "react";
 import { PersonalPortrait } from "./PersonalPortrait";
-import { PortraitUnlockCta } from "./PortraitUnlockCta";
 
 interface PortraitSectionProps {
 	status: PortraitStatus;
 	content?: string | null;
 	displayName?: string | null;
-	onUnlock?: () => void;
 	onRetry?: () => void;
 }
 
@@ -27,13 +25,10 @@ export const PortraitSection = memo(function PortraitSection({
 	status,
 	content,
 	displayName,
-	onUnlock,
 	onRetry,
 }: PortraitSectionProps) {
 	return (
 		<div data-testid="portrait-section" data-slot="portrait-section" className="col-span-full">
-			{status === "none" && onUnlock && <PortraitUnlockCta onUnlock={onUnlock} />}
-
 			{status === "generating" && (
 				<div
 					data-testid="portrait-generating"

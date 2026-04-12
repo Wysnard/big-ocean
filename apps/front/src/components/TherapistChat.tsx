@@ -16,7 +16,6 @@ import Markdown from "react-markdown";
 import { getPlaceholder } from "@/constants/chat-placeholders";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
-import { ChatAuthGate } from "./ChatAuthGate";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
 import { DepthMeter } from "./chat/DepthMeter";
 import { ASSESSMENT_MILESTONES, isMilestoneReached } from "./chat/depth-milestones";
@@ -702,9 +701,6 @@ function ChatContent({
 
 							{/* Typing indicator while loading */}
 							{isLoading && <TypingIndicator />}
-
-							{/* Story 7.18: Auth gate for anonymous users after farewell */}
-							{isFarewellReceived && !isAuthenticated && <ChatAuthGate sessionId={sessionId} />}
 						</div>
 					)}
 

@@ -9,7 +9,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import type { TraitName } from "@workspace/domain";
 import { Loader2 } from "lucide-react";
-import { DashboardCreditsCard } from "@/components/dashboard/DashboardCreditsCard";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardIdentityCard } from "@/components/dashboard/DashboardIdentityCard";
 import { DashboardInProgressCard } from "@/components/dashboard/DashboardInProgressCard";
@@ -17,7 +16,6 @@ import { DashboardRelationshipsCard } from "@/components/dashboard/DashboardRela
 import { PageMain } from "@/components/PageMain";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetResults, useListConversations } from "@/hooks/use-conversation";
-import { useCredits } from "@/hooks/useCredits";
 import { useRelationshipAnalysesList } from "@/hooks/useRelationshipAnalysesList";
 import { getSession } from "@/lib/auth-client";
 
@@ -66,9 +64,6 @@ function DashboardPage() {
 	// Relationship analyses
 	const { data: analyses, isLoading: isAnalysesLoading } = useRelationshipAnalysesList(canLoad);
 
-	// Credits
-	const { data: credits, isLoading: isCreditsLoading } = useCredits(canLoad);
-
 	if (isAuthPending || isConversationsLoading) {
 		return (
 			<PageMain
@@ -104,9 +99,6 @@ function DashboardPage() {
 							messageCount={inProgressSession.messageCount}
 							assessmentTurnCount={conversationData?.assessmentTurnCount ?? 15}
 						/>
-
-						{/* Credits card */}
-						<DashboardCreditsCard credits={credits} isLoading={isCreditsLoading} userId={user?.id} />
 					</div>
 				) : (
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -120,9 +112,6 @@ function DashboardPage() {
 								publicProfileId={results.publicProfileId ?? undefined}
 							/>
 						)}
-
-						{/* Credits card */}
-						<DashboardCreditsCard credits={credits} isLoading={isCreditsLoading} userId={user?.id} />
 
 						{/* Relationship analyses — full width */}
 						<div className="sm:col-span-2">

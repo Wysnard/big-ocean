@@ -110,12 +110,6 @@ test.describe("Invitation System", () => {
 
 		await test.step("results page shows relationship card in qr-active state", async () => {
 			await page.goto(`/results/${sessionId}`);
-			// Dismiss PWYW modal if it appears
-			const pwywModal = page.getByTestId("pwyw-modal");
-			if (await pwywModal.isVisible({ timeout: 3_000 }).catch(() => false)) {
-				await page.locator("[data-slot='dialog-close']").click();
-				await pwywModal.waitFor({ state: "hidden", timeout: 3_000 });
-			}
 
 			const card = page.getByTestId("relationship-card");
 			await expect(card).toBeVisible({ timeout: 15_000 });

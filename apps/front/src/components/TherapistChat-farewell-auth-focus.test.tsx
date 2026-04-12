@@ -68,42 +68,6 @@ describe("TherapistChat", () => {
 		});
 	});
 
-	// Story 7.18: Auth Gate on Chat Page
-	describe("Chat Auth Gate (Story 7.18)", () => {
-		it("shows auth gate when farewell received and not authenticated", () => {
-			mockHookReturn.isFarewellReceived = true;
-
-			const { container } = renderWithProviders(
-				<TherapistChat sessionId="session-123" isAuthenticated={false} />,
-			);
-
-			expect(container.querySelector("[data-slot='chat-auth-gate']")).toBeTruthy();
-			expect(
-				screen.getByText("Create an account so your portrait is here when it's ready."),
-			).toBeTruthy();
-		});
-
-		it("does not show auth gate when authenticated (AC #4)", () => {
-			mockHookReturn.isFarewellReceived = true;
-
-			const { container } = renderWithProviders(
-				<TherapistChat sessionId="session-123" isAuthenticated={true} />,
-			);
-
-			expect(container.querySelector("[data-slot='chat-auth-gate']")).toBeNull();
-		});
-
-		it("does not show auth gate before farewell", () => {
-			mockHookReturn.isFarewellReceived = false;
-
-			const { container } = renderWithProviders(
-				<TherapistChat sessionId="session-123" isAuthenticated={false} />,
-			);
-
-			expect(container.querySelector("[data-slot='chat-auth-gate']")).toBeNull();
-		});
-	});
-
 	// Story 9.5: Auto-focus and input behavior
 	describe("Auto-focus (Story 9.5)", () => {
 		it("textarea receives focus after mount when not resuming", () => {

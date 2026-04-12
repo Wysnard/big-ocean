@@ -122,12 +122,6 @@ test.describe
 			await page.context().addCookies(storageState.cookies);
 
 			await page.goto(`/results/${inviteeSessionId}`);
-			// Dismiss PWYW modal if it appears
-			const pwywModal = page.getByTestId("pwyw-modal");
-			if (await pwywModal.isVisible({ timeout: 3_000 }).catch(() => false)) {
-				await page.locator("[data-slot='dialog-close']").click();
-				await pwywModal.waitFor({ state: "hidden", timeout: 3_000 });
-			}
 
 			const card = page.getByTestId("relationship-card");
 			await expect(card).toBeVisible({ timeout: 15_000 });
@@ -140,12 +134,6 @@ test.describe
 			await page.context().addCookies(storageState.cookies);
 
 			await page.goto(`/results/${inviterSessionId}`);
-			// Dismiss PWYW modal if it appears
-			const pwywModal = page.getByTestId("pwyw-modal");
-			if (await pwywModal.isVisible({ timeout: 3_000 }).catch(() => false)) {
-				await page.locator("[data-slot='dialog-close']").click();
-				await pwywModal.waitFor({ state: "hidden", timeout: 3_000 });
-			}
 
 			const card = page.getByTestId("relationship-card");
 			await expect(card).toBeVisible({ timeout: 15_000 });

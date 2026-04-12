@@ -92,16 +92,6 @@ vi.mock("@/components/results/DetailZone", () => ({
 	DetailZone: () => <div data-testid="detail-zone" />,
 }));
 
-vi.mock("@/components/results/QuickActionsCard", () => ({
-	QuickActionsCard: () => <div data-testid="quick-actions" />,
-}));
-
-vi.mock("@/components/results/RelationshipCreditsSection", () => ({
-	RelationshipCreditsSection: () => (
-		<section data-testid="relationship-credits-section" aria-label="Relationship credits" />
-	),
-}));
-
 vi.mock("@/components/relationship/RelationshipCard", () => ({
 	RelationshipCard: () => (
 		<section data-testid="relationship-card" aria-label="Relationship comparison">
@@ -116,15 +106,6 @@ vi.mock("@/components/relationship/RelationshipAnalysesList", () => ({
 			Relationship analyses
 		</section>
 	),
-}));
-
-vi.mock("@workspace/ui/hooks/use-theme", () => ({
-	useTheme: () => ({ userTheme: "system", appTheme: "light", setTheme: vi.fn() }),
-	ThemeContext: { Provider: ({ children }: { children: React.ReactNode }) => children },
-}));
-
-vi.mock("@/lib/polar-checkout", () => ({
-	createThemedCheckoutEmbed: vi.fn(),
 }));
 
 vi.mock("@/components/finalization-wait-screen", () => ({
@@ -227,9 +208,6 @@ describe("results/$conversationSessionId route behavior", () => {
 		);
 		expect(screen.getByRole("region", { name: "Relationship analyses" })).toContainElement(
 			screen.getByTestId("relationship-analyses-list"),
-		);
-		expect(screen.getByRole("region", { name: "Relationship credits" })).toContainElement(
-			screen.getByTestId("relationship-credits-section"),
 		);
 	});
 
