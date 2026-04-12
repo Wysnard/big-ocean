@@ -78,7 +78,7 @@ const mockConfig = {
 	emailFromAddress: "noreply@bigocean.dev",
 	dropOffThresholdHours: 24,
 	checkInThresholdDays: 14,
-	recaptureThresholdDays: 3,
+	subscriptionNudgeThresholdDays: 21,
 	sessionCostLimitCents: 2000,
 };
 

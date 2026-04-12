@@ -5,11 +5,12 @@
  * - Finds completed sessions and sends check-in emails
  * - One-shot enforcement (no duplicate emails)
  * - Fire-and-forget (email failures don't propagate)
- * - Territory name lookup from assessment exchanges
+ * - Theme derivation from exchange data with assessment-result fallback
  */
-import { vi } from "vitest";
+import { beforeEach, vi } from "vitest";
 
 vi.mock("@workspace/domain/config/app-config");
+vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/exchange.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/resend-email.resend.repository");
@@ -23,10 +24,25 @@ import {
 	ExchangeRepository,
 	ResendEmailRepository,
 } from "@workspace/domain";
-import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
-import { ExchangeDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/exchange.drizzle.repository";
+import {
+	_seedResult,
+	AssessmentResultDrizzleRepositoryLive,
+	_resetMockState as resetAssessmentResultMockState,
+} from "@workspace/infrastructure/repositories/assessment-result.drizzle.repository";
+import {
+	ConversationDrizzleRepositoryLive,
+	_resetMockState as resetConversationMockState,
+} from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
+import {
+	ExchangeDrizzleRepositoryLive,
+	_resetMockState as resetExchangeMockState,
+} from "@workspace/infrastructure/repositories/exchange.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
-import { ResendEmailResendRepositoryLive } from "@workspace/infrastructure/repositories/resend-email.resend.repository";
+import {
+	_getSentEmails,
+	ResendEmailResendRepositoryLive,
+	_resetMockState as resetEmailMockState,
+} from "@workspace/infrastructure/repositories/resend-email.resend.repository";
 import { Effect, Layer, Redacted } from "effect";
 import { checkCheckIn } from "../check-check-in.use-case";
 
@@ -67,14 +83,26 @@ const mockConfig: AppConfigService = {
 	emailFromAddress: "noreply@test.bigocean.dev",
 	dropOffThresholdHours: 24,
 	checkInThresholdDays: 14,
-	recaptureThresholdDays: 3,
+	subscriptionNudgeThresholdDays: 21,
 	sessionCostLimitCents: 2000,
+	nerinDirectorModelId: "claude-haiku-4-5-20251001",
+	nerinDirectorMaxTokens: 1024,
+	nerinDirectorTemperature: 0.7,
+	nerinDirectorRetryTemperature: 0.9,
 };
 
 const TestConfigLayer = Layer.succeed(AppConfig, mockConfig);
 
 describe("checkCheckIn use-case", () => {
+	beforeEach(() => {
+		resetAssessmentResultMockState();
+		resetConversationMockState();
+		resetExchangeMockState();
+		resetEmailMockState();
+	});
+
 	const BaseTestLayer = Layer.mergeAll(
+		AssessmentResultDrizzleRepositoryLive,
 		ConversationDrizzleRepositoryLive,
 		ExchangeDrizzleRepositoryLive,
 		ResendEmailResendRepositoryLive,
@@ -89,50 +117,97 @@ describe("checkCheckIn use-case", () => {
 		}).pipe(Effect.provide(BaseTestLayer)),
 	);
 
-	it.effect("sends email for completed sessions and marks them", () =>
+	it.effect("derives the check-in theme from the latest exchange and enforces one-shot sends", () =>
 		Effect.gen(function* () {
 			const sessionRepo = yield* ConversationRepository;
 			const exchangeRepo = yield* ExchangeRepository;
 
-			// Create a completed session
 			const { sessionId } = yield* sessionRepo.createSession("user-456");
 			yield* sessionRepo.updateSession(sessionId, {
 				status: "completed",
 				userId: "user-456",
+				userEmail: "alice@example.com",
+				userName: "Alice",
 			} as any);
 
-			// Create an exchange
-			const _exchange = yield* exchangeRepo.create(sessionId, 1);
+			const exchange = yield* exchangeRepo.create(sessionId, 1);
+			yield* exchangeRepo.update(exchange.id, {
+				directorOutput: "Explore creative pursuits",
+				coverageTargets: {
+					primaryFacet: "imagination",
+					candidateDomains: ["relationships"],
+				},
+			});
 
 			const result = yield* checkCheckIn;
+			const sentEmails = _getSentEmails();
 
-			// Verify email was attempted (mock always succeeds)
-			expect(result.emailsSent).toBeGreaterThanOrEqual(0);
+			expect(result.emailsSent).toBe(1);
+			expect(sentEmails).toHaveLength(1);
+			expect(sentEmails[0]?.html).toContain("how imagination shows up in your close relationships");
+			expect(sentEmails[0]?.html).toContain("/results");
+
+			const secondRun = yield* checkCheckIn;
+			expect(secondRun.emailsSent).toBe(0);
 		}).pipe(Effect.provide(BaseTestLayer)),
 	);
 
-	it.effect("handles email send failure gracefully (fail-open)", () =>
+	it.effect("falls back to persisted assessment context when exchange context is missing", () =>
 		Effect.gen(function* () {
-			// Override email repo to fail
-			const failingEmailLayer = Layer.succeed(
-				ResendEmailRepository,
-				ResendEmailRepository.of({
-					sendEmail: () => Effect.fail({ _tag: "EmailError", message: "Resend API down" } as any),
-				}),
-			);
+			const sessionRepo = yield* ConversationRepository;
+			const { sessionId } = yield* sessionRepo.createSession("user-789");
+			yield* sessionRepo.updateSession(sessionId, {
+				status: "completed",
+				userId: "user-789",
+			} as any);
 
-			const testLayer = Layer.mergeAll(
-				ConversationDrizzleRepositoryLive,
-				ExchangeDrizzleRepositoryLive,
-				failingEmailLayer,
-				LoggerPinoRepositoryLive,
-				TestConfigLayer,
-			);
+			_seedResult(sessionId, {
+				stage: "completed",
+				traits: {
+					openness: { score: 88, confidence: 92 },
+				} as any,
+				domainCoverage: {
+					health: 0.72,
+				} as any,
+			});
 
-			// Should not throw even though email fails
-			const result = yield* checkCheckIn.pipe(Effect.provide(testLayer));
-			expect(result).toBeDefined();
-			expect(result.emailsSent).toBe(0);
-		}),
+			const result = yield* checkCheckIn;
+			const sentEmails = _getSentEmails();
+
+			expect(result.emailsSent).toBe(1);
+			expect(sentEmails[0]?.html).toContain(
+				"how your openness keeps shaping your energy and self-care",
+			);
+		}).pipe(Effect.provide(BaseTestLayer)),
 	);
+
+	it.effect("handles email send failure gracefully (fail-open)", () => {
+		const failingEmailLayer = Layer.succeed(
+			ResendEmailRepository,
+			ResendEmailRepository.of({
+				sendEmail: () => Effect.fail({ _tag: "EmailError", message: "Resend API down" } as any),
+			}),
+		);
+
+		const testLayer = Layer.mergeAll(
+			AssessmentResultDrizzleRepositoryLive,
+			ConversationDrizzleRepositoryLive,
+			ExchangeDrizzleRepositoryLive,
+			failingEmailLayer,
+			LoggerPinoRepositoryLive,
+			TestConfigLayer,
+		);
+
+		return Effect.gen(function* () {
+			const sessionRepo = yield* ConversationRepository;
+			const { sessionId } = yield* sessionRepo.createSession("user-999");
+			yield* sessionRepo.updateSession(sessionId, {
+				status: "completed",
+				userId: "user-999",
+			} as any);
+
+			const result = yield* checkCheckIn;
+			expect(result.emailsSent).toBe(0);
+		}).pipe(Effect.provide(testLayer));
+	});
 });

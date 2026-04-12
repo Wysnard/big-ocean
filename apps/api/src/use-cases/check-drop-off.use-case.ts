@@ -2,7 +2,7 @@
  * Check Drop-off Use Case (Story 31-7)
  *
  * Finds sessions that have been inactive beyond the configured threshold
- * and sends a one-shot re-engagement email referencing the last conversation territory.
+ * and sends a one-shot re-engagement email referencing the last conversation topic.
  *
  * Fire-and-forget: email failures are logged but never propagate.
  * One-shot: sessions are marked before email send to prevent duplicates.
@@ -17,6 +17,7 @@ import {
 } from "@workspace/domain";
 import { renderDropOffEmail } from "@workspace/infrastructure/email-templates/drop-off-re-engagement";
 import { Effect } from "effect";
+import { deriveDropOffTopic } from "./lifecycle-email-copy";
 
 /**
  * Check for drop-off sessions and send re-engagement emails.
@@ -43,24 +44,25 @@ export const checkDropOff = Effect.gen(function* () {
 
 	for (const session of dropOffSessions) {
 		// Mark session BEFORE sending to prevent duplicate emails on concurrent runs
-		yield* sessionRepo.markDropOffEmailSent(session.sessionId).pipe(
+		const marked = yield* sessionRepo.markDropOffEmailSent(session.sessionId).pipe(
+			Effect.as(true),
 			Effect.catchAll((err) => {
 				logger.error("Failed to mark drop-off email sent", {
 					sessionId: session.sessionId,
 					error: err instanceof Error ? err.message : String(err),
 				});
-				return Effect.void;
+				return Effect.succeed(false);
 			}),
 		);
 
-		// Look up last territory from assessment exchanges
-		const _exchanges = yield* exchangeRepo
+		if (!marked) {
+			continue;
+		}
+
+		const exchanges = yield* exchangeRepo
 			.findBySession(session.sessionId)
 			.pipe(Effect.catchAll(() => Effect.succeed([])));
-
-		// Story 43-1: selectedTerritory removed from exchange table.
-		// Territory name for drop-off email defaults to generic.
-		const territoryName = "your personality";
+		const territoryName = deriveDropOffTopic(exchanges);
 
 		const resumeUrl = `${config.frontendUrl}/chat?sessionId=${session.sessionId}`;
 

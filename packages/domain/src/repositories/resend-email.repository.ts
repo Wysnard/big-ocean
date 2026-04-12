@@ -2,7 +2,7 @@
  * Resend Email Repository Interface (Story 31-7)
  *
  * Transactional email sending via Resend.
- * Used for drop-off re-engagement, Nerin check-in, and deferred portrait recapture.
+ * Used for drop-off re-engagement, Nerin check-in, and subscription conversion nudges.
  */
 
 import { Context, type Effect } from "effect";

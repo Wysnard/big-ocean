@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-12T18:00:00+0200
-last_updated: 2026-04-12T22:00:00+0200
+last_updated: 2026-04-12T18:36:40Z
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -113,8 +113,8 @@ development_status:
   epic-9-retrospective: optional
 
   # Epic 10: Transactional Emails & Re-Engagement
-  epic-10: backlog
-  10-1-three-lifecycle-email-templates: backlog
+  epic-10: in-progress
+  10-1-three-lifecycle-email-templates: in-progress
   10-2-relationship-letter-ready-notification: backlog
   epic-10-retrospective: optional
 

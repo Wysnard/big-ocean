@@ -38,6 +38,7 @@ export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.re
 export { ExchangeDrizzleRepositoryLive } from "./repositories/exchange.drizzle.repository";
 // Facet evidence repository — queries conversation_evidence, maps to SavedFacetEvidence contract
 export { FacetEvidenceDrizzleRepositoryLive } from "./repositories/facet-evidence.drizzle.repository";
+export { LifecycleEmailDrizzleRepositoryLive } from "./repositories/lifecycle-email.drizzle.repository";
 // Logger repository implementation
 export { LoggerPinoRepositoryLive } from "./repositories/logger.pino.repository";
 // Message repository implementation

@@ -112,7 +112,9 @@ const configSchema = Config.all({
 	),
 	dropOffThresholdHours: Config.number("DROP_OFF_THRESHOLD_HOURS").pipe(Config.withDefault(24)),
 	checkInThresholdDays: Config.number("CHECK_IN_THRESHOLD_DAYS").pipe(Config.withDefault(14)),
-	recaptureThresholdDays: Config.number("RECAPTURE_THRESHOLD_DAYS").pipe(Config.withDefault(3)),
+	subscriptionNudgeThresholdDays: Config.number("SUBSCRIPTION_NUDGE_THRESHOLD_DAYS").pipe(
+		Config.withDefault(21),
+	),
 
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: Config.number("SESSION_COST_LIMIT_CENTS").pipe(Config.withDefault(2000)),

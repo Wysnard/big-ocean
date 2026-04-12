@@ -23,7 +23,7 @@ import { RedisRepository } from "@workspace/domain/repositories/redis.repository
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, count, eq, isNull, lt, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import { conversation, message, publicProfile, purchaseEvents, user } from "../db/drizzle/schema";
+import { conversation, message, publicProfile, user } from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database, logger, and Redis through DI
@@ -708,10 +708,11 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 
 			markDropOffEmailSent: (sessionId: string) =>
 				Effect.gen(function* () {
-					yield* db
+					const rows = yield* db
 						.update(conversation)
 						.set({ dropOffEmailSentAt: new Date() })
-						.where(eq(conversation.id, sessionId))
+						.where(and(eq(conversation.id, sessionId), isNull(conversation.dropOffEmailSentAt)))
+						.returning({ id: conversation.id })
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -726,6 +727,14 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 								return new DatabaseError({ message: "Failed to mark drop-off email sent" });
 							}),
 						);
+
+					if (rows.length === 0) {
+						return yield* Effect.fail(
+							new DatabaseError({
+								message: "Drop-off email already marked (concurrent run or duplicate)",
+							}),
+						);
+					}
 				}),
 
 			createExtensionSession: (userId: string, parentConversationId: string) =>
@@ -941,10 +950,11 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 
 			markCheckInEmailSent: (sessionId: string) =>
 				Effect.gen(function* () {
-					yield* db
+					const rows = yield* db
 						.update(conversation)
 						.set({ checkInEmailSentAt: new Date() })
-						.where(eq(conversation.id, sessionId))
+						.where(and(eq(conversation.id, sessionId), isNull(conversation.checkInEmailSentAt)))
+						.returning({ id: conversation.id })
 						.pipe(
 							Effect.mapError((error) => {
 								try {
@@ -959,82 +969,14 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 								return new DatabaseError({ message: "Failed to mark check-in email sent" });
 							}),
 						);
-				}),
 
-			findRecaptureEligibleSessions: (thresholdDays: number) =>
-				Effect.gen(function* () {
-					const cutoff = new Date(Date.now() - thresholdDays * 24 * 60 * 60 * 1000);
-
-					// Find completed sessions past threshold, not yet emailed,
-					// where the user has NO portrait_unlocked purchase event
-					const results = yield* db
-						.select({
-							sessionId: conversation.id,
-							userId: conversation.userId,
-							userEmail: user.email,
-							userName: user.name,
-							updatedAt: conversation.updatedAt,
-						})
-						.from(conversation)
-						.innerJoin(user, eq(conversation.userId, user.id))
-						.leftJoin(
-							purchaseEvents,
-							and(
-								eq(purchaseEvents.userId, conversation.userId),
-								eq(purchaseEvents.eventType, "portrait_unlocked"),
-							),
-						)
-						.where(
-							and(
-								eq(conversation.status, "completed"),
-								lt(conversation.updatedAt, cutoff),
-								isNull(conversation.recaptureEmailSentAt),
-								isNull(purchaseEvents.id),
-							),
-						)
-						.pipe(
-							Effect.mapError((error) => {
-								try {
-									logger.error("Database operation failed", {
-										operation: "findRecaptureEligibleSessions",
-										error: error instanceof Error ? error.message : String(error),
-									});
-								} catch (logError) {
-									console.error("Logger failed:", logError);
-								}
-								return new DatabaseError({ message: "Failed to find recapture eligible sessions" });
+					if (rows.length === 0) {
+						return yield* Effect.fail(
+							new DatabaseError({
+								message: "Check-in email already marked (concurrent run or duplicate)",
 							}),
 						);
-
-					return results.map((row) => ({
-						sessionId: row.sessionId,
-						userId: row.userId as string,
-						userEmail: row.userEmail,
-						userName: row.userName,
-						updatedAt: row.updatedAt,
-					}));
-				}),
-
-			markRecaptureEmailSent: (sessionId: string) =>
-				Effect.gen(function* () {
-					yield* db
-						.update(conversation)
-						.set({ recaptureEmailSentAt: new Date() })
-						.where(eq(conversation.id, sessionId))
-						.pipe(
-							Effect.mapError((error) => {
-								try {
-									logger.error("Database operation failed", {
-										operation: "markRecaptureEmailSent",
-										sessionId,
-										error: error instanceof Error ? error.message : String(error),
-									});
-								} catch (logError) {
-									console.error("Logger failed:", logError);
-								}
-								return new DatabaseError({ message: "Failed to mark recapture email sent" });
-							}),
-						);
+					}
 				}),
 		});
 	}),
