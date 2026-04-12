@@ -1,8 +1,9 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import type { FacetName, TraitName } from "@workspace/domain";
 import { Button } from "@workspace/ui/components/button";
-import { Schema as S } from "effect";
-import { BookOpen, Loader2, MessageCircle } from "lucide-react";
+import { Effect, Schema as S } from "effect";
+import { BookOpen, Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
 import { NotFound } from "@/components/NotFound";
@@ -27,6 +28,7 @@ import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { useShareFlow } from "@/hooks/use-share-flow";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
+import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
 import {
 	clearPendingResultsGateSession,
@@ -100,11 +102,29 @@ function ResultsSessionPage() {
 	const toggleVisibility = useToggleVisibility();
 
 	// Story 13.3: Poll portrait status when authenticated
-	const { data: portraitStatusData, refetch: refetchPortraitStatus } = usePortraitStatus(
+	const { data: portraitStatusData } = usePortraitStatus(
 		canLoadResults ? conversationSessionId : "",
 	);
 
 	const portraitStatus = portraitStatusData?.status;
+
+	// Story 2.4: Retry portrait generation via real endpoint
+	const queryClient = useQueryClient();
+	const retryPortrait = useMutation({
+		mutationKey: ["portrait", "retry", conversationSessionId],
+		mutationFn: () =>
+			Effect.gen(function* () {
+				const client = yield* makeApiClient;
+				return yield* client.portrait.retryPortrait({
+					path: { sessionId: conversationSessionId },
+				});
+			}).pipe(Effect.runPromise),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["portraitStatus", conversationSessionId],
+			});
+		},
+	});
 
 	const selectedFacetTriggerRef = useRef<HTMLElement | null>(null);
 
@@ -325,6 +345,50 @@ function ResultsSessionPage() {
 		: null;
 
 	if (view === "portrait") {
+		// Story 2.4: Failed state with retry button
+		if (portraitStatus === "failed") {
+			return (
+				<PageMain className="bg-background">
+					<div className="min-h-[calc(100dvh-3.5rem)] bg-background">
+						<article className="mx-auto max-w-[65ch] px-6 py-12 sm:py-16">
+							<div className="text-center">
+								<p className="text-base leading-[1.7] text-foreground/80 mb-8">
+									Something went wrong while writing your letter. I'd like to try again — these things
+									happen, and your portrait deserves another attempt.
+								</p>
+								<button
+									type="button"
+									data-testid="portrait-retry-btn"
+									onClick={() => retryPortrait.mutate()}
+									disabled={retryPortrait.isPending}
+									className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-heading text-base disabled:opacity-50"
+								>
+									<RefreshCw
+										className={`w-4 h-4 ${retryPortrait.isPending ? "motion-safe:animate-spin" : ""}`}
+									/>
+									{retryPortrait.isPending ? "Retrying..." : "Try again"}
+								</button>
+								{retryPortrait.isError && (
+									<p className="mt-4 text-sm text-muted-foreground">
+										That didn't work either. Please try again in a moment.
+									</p>
+								)}
+								<div className="mt-8">
+									<button
+										type="button"
+										onClick={handleBackToProfile}
+										className="text-sm text-muted-foreground hover:text-primary transition-colors"
+									>
+										Back to your profile
+									</button>
+								</div>
+							</div>
+						</article>
+					</div>
+				</PageMain>
+			);
+		}
+
 		// Full portrait available → full reading view
 		const fullContent = portraitStatusData?.portrait?.content;
 		if (fullContent) {
@@ -350,7 +414,7 @@ function ResultsSessionPage() {
 				isCurated={results.isCurated}
 				fullPortraitContent={portraitStatusData?.portrait?.content}
 				fullPortraitStatus={portraitStatus}
-				onRetryPortrait={() => void refetchPortraitStatus()}
+				onRetryPortrait={() => retryPortrait.mutate()}
 				selectedTrait={selectedTrait}
 				messageCount={results.messageCount}
 				detailZone={

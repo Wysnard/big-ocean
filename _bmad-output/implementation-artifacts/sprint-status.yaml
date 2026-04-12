@@ -51,11 +51,11 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Post-Assessment Transition & Portrait Reading
-  epic-2: backlog
+  epic-2: in-progress
   2-1-show-me-what-you-found-closing-button: backlog
   2-2-portrait-reading-generating-state-with-nerin-voice: backlog
   2-3-portrait-reading-copy-and-end-of-letter-transition: backlog
-  2-4-portrait-retry-with-exponential-backoff: backlog
+  2-4-portrait-retry-with-exponential-backoff: done
   2-5-return-seed-and-notification-permission-on-first-me-page-visit: backlog
   epic-2-retrospective: optional
 
