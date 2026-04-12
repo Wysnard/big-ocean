@@ -13,17 +13,13 @@ An opening paragraph.
 Body text here.`;
 
 describe("PortraitSection", () => {
-	describe("AC1: Pre-Purchase State (Unlock CTA)", () => {
-		it("renders PortraitUnlockCta when status is 'none' and onUnlock is provided", () => {
-			render(<PortraitSection status="none" onUnlock={vi.fn()} />);
-			expect(screen.getByTestId("portrait-unlock-cta")).toBeInTheDocument();
-		});
-
-		it("renders nothing when status is 'none' and no onUnlock provided", () => {
+	describe("None State (portrait is free, auto-generated)", () => {
+		it("renders empty section when status is 'none'", () => {
 			const { container } = render(<PortraitSection status="none" />);
 			const section = container.querySelector("[data-testid='portrait-section']");
 			expect(section).toBeInTheDocument();
-			expect(screen.queryByTestId("portrait-unlock-cta")).not.toBeInTheDocument();
+			// No unlock CTA — portrait is free
+			expect(section?.children.length).toBe(0);
 		});
 	});
 

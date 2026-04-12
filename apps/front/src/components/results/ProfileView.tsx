@@ -1,12 +1,11 @@
 import type { PortraitStatus } from "@workspace/contracts";
 import type { FacetResult, OceanCode5, TraitName, TraitResult } from "@workspace/domain";
-import type { ReactNode, Ref } from "react";
+import type { ReactNode } from "react";
 import { ArchetypeHeroSection } from "./ArchetypeHeroSection";
 import { ConfidenceRingCard } from "./ConfidenceRingCard";
 import { OceanCodeStrand } from "./OceanCodeStrand";
 import { PersonalityRadarChart } from "./PersonalityRadarChart";
 import { PersonalPortrait } from "./PersonalPortrait";
-import { PortraitUnlockCta } from "./PortraitUnlockCta";
 import { TraitCard } from "./TraitCard";
 
 /** Row 1 traits (3-up on desktop) — detail zone inserts after this row */
@@ -32,18 +31,12 @@ interface ProfileViewProps {
 	fullPortraitStatus?: PortraitStatus;
 	/** Callback to retry failed portrait generation (Story 13.3) */
 	onRetryPortrait?: () => void;
-	/** Callback to open PWYW modal for portrait unlock (Story 3.4) */
-	onUnlockPortrait?: () => void;
-	/** Ref to the inline portrait unlock trigger for focus restoration */
-	portraitUnlockTriggerRef?: Ref<HTMLButtonElement>;
 	/** Current selected trait for DetailZone */
 	selectedTrait?: TraitName | null;
 	/** Total message count for confidence ring */
 	messageCount?: number;
 	/** Detail zone content (rendered below the correct trait row when a trait is selected) */
 	detailZone?: ReactNode;
-	/** Quick actions card (rendered after all trait cards + detail zone, inside the grid) */
-	quickActions?: ReactNode;
 	children?: ReactNode;
 }
 
@@ -61,12 +54,9 @@ export function ProfileView({
 	fullPortraitContent,
 	fullPortraitStatus,
 	onRetryPortrait,
-	onUnlockPortrait,
-	portraitUnlockTriggerRef,
 	selectedTrait,
 	messageCount,
 	detailZone,
-	quickActions,
 	children,
 }: ProfileViewProps) {
 	const archetypeSectionLabel = displayName ? `${displayName}\u2019s archetype` : "Your archetype";
@@ -121,13 +111,6 @@ export function ProfileView({
 								onRetryPortrait={onRetryPortrait}
 							/>
 						</section>
-					) : onUnlockPortrait ? (
-						<section aria-labelledby="results-portrait-heading" className="col-span-full">
-							<h2 id="results-portrait-heading" className="sr-only">
-								{portraitSectionLabel}
-							</h2>
-							<PortraitUnlockCta ref={portraitUnlockTriggerRef} onUnlock={onUnlockPortrait} />
-						</section>
 					) : null}
 
 					<section aria-labelledby="results-traits-heading" className="col-span-full space-y-5">
@@ -162,9 +145,6 @@ export function ProfileView({
 
 							{/* Detail Zone for Row 2 — inserted after 5th card (AC #7) */}
 							{selectedTrait && ROW_2_TRAITS.includes(selectedTrait) && detailZone}
-
-							{/* Quick Actions (AC #8) */}
-							{quickActions && <div className="col-span-full">{quickActions}</div>}
 						</div>
 					</section>
 				</div>

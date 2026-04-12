@@ -94,7 +94,7 @@ vi.mock("@/constants/chat-placeholders", () => ({
 	getPlaceholder: () => "What comes to mind first?",
 }));
 
-// Mock auth hook (used by ChatAuthGate)
+// Mock auth hook
 vi.mock("@/hooks/use-auth", () => ({
 	useAuth: () => ({
 		signUp: { email: vi.fn() },
