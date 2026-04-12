@@ -1,0 +1,1280 @@
+diff --git a/apps/front/src/routes/index.tsx b/apps/front/src/routes/index.tsx
+index e0def9a0..d1defcfe 100644
+--- a/apps/front/src/routes/index.tsx
++++ b/apps/front/src/routes/index.tsx
+@@ -1,11 +1,10 @@
+ import { createFileRoute } from "@tanstack/react-router";
+-import { ChatInputBar } from "../components/home/ChatInputBar";
+-import { DepthMeter } from "../components/home/DepthMeter";
+-import { DepthScrollProvider } from "../components/home/DepthScrollProvider";
+-import { FinalCta } from "../components/home/FinalCta";
+-import { HeroSection } from "../components/home/HeroSection";
+-import { HowItWorks } from "../components/home/HowItWorks";
+ import { PageMain } from "../components/PageMain";
++import { SplitHomepageLayout } from "../components/home/SplitHomepageLayout";
++import { StickyAuthPanel } from "../components/home/StickyAuthPanel";
++import { StickyBottomCTA } from "../components/home/StickyBottomCTA";
++import { TimelinePlaceholder } from "../components/home/TimelinePlaceholder";
++import { useAuth } from "../hooks/use-auth";
+ 
+ export const Route = createFileRoute("/")({
+ 	component: HomePage,
+@@ -33,24 +32,15 @@ export const Route = createFileRoute("/")({
+ });
+ 
+ function HomePage() {
++	const { isAuthenticated } = useAuth();
++
+ 	return (
+ 		<PageMain>
+-			<DepthScrollProvider>
+-				{/* Hero — full-viewport intro */}
+-				<HeroSection />
+-
+-				{/* Conversation section removed — Epic 9 will implement split-layout redesign */}
+-
+-				{/* How It Works — scannable 3-step overview */}
+-				<HowItWorks />
+-
+-				{/* Final conversion CTA */}
+-				<FinalCta />
+-
+-				{/* Fixed UI elements */}
+-				<DepthMeter />
+-				<ChatInputBar />
+-			</DepthScrollProvider>
++			<SplitHomepageLayout
++				timeline={<TimelinePlaceholder />}
++				authPanel={<StickyAuthPanel isAuthenticated={isAuthenticated} />}
++				bottomCta={<StickyBottomCTA isAuthenticated={isAuthenticated} />}
++			/>
+ 		</PageMain>
+ 	);
+ }
+
+diff --git a/apps/front/src/components/home/SplitHomepageLayout.tsx b/apps/front/src/components/home/SplitHomepageLayout.tsx
+new file mode 100644
+index 00000000..768f2949
+--- /dev/null
++++ b/apps/front/src/components/home/SplitHomepageLayout.tsx
+@@ -0,0 +1,38 @@
++import type { ReactNode } from "react";
++
++interface SplitHomepageLayoutProps {
++	timeline: ReactNode;
++	authPanel: ReactNode;
++	bottomCta?: ReactNode;
++}
++
++export function SplitHomepageLayout({ timeline, authPanel, bottomCta }: SplitHomepageLayoutProps) {
++	return (
++		<div
++			data-slot="split-homepage-layout"
++			data-testid="split-homepage-layout"
++			className="grid grid-cols-[1fr] lg:grid-cols-[3fr_2fr]"
++		>
++			{/* Left pane — scrollable timeline content */}
++			<div
++				data-slot="scrollable-timeline"
++				data-testid="scrollable-timeline"
++				className="overflow-y-auto lg:h-[calc(100vh-3.5rem)]"
++			>
++				{timeline}
++			</div>
++
++			{/* Right pane — sticky auth panel (desktop only) */}
++			<div
++				data-slot="sticky-auth-panel-wrapper"
++				data-testid="sticky-auth-panel-wrapper"
++				className="hidden lg:block lg:sticky lg:top-[3.5rem] lg:h-[calc(100vh-3.5rem)]"
++			>
++				{authPanel}
++			</div>
++
++			{/* Mobile bottom CTA (visible only on small screens) */}
++			{bottomCta}
++		</div>
++	);
++}
+
+diff --git a/apps/front/src/components/home/StickyAuthPanel.tsx b/apps/front/src/components/home/StickyAuthPanel.tsx
+new file mode 100644
+index 00000000..efec6fae
+--- /dev/null
++++ b/apps/front/src/components/home/StickyAuthPanel.tsx
+@@ -0,0 +1,132 @@
++/**
++ * Sticky Auth Panel
++ *
++ * Right-side panel with logo, hook line, signup form (or continue link),
++ * tagline, and OCEAN breathing shapes.
++ */
++
++import { Link } from "@tanstack/react-router";
++import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
++import { HomepageSignupForm } from "./HomepageSignupForm";
++
++interface StickyAuthPanelProps {
++	isAuthenticated: boolean;
++}
++
++export function StickyAuthPanel({ isAuthenticated }: StickyAuthPanelProps) {
++	return (
++		<div
++			data-slot="sticky-auth-panel"
++			data-testid="sticky-auth-panel"
++			className="flex h-full flex-col items-center justify-center px-8 py-12"
++		>
++			{/* Brand mark */}
++			<div className="mb-4 flex items-center gap-1.5">
++				<span className="font-heading text-2xl font-bold tracking-tight text-foreground">big-</span>
++				<OceanHieroglyphSet size={20} />
++			</div>
++
++			{/* Hook line — static placeholder (Story 9.2 adds scroll-linked transitions) */}
++			<p
++				data-slot="hook-line"
++				data-testid="hook-line"
++				className="mb-6 text-center font-heading text-lg font-medium text-foreground"
++			>
++				A conversation that sees you.
++			</p>
++
++			{/* Auth-aware content */}
++			<div className="w-full max-w-xs">
++				{isAuthenticated ? (
++					<Link
++						to="/chat"
++						data-testid="continue-to-nerin"
++						className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary font-heading text-base font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-2px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
++					>
++						Continue to Nerin &rarr;
++					</Link>
++				) : (
++					<HomepageSignupForm />
++				)}
++			</div>
++
++			{/* "Already have an account?" link */}
++			{!isAuthenticated && (
++				<p className="mt-3 text-sm text-muted-foreground">
++					Already have an account?{" "}
++					<Link
++						to="/login"
++						search={{ sessionId: undefined, redirectTo: undefined }}
++						data-testid="login-link"
++						className="font-medium text-foreground underline underline-offset-4 transition-colors hover:text-primary"
++					>
++						Log in
++					</Link>
++				</p>
++			)}
++
++			{/* Tagline */}
++			<p
++				data-slot="tagline"
++				data-testid="tagline"
++				className="mt-4 font-mono text-xs tracking-wide text-muted-foreground"
++			>
++				~30 min &middot; Free &middot; No credit card
++			</p>
++
++			{/* OCEAN breathing shapes — scaled for panel */}
++			<div
++				data-slot="ocean-shapes"
++				data-testid="ocean-shapes"
++				className="relative mt-8 h-[160px] w-full max-w-xs"
++				aria-hidden="true"
++			>
++				{/* Openness Circle */}
++				<div
++					className="absolute top-[5px] left-[20px] h-[70px] w-[70px] rounded-full motion-safe:animate-[breathe_6s_ease-in-out_infinite]"
++					style={{ backgroundColor: "var(--trait-openness)", opacity: 0.8 }}
++				/>
++
++				{/* Conscientiousness Rectangle */}
++				<div
++					className="absolute top-[25px] right-[15px] h-[72px] w-[48px] rotate-12 rounded-[6px] motion-safe:animate-[breathe_6s_ease-in-out_infinite]"
++					style={{
++						backgroundColor: "var(--trait-conscientiousness)",
++						opacity: 0.75,
++						animationDelay: "-1.2s",
++					}}
++				/>
++
++				{/* Extraversion Triangle */}
++				<div
++					className="absolute bottom-[10px] left-[45px] motion-safe:animate-[breathe_6s_ease-in-out_infinite]"
++					style={{
++						width: 0,
++						height: 0,
++						borderLeft: "30px solid transparent",
++						borderRight: "30px solid transparent",
++						borderBottom: "60px solid var(--trait-extraversion)",
++						opacity: 0.7,
++						animationDelay: "-2.4s",
++					}}
++				/>
++
++				{/* Agreeableness Half-circle */}
++				<div
++					className="absolute right-[25px] bottom-[15px] h-[32px] w-[64px] rounded-t-full motion-safe:animate-[breathe_6s_ease-in-out_infinite]"
++					style={{
++						backgroundColor: "var(--trait-agreeableness)",
++						opacity: 0.75,
++						animationDelay: "-3.6s",
++					}}
++				/>
++
++				{/* Neuroticism Diamond */}
++				<div
++					className="absolute top-[65px] left-[120px] h-[36px] w-[36px] rotate-45 motion-safe:animate-[breathe_6s_ease-in-out_infinite]"
++					style={{ backgroundColor: "var(--trait-neuroticism)", opacity: 0.85, animationDelay: "-4.8s" }}
++				/>
++			</div>
++		</div>
++	);
++}
+
+diff --git a/apps/front/src/components/home/HomepageSignupForm.tsx b/apps/front/src/components/home/HomepageSignupForm.tsx
+new file mode 100644
+index 00000000..c8a830f2
+--- /dev/null
++++ b/apps/front/src/components/home/HomepageSignupForm.tsx
+@@ -0,0 +1,261 @@
++/**
++ * Homepage Signup Form
++ *
++ * Condensed signup form for the sticky auth panel.
++ * Reuses form logic from signup-form.tsx without card wrapper or corner decorations.
++ */
++
++import { useForm } from "@tanstack/react-form";
++import { useNavigate } from "@tanstack/react-router";
++import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
++import { Input } from "@workspace/ui/components/input";
++import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
++import { useState } from "react";
++import { useAuth } from "../../hooks/use-auth";
++
++export function HomepageSignupForm() {
++	const { signUp } = useAuth();
++	const navigate = useNavigate();
++	const [serverError, setServerError] = useState<string | null>(null);
++	const [isLoading, setIsLoading] = useState(false);
++	const errorId = "homepage-signup-error";
++
++	const form = useForm({
++		defaultValues: {
++			name: "",
++			email: "",
++			password: "",
++			confirmPassword: "",
++		},
++		validators: {
++			onSubmit: ({ value }) => {
++				const errors: Record<string, string> = {};
++				if (!value.name.trim()) {
++					errors.name = "Name is required";
++				}
++				if (!value.email.trim()) {
++					errors.email = "Email is required";
++				}
++				if (value.password.length < 12) {
++					errors.password = "Password must be at least 12 characters";
++				}
++				if (value.password !== value.confirmPassword) {
++					errors.confirmPassword = "Passwords do not match";
++				}
++				return Object.keys(errors).length > 0 ? { fields: errors } : undefined;
++			},
++		},
++		onSubmit: async ({ value }) => {
++			setServerError(null);
++			setIsLoading(true);
++
++			try {
++				await signUp.email(
++					value.email,
++					value.password,
++					value.name,
++					undefined,
++					`${window.location.origin}/dashboard`,
++				);
++
++				await navigate({
++					to: "/verify-email",
++					search: { email: value.email, error: undefined },
++				});
++			} catch (err) {
++				const errorMessage = err instanceof Error ? err.message : String(err);
++				if (errorMessage.includes("already exists")) {
++					setServerError("An account with this email already exists");
++				} else if (
++					errorMessage.includes("data breach") ||
++					errorMessage.includes("compromised") ||
++					errorMessage.includes("PASSWORD_COMPROMISED")
++				) {
++					setServerError(
++						"This password has appeared in a data breach. Please choose a different password.",
++					);
++				} else {
++					setServerError(errorMessage || "Sign up failed. Please try again.");
++				}
++			} finally {
++				setIsLoading(false);
++			}
++		},
++	});
++
++	return (
++		<form
++			data-slot="homepage-signup-form"
++			data-testid="homepage-signup-form"
++			noValidate
++			onSubmit={(e) => {
++				e.preventDefault();
++				form.handleSubmit();
++			}}
++			className="w-full space-y-3"
++		>
++			{serverError && (
++				<p
++					id={errorId}
++					role="alert"
++					className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
++				>
++					{serverError}
++				</p>
++			)}
++
++			<form.Field name="name">
++				{(field) => {
++					const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
++					const fieldErrorId = "homepage-signup-name-error";
++					return (
++						<Field data-invalid={isInvalid}>
++							<FieldLabel htmlFor="homepage-signup-name">Name</FieldLabel>
++							<Input
++								id="homepage-signup-name"
++								type="text"
++								value={field.state.value}
++								onBlur={field.handleBlur}
++								onChange={(e) => field.handleChange(e.target.value)}
++								autoComplete="name"
++								placeholder="Your name"
++								required
++								aria-invalid={isInvalid}
++								aria-describedby={
++									[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
++										.filter(Boolean)
++										.join(" ") || undefined
++								}
++								className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
++							/>
++							{isInvalid && (
++								<FieldError
++									id={fieldErrorId}
++									errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
++								/>
++							)}
++						</Field>
++					);
++				}}
++			</form.Field>
++
++			<form.Field name="email">
++				{(field) => {
++					const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
++					const fieldErrorId = "homepage-signup-email-error";
++					return (
++						<Field data-invalid={isInvalid}>
++							<FieldLabel htmlFor="homepage-signup-email">Email</FieldLabel>
++							<Input
++								id="homepage-signup-email"
++								type="email"
++								value={field.state.value}
++								onBlur={field.handleBlur}
++								onChange={(e) => field.handleChange(e.target.value)}
++								autoComplete="email"
++								placeholder="you@example.com"
++								required
++								aria-invalid={isInvalid}
++								aria-describedby={
++									[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
++										.filter(Boolean)
++										.join(" ") || undefined
++								}
++								className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
++							/>
++							{isInvalid && (
++								<FieldError
++									id={fieldErrorId}
++									errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
++								/>
++							)}
++						</Field>
++					);
++				}}
++			</form.Field>
++
++			<form.Field name="password">
++				{(field) => {
++					const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
++					const fieldErrorId = "homepage-signup-password-error";
++					return (
++						<Field data-invalid={isInvalid}>
++							<FieldLabel htmlFor="homepage-signup-password">Password</FieldLabel>
++							<Input
++								id="homepage-signup-password"
++								type="password"
++								value={field.state.value}
++								onBlur={field.handleBlur}
++								onChange={(e) => field.handleChange(e.target.value)}
++								autoComplete="new-password"
++								placeholder="At least 12 characters"
++								required
++								aria-invalid={isInvalid}
++								aria-describedby={
++									[isInvalid ? fieldErrorId : null, serverError ? errorId : null, "homepage-signup-password-help"]
++										.filter(Boolean)
++										.join(" ") || undefined
++								}
++								className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
++							/>
++							<p id="homepage-signup-password-help" className="text-xs text-muted-foreground">
++								Minimum 12 characters
++							</p>
++							{isInvalid && (
++								<FieldError
++									id={fieldErrorId}
++									errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
++								/>
++							)}
++						</Field>
++					);
++				}}
++			</form.Field>
++
++			<form.Field name="confirmPassword">
++				{(field) => {
++					const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
++					const fieldErrorId = "homepage-signup-confirm-password-error";
++					return (
++						<Field data-invalid={isInvalid}>
++							<FieldLabel htmlFor="homepage-signup-confirm-password">Confirm Password</FieldLabel>
++							<Input
++								id="homepage-signup-confirm-password"
++								type="password"
++								value={field.state.value}
++								onBlur={field.handleBlur}
++								onChange={(e) => field.handleChange(e.target.value)}
++								autoComplete="new-password"
++								placeholder="Confirm password"
++								required
++								aria-invalid={isInvalid}
++								aria-describedby={
++									[isInvalid ? fieldErrorId : null, serverError ? errorId : null]
++										.filter(Boolean)
++										.join(" ") || undefined
++								}
++								className="min-h-11 rounded-xl border-border bg-card px-4 py-3"
++							/>
++							{isInvalid && (
++								<FieldError
++									id={fieldErrorId}
++									errors={field.state.meta.errors.map((e) => ({ message: String(e) }))}
++								/>
++							)}
++						</Field>
++					);
++				}}
++			</form.Field>
++
++			<button
++				type="submit"
++				disabled={isLoading}
++				data-testid="homepage-signup-submit"
++				className="mt-2 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary font-heading text-base font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-2px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)] active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
++			>
++				{isLoading && <OceanSpinner size={16} mono />}
++				{isLoading ? "Creating account..." : "Start yours \u2192"}
++			</button>
++		</form>
++	);
++}
+
+diff --git a/apps/front/src/components/home/StickyBottomCTA.tsx b/apps/front/src/components/home/StickyBottomCTA.tsx
+new file mode 100644
+index 00000000..618f0d8a
+--- /dev/null
++++ b/apps/front/src/components/home/StickyBottomCTA.tsx
+@@ -0,0 +1,41 @@
++/**
++ * Sticky Bottom CTA
++ *
++ * Fixed bottom bar for mobile users with a "Start yours" button.
++ * Hidden on desktop where the sticky auth panel is visible.
++ */
++
++import { Link } from "@tanstack/react-router";
++
++interface StickyBottomCTAProps {
++	isAuthenticated: boolean;
++}
++
++export function StickyBottomCTA({ isAuthenticated }: StickyBottomCTAProps) {
++	return (
++		<div
++			data-slot="sticky-bottom-cta"
++			data-testid="sticky-bottom-cta"
++			className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/50 bg-background/80 px-4 py-3 backdrop-blur-md lg:hidden"
++		>
++			{isAuthenticated ? (
++				<Link
++					to="/chat"
++					data-testid="mobile-continue-cta"
++					className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary font-heading text-[.95rem] font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-1px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
++				>
++					Continue to Nerin &rarr;
++				</Link>
++			) : (
++				<Link
++					to="/signup"
++					search={{ sessionId: undefined, redirectTo: undefined }}
++					data-testid="mobile-signup-cta"
++					className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary font-heading text-[.95rem] font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-1px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
++				>
++					Start yours &rarr;
++				</Link>
++			)}
++		</div>
++	);
++}
+
+diff --git a/apps/front/src/components/home/TimelinePlaceholder.tsx b/apps/front/src/components/home/TimelinePlaceholder.tsx
+new file mode 100644
+index 00000000..54f497c5
+--- /dev/null
++++ b/apps/front/src/components/home/TimelinePlaceholder.tsx
+@@ -0,0 +1,80 @@
++/**
++ * Timeline Placeholder
++ *
++ * Left pane content for the split layout homepage.
++ * Contains hero content (adapted — OCEAN shapes moved to auth panel),
++ * HowItWorks section, and placeholders for Stories 9.3 and 9.4.
++ */
++
++import { Link } from "@tanstack/react-router";
++import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
++import { HowItWorks } from "./HowItWorks";
++
++export function TimelinePlaceholder() {
++	return (
++		<div data-slot="timeline-placeholder" data-testid="timeline-placeholder">
++			{/* Hero content — adapted for left pane (no OCEAN shapes, they're in the auth panel) */}
++			<section
++				data-slot="hero-section"
++				data-testid="hero-section"
++				className="flex min-h-[calc(100vh-3.5rem)] flex-col justify-center px-6 py-16 sm:px-12 lg:px-16"
++			>
++				{/* Brand mark (visible on mobile, hidden on desktop where auth panel shows it) */}
++				<div className="mb-6 flex items-center gap-2 lg:hidden">
++					<span className="font-heading text-4xl font-bold tracking-tight text-foreground">big-</span>
++					<OceanHieroglyphSet size={36} className="sm:hidden" />
++					<OceanHieroglyphSet size={44} className="hidden sm:inline-flex" />
++				</div>
++
++				<h1 className="mb-[18px] font-heading text-[clamp(2.4rem,5vw,4rem)] font-bold leading-[1.06]">
++					Not a personality quiz.{" "}
++					<span className="bg-gradient-to-r from-primary via-[#FF1493] to-secondary bg-clip-text text-transparent">
++						A conversation.
++					</span>
++				</h1>
++
++				<p className="mb-6 max-w-[440px] text-[1.05rem] leading-[1.7] text-muted-foreground">
++					A portrait of who you are that no test has ever given you.
++				</p>
++
++				<div className="mb-8 font-mono text-[.72rem] tracking-[.05em] text-muted-foreground">
++					~30 MINUTES &middot; FREE &middot; JUST A CONVERSATION
++				</div>
++
++				{/* CTA — visible on mobile, hidden on desktop (auth panel has the form) */}
++				<div className="flex flex-wrap items-center gap-3 lg:hidden">
++					<Link
++						to="/signup"
++						search={{ sessionId: undefined, redirectTo: undefined }}
++						data-testid="hero-cta"
++						className="inline-flex min-h-[44px] items-center gap-[10px] rounded-xl bg-gradient-to-r from-primary to-secondary px-[34px] py-[15px] font-heading text-[.95rem] font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-2px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
++					>
++						Start yours &rarr;
++					</Link>
++				</div>
++			</section>
++
++			{/* How It Works */}
++			<HowItWorks />
++
++			{/* Placeholder for Story 9.3: Timeline Phases (conversation preview, portrait excerpt, world-after) */}
++			<section
++				data-slot="timeline-phases-placeholder"
++				data-testid="timeline-phases-placeholder"
++				className="px-6 py-16 sm:px-12 lg:px-16"
++				aria-hidden="true"
++			/>
++
++			{/* Placeholder for Story 9.4: Reassurance Section (fear-addressing cards) */}
++			<section
++				data-slot="reassurance-placeholder"
++				data-testid="reassurance-placeholder"
++				className="px-6 py-16 sm:px-12 lg:px-16"
++				aria-hidden="true"
++			/>
++
++			{/* Bottom padding to account for StickyBottomCTA on mobile */}
++			<div className="h-20 lg:hidden" />
++		</div>
++	);
++}
+
+diff --git a/apps/front/src/components/home/SplitHomepageLayout.test.tsx b/apps/front/src/components/home/SplitHomepageLayout.test.tsx
+new file mode 100644
+index 00000000..e4664df1
+--- /dev/null
++++ b/apps/front/src/components/home/SplitHomepageLayout.test.tsx
+@@ -0,0 +1,109 @@
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it } from "vitest";
++import { SplitHomepageLayout } from "./SplitHomepageLayout";
++
++describe("SplitHomepageLayout", () => {
++	it("renders the split layout container with both panes", () => {
++		render(
++			<SplitHomepageLayout
++				timeline={<div data-testid="test-timeline">Timeline</div>}
++				authPanel={<div data-testid="test-auth-panel">Auth</div>}
++			/>,
++		);
++
++		expect(screen.getByTestId("split-homepage-layout")).toBeInTheDocument();
++		expect(screen.getByTestId("scrollable-timeline")).toBeInTheDocument();
++		expect(screen.getByTestId("sticky-auth-panel-wrapper")).toBeInTheDocument();
++	});
++
++	it("renders timeline content in the left pane", () => {
++		render(
++			<SplitHomepageLayout
++				timeline={<div data-testid="test-timeline">Timeline Content</div>}
++				authPanel={<div>Auth</div>}
++			/>,
++		);
++
++		const scrollableTimeline = screen.getByTestId("scrollable-timeline");
++		expect(scrollableTimeline).toContainElement(screen.getByTestId("test-timeline"));
++	});
++
++	it("renders auth panel content in the right pane", () => {
++		render(
++			<SplitHomepageLayout
++				timeline={<div>Timeline</div>}
++				authPanel={<div data-testid="test-auth-panel">Auth Panel Content</div>}
++			/>,
++		);
++
++		const authPanelWrapper = screen.getByTestId("sticky-auth-panel-wrapper");
++		expect(authPanelWrapper).toContainElement(screen.getByTestId("test-auth-panel"));
++	});
++
++	it("renders optional bottom CTA when provided", () => {
++		render(
++			<SplitHomepageLayout
++				timeline={<div>Timeline</div>}
++				authPanel={<div>Auth</div>}
++				bottomCta={<div data-testid="test-bottom-cta">Bottom CTA</div>}
++			/>,
++		);
++
++		expect(screen.getByTestId("test-bottom-cta")).toBeInTheDocument();
++	});
++
++	it("does not render bottom CTA when not provided", () => {
++		render(
++			<SplitHomepageLayout timeline={<div>Timeline</div>} authPanel={<div>Auth</div>} />,
++		);
++
++		expect(screen.queryByTestId("test-bottom-cta")).not.toBeInTheDocument();
++	});
++
++	it("applies responsive grid classes for 60/40 split", () => {
++		render(
++			<SplitHomepageLayout timeline={<div>Timeline</div>} authPanel={<div>Auth</div>} />,
++		);
++
++		const layout = screen.getByTestId("split-homepage-layout");
++		expect(layout.className).toMatch(/grid-cols-\[1fr\]/);
++		expect(layout.className).toMatch(/lg:grid-cols-\[3fr_2fr\]/);
++	});
++
++	it("applies sticky positioning classes to auth panel wrapper", () => {
++		render(
++			<SplitHomepageLayout timeline={<div>Timeline</div>} authPanel={<div>Auth</div>} />,
++		);
++
++		const wrapper = screen.getByTestId("sticky-auth-panel-wrapper");
++		expect(wrapper.className).toMatch(/lg:sticky/);
++		expect(wrapper.className).toMatch(/lg:top-\[3\.5rem\]/);
++		expect(wrapper.className).toMatch(/lg:h-\[calc\(100vh-3\.5rem\)\]/);
++	});
++
++	it("hides auth panel wrapper on mobile via hidden class", () => {
++		render(
++			<SplitHomepageLayout timeline={<div>Timeline</div>} authPanel={<div>Auth</div>} />,
++		);
++
++		const wrapper = screen.getByTestId("sticky-auth-panel-wrapper");
++		expect(wrapper.className).toMatch(/hidden/);
++		expect(wrapper.className).toMatch(/lg:block/);
++	});
++
++	it("has data-slot attributes on all structural elements", () => {
++		render(
++			<SplitHomepageLayout timeline={<div>Timeline</div>} authPanel={<div>Auth</div>} />,
++		);
++
++		expect(screen.getByTestId("split-homepage-layout").getAttribute("data-slot")).toBe(
++			"split-homepage-layout",
++		);
++		expect(screen.getByTestId("scrollable-timeline").getAttribute("data-slot")).toBe(
++			"scrollable-timeline",
++		);
++		expect(screen.getByTestId("sticky-auth-panel-wrapper").getAttribute("data-slot")).toBe(
++			"sticky-auth-panel-wrapper",
++		);
++	});
++});
+
+diff --git a/apps/front/src/components/home/StickyAuthPanel.test.tsx b/apps/front/src/components/home/StickyAuthPanel.test.tsx
+new file mode 100644
+index 00000000..12a6bd55
+--- /dev/null
++++ b/apps/front/src/components/home/StickyAuthPanel.test.tsx
+@@ -0,0 +1,130 @@
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it, vi } from "vitest";
++
++vi.mock("@tanstack/react-router", () => ({
++	Link: ({ children, ...props }: any) => (
++		<a {...props} href={props.to as string}>
++			{children}
++		</a>
++	),
++	useNavigate: () => vi.fn(),
++}));
++
++vi.mock("@workspace/ui/components/ocean-hieroglyph-set", () => ({
++	OceanHieroglyphSet: () => <span data-testid="ocean-hieroglyphs" />,
++}));
++
++vi.mock("@workspace/ui/components/ocean-spinner", () => ({
++	OceanSpinner: () => <span data-testid="ocean-spinner" />,
++}));
++
++vi.mock("@workspace/ui/components/field", () => ({
++	Field: ({ children, ...props }: any) => <div {...props}>{children}</div>,
++	// biome-ignore lint/a11y/noLabelWithoutControl: test mock — associated control rendered by component under test
++	FieldLabel: ({ children, ...props }: any) => <label {...props}>{children}</label>,
++	FieldError: ({ errors, ...props }: any) => (
++		<span {...props}>{errors?.map((e: any) => e.message).join(", ")}</span>
++	),
++}));
++
++vi.mock("@workspace/ui/components/input", () => ({
++	Input: (props: any) => <input {...props} />,
++}));
++
++vi.mock("@/hooks/use-auth", () => ({
++	useAuth: () => ({
++		signUp: { email: vi.fn() },
++		signIn: { email: vi.fn() },
++		signOut: vi.fn(),
++		refreshSession: vi.fn(),
++		session: null,
++		user: null,
++		isAuthenticated: false,
++		isPending: false,
++		error: null,
++	}),
++}));
++
++import { StickyAuthPanel } from "./StickyAuthPanel";
++
++describe("StickyAuthPanel", () => {
++	it("renders the panel container", () => {
++		render(<StickyAuthPanel isAuthenticated={false} />);
++		expect(screen.getByTestId("sticky-auth-panel")).toBeInTheDocument();
++	});
++
++	it("renders the brand mark with OceanHieroglyphSet", () => {
++		render(<StickyAuthPanel isAuthenticated={false} />);
++		expect(screen.getByText("big-")).toBeInTheDocument();
++		expect(screen.getByTestId("ocean-hieroglyphs")).toBeInTheDocument();
++	});
++
++	it("renders the static hook line", () => {
++		render(<StickyAuthPanel isAuthenticated={false} />);
++		expect(screen.getByTestId("hook-line")).toHaveTextContent("A conversation that sees you.");
++	});
++
++	it("renders the tagline", () => {
++		render(<StickyAuthPanel isAuthenticated={false} />);
++		const tagline = screen.getByTestId("tagline");
++		expect(tagline).toBeInTheDocument();
++		expect(tagline.textContent).toContain("30 min");
++		expect(tagline.textContent).toContain("Free");
++		expect(tagline.textContent).toContain("No credit card");
++	});
++
++	it("renders OCEAN breathing shapes", () => {
++		render(<StickyAuthPanel isAuthenticated={false} />);
++		const shapes = screen.getByTestId("ocean-shapes");
++		expect(shapes).toBeInTheDocument();
++		expect(shapes).toHaveAttribute("aria-hidden", "true");
++	});
++
++	describe("when unauthenticated", () => {
++		it("renders the signup form", () => {
++			render(<StickyAuthPanel isAuthenticated={false} />);
++			expect(screen.getByTestId("homepage-signup-form")).toBeInTheDocument();
++		});
++
++		it("renders the 'Already have an account? Log in' link", () => {
++			render(<StickyAuthPanel isAuthenticated={false} />);
++			const loginLink = screen.getByTestId("login-link");
++			expect(loginLink).toBeInTheDocument();
++			expect(loginLink).toHaveTextContent("Log in");
++			expect(loginLink).toHaveAttribute("href", "/login");
++		});
++
++		it("does not render the 'Continue to Nerin' link", () => {
++			render(<StickyAuthPanel isAuthenticated={false} />);
++			expect(screen.queryByTestId("continue-to-nerin")).not.toBeInTheDocument();
++		});
++	});
++
++	describe("when authenticated", () => {
++		it("renders 'Continue to Nerin' link instead of signup form", () => {
++			render(<StickyAuthPanel isAuthenticated={true} />);
++			const continueLink = screen.getByTestId("continue-to-nerin");
++			expect(continueLink).toBeInTheDocument();
++			expect(continueLink).toHaveTextContent("Continue to Nerin");
++			expect(continueLink).toHaveAttribute("href", "/chat");
++		});
++
++		it("does not render the signup form", () => {
++			render(<StickyAuthPanel isAuthenticated={true} />);
++			expect(screen.queryByTestId("homepage-signup-form")).not.toBeInTheDocument();
++		});
++
++		it("does not render the login link", () => {
++			render(<StickyAuthPanel isAuthenticated={true} />);
++			expect(screen.queryByTestId("login-link")).not.toBeInTheDocument();
++		});
++	});
++
++	it("has data-slot attributes on key elements", () => {
++		render(<StickyAuthPanel isAuthenticated={false} />);
++		expect(screen.getByTestId("sticky-auth-panel").getAttribute("data-slot")).toBe("sticky-auth-panel");
++		expect(screen.getByTestId("hook-line").getAttribute("data-slot")).toBe("hook-line");
++		expect(screen.getByTestId("tagline").getAttribute("data-slot")).toBe("tagline");
++		expect(screen.getByTestId("ocean-shapes").getAttribute("data-slot")).toBe("ocean-shapes");
++	});
++});
+
+diff --git a/apps/front/src/components/home/HomepageSignupForm.test.tsx b/apps/front/src/components/home/HomepageSignupForm.test.tsx
+new file mode 100644
+index 00000000..8e291f7b
+--- /dev/null
++++ b/apps/front/src/components/home/HomepageSignupForm.test.tsx
+@@ -0,0 +1,210 @@
++import { fireEvent, render, screen, waitFor } from "@testing-library/react";
++import { beforeEach, describe, expect, it, vi } from "vitest";
++
++const mockSignUpEmail = vi.fn();
++const mockNavigate = vi.fn();
++
++vi.mock("@/hooks/use-auth", () => ({
++	useAuth: () => ({
++		signUp: { email: mockSignUpEmail },
++		signIn: { email: vi.fn() },
++		signOut: vi.fn(),
++		refreshSession: vi.fn(),
++		session: null,
++		user: null,
++		isAuthenticated: false,
++		isPending: false,
++		error: null,
++	}),
++}));
++
++vi.mock("@tanstack/react-router", () => ({
++	useNavigate: () => mockNavigate,
++	Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
++}));
++
++vi.mock("@workspace/ui/components/field", () => ({
++	Field: ({ children, ...props }: any) => <div {...props}>{children}</div>,
++	// biome-ignore lint/a11y/noLabelWithoutControl: test mock — associated control rendered by component under test
++	FieldLabel: ({ children, ...props }: any) => <label {...props}>{children}</label>,
++	FieldError: ({ errors, ...props }: any) => (
++		<span role="alert" {...props}>
++			{errors?.map((e: any) => e.message).join(", ")}
++		</span>
++	),
++}));
++
++vi.mock("@workspace/ui/components/input", () => ({
++	Input: (props: any) => <input {...props} />,
++}));
++
++vi.mock("@workspace/ui/components/ocean-spinner", () => ({
++	OceanSpinner: () => <span data-testid="ocean-spinner" />,
++}));
++
++import { HomepageSignupForm } from "./HomepageSignupForm";
++
++describe("HomepageSignupForm", () => {
++	beforeEach(() => {
++		mockSignUpEmail.mockReset();
++		mockNavigate.mockReset();
++	});
++
++	it("renders all form fields", () => {
++		render(<HomepageSignupForm />);
++
++		expect(screen.getByLabelText("Name")).toBeInTheDocument();
++		expect(screen.getByLabelText("Email")).toBeInTheDocument();
++		expect(screen.getByLabelText("Password")).toBeInTheDocument();
++		expect(screen.getByLabelText("Confirm Password")).toBeInTheDocument();
++	});
++
++	it("renders the 'Start yours' submit button", () => {
++		render(<HomepageSignupForm />);
++
++		const submitButton = screen.getByTestId("homepage-signup-submit");
++		expect(submitButton).toBeInTheDocument();
++		expect(submitButton).toHaveTextContent("Start yours");
++	});
++
++	it("has data-testid on the form element", () => {
++		render(<HomepageSignupForm />);
++		expect(screen.getByTestId("homepage-signup-form")).toBeInTheDocument();
++	});
++
++	it("has data-slot on the form element", () => {
++		render(<HomepageSignupForm />);
++		expect(screen.getByTestId("homepage-signup-form").getAttribute("data-slot")).toBe(
++			"homepage-signup-form",
++		);
++	});
++
++	it("shows validation error when password is too short", async () => {
++		render(<HomepageSignupForm />);
++
++		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test User" } });
++		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
++		fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
++		fireEvent.change(screen.getByLabelText("Confirm Password"), { target: { value: "short" } });
++		fireEvent.submit(screen.getByTestId("homepage-signup-form"));
++
++		await waitFor(() => {
++			expect(screen.getByText("Password must be at least 12 characters")).toBeTruthy();
++		});
++	});
++
++	it("shows validation error when passwords do not match", async () => {
++		render(<HomepageSignupForm />);
++
++		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test User" } });
++		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
++		fireEvent.change(screen.getByLabelText("Password"), {
++			target: { value: "securepassword1" },
++		});
++		fireEvent.change(screen.getByLabelText("Confirm Password"), {
++			target: { value: "differentpassword" },
++		});
++		fireEvent.submit(screen.getByTestId("homepage-signup-form"));
++
++		await waitFor(() => {
++			expect(screen.getByText("Passwords do not match")).toBeTruthy();
++		});
++	});
++
++	it("calls signUp.email and navigates to /verify-email on successful submission", async () => {
++		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
++		render(<HomepageSignupForm />);
++
++		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test User" } });
++		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
++		fireEvent.change(screen.getByLabelText("Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.change(screen.getByLabelText("Confirm Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.submit(screen.getByTestId("homepage-signup-form"));
++
++		await waitFor(() => {
++			expect(mockSignUpEmail).toHaveBeenCalledWith(
++				"test@example.com",
++				"securepassword123",
++				"Test User",
++				undefined,
++				expect.any(String),
++			);
++		});
++
++		await waitFor(() => {
++			expect(mockNavigate).toHaveBeenCalledWith({
++				to: "/verify-email",
++				search: { email: "test@example.com", error: undefined },
++			});
++		});
++	});
++
++	it("shows server error for duplicate email", async () => {
++		mockSignUpEmail.mockRejectedValueOnce(new Error("User already exists"));
++		render(<HomepageSignupForm />);
++
++		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test User" } });
++		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "dupe@example.com" } });
++		fireEvent.change(screen.getByLabelText("Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.change(screen.getByLabelText("Confirm Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.submit(screen.getByTestId("homepage-signup-form"));
++
++		await waitFor(() => {
++			expect(
++				screen.getByText("An account with this email already exists"),
++			).toBeInTheDocument();
++		});
++	});
++
++	it("shows server error for compromised password", async () => {
++		mockSignUpEmail.mockRejectedValueOnce(new Error("PASSWORD_COMPROMISED"));
++		render(<HomepageSignupForm />);
++
++		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test User" } });
++		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
++		fireEvent.change(screen.getByLabelText("Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.change(screen.getByLabelText("Confirm Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.submit(screen.getByTestId("homepage-signup-form"));
++
++		await waitFor(() => {
++			expect(
++				screen.getByText(
++					"This password has appeared in a data breach. Please choose a different password.",
++				),
++			).toBeInTheDocument();
++		});
++	});
++
++	it("displays server error with role='alert'", async () => {
++		mockSignUpEmail.mockRejectedValueOnce(new Error("Something went wrong"));
++		render(<HomepageSignupForm />);
++
++		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test User" } });
++		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
++		fireEvent.change(screen.getByLabelText("Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.change(screen.getByLabelText("Confirm Password"), {
++			target: { value: "securepassword123" },
++		});
++		fireEvent.submit(screen.getByTestId("homepage-signup-form"));
++
++		await waitFor(() => {
++			const alert = screen.getByRole("alert");
++			expect(alert).toBeInTheDocument();
++			expect(alert).toHaveTextContent("Something went wrong");
++		});
++	});
++});
+
+diff --git a/apps/front/src/components/home/StickyBottomCTA.test.tsx b/apps/front/src/components/home/StickyBottomCTA.test.tsx
+new file mode 100644
+index 00000000..92eb4ca0
+--- /dev/null
++++ b/apps/front/src/components/home/StickyBottomCTA.test.tsx
+@@ -0,0 +1,77 @@
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it, vi } from "vitest";
++
++vi.mock("@tanstack/react-router", () => ({
++	Link: ({ children, ...props }: any) => (
++		<a {...props} href={props.to as string}>
++			{children}
++		</a>
++	),
++}));
++
++import { StickyBottomCTA } from "./StickyBottomCTA";
++
++describe("StickyBottomCTA", () => {
++	it("renders the bottom CTA container", () => {
++		render(<StickyBottomCTA isAuthenticated={false} />);
++		expect(screen.getByTestId("sticky-bottom-cta")).toBeInTheDocument();
++	});
++
++	it("has fixed positioning and z-20 for proper stacking", () => {
++		render(<StickyBottomCTA isAuthenticated={false} />);
++		const cta = screen.getByTestId("sticky-bottom-cta");
++		expect(cta.className).toMatch(/fixed/);
++		expect(cta.className).toMatch(/bottom-0/);
++		expect(cta.className).toMatch(/z-20/);
++	});
++
++	it("is hidden on desktop via lg:hidden", () => {
++		render(<StickyBottomCTA isAuthenticated={false} />);
++		const cta = screen.getByTestId("sticky-bottom-cta");
++		expect(cta.className).toMatch(/lg:hidden/);
++	});
++
++	it("has backdrop blur for visual separation", () => {
++		render(<StickyBottomCTA isAuthenticated={false} />);
++		const cta = screen.getByTestId("sticky-bottom-cta");
++		expect(cta.className).toMatch(/backdrop-blur/);
++		expect(cta.className).toMatch(/border-t/);
++	});
++
++	describe("when unauthenticated", () => {
++		it("renders 'Start yours' button linking to /signup", () => {
++			render(<StickyBottomCTA isAuthenticated={false} />);
++			const link = screen.getByTestId("mobile-signup-cta");
++			expect(link).toBeInTheDocument();
++			expect(link).toHaveTextContent("Start yours");
++			expect(link).toHaveAttribute("href", "/signup");
++		});
++
++		it("does not render the continue CTA", () => {
++			render(<StickyBottomCTA isAuthenticated={false} />);
++			expect(screen.queryByTestId("mobile-continue-cta")).not.toBeInTheDocument();
++		});
++	});
++
++	describe("when authenticated", () => {
++		it("renders 'Continue to Nerin' button linking to /chat", () => {
++			render(<StickyBottomCTA isAuthenticated={true} />);
++			const link = screen.getByTestId("mobile-continue-cta");
++			expect(link).toBeInTheDocument();
++			expect(link).toHaveTextContent("Continue to Nerin");
++			expect(link).toHaveAttribute("href", "/chat");
++		});
++
++		it("does not render the signup CTA", () => {
++			render(<StickyBottomCTA isAuthenticated={true} />);
++			expect(screen.queryByTestId("mobile-signup-cta")).not.toBeInTheDocument();
++		});
++	});
++
++	it("has data-slot attribute", () => {
++		render(<StickyBottomCTA isAuthenticated={false} />);
++		expect(screen.getByTestId("sticky-bottom-cta").getAttribute("data-slot")).toBe(
++			"sticky-bottom-cta",
++		);
++	});
++});
+
+diff --git a/apps/front/src/components/home/TimelinePlaceholder.test.tsx b/apps/front/src/components/home/TimelinePlaceholder.test.tsx
+new file mode 100644
+index 00000000..60b9e306
+--- /dev/null
++++ b/apps/front/src/components/home/TimelinePlaceholder.test.tsx
+@@ -0,0 +1,78 @@
++import { render, screen } from "@testing-library/react";
++import { describe, expect, it, vi } from "vitest";
++
++vi.mock("@tanstack/react-router", () => ({
++	Link: ({ children, ...props }: any) => (
++		<a {...props} href={props.to as string}>
++			{children}
++		</a>
++	),
++}));
++
++vi.mock("@workspace/ui/components/ocean-hieroglyph-set", () => ({
++	OceanHieroglyphSet: () => <span data-testid="ocean-hieroglyphs" />,
++}));
++
++import { TimelinePlaceholder } from "./TimelinePlaceholder";
++
++describe("TimelinePlaceholder", () => {
++	it("renders the timeline placeholder container", () => {
++		render(<TimelinePlaceholder />);
++		expect(screen.getByTestId("timeline-placeholder")).toBeInTheDocument();
++	});
++
++	it("preserves data-testid='hero-section' on the hero section", () => {
++		render(<TimelinePlaceholder />);
++		expect(screen.getByTestId("hero-section")).toBeInTheDocument();
++	});
++
++	it("renders the headline text", () => {
++		render(<TimelinePlaceholder />);
++		expect(screen.getByText("Not a personality quiz.")).toBeTruthy();
++		expect(screen.getByText("A conversation.")).toBeTruthy();
++	});
++
++	it("renders the subheadline", () => {
++		render(<TimelinePlaceholder />);
++		expect(
++			screen.getByText("A portrait of who you are that no test has ever given you."),
++		).toBeInTheDocument();
++	});
++
++	it("preserves data-testid='hero-cta' on the CTA button", () => {
++		render(<TimelinePlaceholder />);
++		const cta = screen.getByTestId("hero-cta");
++		expect(cta).toBeInTheDocument();
++		expect(cta).toHaveTextContent("Start yours");
++	});
++
++	it("preserves data-testid='how-it-works' on the HowItWorks section", () => {
++		render(<TimelinePlaceholder />);
++		expect(screen.getByTestId("how-it-works")).toBeInTheDocument();
++	});
++
++	it("renders placeholder sections for Stories 9.3 and 9.4", () => {
++		render(<TimelinePlaceholder />);
++		expect(screen.getByTestId("timeline-phases-placeholder")).toBeInTheDocument();
++		expect(screen.getByTestId("reassurance-placeholder")).toBeInTheDocument();
++	});
++
++	it("renders the brand mark on mobile (hidden on lg)", () => {
++		render(<TimelinePlaceholder />);
++		expect(screen.getByText("big-")).toBeInTheDocument();
++	});
++
++	it("has data-slot attributes on structural elements", () => {
++		render(<TimelinePlaceholder />);
++		expect(screen.getByTestId("timeline-placeholder").getAttribute("data-slot")).toBe(
++			"timeline-placeholder",
++		);
++		expect(screen.getByTestId("hero-section").getAttribute("data-slot")).toBe("hero-section");
++		expect(
++			screen.getByTestId("timeline-phases-placeholder").getAttribute("data-slot"),
++		).toBe("timeline-phases-placeholder");
++		expect(screen.getByTestId("reassurance-placeholder").getAttribute("data-slot")).toBe(
++			"reassurance-placeholder",
++		);
++	});
++});
+
