@@ -5,18 +5,20 @@ status: 'complete'
 completedAt: '2026-03-15'
 lastUpdated: '2026-04-12'
 lastConsolidated: '2026-04-05 — unified all satellite architecture docs into this single authoritative file'
-lastDeltaUpdate: '2026-04-12 — incorporated problem-solution-2026-04-11.md (portrait pipeline rework). Added ADR-51 through ADR-54 (three-stage portrait pipeline, UserSummary at completion, direct Anthropic SDK carve-out, portrait observability + rubric). Edited ADR-3 (Full Portrait row split into Spine Extractor / Spine Verifier / Prose Renderer + UserSummary Generator), ADR-13 (per-stage failure semantics).'
-adrsTotal: 54
+lastDeltaUpdate: '2026-04-12 — added ADR-55 (UserSummary as living cross-cutting asset with rolling regeneration, recency decay, versioning) and ADR-56 (subscriber Nerin chat sessions). Edited ADR-3 (agent table — UserSummary Generator updated for rolling lifecycle, weekly letter + relationship letter inputs changed to UserSummary), ADR-10 (relationship letter reads both UserSummaries), ADR-41 (UserSummary is primary personality context source), ADR-45 (weekly letter reads UserSummary instead of raw evidence), ADR-47 (added subscriber_chat to SubscriptionFeature), ADR-52 (marked as evolved → ADR-55). Updated cost ceiling, cross-component flows.'
+adrsTotal: 56
 adrsAdded:
   - 'ADR-22 through ADR-30 (post-completion)'
   - 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)'
   - 'ADR-39 through ADR-42 (Post-MVP design-now-build-later: conversations table rename, agent architecture, personality context, subscription billing)'
   - 'ADR-43 through ADR-50 (2026-04-11 PRD delta — three-space nav, silent journal, weekly letter, focused reading, MVP subscription billing, Nerin output grammar, knowledge library SSR, cost ceiling)'
   - 'ADR-51 through ADR-54 (2026-04-12 portrait pipeline rework — three-stage Spine Extractor → Verifier → Prose Renderer, UserSummary at assessment completion with quote bank, direct Anthropic SDK carve-out for portrait calls, portrait observability + quality rubric skill)'
+  - 'ADR-55 through ADR-56 (2026-04-12 UserSummary lifecycle — rolling regeneration with recency decay as canonical user-state input for all Nerin surfaces, subscriber 15-turn Nerin chat sessions with portrait + summary refresh)'
 adrsSuperseded:
   - 'ADR-5, ADR-17, ADR-18, ADR-19, ADR-21 → Director Model (ADR-30 through ADR-38)'
   - 'ADR-23 (Dashboard/Profile Consolidation) → ADR-43 (Three-Space Navigation, 2026-04-11)'
   - 'ADR-42 (Post-MVP Subscription Billing design-now-build-later) → PROMOTED TO MVP as ADR-47 (2026-04-11)'
+  - 'ADR-52 (UserSummary snapshot) → EVOLVED into ADR-55 (UserSummary living cross-cutting asset, 2026-04-12). ADR-52 retained for design lineage.'
 satelliteDocsConsolidated:
   - 'architecture-director-model.md → ADR-31 through ADR-38'
   - 'architecture-conversation-pacing.md → Historical Appendix A'
@@ -55,6 +57,9 @@ This is a self-contained architecture document. All content from previously sepa
   - ADR-52: UserSummary at Assessment Completion (quote-bank compression, cross-cutting asset)
   - ADR-53: Direct Anthropic SDK for Portrait (LangChain carve-out)
   - ADR-54: Portrait Observability + Quality Rubric Skill
+- **UserSummary lifecycle & subscriber chat (added 2026-04-12):** ADR-55 through ADR-56
+  - ADR-55: UserSummary as Living Cross-Cutting Asset (rolling regeneration, recency decay, versioning, monthly check-in aggregation)
+  - ADR-56: Subscriber Nerin Chat Sessions (15-turn Director/Actor sessions with UserSummary injection, triggers portrait + summary refresh)
 - **Post-MVP design decisions (design now, build later):** ADR-39 through ADR-41 — conversations table rename, agent type architecture, personality context pattern. ADR-42 promoted to ADR-47 MVP.
 - **Superseded by 2026-04-11 delta:** ADR-23 (Dashboard/Profile Consolidation) — replaced by ADR-43 (Three-Space Navigation)
 - **Historical pacing pipeline:** ADR-5, 17-19, 21 (marked `[SUPERSEDED]`) + Historical Appendix A
@@ -269,12 +274,12 @@ flowchart LR
 | Nerin Director | Claude Sonnet / Haiku | Every message after evidence extraction | Reads full conversation + coverage targets and writes a creative-director brief | Fatal (mapped to `AgentInvocationError`) |
 | Nerin Actor | Haiku 4.5 | Every message after Nerin Director | Voices the brief as the user-facing Nerin response | Fatal |
 | ConversAnalyzer | Haiku 4.5 | Every user message, **before Nerin Director** (sequential, not parallel) | Evidence-only extraction — **single source of truth** for scoring, coverage, portraits, and relationship analysis | Three-tier: strict ×3 → lenient ×1 → neutral defaults |
-| UserSummary Generator | Haiku 4.5 | Once on assessment completion, before portrait kickoff (ADR-52) | Compresses raw conversation into a themed summary + verbatim `quoteBank` (20–40 entries) used by Spine Extractor in lieu of raw conversation | Fatal — missing UserSummary fails portrait kickoff |
+| UserSummary Generator | Haiku 4.5 | On assessment completion, conversation extension, subscriber chat completion, and monthly check-in aggregation (ADR-52, ADR-55) | Rolling regeneration: compresses raw data into themed summary + verbatim `quoteBank` (≤50 entries). **Canonical user-state input for all Nerin LLM surfaces** — portrait, weekly letter, relationship letter, subscriber chat. Versioned for audit/personality-drift research. | Fatal on first generation (assessment completion); non-fatal on subsequent refreshes (stale-but-valid previous version persists) |
 | Spine Extractor | Sonnet 4.6 with `thinking: { budget_tokens: 2048 }` | Stage A of portrait pipeline (ADR-51) | Reads UserSummary + facet scores → produces prescriptive `SpineBrief` JSON (insight, 6-beat arc, coined-phrase targets, verbatim anchors). Inference, not summary. | Bounded retry: Verifier-driven re-extraction, max 2 attempts |
 | Spine Verifier | Haiku 4.5 | Stage B of portrait pipeline (ADR-51) | Judges the SpineBrief against structural + specificity + insight-falsifiability checklist. Produces `SpineVerification` with `gapFeedback`. Brief-only input. | Verifier pass → Stage C; fail → re-extract once with gap feedback; second fail → ship best brief, log for audit |
 | Prose Renderer | Sonnet 4.6 (Phase 4a may swap to Haiku 4.5) | Stage C of portrait pipeline (ADR-51) | Renders `SpineBrief` + `PORTRAIT_CONTEXT` craft rules into 6-movement prose. **No UserSummary, no raw conversation** — brief is the sole user-state input. | Placeholder + lazy retry (reconciliation per ADR-13) |
-| Relationship Letter | Sonnet 4.6 | Once on QR token accept (free — FR33); annual regeneration post-MVP (FR35a) | Cross-user comparison in letter format | Placeholder + lazy retry |
-| Weekly Letter | Sonnet 4.6 (free) / Sonnet 4.6 with extended prompt (subscriber) | Once per user per week on Sunday 6pm local (ADR-45) if ≥3 check-ins | Week narrative from mood + note entries + personality context | Idempotent cron, retry on failure |
+| Relationship Letter | Sonnet 4.6 | Once on QR token accept (free — FR33); annual regeneration post-MVP (FR35a) | Cross-user comparison in letter format. **Reads both users' UserSummaries** (ADR-55) — not raw evidence | Placeholder + lazy retry |
+| Weekly Letter | Sonnet 4.6 (free) / Sonnet 4.6 with extended prompt (subscriber) | Once per user per week on Sunday 6pm local (ADR-45) if ≥3 check-ins | Week narrative from **UserSummary** (ADR-55) + week's check-ins (mood + note + dates) | Idempotent cron, retry on failure |
 
 **Per-assessment LLM budget:** Evidence + Director + Actor on each turn (~€0.30 per 15-exchange assessment). Portrait pipeline targets **~$0.13–$0.14 per portrait** (Sonnet Spine Extractor + Haiku Verifier + Sonnet Prose Renderer + Haiku UserSummary amortized at completion). See ADR-51, ADR-54 for cost breakdown and ADR-50 for cost-ceiling interaction.
 
@@ -507,6 +512,8 @@ type SubscriptionFeature =
 ### ADR-10: QR Token Relationship Letter Model
 
 **Updated 2026-04-11:** Relationship letters are free and unlimited (FR33). Credit consumption removed from the accept path. User-facing term is "relationship letter" (ADR-48 letter format); table and field names retain `relationship_analyses` for code compatibility. Adds Letter History versioning support (FR29, FR35) and post-MVP annual regeneration hook (FR35a).
+
+**Updated 2026-04-12 (ADR-55):** Relationship letter generation now reads **both users' UserSummaries** (ADR-55) as primary input instead of raw evidence. The Sonnet prompt receives User A's UserSummary + User B's UserSummary + both users' facet scores. This replaces the prior approach of reading raw per-user evidence, cutting input tokens from ~70K+ (two users' raw evidence) to ~30K (two 15K summaries) and providing richer context (themes, tensions, quote banks for both users).
 
 **Decision:** Replace invitation link model with QR token model. Users generate ephemeral QR codes to initiate a free relationship letter.
 
@@ -835,8 +842,9 @@ User message → Evidence extraction → Coverage analyzer → Nerin Director �
 Assessment complete (15 exchanges) → compute results (derive-at-read) → Queue.offer(PortraitJobQueue) → worker generates portrait (free, FR21) → client polls focused reading view (/results/$sessionId?view=portrait, ADR-46) → "ready"
 User signs up → email verification → Polar customer created (externalId = userId) → accepts pending QR invitations (no credit grant)
 Polar subscription checkout → Better Auth subscription webhook → insert subscription_started event (ADR-47)
-Subscriber activates conversation extension → isEntitledTo(userId, "conversation_extension") check → new assessment_session (parent_session_id FK) → 15 new exchanges → new assessment_results → [first extension only] Queue.offer(PortraitJobQueue, replaces_portrait_id=prior) → bundled portrait regen (FR23) → prior portrait/letters become "previous version"
-QR scan → accept (free, FR33) → placeholder row → forkDaemon → polling → both users see relationship letter (letter format, ADR-48)
+Subscriber activates conversation extension → isEntitledTo(userId, "conversation_extension") check → new assessment_session (parent_session_id FK) → 15 new exchanges → new assessment_results → UserSummary refresh (ADR-55) → [first extension only] Queue.offer(PortraitJobQueue, replaces_portrait_id=prior) → bundled portrait regen (FR23) → prior portrait/letters become "previous version"
+Subscriber starts Nerin chat → isEntitledTo(userId, "subscriber_chat") check → new session (conversation_type='subscriber_chat', ADR-56) → 15 exchanges (Director has UserSummary context) → complete → UserSummary refresh (ADR-55) → portrait regen → prior portrait becomes "previous version"
+QR scan → accept (free, FR33) → placeholder row → forkDaemon → polling → both users see relationship letter (letter format, ADR-48, reads both UserSummaries per ADR-55)
 User submits daily check-in → zero LLM calls → save to daily_check_ins → render 7-day grid (<500ms, FR68, ADR-44)
 Sunday 6pm local (per-user cron) → if ≥3 check-ins this week → generate weekly letter → save to weekly_summaries → push notification (email fallback) → user reads at /today/week/$weekId (ADR-45, FR86-92)
 Status poll → reconcile-portrait: if assessment_results exists but no portrait row → Queue.offer to worker
@@ -2844,24 +2852,27 @@ _Added 2026-04-07. Source: innovation-strategy-2026-04-06.md._
 
 **Decision:** No shared personality context builder or injection service. Each agent builds its own personality context from shared read-only utilities. Agents have full freedom over what personality data they consume and how they frame it in their prompts.
 
-**Rationale:** A shared builder assumes agents want personality data formatted the same way. They won't. A Coach needs conflict patterns; a Journal needs emotional baseline; a Career agent needs openness-to-change profile. Different data, different framing, different prompt structure. A shared abstraction becomes a constraint, not a service.
+**Updated 2026-04-12 (ADR-55):** The **UserSummary is now the primary personality context data source** for all Nerin-voiced LLM surfaces. Agents read UserSummary (via `getUserSummary(userId)`) instead of raw evidence. The shared read utilities below remain available for agents that need raw facet scores or archetype data, but evidence access for prompt construction is through UserSummary, not raw repositories.
+
+**Rationale:** A shared builder assumes agents want personality data formatted the same way. They won't. A Coach needs conflict patterns; a Journal needs emotional baseline; a Career agent needs openness-to-change profile. Different data, different framing, different prompt structure. A shared abstraction becomes a constraint, not a service. UserSummary provides the compressed user-state; agents own selection and framing from it.
 
 **Shared read utilities** (domain layer, pure functions — most already exist or are trivial wrappers):
 
 ```typescript
+getUserSummary(userId): UserSummary             // PRIMARY — canonical user state (ADR-55)
 getFacetScores(userId): FacetScoreMap           // all 30 facets
 getTraitScores(userId): TraitScoreMap           // 5 traits (derived from facets)
-getEvidenceForFacet(userId, facet): Evidence[]  // supporting observations
 getArchetype(userId): Archetype                 // derived from OCEAN code
-getEvidenceByDomain(userId, domain): Evidence[] // e.g., "work", "relationships"
+// Raw evidence access remains for scoring/coverage — NOT for prompt construction
+getEvidenceForFacet(userId, facet): Evidence[]  // used by coverage analyzer, not by prompts
+getEvidenceByDomain(userId, domain): Evidence[] // used by coverage analyzer, not by prompts
 ```
 
 **Each agent owns:**
-- Which utilities to call
-- Which facets/traits/evidence to select
+- Which fields from the UserSummary to select (themes, quotes, tensions, voice cues)
 - How to format them into prompt context
 - How much token budget to allocate to personality context
-- Whether to include evidence quotes, scores, narrative summaries, or nothing
+- Whether to include the full summary or a targeted subset
 
 **Example divergence:**
 
@@ -3057,7 +3068,7 @@ CREATE INDEX weekly_summaries_user_week_idx ON weekly_summaries (user_id, week_s
 - **Backfill:** On cron miss (downtime, deploy gap), the next cron tick picks up any users whose Sunday 18:00 has passed but have no row for the current week. No retroactive generation beyond the current week.
 
 **Generation:**
-- **LLM call:** Sonnet 4.6 with the letter-format prompt (ADR-48). Input: user's facets, traits, archetype, top evidence strings, week's check-ins (mood + note + dates), and persona context.
+- **LLM call:** Sonnet 4.6 with the letter-format prompt (ADR-48). Input: user's **UserSummary** (ADR-55 — canonical user-state input, replaces raw facets/traits/evidence), week's check-ins (mood + note + dates), and persona context. The UserSummary provides themes, quote bank, voice cues, and unresolved tensions; the weekly check-ins provide the week-specific narrative arc.
 - **Prompt variants (FR87 vs FR88):** MVP ships **only the free prompt**. The subscriber prescriptive version (FR88) is post-MVP Phase 1b and uses the same LLM call with additional prompt sections — not a separate call. Entitlement gate: `isEntitledTo(userId, "prescriptive_weekly_letter")` selects the prompt variant.
 - **Cost envelope (NFR7a):** ~$0.02–0.05 per user per week. This is the only LLM touchpoint in the free-tier weekly loop; combined with silent daily check-ins (ADR-44) it keeps free-tier ongoing cost at ~$0.02–0.08/user/month.
 
@@ -3136,6 +3147,7 @@ type PortraitReadingState =
 ```typescript
 type SubscriptionFeature =
   | "conversation_extension"        // MVP — FR10, FR25
+  | "subscriber_chat"              // MVP — ADR-56, 15-turn Nerin chat sessions
 
   // Post-MVP Phase 1b (subscription-gated features)
   | "daily_llm_recognition"         // FR69
@@ -3289,7 +3301,7 @@ All pages include `BreadcrumbList` and an `Offer` (free assessment CTA).
 |---|---|---|---|
 | Per-session | Session boundary, existing (ADR-29 `sessionCostLimitCents`) | 2000 cents | Assessment + extension sessions (new or ongoing) |
 | Free-tier monthly per-user | Rolling 30-day window | $0.10/user/month (target: $0.02-0.08) | Free users — weekly letter is the only LLM surface |
-| Subscriber monthly per-user | Rolling 30-day window | $1.00/subscriber/month (target: $0.35-0.75) | Subscribers — weekly letter + conversation extension + portrait regen |
+| Subscriber monthly per-user | Rolling 30-day window | $1.50/subscriber/month (target: $0.50-1.00) | Subscribers — weekly letter + conversation extension + portrait regen + subscriber chat (~$0.45/session) + UserSummary refresh (~$0.006/refresh) |
 | Global free-tier daily (legacy) | 24h rolling, existing (ADR-29 `globalDailyAssessmentLimit`) | 100 assessments/day | Assessment starts |
 | **Circuit breaker (NFR7b, NEW)** | 24h rolling window | **>3× expected weekly-letter cost** ≈ 3 × (weeklyLetterCostCents × estimatedActiveUsersPerDay) | Triggers automated rate limiting on ALL free-tier LLM surfaces (weekly letter, any future free LLM surface) |
 
@@ -3498,11 +3510,13 @@ Compared to the pre-rework observed $0.30–$0.40/portrait: ~50–60% reduction.
 
 **Hard exit gate:** Every portrait, every rubric dimension, minimum score 3 (no 1s or 2s). Target median on spine-related dimensions: 4 across the 25-portrait corpus. "Insight beneath observation" dimension: ≥30% of portraits score 4 or 5. Verifier pass rate on first attempt ≥ 70%. If any fails, **stop and re-diagnose** — do not proceed to Phase 4a on a broken Phase 3.
 
-### ADR-52: UserSummary at Assessment Completion — Quote-Bank Compression
+### ADR-52: UserSummary at Assessment Completion — Quote-Bank Compression `[EVOLVED → ADR-55]`
 
 **Source:** `problem-solution-2026-04-11.md` (Phase 2 — conversation compression).
 
-**Decision:** Generate a `UserSummary` artifact via Haiku 4.5 **at assessment-completion time** (not lazily at portrait generation time), persist it on the assessment result, and use it as the sole user-state input to the Spine Extractor (ADR-51). The summary contains an explicit `quoteBank` of 20–40 verbatim user phrases that is load-bearing: it is the minimum-viable alternative to RAG for plumbing literal user language through to prose rendering.
+**Note (2026-04-12):** This ADR established the initial UserSummary design as a one-shot snapshot. **ADR-55 evolves it into a living cross-cutting asset** with rolling regeneration, recency decay, versioning, and multiple refresh triggers. The schema, token budget (now 15K), structural caps, and persistence model in ADR-55 supersede the specifics below. This ADR is retained for design lineage — the core insight (compression layer + quote bank) remains load-bearing.
+
+**Decision:** Generate a `UserSummary` artifact via Haiku 4.5 **at assessment-completion time** (not lazily at portrait generation time), persist it, and use it as the canonical user-state input for all Nerin LLM surfaces (ADR-55). The summary contains an explicit `quoteBank` of verbatim user phrases that is load-bearing: it is the minimum-viable alternative to RAG for plumbing literal user language through to prose rendering.
 
 **Problem being solved:**
 - Pre-rework portrait calls were ~50K input tokens, with raw conversation history + evidence contributing ~37K of that — the dominant input-cost driver.
@@ -3545,7 +3559,7 @@ interface UserSummary {
 
 **Why completion time, not portrait time:** Moving UserSummary generation out of the portrait critical path removes a serial Haiku call (~5–10s) from portrait latency and aligns with the cross-cutting-asset framing — the summary is a property of the user/assessment, not of the portrait. Other features (weekly letter, relationship letter) can read the same artifact without re-generating it.
 
-**Persistence:** New `user_summary` column (or table) on `assessment_result` via a new Drizzle migration (per the migration rule — never modify existing). Column is populated atomically with the assessment result transition to "complete."
+**Persistence:** ~~New `user_summary` column on `assessment_result`.~~ **Superseded by ADR-55:** UserSummary is now persisted in a dedicated `user_summary_versions` table with full version history. See ADR-55 for schema.
 
 **Path A vs Path B fork (documented for posterity):** `problem-solution-2026-04-11.md` explicitly flags two options — Path A (this ADR: build UserSummary as a cross-cutting asset) and Path B (Spine Extractor reads raw conversation directly, no UserSummary). Path B ships faster (~1 week vs ~2) and avoids the "Haiku might quietly abstract away specificity" risk, but locks per-portrait cost at ~$0.24 vs Path A's ~$0.13, and defers UserSummary work that may have to happen anyway for other features. **This ADR commits to Path A.** If the `quoteBank` approach proves insufficient after 2 iterations on the Haiku prompt, the escape hatch is to fall back to Path B (raise per-portrait cost to ~$0.24, eliminate the abstraction layer). RAG infrastructure remains out of scope in both paths.
 
@@ -3562,7 +3576,7 @@ interface UserSummary {
 
 **Rollback:** Feature flag for raw-messages code path for one release cycle. Any rubric dimension dropping > 0.5 points triggers rollback.
 
-**Cross-cutting claimants (future users of this artifact):** Weekly letter (ADR-45), relationship letter (ADR-3, ADR-10), any future "personality context" surface. These are NOT part of this ADR's scope but motivate Path A over Path B.
+**Cross-cutting claimants:** ~~Future users of this artifact.~~ **Now wired (ADR-55):** Weekly letter (ADR-45), relationship letter (ADR-10), subscriber Nerin chat (ADR-56), and all future Nerin-voiced surfaces. ADR-55 formalizes UserSummary as the binding canonical input for all these consumers.
 
 ### ADR-53: Direct Anthropic SDK for Portrait Generation — LangChain Carve-Out
 
@@ -3738,6 +3752,241 @@ Rubric prompt defines each dimension concretely and provides 1/3/5 anchoring exa
 **Ambient progress indication** (paired Phase 3 UX enhancement, not streaming): `/portrait-status` endpoint gains a `currentStage` field (`user_summary` | `spine_extraction` | `spine_verification` | `prose_rendering` | `complete` | `failed`). Frontend rotates ambient narrative copy every ~5s based on stage + elapsed time — e.g. *"Nerin is finding her thread..." → "Nerin is sitting with your curiosity..." → "Nerin is writing the opening..."*. Turns the spinner into visible intentional progress. This is the **only** UX latency-mitigation retained from the problem-solution doc; streaming / progressive reveal (Phase 4b) was explicitly cut.
 
 **Observability principle:** *Production behavior is ground truth.* If rubric scores hold but users complain about portraits, the rubric is wrong and needs recalibration. If rubric scores drop but users don't notice, investigate whether the rubric is over-sensitive. The rubric is a tool, not a verdict.
+
+## UserSummary Lifecycle & Subscriber Chat (ADR-55 through ADR-56)
+
+### ADR-55: UserSummary as Living Cross-Cutting Asset — Rolling Regeneration with Recency Decay
+
+**Source:** Architectural gap analysis — ADR-52 established UserSummary as a cross-cutting asset but only wired the portrait pipeline. Weekly letter (ADR-45), relationship letter (ADR-10), subscriber chat, and future Nerin surfaces still planned to read raw evidence, defeating the cost and quality benefits of the compression layer.
+
+**Decision:** UserSummary is the **canonical user-state input for all Nerin LLM surfaces**. No Nerin-voiced LLM call reads raw conversation evidence or raw check-in data directly — it reads the UserSummary. The UserSummary is a **living document** maintained via rolling regeneration: each refresh takes the previous summary + new raw data and produces a replacement at a fixed token budget.
+
+**Binding rule:** Any new Nerin LLM surface (agent, letter, prompt) MUST consume UserSummary as its primary user-state input. Raw evidence and raw conversation are never passed to Nerin-voiced generation prompts. Agents still own how they frame and select from the UserSummary (per ADR-41), but the UserSummary is the data source, not raw repositories.
+
+**Rolling regeneration model:**
+
+```
+┌──────────────────────────────────────────────────┐
+│  Refresh trigger fires                           │
+│                                                  │
+│  Input to Haiku 4.5:                             │
+│    1. Previous UserSummary (~15K)                │
+│    2. New raw data (conversation / check-ins)    │
+│    3. Current facet scores                       │
+│    4. Regeneration prompt with decay rules        │
+│                                                  │
+│  Prompt rules:                                   │
+│    - Output MUST conform to UserSummary schema   │
+│    - Output MUST stay within 15K token budget    │
+│    - STRENGTHEN themes with new supporting data  │
+│    - FADE themes lacking recent evidence         │
+│    - REPLACE quotes with more vivid/recent ones  │
+│    - PROMOTE new patterns that appear in ≥2      │
+│      recent data points                          │
+│    - DEMOTE patterns present only in old summary │
+│      with no new corroboration                   │
+│                                                  │
+│  Output: NEW UserSummary (replaces current)      │
+│          Previous version archived               │
+└──────────────────────────────────────────────────┘
+```
+
+**Token budget:** ~15K tokens (up from ADR-52's original ~10-12K). The increase accommodates richer theme descriptions and a larger quote bank needed for multiple downstream consumers (portrait, weekly letter, relationship letter, subscriber chat).
+
+**Structural caps (enforced via JSON schema / tool-use, not prose instructions):**
+
+| Field | Cap | Purpose |
+|---|---|---|
+| `themes` | maxItems: 12 | Abstracted personality patterns |
+| `notableMoments` | maxItems: 20 | Key biographical/personality moments |
+| `quoteBank` | maxItems: 50 | Verbatim user language (up from 40 — more consumers need more material) |
+| `voiceCues` | maxItems: 10 | How the user speaks, metaphors they reach for |
+| `unresolvedTensions` | maxItems: 8 | Things resisting easy reframing |
+
+**Recency decay mechanism:** The regeneration prompt instructs Haiku to treat the previous UserSummary as a "memory" that naturally fades. Specifically:
+
+1. **Theme survival rule:** A theme from the previous summary survives into the new summary only if (a) new data provides corroborating evidence, OR (b) the theme is deeply structural (appears in ≥3 prior regenerations — tracked via an internal `themeAge` counter in each theme entry). Themes that fail both criteria are dropped.
+2. **Quote rotation:** Quotes are replaced when newer, more vivid alternatives exist. The prompt favors specificity and recency — a 6-month-old quote survives only if nothing more recent captures the same insight.
+3. **Tension evolution:** Unresolved tensions from the previous summary are re-evaluated against new data. If the user shows evidence of resolution, the tension is removed or reframed.
+
+**Schema evolution (extends ADR-52 schema):**
+
+```typescript
+interface UserSummary {
+  version: number;                            // incremented on each regeneration
+  generatedAt: string;                        // ISO timestamp
+  refreshSource: RefreshSource;               // what triggered this regeneration
+  assessmentCount: number;                    // total assessments contributing to this summary
+
+  themes: Array<{
+    theme: string;
+    description: string;
+    themeAge: number;                         // number of regenerations this theme has survived
+    lastCorroborated: string;                 // ISO date of last supporting evidence
+  }>;
+
+  notableMoments: Array<{
+    description: string;
+    verbatim?: string;
+    context: string;
+  }>;
+
+  quoteBank: Array<{
+    quote: string;                            // verbatim user text (≤ 40 words)
+    themeTag: string;
+    context: string;
+    sourceType: "assessment" | "extension" | "subscriber_chat" | "check_in";
+  }>;
+
+  voiceCues: string[];
+  unresolvedTensions: string[];
+}
+
+type RefreshSource =
+  | "assessment_completion"
+  | "conversation_extension"
+  | "subscriber_chat_completion"
+  | "monthly_checkin_aggregation";
+```
+
+**Refresh triggers:**
+
+| Trigger | New raw data fed in | Weight | When |
+|---|---|---|---|
+| Assessment completion | Full conversation transcript + evidence | Heavy — full regeneration (or initial generation if first) | On `complete-assessment` use-case, before portrait kickoff |
+| Conversation extension (subscriber) | Extension exchanges + new evidence | Medium — previous summary + new exchanges | On extension completion, before portrait regeneration |
+| Subscriber chat completion (ADR-56) | Full 15-turn chat transcript | Medium — previous summary + chat transcript | On subscriber chat completion, before portrait generation |
+| Monthly check-in aggregation | All check-ins from the past month | Light — previous summary + check-in batch | Monthly cron (1st of month, after weekly letter cron) |
+
+**Monthly check-in aggregation rationale:** Weekly check-ins are thin data (mood + short note). A single week rarely moves the needle on personality patterns. Monthly aggregation (4-5 weeks of check-ins batched) provides enough signal to detect genuine mood shifts, new preoccupations, or evolving tensions without wasting Haiku calls on noise.
+
+**Versioning — `user_summary_versions` table:**
+
+```sql
+CREATE TABLE user_summary_versions (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         uuid NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  version         integer NOT NULL,
+  content         jsonb NOT NULL,                -- the full UserSummary object
+  refresh_source  text NOT NULL,                 -- RefreshSource enum value
+  generated_at    timestamptz NOT NULL DEFAULT now(),
+  token_count     integer,                       -- actual output token count
+  UNIQUE (user_id, version)
+);
+CREATE INDEX user_summary_versions_user_idx ON user_summary_versions (user_id, version DESC);
+```
+
+All versions are retained for audit and personality-drift research. The "current" UserSummary is always the highest-version row for a given user. No pruning — storage cost is negligible (~15KB per version × low regeneration frequency).
+
+**Current summary access pattern:** `getUserSummary(userId)` returns the latest version. Consumers never specify a version — they always get the freshest summary. The versioning table is for research/audit only.
+
+**First-time generation (no previous summary):** On first assessment completion, the regeneration prompt receives no previous summary — it generates from scratch using only the conversation transcript + evidence + facet scores. This is equivalent to the original ADR-52 behavior.
+
+**Failure handling:** UserSummary regeneration failure is non-fatal for the triggering flow *except* on first assessment completion (where it remains fatal per ADR-52, since the portrait pipeline requires it). On subsequent refreshes, failure means the previous version persists — the system operates on stale-but-valid data. Failed regeneration attempts are logged with the triggering source for monitoring.
+
+**Cost impact:** Each Haiku 4.5 regeneration call costs ~$0.003–0.008 (15K output, ~20K input including previous summary + new data). Monthly check-in aggregation adds ~$0.006/user/month. Negligible vs the portrait pipeline cost.
+
+**Consumers and how they use UserSummary:**
+
+| Consumer | What it reads from UserSummary | How it frames it |
+|---|---|---|
+| Portrait Spine Extractor (ADR-51) | Full summary — themes, quotes, tensions, voice cues | Raw input alongside facet scores for spine inference |
+| Weekly Letter (ADR-45) | themes, quoteBank, unresolvedTensions + week's check-ins (separate input) | Personality backdrop for the week's narrative |
+| Relationship Letter (ADR-10) | Both users' full summaries | Cross-user comparison — shared themes, complementary tensions, quote juxtaposition |
+| Subscriber Nerin Chat (ADR-56) | Full summary injected into Director context | Nerin "knows" the user — references past themes, uses their language |
+| Future agents (ADR-40, ADR-41) | Agent-selected subset | Per ADR-41, each agent owns selection and framing |
+
+**Implementation files (new):**
+- `packages/domain/src/types/user-summary.ts` — extended `UserSummary` type with `version`, `refreshSource`, `themeAge`
+- `packages/domain/src/repositories/user-summary.repository.ts` — `getUserSummary(userId)`, `saveUserSummaryVersion(userId, summary)`, `getUserSummaryHistory(userId)`
+- `packages/infrastructure/src/repositories/user-summary.drizzle.repository.ts` — Drizzle implementation against `user_summary_versions`
+- `packages/infrastructure/src/repositories/user-summary-generator.claude.repository.ts` — updated to accept optional previous summary; regeneration prompt with decay rules
+- New migration: `user_summary_versions` table (replaces the `user_summary` column on `assessment_result` from ADR-52)
+
+**Implementation files (edited):**
+- `apps/api/src/use-cases/complete-assessment.use-case.ts` — writes to `user_summary_versions` instead of assessment result column
+- `apps/api/src/use-cases/generate-full-portrait.use-case.ts` — reads from `getUserSummary(userId)` instead of assessment result
+- `apps/api/src/use-cases/generate-weekly-summary.use-case.ts` — reads UserSummary as input (ADR-45 edit)
+- `apps/api/src/use-cases/generate-relationship-analysis.use-case.ts` — reads both users' UserSummaries (ADR-10 edit)
+- New cron use-case: `run-monthly-checkin-aggregation.use-case.ts`
+
+**Migration from ADR-52:** ADR-52's `user_summary` column on `assessment_result` is superseded by the `user_summary_versions` table. Migration copies existing column data as version 1 rows, then the column can be dropped in a subsequent migration.
+
+### ADR-56: Subscriber Nerin Chat Sessions — Assessment-Grade Conversations with Portrait Regeneration
+
+**Source:** Architectural gap analysis — subscriber value proposition requires ongoing Nerin interaction beyond the initial assessment. The UserSummary cross-cutting asset (ADR-55) enables Nerin to "know" the user across sessions.
+
+**Decision:** Subscribers can initiate **15-turn chat sessions with Nerin** that follow the same Director/Actor architecture as assessment conversations (ADR-3, ADR-31–38). On completion, the session triggers UserSummary regeneration (ADR-55) and portrait regeneration. These are full-grade conversations, not lightweight check-ins.
+
+**Conversation type:** `conversation_type = 'subscriber_chat'` per ADR-39 multi-type schema. Uses the same `assessment_session` / `assessment_exchange` tables with the conversation type discriminator.
+
+**Architecture — same pipeline, enriched context:**
+
+| Component | Assessment | Subscriber Chat |
+|---|---|---|
+| ConversAnalyzer | Per-message evidence extraction | Same — evidence feeds future UserSummary refresh |
+| Director | Reads conversation + coverage targets | Same + **UserSummary injected** as personality context |
+| Actor | Voices the Director's brief as Nerin | Same |
+| Turn limit | 15 exchanges | 15 exchanges |
+| Coverage analyzer | Steers toward uncovered facets | Same — steers toward facets that have evolved or lack recent evidence |
+| On completion | UserSummary gen → Portrait gen | UserSummary refresh → Portrait regen |
+
+**Key difference — UserSummary injection:** The Director receives the user's current UserSummary (ADR-55) as additional context. This means Nerin enters the conversation already knowing the user's themes, tensions, voice patterns, and notable moments. The conversation is a continuation of the relationship, not a blank-slate assessment.
+
+**Director prompt augmentation:**
+
+```typescript
+// In the Director's system prompt, after the standard brief context:
+const subscriberChatContext = `
+## What you know about this person (from prior conversations)
+${formatUserSummaryForDirector(userSummary)}
+
+## Your task in this conversation
+You already know this person. This is not a discovery conversation — it is a deepening.
+Steer toward:
+- Facets where evidence is thin or dated (coverage analyzer will flag these)
+- Themes from their summary that show unresolved tension
+- Areas where their recent check-ins suggest change or growth
+Do NOT re-explore well-covered territory unless the user initiates it.
+`;
+```
+
+**Coverage analyzer behavior:** The coverage analyzer runs identically but with awareness that some facets already have rich evidence from prior sessions. The `steeringSignal` metric naturally favors under-covered or stale facets, so subscriber chats tend to explore new territory or probe areas of change.
+
+**Completion flow:**
+
+```
+Subscriber chat turn 15 (or user ends early)
+  → ConversAnalyzer extracts final evidence
+  → complete-subscriber-chat.use-case.ts:
+      1. Persist conversation as complete
+      2. Regenerate UserSummary (ADR-55 — medium weight, previous summary + chat transcript)
+      3. Enqueue portrait generation (replaces prior portrait, same as extension flow)
+      4. Update facet scores from new evidence
+```
+
+**Entitlement:** `isEntitledTo(userId, "subscriber_chat")` — new `SubscriptionFeature` variant. Subscribers can initiate one chat session at a time (no concurrent sessions). No limit on total sessions per billing period in MVP — revisit if cost ceiling (ADR-50) is threatened.
+
+**Session linking:** Subscriber chat sessions reference the user's latest `assessment_result_id` but do NOT use `parent_session_id` (that's for extensions of the same assessment). They are independent sessions that contribute to the same user's evolving profile.
+
+**Evidence accumulation:** Evidence extracted during subscriber chats is persisted in `assessment_exchange` with the subscriber chat's session ID. The coverage analyzer and UserSummary regeneration read evidence across ALL of a user's sessions (assessment + extensions + subscriber chats) to build the complete picture.
+
+**Portrait regeneration:** Follows the same three-stage pipeline (ADR-51) with the refreshed UserSummary. The new portrait replaces the previous one (prior becomes "previous version" via derive-at-read).
+
+**Cost impact:** Same per-turn cost as assessment (~$0.02/turn for evidence + Director + Actor). 15-turn session ≈ $0.30. Portrait regeneration ≈ $0.14. UserSummary refresh ≈ $0.006. Total per subscriber chat ≈ $0.45. Within subscriber cost ceiling if usage averages 1-2 sessions/month.
+
+**Implementation files (new):**
+- `apps/api/src/use-cases/start-subscriber-chat.use-case.ts` — entitlement check, session creation with `conversation_type = 'subscriber_chat'`
+- `apps/api/src/use-cases/complete-subscriber-chat.use-case.ts` — completion flow (UserSummary refresh → portrait regen → facet update)
+- `packages/domain/src/constants/nerin-subscriber-chat-director-prompt.ts` — Director prompt augmented with UserSummary context
+
+**Implementation files (edited):**
+- `apps/api/src/handlers/assessment.ts` (or new `subscriber-chat.ts` handler) — new endpoints for subscriber chat lifecycle
+- `packages/contracts/src/` — new subscriber chat endpoint definitions
+- `packages/domain/src/types/subscription-feature.ts` — add `"subscriber_chat"` variant
+- Coverage analyzer — no code change needed (already facet-first and history-aware)
+
+**Interaction with ADR-40 (Agent Type Architecture):** Subscriber chat is NOT a separate agent type — it uses the same Nerin Director/Actor pipeline as assessment. It is a conversation type, not an agent type. Future agents (Coach, Journal, Career per ADR-40) are architecturally distinct pipelines with their own prompts and behaviors. Subscriber chat is "more Nerin" — the same personality, the same voice, deeper relationship.
 
 ---
 

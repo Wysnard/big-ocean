@@ -1,7 +1,11 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-lastEdited: '2026-04-11'
+lastEdited: '2026-04-12'
 editHistory:
+  - date: '2026-04-12'
+    type: 'revision'
+    source: 'PRD need-positioning pivot + Snapchat/Instagram split-layout reference + UX spec §16 adversarial review'
+    summary: '§16 Homepage full rewrite. Split-layout architecture (scrollable timeline left 60%, sticky auth panel right 40%) replaces full-width conversational scroll. Three visual phases (Conversation/Portrait/World After) with distinct visual languages replace 14-beat narrative. Need-positioning replaces want-positioning throughout. Show-not-explain principle: artifacts are real product surfaces, not descriptions. Framer Motion (motion v12) scroll-linked animations replace CSS IntersectionObserver. Archetype carousel (horizontal swipe, 4-6 cards) is the only expandable element. Founder story removed from homepage (moved to /about — deliberate FR84 deviation requiring PRD amendment). Reassurance section renamed from "How It Works" to "Before you start." Content-left/form-right reading order for unknown-brand conversion. Mobile: stacked layout with sticky bottom CTA. Components retired from homepage: ConversationFlow, ComparisonCard, TraitStackEmbed, ComparisonTeaserPreview, ScrollIndicator, ChatInputBar, FounderPortraitExcerpt. New components: StickyAuthPanel, StickyBottomCTA, TimelinePhase, PhaseTransition, ArchetypeCarousel, TodayScreenMockup, WeeklyLetterCard, RelationshipLetterFragment, DeeperConversationCallback, ReassuranceCards.'
   - date: '2026-04-11'
     type: 'revision'
     source: '_bmad-output/design-thinking-2026-04-09.md + _bmad-output/planning-artifacts/prd.md (2026-04-11 edit)'
@@ -5258,338 +5262,685 @@ No competitive animations (heart counts, activity indicators). Calm scroll.
 | Notification permission | Not collected | Collected via ReturnSeedSection in Nerin's voice | New permission request flow tied to browser API |
 | Mood calendar | Doesn't exist | `/today/calendar` | New MoodCalendarView component |
 
+
 ---
 
 ## 16. Homepage Specification
 
-### 16.1 Homepage Purpose
+### 16.1 Homepage Purpose & Positioning
 
-The homepage is the primary conversion surface for organic visitors — people who Google "big ocean personality," land from SEO, or arrive without a shared card context. Unlike public profiles (which convert via someone else's results), the homepage must sell the experience cold.
+The homepage is the primary conversion surface for organic visitors — people who Google "big ocean personality," land from SEO, or arrive without a shared card context. Unlike public profiles (which convert via someone else's results), the homepage must convert cold.
 
-**⚠️ Load-bearing since anonymous path removed.** All users must sign up and verify email before turn 1 of the assessment (FR50/50a/50b). Cold visitors cannot experience Nerin before committing to signup. The homepage is now doing the sales work that the anonymous conversation used to do — Nerin preview (FR63) and portrait excerpt (FR62) are the primary conversion content, not scroll decoration. Trade-off: lower top-of-funnel conversion, higher middle-of-funnel quality (Headspace / BetterUp precedent).
+**⚠️ Load-bearing since anonymous path removed.** All users must sign up and verify email before turn 1 of the assessment (FR50/50a/50b). Cold visitors cannot experience Nerin before committing to signup. The homepage does the sales work that the anonymous conversation used to do. Trade-off: lower top-of-funnel conversion, higher middle-of-funnel quality (Headspace / BetterUp precedent).
 
 **Important: the homepage is NOT where subscription conversion happens.** The portrait is free. The relationship letter is free. The silent daily journal is free. The Sunday weekly letter is free. The subscription conversion moment lives inside the Sunday weekly letter at Week 3+ (see §10.8 Journey 8). The homepage sells the experience, not the paywall.
 
-**Current state:** A 14-beat conversational narrative between Nerin, a skeptical user, and Vincent (founder). Scroll-driven, with embedded interactive previews (trait explorer, horoscope vs. portrait comparison, radar chart). Uses a DepthScrollProvider + DepthMeter to track scroll progress.
+**Positioning: need, not want.** The homepage positions Big Ocean as something the visitor needs — a gap they already feel but haven't been able to fill — not something they might enjoy trying. The emotional arc is recognition → relief → urgency → action, not curiosity → interest → desire → action. Every piece of content answers "you already know this feeling" rather than "look what we built."
 
-### 16.2 Current Homepage Structure (Built)
+**Core principle: show, not explain.** The homepage does not describe the product. It shows real product artifacts — a real conversation excerpt, a real portrait paragraph, a real archetype card, a real Today screen, a real relationship letter fragment. The visitor scrolls through pieces of the actual product. The content IS the explanation.
 
-The existing homepage (`apps/front/src/routes/index.tsx`) implements a full conversational scroll experience:
+### 16.2 Split-Layout Architecture
 
-**Route:** `/` — no authentication required.
+The homepage uses a split-layout inspired by Snapchat/Instagram's unauthenticated pages: a scrollable content timeline on the left and a persistent authentication panel on the right.
 
-**Component inventory:**
+**Route:** `/` — no authentication required. SSR for SEO.
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| `HeroSection` | `components/home/HeroSection.tsx` | Full-viewport intro: headline, subtitle, tagline, CTA, 5 animated OCEAN breathing shapes |
-| `ConversationFlow` | `components/home/ConversationFlow.tsx` | Container with vertical CSS thread line connecting all message groups |
-| `ChatBubble` | `components/home/ChatBubble.tsx` | 3 variants: `nerin` (NerinMessage from @workspace/ui), `user` (gradient bubble, "Y" avatar), `vincent` (amber gradient, "V" avatar, "Founder" label) |
-| `MessageGroup` | `components/home/MessageGroup.tsx` | IntersectionObserver wrapper: fade-in + slide-up on scroll visibility |
-| `ComparisonCard` | `components/home/ComparisonCard.tsx` | Beat 4: split panel — "Traditional" (16Personalities scale) vs "Conversational" (animated chat bubbles with staggered typing) |
-| `TraitStackEmbed` | `components/home/TraitStackEmbed.tsx` | Beat 6: 5 interactive trait buttons → click expands to show 6 facets per trait with cascading animation |
-| `HoroscopeVsPortraitComparison` | `components/home/HoroscopeVsPortraitComparison.tsx` | Beat 8 (climax): side-by-side — horoscope card (Aries, pastel, star ratings) vs real portrait excerpt from Nerin |
-| `ComparisonTeaserPreview` | `components/home/ComparisonTeaserPreview.tsx` | Beat 12: dual overlaid radar charts ("You" vs "A Friend") in ResultPreviewEmbed wrapper |
-| `ResultPreviewEmbed` | `components/home/ResultPreviewEmbed.tsx` | Container with border + backdrop blur + CTA button for embedded previews |
-| `DepthMeter` | `components/home/DepthMeter.tsx` | Left sidebar progress bar, appears at 5% scroll, fills based on scroll percentage. Hidden on mobile |
-| `DepthScrollProvider` | `components/home/DepthScrollProvider.tsx` | Context tracking scroll percentage (0-1) for DepthMeter and ChatInputBar visibility |
-| `ChatInputBar` | `components/home/ChatInputBar.tsx` | Sticky bottom bar appearing at 35% scroll depth — fake input field linking to `/chat` |
-| `WaveDivider` | `components/home/WaveDivider.tsx` | Wave SVG divider between sections |
-| `ScrollIndicator` | `components/home/ScrollIndicator.tsx` | Bouncing chevron |
+**Why split layout:** The persistent auth panel communicates need-framing: "Whenever you're ready. We both know you will be." The visitor is never searching for a CTA — it's always in peripheral vision. The content's job shifts from "convince you to act" to "help you recognize what you already feel."
 
-### 16.3 14-Beat Narrative Structure (Built)
+**Why content-left, form-right:** Western eyes scan left-to-right (F-pattern). Content on the left gets seen first. For an unknown brand, the visitor needs to understand before committing. Content-left, form-right says "look at this first, then sign up when you're ready." Form-left would say "sign up first" — appropriate for known brands (Snapchat), wrong for cold visitors who don't yet know what Big Ocean is.
 
-| Beat | Speaker | Content | Embed |
-|------|---------|---------|-------|
-| 1 | Nerin | Hook — the "but" problem with personality tests | — |
-| 2 | User | Skeptic reveals wound — past test disappointments | — |
-| 3 | Nerin | Acknowledges wound, frames the problem | — |
-| 4 | Nerin | Traditional vs Conversational comparison | `ComparisonCard` — split panel with animated chat bubbles |
-| 5 | User | Bridges — skepticism continues | — |
-| 6 | Nerin | Trait explorer — interactive Big Five overview | `TraitStackEmbed` — 5 clickable traits |
-| 6b | (conditional) | Facet details for selected trait | `TraitFacetPair` — spawned on trait click, 6 facets with cascade animation |
-| 7 | User | Challenges output — "all descriptions sound the same" | — |
-| 8 | Nerin | **Climax** — horoscope vs portrait side-by-side | `HoroscopeVsPortraitComparison` — real Nerin portrait excerpt vs generic Aries horoscope |
-| 9 | User | Reacts to portrait quality | — |
-| 10 | Nerin | The reveal — Vincent's portrait | — |
-| 10b | Vincent | Founder's personal share | — |
-| 11 | User | "I'd be scared to read mine" | — |
-| 11b | Nerin | Privacy + control message | — |
-| 11c | User | Asks about sharing | — |
-| 12 | Nerin | Social comparison — radar chart preview | `ComparisonTeaserPreview` — dual radar in ResultPreviewEmbed |
-| 13 | User | Converting line: "I wonder what mine would say" | — |
-| 14 | Nerin | CTA close: "Just a Conversation" | — |
+```
+Desktop (≥1024px): 60/40 split
+┌─────────────────────────────────────────┬────────────────────┐
+│                                         │                    │
+│  SCROLLABLE TIMELINE (60%)              │  STICKY AUTH (40%) │
+│                                         │                    │
+│  Phase 1: The Conversation              │  big ocean logo    │
+│  Phase 2: The Portrait                  │  Hook line         │
+│  Phase 3: The World After               │  [Email]           │
+│  Reassurance                            │  [Password]        │
+│                                         │  [Start yours →]   │
+│                                         │  Log in link       │
+│                                         │  ~30 min · Free    │
+│                                         │  OCEAN shapes      │
+│                                         │                    │
+└─────────────────────────────────────────┴────────────────────┘
+```
 
-**Portrait excerpt content** (used in beat 8): `portrait-excerpt.md` — two real sections from a Nerin portrait: "The Selective Gate" (strategic filtering) and "The Undertow" (protective barrier pattern).
+### 16.3 Sticky Auth Panel (Right Column)
 
-### 16.4 Animation Inventory (Built)
+The right column is fixed/sticky and always visible on desktop. It contains the brand, a dynamic hook, the conversion form, and ambient visual elements.
 
-| Element | Animation | Timing | Notes |
-|---------|-----------|--------|-------|
-| OCEAN breathing shapes (hero) | Scale breathing (6s infinite) | Staggered delays: -1.2s to -4.8s per shape | `@keyframes breathe` |
-| MessageGroup entrance | Fade-in + slide-up (opacity 0→1, translateY 26→0) | 650ms, cubic-bezier(.16,1,.3,1) | IntersectionObserver, threshold 0.12, rootMargin "0px 0px -30px 0px" |
-| ComparisonCard chat bubbles | Staggered typing appearance | 600-1800ms delays per bubble | Simulates real conversation |
-| TraitStackEmbed click | Cross-fade between traits | 200ms exit → enter new | State-driven |
-| Facet cascade | Staggered reveal per facet | 60ms stagger, starts at 400ms | `@keyframes facetCascade` |
-| HoroscopeVsPortraitComparison | Staggered entrance | Left: 200ms, Right: 500ms, Closing text: 900ms | IntersectionObserver |
-| DepthMeter appearance | Fade-in | At 5% scroll depth | CSS transition |
-| ChatInputBar appearance | Fade-in + translateY | At 35% scroll depth, 500ms | CSS transition |
-| ScrollIndicator | Bounce | Infinite | CSS animation |
+**Layout:**
 
-All animations respect `prefers-reduced-motion`.
+```
+┌──────────────────────┐
+│                      │
+│  big ocean           │
+│                      │
+│  A conversation      │  ← medium weight, standard size
+│  that SEES you.      │  ← SEES = display size, bold 900,
+│                      │     animated gradient text
+│                      │
+│  [Email]             │
+│  [Password]          │
+│  [Start yours →]     │
+│                      │
+│  Already have an     │
+│  account? Log in     │
+│                      │
+│  ─────────────────   │
+│  ~30 min · Free      │
+│                      │
+│  ◇ ○ △ □ ◇          │
+│                      │
+└──────────────────────┘
+```
 
-### 16.5 Elements to Preserve
-
-| Element | Why |
-|---------|-----|
-| **Nerin-User-Vincent three-voice narrative** | Models the actual product experience. Shows Nerin's personality, not just describes it |
-| **Objection-resolution arc** | User asks skeptical questions, Nerin addresses them through demonstration |
-| **Embedded interactive previews** | Trait explorer, horoscope vs. portrait, radar comparison — show, don't tell |
-| **Vincent's founder reveal** | Humanizes the product, introduces the portrait through personal vulnerability |
-| **Scroll-as-conversation metaphor** | DepthMeter + ConversationFlow thread line create a reading experience |
-| **DepthScrollProvider + DepthMeter** | Unique and on-brand scroll tracking |
-
-### 16.6 Homepage Redesign Areas
-
-The following areas need design attention:
-
-#### A. Hero Section Redesign (FR59, FR60, FR61)
-
-**Current:** "Not a personality quiz. A conversation." — defines by negation, references tests (irrelevant to visitors who haven't taken any), has dual CTAs that dilute conversion.
-
-**Brainstorming insight:** The test-frame trap (#10). Most visitors don't arrive thinking about personality tests. The headline has a conversation about something they never asked about. The founder's in-person pitch — a transformation story — converts instantly. The homepage doesn't use this approach.
-
-**Updated hero:**
-
-| Element | Current | Updated | Rationale |
-|---------|---------|---------|-----------|
-| Headline | "Not a personality quiz. A conversation." | **New: transformation-oriented hook.** Must land for zero-context visitors. No test references. Leads with what the portrait *does to you*, not what the method *is*. Exact copy TBD — brainstorming direction: something about discovering a part of yourself you've never been able to articulate | FR59: no test references. FR60: transformation-oriented |
-| Subtitle | "A portrait of who you are that no test has ever given you." | **New: one-line clarity.** "A 15-turn conversation with an AI that writes you a personal letter about who you are (~30 minutes)." — concrete, specific, immediately understandable | FR59: communicate what it is in 3 seconds |
-| Tagline | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · NO CREDIT CARD" — surfaces zero-cost commitment immediately. Signup is still required (email verification) but the experience is free; subscription is optional and lives in the weekly letter, not on the homepage | Anonymous path retired; PWYW retired — the signal is "no money on the table" rather than "pay what you want" |
-| Primary CTA | "Begin Your Dive ↓" (scroll-down) | **Single CTA:** "Start your conversation" → `/chat`. No scroll-down alternative. No "See how it works." One action | FR61: single primary CTA |
-| Secondary CTA | None (proposed in previous spec) | **Removed.** No competing CTAs. Visitors who need convincing scroll; the page content converts them. The CTA reappears as sticky bar (mobile) and at page bottom | FR61 |
-| OCEAN shapes | Animated breathing shapes | Keep — aligns with GeometricSignature design language | §16.5 preserve |
-| Scroll indicator | Bouncing chevron | **Remove.** Trust the content to pull visitors down | Brainstorming #60 |
-
-#### B. Conversion CTAs (FR61)
-
-**Principle:** One CTA, repeated at natural decision points. Never competing CTAs. The same action ("Start your conversation" → `/chat`) appears in three places, one at a time:
-
-| Placement | Behavior | Viewport |
-|-----------|----------|----------|
-| **Hero CTA** | Static, above the fold. The primary conversion point for visitors who don't need convincing | All |
-| **Sticky bottom bar** | Appears after scrolling past the hero. Disappears when user scrolls back to hero. CSS-only via IntersectionObserver | Mobile only |
-| **Final CTA section** | After the last beat. Dedicated conversion section: "What's YOUR code?" → `/chat` | All |
-
-**Removed:** All embedded CTAs inside ResultPreviewEmbed components. The page should feel like reading/experiencing, not like being sold to. The CTA is always available but never intrusive.
-
-#### C. "How It Works" Section — Fear-Resolving, Not Feature-Based (FR64)
-
-**Currently missing.** Add between the conversational narrative and the final CTA.
-
-**Brainstorming insight:** The homepage never addresses "Will this be awkward?" (#15), "Is ~30 minutes worth it?" (#11), or "What if I don't like what it says?" (#17). These are the actual barriers to conversion, not lack of feature understanding.
-
-**Reframe as three fear-resolving steps:**
-
-| Step | Fear Addressed | Content |
-|------|---------------|---------|
-| 1 | "Will this be awkward?" (process anxiety) | **It feels like a conversation, not a test.** No quiz. No checkboxes. Nerin asks about your life — your routines, your relationships, what you care about. Most people are surprised by how natural it feels. ~30 minutes. |
-| 2 | "Is it worth ~30 minutes?" (time commitment) | **You'll get something no test can produce.** A personal letter from Nerin about who you are — not generic descriptions, but patterns from YOUR conversation. Your OCEAN code, your archetype, your scores, a shareable archetype card. All free. |
-| 3 | "What if I don't like what it says?" (self-exposure fear) | **It's a mirror, not a judgment.** Nerin describes patterns and tensions — things you'll recognize. Nothing clinical, nothing labeling. And it's private — only you see it unless you choose to share. |
-
-**Design:** Three cards or stacked sections, scannable in 5 seconds. Each addresses a real visitor question, not a product feature. Tone: warm, direct, reassuring.
-
-#### D. Archetype Gallery Preview
-
-**Currently missing.** Add as a section showing 3-4 example archetype cards (real archetypes from the system) in a horizontal scroll or grid. Purpose: demonstrate the visual identity system and trigger "I want one of these" curiosity.
+**Contents (top to bottom):**
 
 | Element | Details |
 |---------|---------|
-| Content | 3-4 archetype cards with names, OCEAN codes, GeometricSignatures, short descriptions |
-| Layout | Horizontal scroll (mobile), 3-4 column grid (desktop) |
-| Interaction | Tap → nothing (no link to type pages for MVP). Visual only |
-| Position | Between "How It Works" and final CTA |
+| **Logo** | "big ocean" wordmark, minimal |
+| **Dynamic hook** | Phase-aware statement with an animated gradient keyword. The surrounding text is medium weight, standard size. The keyword is display-size, bold 900, `bg-gradient-to-r bg-clip-text text-transparent` with animated gradient drift. The full hook changes via `AnimatePresence` cross-fade when the visitor scrolls into a new phase. See §16.3.1 for copy and gradient spec |
+| **Signup form** | Email field + password field + "Start yours →" submit button. Real form, not a redirect — reduces clicks-to-conversion. Form submits to signup flow → email verification → `/chat` |
+| **Login link** | "Already have an account? Log in" — text link below form |
+| **Divider** | Thin line or whitespace |
+| **Tagline** | "~30 min · Free · No credit card" — zero-cost reassurance in 6 words |
+| **OCEAN breathing shapes** | 5 geometric shapes with scale-breathing animation (6s infinite, staggered). Ambient, decorative. Moved from old hero section. Uses existing `@keyframes breathe` |
 
-#### E. Beat Compression & Reordering (FR62, brainstorming #59, #66)
+#### 16.3.1 Dynamic Hook — Copy & Gradient Specification
 
-**Current:** 14 beats, portrait excerpt at Beat 8 (~57% scroll), trait explorer at Beat 6.
+The hook line is the only element in the auth panel that changes. It shifts as the visitor scrolls through the timeline phases, naming what they're feeling — quiet recognition, not assertion. The gradient keyword is visually bold but the tone is warm and invitational.
 
-**Brainstorming insight:** The homepage's greatest strength (immersive format) is also its conversion weakness (#13). Value not visible fast enough. Best content buried deep. The page rewards patience but punishes scanning.
+**Copy per phase:**
 
-**Compressed to ~9 beats with portrait at ~40%:**
+| Phase | Full line | Gradient keyword | Tone |
+|-------|-----------|-----------------|------|
+| **Conversation** | A conversation that **sees** you. | SEES | Intimate — "this is what real listening looks like" |
+| **Portrait** | Words you've been **carrying** without knowing. | CARRYING | Recognition — "you already feel this, now it has a name" |
+| **World After** | A place that **stays**. | STAYS | Need — "this isn't a one-time thing" |
+| **Reassurance** | **Yours.** | YOURS | Resolution — one word, the whole journey compressed |
 
-| Beat | Speaker | Content | Maps to old beat |
-|------|---------|---------|-----------------|
-| 1 | Nerin | **Hook — sharp, weighted opening.** Not about tests. Something that creates different reactions for different visitors: the therapy-seeker thinks "yes, I need this," the fun-seeker thinks "ooh that's bold." Bold, scannable headline on this bubble | New |
-| 2 | User | One-line gut reaction — not a scripted dialogue, a single authentic response | Compressed from old 2 |
-| 3 | Nerin | **Portrait excerpt — proof of output quality.** A real paragraph from a Nerin portrait. Specific, personal, emotionally resonant. Shows what you'll get, not describes it. This is the "I want to know what it would say about ME" moment | Moved from old 8 (FR62: within 40%) |
-| 4 | Nerin | **Nerin being Nerin — a pattern observation.** Not pitching. A demonstration of conversational depth: Nerin noticing something specific about someone's behavior that feels startlingly perceptive. Shows what the conversation *feels like* | New (FR63) |
-| 5 | User | Reacts — "how did you notice that?" or equivalent | New |
-| 6 | Nerin | **The founder reveal.** Vincent's personal story — why he built this, what Nerin's letter did for him. Humanizes the product. Includes zero-cost reassurance: "The whole thing is free. Nerin writes you a letter, you get your archetype, you can share it, you can invite someone into your Circle — no paywall." | Compressed from old 10/10b |
-| 7 | User | The converting line — "I want to know what mine would say" | Old 13 |
-| 8 | Nerin | **CTA close.** "Just a conversation." Single CTA | Old 14 |
+**Typography:**
+- Surrounding text: Inter, medium weight (500), standard size (~1.125rem / 18px)
+- Gradient keyword: Inter, bold 900, display size (~2.5rem / 40px on desktop, ~2rem / 32px on mobile hero). Uppercase optional — test both
+- Line break before the keyword for visual emphasis (the keyword sits on its own line or dominates its line)
 
-**Beats removed:** Old 4 (Traditional vs Conversational comparison — test-frame), old 6 (Trait explorer — machinery explanation), old 7 (User challenges output), old 5 (skepticism bridge), old 11/11b/11c (fear + privacy — moved to How It Works section), old 12 (radar comparison preview — moved to after CTA or removed).
+**Animated gradient specification:**
 
-**Key structural changes:**
-- Portrait excerpt at Beat 3 (~33% through) instead of Beat 8 (~57%) — FR62 met
-- Nerin depth preview at Beat 4 — FR63 met
-- Zero-cost reassurance at Beat 6 (replacing the old PWYW transparency beat)
-- Removed test-comparison framing entirely — FR59 met
-- Reduced trait machinery to zero (moved to results page where it belongs) — brainstorming #61
+The gradient keyword uses a slow-drifting animated gradient — the colors shift position continuously, like the word is breathing. Each phase has its own color palette that echoes the timeline's visual language. In dark mode, gradient values shift to `-300` for extra luminance against darker backgrounds.
 
-**Elements preserved from §16.5:**
-- Nerin-User-Vincent three-voice narrative ✓
-- Objection-resolution arc (compressed, not eliminated) ✓
-- Vincent's founder reveal ✓
-- Scroll-as-conversation metaphor (DepthMeter + thread line) ✓
-- Embedded interactive preview: HoroscopeVsPortraitComparison repurposed as Beat 3's portrait excerpt ✓
+| Phase | Light mode gradient | Dark mode gradient | Emotional match |
+|-------|--------------------|--------------------|-----------------|
+| **Conversation** | `blue-400` → `violet-500` → `blue-400` | `blue-300` → `violet-400` → `blue-300` | Cool, deep — echoes the dark conversation bg |
+| **Portrait** | `amber-400` → `rose-400` → `amber-400` | `amber-300` → `rose-300` → `amber-300` | Warm, intimate — echoes the papery portrait bg |
+| **World After** | `teal-400` → `cyan-400` → `teal-400` | `teal-300` → `cyan-300` → `teal-300` | Fresh, alive — echoes the UI bg |
+| **Reassurance** | `violet-400` → `rose-400` → `amber-400` | `violet-300` → `rose-300` → `amber-300` | All three phase colors merge — the whole journey in one word |
 
-**Elements moved, not deleted:**
-- TraitStackEmbed → results page or public profile (where visitors who care about methodology can explore)
-- ComparisonTeaserPreview → optional section after final CTA, or removed for MVP
-- ComparisonCard (Traditional vs Conversational) → removed (test-frame)
+**Contrast note:** The `-400` values provide sufficient contrast against light-mode panel backgrounds (`slate-800`, `stone-100`, `slate-100`). The `-300` values glow more vividly against dark-mode panel backgrounds (`slate-900`, `stone-900`, `slate-850`). Both pass WCAG AA for large text (the gradient keyword is display-size).
 
-#### F. Nerin Depth Preview Beat (FR63)
+**Gradient animation:**
 
-**Purpose:** Show Nerin being Nerin — not explaining, not pitching, but demonstrating the conversational depth that makes the product different. This is the "proof of character" moment.
+```css
+.gradient-keyword {
+  background-size: 200% 200%;
+  animation: gradient-drift 6s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
-**Content direction:** A Nerin observation from a real conversation (anonymized). Something like: "You mentioned you redesign your workspace every few months but you've kept the same morning routine for years. That's an interesting tension — the part of you that craves novelty has a deal with the part that needs anchoring."
+@keyframes gradient-drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+```
 
-**Design requirements:**
-- This beat should feel like eavesdropping on a real conversation, not reading marketing copy
-- Bold, scannable headline on the Nerin bubble (brainstorming #47): e.g., "What Nerin sounds like"
-- Nerin's observation should be 2-3 sentences max — specific enough to feel real, general enough that multiple visitor types recognize the depth
-- No explanation of methodology. Just the observation landing.
+The 6s cycle matches the OCEAN breathing shapes' animation duration — the whole panel breathes at the same rhythm.
 
-#### G. Zero-Cost Reassurance (replaces old PWYW Transparency)
+**Phase transition behavior — vertical slide:**
 
-**Purpose:** Cold visitors need to know up front that the full assessment + portrait + relationship letter + daily journal + Sunday weekly letter experience is free. No paywall, no hidden cost, no "pay what you feel it's worth." The subscription exists (€9.99/mo) but lives inside the Sunday weekly letter conversion moment at Week 3+, not on the homepage.
+The hook transitions via a vertical slide — old phrase slides up and out, new phrase slides up into position from below. The motion echoes the scroll direction: the visitor scrolls down, the phrase shifts up. Cause and effect.
 
-**Placement:** Integrated into Beat 6 (founder reveal) and the hero tagline.
+- Triggered by the same scroll thresholds that drive the Phase 1→2→3 background transitions (§16.5)
+- Old hook slides up + fades out simultaneously (200ms, ease-out)
+- New hook slides up from below + fades in (200ms, ease-out, 50ms delay after old exits)
+- The gradient keyword leads the motion — it slides slightly ahead of the surrounding text (30ms earlier), so the visitor's eye tracks the gradient word first
+- Gradient colors shift during the slide — old colors on exit, new colors already applied on entry. The drift animation continues uninterrupted throughout
+- Total transition: ~450ms. Fast enough to feel responsive, slow enough to register subconsciously
+- The hook container has `overflow: hidden` so the sliding text clips cleanly at the boundary — no text floating above or below the hook area
 
-**Content direction:**
-- Hero tagline: "~30 MIN · FREE · NO CREDIT CARD"
-- Beat 6 (Vincent): "The whole thing is free. Nerin writes you a letter. You get your archetype, your OCEAN code, your scores. You can share your card. You can invite someone you care about and get a letter about your dynamic. No paywall. No pay-what-you-feel. Just free."
-- If the visitor eventually subscribes, it'll be inside the Sunday weekly letter at Week 3+ — Nerin asking for more — not here.
+**Implementation:**
 
-**Design:** Not a pricing table, not a subscription mention. Woven into Vincent's personal story as a natural aside. The tone is confidence, not justification. **The homepage does NOT mention the €9.99/mo subscription.** That conversation belongs inside the weekly letter, where Nerin has earned the right to ask.
+```tsx
+<AnimatePresence mode="wait">
+  <motion.div
+    key={currentPhase}
+    initial={{ y: 20, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    exit={{ y: -20, opacity: 0 }}
+    transition={{ duration: 0.2, ease: "easeOut" }}
+  >
+    <span>{surroundingTextBefore}</span>
+    <motion.span
+      className="gradient-keyword"
+      style={{
+        "--gradient-from": phaseGradients[currentPhase].from,
+        "--gradient-via": phaseGradients[currentPhase].via,
+        "--gradient-to": phaseGradients[currentPhase].to,
+      }}
+      // Keyword enters 30ms before surrounding text
+      transition={{ duration: 0.2, ease: "easeOut", delay: -0.03 }}
+    >
+      {keyword}
+    </motion.span>
+    <span>{surroundingTextAfter}</span>
+  </motion.div>
+</AnimatePresence>
+```
 
-**Retired content:** Previous PWYW messaging ("pay what you want", "starting at €1", "most people pay around €5") is fully retired. The monetization story has changed — the portrait is free, and the subscription conversation happens inside the Sunday weekly letter, not on the homepage.
+- `key` prop set to phase name so `AnimatePresence` detects the swap
+- Hook container: `overflow: hidden` for clean clipping
+- Gradient drift via CSS `@keyframes` (not Framer Motion — CSS handles infinite loops more efficiently)
+- Gradient color stops driven by CSS custom properties (`--gradient-from`, `--gradient-via`, `--gradient-to`) updated per phase
+- `prefers-reduced-motion`: vertical slide replaced with instant swap (no motion), gradient drift pauses (static position)
 
-#### H. Multi-Persona Considerations (FR66)
+**The "YOURS" payoff:** The reassurance phase gradient contains all three phase colors (`violet` → `rose` → `amber`). The visitor has scrolled through cool → warm → fresh, and the final word holds all of it. One word. All three worlds. Subconscious, but it lands.
 
-**Purpose:** The homepage must work for visitors with different motivations without requiring a single narrative arc.
+#### 16.3.2 Auth Panel Behavior
 
-**Brainstorming personas:**
-1. **Zero-context visitor** (someone who discovered big-ocean via a shared archetype card) — needs to understand what this is in 3 seconds
-2. **Invited friend** (someone pulled in via Journey 7 Invite Ceremony) — already has social proof via the inviter's framing, needs a clear path forward
-3. **Social media curious** — saw a clip or archetype card, wants fun, low-friction energy
-4. **Therapy-seeker** — going through something, emotionally open, needs to feel safe
+- `position: sticky; top: 0; height: 100vh` — stays in viewport while left column scrolls
+- Vertically centered content with generous padding
+- Form validation inline (email format, password min length)
+- Submit button disabled during async, loading spinner
+- On successful signup: redirect to `/verify-email`
+- On "Log in" click: navigate to `/login`
 
-**How the compressed arc serves all four:**
-- **Beat 1 (hook):** A weighted, provocative opening creates different reactions for each persona. The therapy-seeker thinks "yes." The fun-seeker thinks "ooh." The zero-context visitor thinks "what is this?" — and scrolls to find out. One line, four doors
-- **Beat 3 (portrait excerpt):** Proof of quality. The zero-context visitor sees what they'll get. The invited friend sees their partner's experience validated. The therapy-seeker sees emotional depth. The fun-seeker sees something surprisingly personal
-- **Beat 6 (founder + zero-cost reassurance):** The zero-context visitor's last friction (cost) is removed — the whole thing is free. The invited friend is reassured. The therapy-seeker connects with Vincent's vulnerability. The fun-seeker sees there's no paywall at all
-- **How It Works (fear-resolving):** Addresses the three universal fears regardless of entry motivation
+**The panel does NOT contain:**
+- Any description of the product (the timeline does that)
+- Any mention of subscription, pricing, or payment
+- Any secondary CTA or "learn more" link
 
-**For invited friends specifically:** If a visitor arrives with a referral parameter (from QR flow or shared link), the homepage should feel relevant even though their primary conversion path is the QR accept screen. The compressed, non-test-frame arc ensures the homepage doesn't feel like a mismatch if they land here first.
+### 16.4 Timeline Structure — Three Visual Phases
 
-### 16.7 Homepage Flow Diagram
+The left column is a scrollable timeline of real product artifacts, ordered to mirror the actual user journey: first you talk with Nerin, then you get your portrait, then you access the platform. Each phase has a distinct visual language so the visitor *feels* the phase transitions without needing labels.
+
+**9 artifacts across 3 phases + 1 reassurance section:**
+
+| # | Phase | Artifact | What the visitor sees | What they feel |
+|---|-------|----------|-----------------------|----------------|
+| 1 | **The Conversation** | Nerin's opening message | 2-3 sentences of real first-turn energy — the moment a conversation with Nerin begins | "This isn't a quiz. This is... a real conversation." |
+| 2 | **The Conversation** | User reply | One line — an authentic human response to Nerin's opening | The visitor projects themselves into the user's seat |
+| 3 | **The Conversation** | Nerin observation (mid-conversation) | A real pattern-noticing moment from ~15 min in. Nerin connects two things the user said and surfaces something the user hadn't seen | "How did she catch that?" — intrigue deepens to respect |
+| 4 | **The Portrait** | Portrait excerpt | 3-4 sentences from a real Nerin portrait. The "named things I'd been carrying" quality. Letter/prose aesthetic, not chat bubble | "That's what comes out of the conversation? I want to know what mine would say." — the need crystallizes |
+| 5 | **The Portrait** | Archetype card + OCEAN code | One real archetype rendered with name, 5-letter OCEAN code, and `GeometricSignature`. Plus a horizontal swipe carousel of 3-5 additional archetype cards | "Which one am I?" — identity-hunger, not curiosity |
+| 6 | **The World After** | Today screen mockup | Device-framed mockup showing mood dots for the week, a journal entry snippet, a morning check-in prompt | "Wait — it keeps going? This isn't a one-time thing." |
+| 7 | **The World After** | Weekly letter snippet | 2-3 sentences from a Sunday letter from Nerin. Recognition tone, not advice tone. Dated ("Sunday, March 22") | The need deepens from "one portrait" to "ongoing companion" |
+| 8 | **The World After** | Relationship letter fragment | Two first names + one paragraph about how they navigate conflict differently | "I could have this for me and [person]" — relational need |
+| 9 | **The World After** | Deeper conversation callback | Nerin in a chat bubble again, referencing something from weeks ago: "Remember when you mentioned..." with a "Week 5" timestamp | The product is cyclical. The loop closes. Conversation → portrait → daily world → conversation again |
+| — | **Reassurance** | "Before you start" | 3 fear-resolving cards, clean and still | Last friction removed. Safety before commitment |
+
+### 16.5 Three Visual Languages
+
+Each phase has a distinct visual treatment. The transitions between phases are scroll-linked (not hard cuts) — the visitor's eye registers "something changed" before their brain labels it. No section headers or phase labels needed. The visual language IS the chapter marker.
+
+**Dark mode support:** The homepage respects `prefers-color-scheme`. All three phases adapt to dark mode while maintaining perceptible visual contrast between them. The phase transitions are subtler in dark mode (dark-warm vs dark-cool vs near-black) but the typography and content framing (chat bubbles → serif prose → device frames) carry the phase identity even when background contrast is softer. The auth panel mirrors the current phase's palette in both modes.
+
+#### Phase 1: The Conversation
+
+| Property | Light mode | Dark mode |
+|----------|-----------|-----------|
+| **Background** | `slate-900` with subtle grain texture | `slate-950` / near-black with subtle grain |
+| **Typography** | Inter, conversational weight, standard size. Text: `slate-100` | Inter, same weight/size. Text: `slate-200` |
+| **Content framing** | Chat bubbles — Nerin variant + user variant. Timestamps between messages | Same — already designed for dark bg |
+| **Feeling** | Eavesdropping on someone's private conversation. Intimate, low-lit | Same — Phase 1 is inherently dark in both modes |
+| **Spacing** | Generous vertical gaps. Each message theatrical, not dense | Same |
+
+**Note:** Phase 1 has the least difference between light/dark modes — it's already a dark phase by design. Dark mode simply deepens it slightly.
+
+#### Phase 2: The Portrait
+
+| Property | Light mode | Dark mode |
+|----------|-----------|-----------|
+| **Background** | Warm, papery — `amber-50` or `stone-100` | Dark parchment — `amber-950` or `stone-900`. Warm undertone preserved, just inverted |
+| **Typography** | Serif or serif-adjacent (e.g., `Lora`, `Merriweather`). Lighter weight, larger size. Text: `stone-800` | Same serif family. Text: `stone-200`. The serif on dark-warm bg feels like a letter read by candlelight |
+| **Content framing** | Blockquote-style: generous margins, letter-like whitespace, subtle quotation marks or thin left border (`amber-200`) | Same structure. Border: `amber-700`. Quotation marks: `amber-600` |
+| **Archetype card** | Real `GeometricSignature` component. Card bg: white with subtle shadow | Card bg: `slate-800` with subtle shadow. GeometricSignature colors unchanged (they're already vibrant) |
+| **Feeling** | Reading someone's private letter. Intimate, still, warm | Same warmth — dark-warm is perceptibly different from dark-cool (Phase 3) |
+| **Spacing** | Wide margins. Line-height 1.7+. Max-width narrower than Phase 1 | Same |
+
+#### Phase 3: The World After
+
+| Property | Light mode | Dark mode |
+|----------|-----------|-----------|
+| **Background** | Light UI grey — `slate-50` | Dark UI — `slate-800`. Cool undertone preserved |
+| **Typography** | Inter in app-UI context. Smaller, denser, functional. Text: `slate-700` | Inter same context. Text: `slate-300` |
+| **Content framing** | Device frames: `rounded-2xl`, subtle shadow (`shadow-lg`), light bg inside frames | Device frames: same radius, shadow adapted (`shadow-lg` with darker spread), `slate-900` bg inside frames |
+| **Mockup interiors** | Light app surfaces (white cards, light inputs, colored mood dots) | Dark app surfaces (dark cards, dark inputs, same colored mood dots). The mockups should look like a real dark-mode app — consistent with how the actual Today/Me/Circle pages would render in dark mode |
+| **Feeling** | Looking over someone's shoulder at their phone | Same — but the phone is in dark mode too |
+| **The loop closure** | Last artifact: bg returns to `slate-900`, chat-bubble framing | Last artifact: bg returns to `slate-950`, chat-bubble framing. The return is even more seamless in dark mode since the contrast shift is smaller |
+
+#### Phase Transitions
+
+Transitions are scroll-linked using `motion`'s `useScroll` + `useTransform`. They happen over ~100vh of scroll distance — not instant cuts, but gradual cross-fades.
+
+**Light mode transitions:**
+
+| Transition | What changes | Scroll distance |
+|-----------|--------------|-----------------|
+| **Phase 1 → 2** | Background cross-fades from `slate-900` to `amber-50`. Typography shifts from Inter to serif. Last chat bubble dissolves, portrait text materializes | ~100vh centered on the boundary |
+| **Phase 2 → 3** | Background cools from `amber-50` to `slate-50`. Serif contracts to system font. Content framing shifts from letter to device frames | ~100vh centered on the boundary |
+| **Phase 3 → Loop** | Background darkens back to `slate-900` for the final artifact only. Chat bubble framing returns | ~50vh — quicker, surprising |
+
+**Dark mode transitions:**
+
+| Transition | What changes | Scroll distance |
+|-----------|--------------|-----------------|
+| **Phase 1 → 2** | Background shifts from `slate-950` to `amber-950`. Temperature change (cool-dark → warm-dark) is the primary signal. Typography still shifts to serif | ~100vh |
+| **Phase 2 → 3** | Background cools from `amber-950` to `slate-800`. Warm-dark → cool-dark. Serif → system font | ~100vh |
+| **Phase 3 → Loop** | Background deepens from `slate-800` to `slate-950`. Chat bubble returns | ~50vh |
+
+**Implementation:** Use CSS custom properties for all phase colors. Define `--phase-bg`, `--phase-text`, `--phase-accent`, `--phase-border` etc. The `useTransform` interpolation targets these custom properties. Dark mode overrides via `@media (prefers-color-scheme: dark)` or Tailwind's `dark:` variant set the alternate values.
+
+#### Auth Panel — Phase-Mirrored Background
+
+The auth panel's background shifts to match the current phase, keeping the page visually unified. The panel never fights the timeline.
+
+| Phase | Auth panel bg (light) | Auth panel bg (dark) |
+|-------|-----------------------|----------------------|
+| **Conversation** | `slate-800` (slightly lighter than timeline's `slate-900` for subtle depth) | `slate-900` (slightly lighter than timeline's `slate-950`) |
+| **Portrait** | `stone-100` (warm neutral — doesn't compete with timeline's serif content) | `stone-900` (dark warm neutral) |
+| **World After** | `slate-100` (cool neutral) | `slate-850` / `slate-800` (cool dark neutral, slightly distinct from timeline's `slate-800`) |
+| **Reassurance** | White | `slate-900` |
+
+The panel bg transitions use the same scroll-linked timing as the timeline's phase transitions. The auth form elements (inputs, button, text) adapt via standard dark mode styling — dark inputs with light text, button contrast preserved.
+
+**Form element colors:**
+
+| Element | Light mode | Dark mode |
+|---------|-----------|-----------|
+| Input bg | `white` | `slate-800` |
+| Input border | `slate-200` | `slate-600` |
+| Input text | `slate-900` | `slate-100` |
+| Input placeholder | `slate-400` | `slate-500` |
+| Button bg | Brand primary (gradient or solid) | Same — buttons stay vibrant in both modes |
+| Button text | White | White |
+| "Log in" link | `slate-500` | `slate-400` |
+| Tagline text | `slate-400` | `slate-500` |
+
+### 16.6 Animation Specification (Framer Motion)
+
+All animations use the `motion` library (v12, already in `apps/front`). The scroll is the primary interaction — visitors don't click to trigger animations, they scroll and the page responds at their pace.
+
+#### Scroll-Linked Animations
+
+| Element | Animation | Motion API | Notes |
+|---------|-----------|------------|-------|
+| **Phase transitions** | Background color + typography cross-fade | `useScroll` + `useTransform` mapping scroll position to CSS properties | See §16.5 transition table |
+| **Depth tracking** | Left-column scroll progress indicator | Existing `DepthScrollProvider` + `DepthMeter`, recalibrated for new timeline length | Keep existing component. Hidden on mobile |
+
+#### Entrance Animations (whileInView)
+
+| Element | Animation | Timing | API |
+|---------|-----------|--------|-----|
+| **Nerin's opening (artifact 1)** | Word-by-word reveal as scroll enters viewport | Staggered, ~30ms per word | `motion.span` per word, `staggerChildren: 0.03`, `whileInView` trigger |
+| **User reply (artifact 2)** | Fade-in + slide-up (single block) | 500ms, spring | `motion.div` with `initial={{ opacity: 0, y: 20 }}` `whileInView={{ opacity: 1, y: 0 }}` |
+| **Nerin observation (artifact 3)** | Word-by-word reveal (same as artifact 1) with "· 15 min in" timestamp fading in after | Words: staggered 30ms. Timestamp: 400ms delay after last word | Same word-reveal pattern. Timestamp is a separate `motion.span` with `delay` |
+| **Portrait excerpt (artifact 4)** | Line-by-line stagger — like a letter being written | `staggerChildren: 0.08`, spring physics per line | `motion.p` per paragraph/line, `whileInView` on container |
+| **Archetype card (artifact 5)** | GeometricSignature shapes drift into position, OCEAN code letters land one at a time | Shapes: spring with slight overshoot. Letters: stagger 60ms | `motion.div` per shape with `initial={{ scale: 0, rotate: -10 }}`. Letters: `staggerChildren: 0.06` |
+| **Today mockup (artifact 6)** | Mood dots fill one by one. Journal text appears as if typed | Dots: stagger 100ms. Text: typewriter effect or fade | `staggerChildren` on dot container |
+| **Weekly letter (artifact 7)** | Slides up like a notification | `y: 40 → 0`, spring, 600ms | `motion.div` with spring transition |
+| **Relationship letter (artifact 8)** | Unfolds — `scaleY: 0 → 1`, origin top | 500ms, ease-out | `motion.div` with `transformOrigin: "top"` |
+| **Deeper conversation (artifact 9)** | Chat bubble returns — mirrors Phase 1 entrance style. Background darkens simultaneously | Word-by-word reveal + `useScroll` for bg transition | Combined scroll-linked bg + whileInView word reveal |
+| **Reassurance cards** | **Intentionally still.** Fade-in only, no motion or spring physics | 300ms fade, stagger 100ms between cards | `motion.div` with simple opacity transition. The sudden calm after Phase 3's dynamism amplifies trust |
+
+#### Hover / Presence Signals (Desktop Only)
+
+Subtle responses when the cursor enters an artifact. Not expand/collapse interactions — just the artifact acknowledging attention.
+
+| Element | Hover response |
+|---------|---------------|
+| **Portrait excerpt** | Floating label fades in: *"From Léa's portrait, March 2026"* — confirms this is real |
+| **Today mockup** | Mood dots pulse gently, journal entry gets soft highlight |
+| **Archetype cards** | Slight lift (`y: -2`) + shadow deepen |
+| **Relationship letter** | Two names get subtle underline |
+
+All hover effects: `whileHover` with `transition: { duration: 0.2 }`. No scale transforms that shift layout.
+
+#### Reduced Motion
+
+All animations respect `prefers-reduced-motion`:
+- Scroll-linked phase transitions: instant color change, no interpolation
+- Entrance animations: simple fade-in (no slide, no word-by-word)
+- Hover effects: preserved (they're subtle enough)
+- OCEAN breathing shapes: paused
+
+Implementation: `const prefersReducedMotion = useReducedMotion()` from `motion`, conditionally set `transition` and `initial` props.
+
+### 16.7 Archetype Carousel (The One Expandable Element)
+
+The archetype card in Phase 2 is the single artifact with an interactive expand behavior. The visitor sees one featured archetype card, then can swipe horizontally through 3-5 more. This is the "which one am I?" accelerant.
+
+| Property | Value |
+|----------|-------|
+| **Content** | 4-6 real archetype cards. Each: archetype name, 5-letter OCEAN code, `GeometricSignature`, 1-line description |
+| **Layout** | Featured card (large, centered) + horizontal swipe carousel for remaining cards. Dot indicators below |
+| **Interaction** | `motion.div` with `drag="x"` + `dragConstraints` (bounded). Snap to nearest card on release (modular snap points via `dragSnapToOrigin` or custom `onDragEnd` logic) |
+| **Mobile** | Full-width cards, swipe gesture. Snap behavior same |
+| **Desktop** | Cards at ~280px width, visible overflow for peek effect. Swipe or arrow buttons |
+| **Data** | Hardcoded archetype data — no API call. Static for performance (LCP < 1s) |
+
+**Why this is the only expandable element:** Every other artifact is a deliberate fragment. Showing more would dilute impact — the portrait excerpt is more powerful as 3 sentences than as a full page. But the archetype cards compound — each additional card intensifies "which one am I?" No modal, no depth-drill. Just more identity to hunger for.
+
+### 16.8 Multi-Persona Considerations (FR66)
+
+The homepage serves three personas (invited friends always land on the inviter's profile via QR, not the homepage):
+
+| Persona | What they need | How the timeline serves them |
+|---------|---------------|------------------------------|
+| **Zero-context visitor** | Understand what this is in 3 seconds | Phase 1 artifacts show immediately — "this is a conversation with an AI." Phase 2 answers "what comes out of it." Form always visible — zero hunting |
+| **Social-media curious** | Saw a card or clip, wants visual proof + low friction | Archetype carousel in Phase 2 delivers the visual identity they came for. "~30 min · Free" in the sticky panel removes friction |
+| **Therapy-seeker** | Going through something, emotionally open, needs to feel safe | Phase 1's conversation excerpts feel intimate, not flashy. Portrait excerpt in Phase 2 demonstrates emotional depth. Reassurance section addresses safety. The warm Phase 2 aesthetic reads as gentle |
+
+**How need-framing serves all three simultaneously:** The timeline doesn't try to make one line work for all personas (the "one line, four doors" trap). Instead, each persona self-selects their entry point: the zero-context visitor starts scrolling from the top; the social-media curious scans fast and stops at the archetype carousel; the therapy-seeker reads slowly and connects with the portrait. The same content, consumed at different speeds and depths, serves different needs.
+
+### 16.9 Mobile Adaptation
+
+On mobile (< 1024px), the split layout collapses to a single-column stacked layout with a sticky bottom CTA bar.
+
+```
+Mobile (< 1024px):
+┌─────────────────────────────┐
+│  big ocean logo             │
+│  Hook line (1 sentence)     │
+│  [Start yours →]            │  ← scrolls away with content
+│  ~30 min · Free             │
+├─────────────────────────────┤
+│                             │
+│  Timeline artifacts         │
+│  (same content, full-width) │
+│  Phase 1 → 2 → 3           │
+│  Reassurance                │
+│                             │
+└─────────────────────────────┘
+┌─────────────────────────────┐
+│  [Start yours →]            │  ← sticky bottom bar
+└─────────────────────────────┘
+```
+
+| Element | Mobile behavior |
+|---------|----------------|
+| **Sticky auth panel** | Not shown. Full signup form too tall for persistent display |
+| **Mini hero** | Logo + Phase 1 hook ("A conversation that **sees** you." with animated gradient on SEES) + CTA button + tagline. Compact, ~30vh. Scrolls away. On mobile the hook does NOT change with scroll — it stays on Phase 1 copy since the hero scrolls out of view and the sticky bottom CTA takes over |
+| **Sticky bottom CTA** | Appears when mini hero scrolls out of viewport. Single button: "Start yours →" links to `/chat` (which gates on auth). `position: fixed; bottom: 0`. 44px+ touch target. Semi-transparent background with backdrop blur |
+| **Timeline content** | Full-width, same artifact order. Phase transitions still scroll-linked. Device-frame mockups in Phase 3 centered with slight horizontal padding |
+| **Archetype carousel** | Full-width cards, horizontal swipe. Dot indicators below |
+| **DepthMeter** | Hidden on mobile (existing behavior) |
+| **OCEAN breathing shapes** | Not shown on mobile (declutter) |
+
+**Tablet (640-1023px):** Same as mobile layout. The split layout only activates at ≥1024px. Tablet uses the stacked layout with sticky bottom CTA.
+
+**Desktop (≥1024px):** Full split layout. Sticky auth panel right (40%). Scrollable timeline left (60%). Max content width: 1280px total (768px timeline + 512px auth panel). No sticky bottom CTA (form always visible).
+
+### 16.10 Homepage Flow Diagram
 
 ```mermaid
 flowchart TD
-    A["Visitor arrives (SEO, direct, referral)"] --> B["Hero: transformation hook + OCEAN shapes
-    + single CTA: 'Start your conversation'"]
-    B --> C{Scrolls down?}
-    C -->|No — convinced| D["Taps hero CTA → /chat"]
-    C -->|Yes — exploring| E["Compressed narrative (8 beats)
-    Portrait excerpt at Beat 3 (~33%)
-    Nerin depth preview at Beat 4
-    Founder + PWYW at Beat 6"]
-    E --> F["How It Works (3 fear-resolving steps)"]
-    F --> G["Archetype Gallery (3-4 cards)"]
-    G --> H["Final CTA: 'What's YOUR code?'"]
-    H --> I["→ /chat"]
+    A["Visitor arrives (SEO, direct, social)"] --> B["Homepage loads: split layout
+    Left: timeline artifacts | Right: sticky auth panel"]
 
-    %% Sticky CTA
-    E -.->|Sticky bottom bar (mobile)| I
+    B --> C{Convinced?}
+    C -->|Yes — fills form| D["Submits signup form in auth panel"]
+    C -->|Not yet — scrolls| E["Scrolls through timeline:
+    Phase 1: Conversation artifacts
+    Phase 2: Portrait + archetype carousel
+    Phase 3: Today / weekly / relationship / deeper convo
+    Reassurance cards"]
 
-    %% Auth gate
-    D --> J{Has account?}
-    I --> J
-    J -->|No| K["Sign up → /verify-email → verify → /chat"]
-    J -->|Yes, no assessment| L["/chat — start conversation"]
-    J -->|Yes, assessment complete| M["/today (default landing) — three-space world"]
+    E --> F{Convinced now?}
+    F -->|Yes — fills form| D
+    F -->|Yes — taps sticky CTA on mobile| G["→ /chat (auth gate)"]
+
+    D --> H["→ /verify-email → verify → /chat"]
+    G --> H
+
+    H --> I{Has completed assessment?}
+    I -->|No| J["/chat — start conversation"]
+    I -->|Yes| K["/today — three-space world"]
+
+    %% Returning user
+    B --> L{Already logged in?}
+    L -->|Yes, no assessment| J
+    L -->|Yes, assessment complete| K
 ```
 
-### 16.8 Loading & Error States
+### 16.11 Loading & Error States
 
 | Section | Loading | Error/Fallback |
 |---------|---------|----------------|
-| Hero | Server-rendered — no loading state (critical path) | Static content, cannot fail |
-| OCEAN breathing shapes | Render immediately (SVG, no data dependency) | — |
-| Conversational narrative | MessageGroups lazy-load via IntersectionObserver | Static content, cannot fail |
-| TraitStackEmbed | Renders immediately (static trait data) | Trait data is hardcoded — no API call |
-| HoroscopeVsPortraitComparison | Renders immediately (static portrait excerpt + horoscope data) | Static content |
-| ComparisonTeaserPreview | Renders immediately (static sample radar data) | Static content |
-| Archetype Gallery (new) | Skeleton cards while loading archetype data | Fallback: hide section entirely (non-critical) |
-| ChatInputBar | Appears at 35% scroll — no data dependency | — |
+| **Sticky auth panel** | Server-rendered — no loading state | Form validation inline. Signup errors shown below form |
+| **Timeline artifacts 1-4** | Server-rendered (above-fold critical path for SEO) | Static content, cannot fail |
+| **Archetype carousel (artifact 5)** | Hardcoded archetype data — no API call, renders immediately | Static content |
+| **Phase 3 mockups (artifacts 6-9)** | Render on scroll via `whileInView` — no data dependency | Static content |
+| **Reassurance cards** | Render on scroll | Static content |
+| **OCEAN breathing shapes** | Render immediately (SVG) | — |
+| **DepthMeter** | Appears at 5% scroll depth | CSS transition, existing behavior |
+| **Sticky bottom CTA (mobile)** | Appears when hero scrolls out of viewport | IntersectionObserver, CSS transition |
 
-**Key insight:** The entire existing homepage is static content — no API calls, no data dependencies. All interactive embeds use hardcoded data. This is intentional for performance (LCP < 2.5s target). The only new section requiring data fetching is the Archetype Gallery Preview.
+**Performance principle:** The entire homepage is static content — no API calls, no data dependencies. All artifacts use hardcoded content (real portrait text, real archetype data, mocked Today screen). This is intentional for LCP < 1s (PRD target). The signup form is the only dynamic element (auth API calls on submit).
 
-### 16.9 OG Meta / SEO
+### 16.12 OG Meta / SEO
 
 | Tag | Content |
 |-----|---------|
-| `og:title` | "big ocean — [Updated to match new hero headline, no test references]" |
-| `og:description` | "A 15-turn conversation (~30 minutes) with an AI that writes you a personal letter about who you are. Free — assessment, portrait, archetype, relationship letters, weekly check-ins. No paywall." |
-| `og:image` | Hero visual or branded card (not an archetype card — generic brand image) |
-| `<title>` | "big ocean — Personality portrait through conversation" |
-| `<meta description>` | "A 15-turn conversation (~30 minutes) with Nerin reveals your personality portrait, OCEAN code, and archetype. Compare with friends. Built on Big Five science." |
+| `<title>` | "big ocean — [matches hook line, no test references]" |
+| `<meta name="description">` | "A 15-turn conversation with Nerin (~30 minutes) that produces a personal letter about who you are. Your OCEAN code, your archetype, a daily companion. Free." |
+| `og:title` | Same as `<title>` |
+| `og:description` | "Talk to Nerin for ~30 minutes. Get a portrait of who you are. Then stay — daily check-ins, weekly letters, relationship insights. Free." |
+| `og:image` | Branded card — not an archetype card. Generic big ocean visual with OCEAN shapes |
 
-### 16.10 Responsive Behavior
+**SEO notes:**
+- Server-rendered (TanStack Start SSR) for crawlability
+- Structured data: `WebApplication` schema with personality assessment attributes
+- Canonical URL: `https://bigocean.app/` (or equivalent)
+- The timeline content is real HTML text (not images or canvas), fully indexable
 
-| Viewport | Layout |
-|----------|--------|
-| Mobile (< 640px) | Single column. Hero stacked. Conversation full-width. Sticky bottom CTA after hero. Archetype gallery horizontal scroll. DepthMeter hidden. ChatInputBar visible |
-| Tablet (640-1023px) | Hero side-by-side. Conversation at comfortable reading width. Archetype gallery 2x2 grid. DepthMeter visible |
-| Desktop (1024px+) | Hero side-by-side at max-width (1280px). Conversation centered (900px). Archetype gallery 4-column. No sticky CTA (hero CTA visible enough). DepthMeter visible |
+### 16.13 Component Inventory (Target)
 
-### 16.11 Implementation Notes
+#### New Components
 
-- **This is a content restructure, not a rebuild.** ConversationFlow, ChatBubble, MessageGroup, DepthMeter, DepthScrollProvider all stay. The change is: fewer beats, reordered content, new beats, removed components.
-- **Components to remove from homepage flow:** ComparisonCard (test-frame), TraitStackEmbed (machinery), ComparisonTeaserPreview (moved or removed), ScrollIndicator (removed). These components may be reused elsewhere (TraitStackEmbed on results page) — don't delete the source files.
-- **Components to add:** StickyConversionBar (CSS-only show/hide via IntersectionObserver), HowItWorks (static, 3 fear-resolving steps), ArchetypeGalleryPreview (static cards with real archetype data).
-- **Hero CTA:** Single "Start your conversation" → `/chat`. No scroll-down alternative.
-- **New beat content:** Beat 3 (portrait excerpt) reuses the existing portrait-excerpt.md content but presented standalone, not in a horoscope comparison. Beat 4 (Nerin observation) is new ChatBubble content with a bold headline.
-- **DepthMeter + DepthScrollProvider:** Keep — recalibrate for 8 beats instead of 14.
-- **Performance:** Homepage is the primary SEO surface. Ensure LCP < 1s (updated target from PRD). Hero section server-rendered. Embeds lazy-loaded via IntersectionObserver (already implemented in MessageGroup).
-- **Preserve data-testid:** Existing `data-testid` and `data-slot` attributes must not be removed.
-- **Copy dependency:** Hero headline (FR60) and Nerin observation beat (FR63) require copywriting iteration. Placeholder content can be used for initial implementation, then refined.
+| Component | Purpose | Notes |
+|-----------|---------|-------|
+| `StickyAuthPanel` | Right-column persistent signup/login form | Desktop only (≥1024px). Contains logo, hook, form, tagline, OCEAN shapes |
+| `StickyBottomCTA` | Mobile sticky bottom bar with CTA button | `position: fixed; bottom: 0`. Appears via IntersectionObserver when hero exits viewport |
+| `HomepageTimeline` | Left-column container for all timeline phases | Replaces `ConversationFlow`. Manages scroll context for phase transitions |
+| `TimelinePhase` | Wrapper for each phase — sets visual language (bg, typography) | Accepts `phase: "conversation" | "portrait" | "worldAfter"` prop. Provides CSS custom properties |
+| `PhaseTransition` | Scroll-linked cross-fade between phases | `motion.div` using `useScroll` + `useTransform`. ~100vh transition zone |
+| `PortraitExcerptBlock` | Phase 2 portrait excerpt in letter aesthetic | Blockquote-style, serif typography, warm bg. Uses existing portrait-excerpt content |
+| `ArchetypeCarousel` | Horizontal swipe carousel of 4-6 archetype cards | `motion.div` with `drag="x"`, snap points, dot indicators. Uses real `GeometricSignature` |
+| `TodayScreenMockup` | Device-framed mock of Today page | Mood dots + journal entry + check-in prompt. Static content, app-frame styling |
+| `WeeklyLetterCard` | Sunday letter snippet in notification/card style | Dated, Nerin attribution, 2-3 sentences of recognition |
+| `RelationshipLetterFragment` | Two names + one paragraph about dynamic | Letter aesthetic, two-person framing |
+| `DeeperConversationCallback` | Nerin chat bubble with "Week 5" timestamp | Same ChatBubble styling as Phase 1 — visual loop closure |
+| `ReassuranceCards` | "Before you start" — 3 fear-resolving cards | Static, intentionally still (no spring animations). Clean layout |
+| `MobileHero` | Compact hero for mobile: logo + Phase 1 dynamic hook with animated gradient keyword + CTA button + tagline | ~30vh, scrolls away. Only shown < 1024px. Hook stays on Phase 1 copy (static) |
 
-### 16.12 Implementation Gap (Current → Target)
+#### Existing Components — Reused
+
+| Component | Usage in new homepage |
+|-----------|-----------------------|
+| `ChatBubble` (nerin + user variants) | Phase 1 conversation artifacts + Phase 3 deeper conversation callback |
+| `DepthMeter` | Left-column scroll progress (recalibrated for new length). Hidden on mobile |
+| `DepthScrollProvider` | Scroll percentage context. Recalibrate for timeline length |
+| `GeometricSignature` | Inside archetype cards (Phase 2 carousel) and OCEAN shapes (auth panel) |
+
+#### Existing Components — Removed from Homepage
+
+| Component | Reason | Source files preserved? |
+|-----------|--------|------------------------|
+| `ConversationFlow` | Replaced by `HomepageTimeline`. Thread-line metaphor retired | Yes — may be reused in `/chat` or other pages |
+| `MessageGroup` | IntersectionObserver wrapper replaced by `motion` `whileInView` | Yes |
+| `ComparisonCard` | Test-frame removed (FR59) | Yes — potential reuse on results page |
+| `TraitStackEmbed` | Machinery removed from homepage — belongs on results/Me page | Yes — move to results page |
+| `HoroscopeVsPortraitComparison` | Test-frame comparison retired. Portrait excerpt shown standalone | Yes — portrait text content reused in `PortraitExcerptBlock` |
+| `ComparisonTeaserPreview` | Radar chart comparison removed from homepage | Yes |
+| `ResultPreviewEmbed` | No embedded previews with CTAs — timeline artifacts stand alone | Yes |
+| `ChatInputBar` | Replaced by `StickyBottomCTA` (mobile) and `StickyAuthPanel` (desktop) | Yes |
+| `ScrollIndicator` | Removed. Trust content to pull visitors down | Can delete — not reused |
+| `HeroSection` | Replaced by `StickyAuthPanel` (desktop) + `MobileHero` (mobile) | Yes — reference for OCEAN shape animations |
+| `WaveDivider` | Phase transitions handled by scroll-linked color interpolation, not dividers | Can delete |
+| `FounderPortraitExcerpt` | Founder section removed from homepage (see §16.15) | Yes — move to `/about` page |
+| `HowItWorks` | Renamed and restyled as `ReassuranceCards` | Replace in place |
+| `FinalCta` | No final CTA section — auth panel (desktop) and sticky bar (mobile) are always visible | Can delete from homepage usage |
+| `RelationshipCta` | No inline CTAs — timeline is CTA-free | Can delete from homepage usage |
+
+### 16.14 Artifact Content Specification
+
+Each artifact uses real (or realistic) content. No placeholder lorem ipsum. All copy is locked — voice-matched to Nerin's persona from `nerin-persona.ts`, `nerin-actor-prompt.ts`, and `portrait-context.ts`.
+
+#### Artifacts 1-3: Connected Conversation Sequence
+
+Artifacts 1-3 form a single connected thread — not three isolated showcases. The visitor sees Nerin ask, the user reveal something, and Nerin catch a detail from that reveal and pull it deeper. The thread is: **what you show vs. what's real.**
+
+**Artifact 1 — Nerin opens:**
+
+> You know that thing where someone asks how you're doing and you say "good" — and it's not a lie exactly, but it's not the answer either? 🤿
+>
+> I'm interested in the answer.
+
+**Voice notes:** Direct, confident, slightly playful. "Not a lie exactly" is Nerin's dry observation register. "I'm interested in the answer" — no hedging, no permission-asking. She tells you where she's going. The 🤿 is Nerin's signature — a dive begins.
+
+**Visual:** `ChatBubble variant="nerin"`. Dark background (Phase 1). Nerin avatar visible.
+
+**Artifact 2 — User replies, reveals a thread:**
+
+> I think I'm good at making everything look easy. People assume I have it together. But most of the time I'm just... figuring it out like everyone else.
+
+**Voice notes:** The user reveals the specific shape of their gap: performing ease. The "just... figuring it out" pause feels genuine — a real person thinking out loud. The visitor reading this should project themselves into the reply ("...yeah, same").
+
+**Visual:** `ChatBubble variant="user"`. Aligned right.
+
+**Artifact 3 — Nerin catches the thread:**
+
+> "Making everything look easy." You said that like it costs you something 🐚
+>
+> I've noticed — you get precise when you talk about what you do for other people. Your job, your friends, your family. You've mapped every route. But when the question turns to you, you go vague. Laugh it off.
+>
+> I don't think that's nothing.
+
+**Voice notes:** Nerin quotes the user's exact words back ("Making everything look easy" — per Director rules: use blockquotes/specific words). "You said that like it costs you something" is the observation she's been holding. "Mapped every route" is ocean/navigation language woven naturally, not as decoration. "I don't think that's nothing" — partial, she doesn't complete the read. Builds toward insight and stops. The 🐚 is quiet — a shell, something you hold and listen to.
+
+**Visual:** `ChatBubble variant="nerin"` with a subtle "· 15 min in" timestamp above the bubble. The timestamp implies Nerin has been sitting with "making everything look easy" for 15 minutes, quietly tracking how it shows up, before naming it. She wasn't just listening — she was holding something.
+
+**The connection the visitor sees:** Nerin asks about the gap between "good" and the real answer → the user reveals the gap is about performing ease → Nerin catches the specific phrase, names a pattern she's been tracking (precise about others, vague about self), and stops short. Three artifacts, one thread. The visitor watches Nerin build understanding in real time.
+
+#### Artifact 4: Portrait Excerpt
+
+**Content:** Real portrait text from `portrait-excerpt.md`. Two sections: "The Selective Gate" (strategic filtering) and "The Undertow" (protective barrier pattern). 3-4 sentences total — curated for maximum emotional impact.
+
+**Visual:** Blockquote-style. Serif typography. No chat bubble framing. Wide margins, generous line-height (1.7+). Subtle decorative element (thin left border, opening quotation mark, or similar). The visual shift from chat bubbles to prose signals "the conversation produced this."
+
+**Hover (desktop):** Floating label: *"From Léa's portrait, March 2026"* — confirms authenticity.
+
+#### Artifact 5: Archetype Card + Carousel
+
+**Content:** 4-6 real archetypes with names, OCEAN codes, `GeometricSignature` renders, and 1-line descriptions. Featured card is the same person as the portrait excerpt (consistency).
+
+**Visual:** Featured card large and centered. Additional cards in horizontal swipe carousel below. Dot indicators. Card design matches the real archetype card component used in the product.
+
+**Interaction:** Horizontal swipe (touch) or arrow buttons (desktop). Snap to card.
+
+#### Artifact 6: Today Screen Mockup
+
+**Content:** A mock of the Today page showing:
+- Mood dot row: 7 dots for the week (mix of filled/empty, colored by mood)
+- One journal entry snippet: "Woke up thinking about that conversation with Mom. Not sure why." (handwritten feel)
+- Morning check-in prompt (optional)
+
+**Visual:** Device frame — `rounded-2xl`, subtle shadow, light background. Status bar hint at top (time, battery — minimal). The visitor should feel like they're looking at someone's actual phone screen.
+
+**Hover (desktop):** Mood dots pulse gently. Journal entry gets soft highlight.
+
+#### Artifact 7: Weekly Letter Snippet
+
+**Content:**
+
+> **Sunday, March 22**
+>
+> You were quieter this week — not withdrawn, just turned inward. You do this when something's working itself out below the surface 🫧
+>
+> You don't need anyone to name it yet. You just need the space to let it settle.
+
+**Voice notes:** "You do this when" — Nerin speaking from accumulated knowledge, pattern recognition across weeks. "Below the surface" — ocean language that's earned, not decorative. "The space to let it settle" — recognition, not advice. The 🫧 is quiet and fits the underwater settling image.
+
+**Visual:** Slides up like a notification card. Letter aesthetic (matching Phase 2 treatment). Nerin attribution.
+
+#### Artifact 8: Relationship Letter Fragment
+
+**Content:**
+
+> **Léa & Marco**
+>
+> You both care deeply — but you show it in ways the other can't always read. Léa leads with words; Marco leads with action. When Léa says "we need to talk," Marco hears criticism. When Marco fixes something without being asked, Léa doesn't see love — she sees avoidance of the conversation 🐚
+>
+> Neither of you is wrong. You're fluent in different languages about the same thing.
+
+**Voice notes:** Specific behavioral examples build toward insight without announcing it. "Fluent in different languages" is a coined phrase — short, vivid, specific to this dynamic (per portrait guide: 2-4 coined phrases per portrait). The 🐚 fits — a shell held between two people. The observation is relational, not prescriptive. Nerin doesn't tell them what to do. She names what she sees.
+
+**Visual:** Letter aesthetic. Two names as a header. The two-name format instantly signals "this is about a relationship."
+
+#### Artifact 9: Deeper Conversation Callback
+
+**Content:** Nerin in a chat bubble, referencing something from weeks prior. The "Week 5" timestamp signals this is an ongoing relationship, not a one-time interaction. This artifact callbacks to the Artifact 1-3 thread — Nerin is still holding what she noticed.
+
+> Remember that thing you said about making everything look easy? I've been sitting with that for a few weeks now 🤿
+>
+> I think the ease isn't performance. It's protection. And I think you're starting to figure out who you don't need to protect yourself from.
+
+**Voice notes:** "That thing you said" — direct callback to Artifact 2's user reply and Artifact 3's observation. The visitor recognizes the thread from Phase 1 — proof that Nerin holds things across weeks, not just within a conversation. "I've been sitting with that" — per persona: speaks from experience, honest about her process. "I think... I think..." — two partial observations, building, not announcing (per Director rules: keep observations partial). The 🤿 returns — a dive that started in Artifact 1 is still going. The loop closes visually (dark bg, chat bubble) AND narratively (same thread, deeper insight).
+
+**Visual:** Chat bubble (Nerin variant) — same styling as Phase 1. Background darkens back to `slate-900`. The visual callback to Phase 1 creates the loop: the product is cyclical, Nerin keeps going, the conversation never really ended.
+
+#### Reassurance Section: "Before you start"
+
+Three cards addressing real visitor fears. Not feature explanations — emotional reassurance.
+
+| Card | Fear Addressed | Content |
+|------|---------------|---------|
+| 1 | "Will this be awkward?" | **~30 minutes. It's a conversation, not a test.** No quiz. No checkboxes. Nerin asks about your life. Most people are surprised how natural it feels. |
+| 2 | "Is it really free?" | **Free. No credit card. No paywall.** Portrait, archetype, relationship letters, daily check-ins, weekly letters — all free. |
+| 3 | "What if I don't like what it says?" | **It's a mirror, not a judgment.** Nerin describes patterns you'll recognize. Nothing clinical. Private by default — only you see it. |
+
+**Visual:** Clean, neutral background (white or `slate-50`). Three cards in a row (desktop) or stacked (mobile). **Intentionally still** — no spring physics, no slide-in, just a simple fade. The sudden calm after Phase 3's dynamism amplifies trust. These are facts, not theatre.
+
+### 16.15 Deliberate Deviations from PRD
+
+| PRD Requirement | Homepage Decision | Rationale | Required PRD Amendment |
+|----------------|-------------------|-----------|----------------------|
+| **FR84:** Homepage includes a founder story block with portrait excerpt and first-person statement | **Removed from homepage.** Founder story moves to `/about` page | In the show-not-explain timeline, the product artifacts carry the emotional weight that the founder story previously carried. Adding a founder section after the timeline answers a question nobody is asking — the product already spoke for itself. The founder story is valuable but belongs where visitors seek it (about page), not where they're deciding to act (homepage) | Yes — amend FR84 to: "The founder story block appears on the `/about` page. The homepage does not include a founder section." |
+| **FR62:** Portrait excerpt within first 40% of scroll depth | **Portrait at artifact 4 of 9 (~35-40% of timeline scroll).** Additionally, the split-layout means the auth panel is always visible, so "conversion-relevant content" is always at 0% | Met in spirit. The split layout changes the math — with the form always visible, scroll depth is less correlated with conversion delay | No amendment needed |
+| **FR63:** Nerin conversation preview showing character depth | **Artifact 3: Nerin observation at ~25% scroll** | Met. The mid-conversation observation demonstrates Nerin's depth through a real example, not a pitch | No amendment needed |
+
+### 16.16 Implementation Gap (Current → Target)
 
 | Area | Current | Target | Work Required |
 |------|---------|--------|---------------|
-| **Hero headline** | "Not a personality quiz. A conversation." | Transformation-oriented hook, no test references (FR59, FR60) | Rewrite headline + subtitle in HeroSection. Copy TBD |
-| **Hero subtitle** | "A portrait of who you are that no test has ever given you." | "A 15-turn conversation with an AI that writes you a personal letter about who you are (~30 minutes)." | Text update in HeroSection |
-| **Hero tagline** | "30 MIN · NO ACCOUNT · JUST TALKING" | "~30 MIN · FREE · NO CREDIT CARD" — signup required but zero-cost experience | Text update in HeroSection |
-| **Hero CTA** | "Begin Your Dive ↓" (scroll-down) | Single "Start your conversation" → `/chat` (FR61) | Replace scroll CTA with nav link |
-| **Scroll indicator** | Bouncing chevron | Remove | Delete ScrollIndicator component usage |
-| **Beat compression** | 14 beats | ~8 beats (FR62 portrait at 40%) | Reorder ConversationFlow beats, remove 5-6 beats, add 2 new beats |
-| **Portrait excerpt position** | Beat 8 (~57%) | Beat 3 (~33%) (FR62) | Move HoroscopeVsPortraitComparison earlier, simplify to portrait-only |
-| **Nerin depth preview** | None | New beat showing Nerin observation (FR63) | New ChatBubble content with bold headline |
-| **Test-comparison framing** | ComparisonCard at Beat 4 | Remove (FR59) | Remove ComparisonCard from flow |
-| **Trait explorer** | TraitStackEmbed at Beat 6 | Remove from homepage (move to results page) | Remove TraitStackEmbed from flow |
-| **Zero-cost reassurance in founder beat** | Vincent reveals portrait, no pricing | Add zero-cost reassurance ("The whole thing is free. No paywall.") — replaces old PWYW transparency ask | Update Beat 6 content |
-| **Subscription on homepage** | None | **Explicitly do not mention subscription on homepage.** €9.99/mo conversation lives inside the Sunday weekly letter at Week 3+, not here | Enforce in copy review — no "subscribe" copy on homepage |
-| **Anonymous path reference** | Tagline says "NO ACCOUNT" (false — signup required post-FR50) | "NO CREDIT CARD" — honest about signup, honest about zero cost | Tagline + any body copy references |
-| **Sticky bottom CTA** | None | Mobile-only sticky bar after scrolling past hero | New `StickyConversionBar` component, IntersectionObserver |
-| **"How It Works"** | None | 3-step fear-resolving section (FR64) | New `HowItWorks` component |
-| **Archetype Gallery** | None | 3-4 example archetype cards | New `ArchetypeGalleryPreview` component |
-| **Final CTA section** | None | ConversationCTA after last beat | Add section after last MessageGroup |
-| **OG meta tags** | Test-frame headline | Updated to match new hero (FR59) | Update meta tags in route |
+| **Page architecture** | Full-width single-column conversational scroll | Split layout: 60/40 timeline + sticky auth panel (desktop), stacked + sticky bottom CTA (mobile) | New page structure. `StickyAuthPanel`, `MobileHero`, `StickyBottomCTA`, `HomepageTimeline` |
+| **Animation library** | CSS `@keyframes` + IntersectionObserver | Framer Motion (`motion` v12) — scroll-linked phase transitions, word-by-word reveals, spring physics, drag carousel | Add `motion` imports. Replace `MessageGroup` IntersectionObserver with `whileInView`. Phase transitions via `useScroll` + `useTransform` |
+| **Content structure** | 14-beat Nerin-User-Vincent dialogue in chat bubbles | 9 artifacts across 3 visual phases + reassurance. Chat bubbles (Phase 1) → letter prose (Phase 2) → app mockups (Phase 3) → chat callback | Remove 14-beat structure. Build 3 phase containers with distinct styling. New components for each artifact type |
+| **Hero / auth** | `HeroSection` — full-viewport intro with headline, CTA, OCEAN shapes | `StickyAuthPanel` (desktop) with real signup form + `MobileHero` (mobile) with compact hero | New components. Auth form with email/password fields, validation, submit handler |
+| **Phase 1: Conversation** | Beats 1-6 with embedded ComparisonCard + TraitStackEmbed | 3 artifacts: Nerin opening, user reply, Nerin observation. Word-by-word scroll-reveal. Dark bg | Rewrite content. New animation pattern. Remove ComparisonCard + TraitStackEmbed from flow |
+| **Phase 2: Portrait** | Beat 8 horoscope-vs-portrait comparison | 2 artifacts: standalone portrait excerpt (letter aesthetic) + archetype carousel (4-6 swipeable cards) | `PortraitExcerptBlock` with serif typography. `ArchetypeCarousel` with drag/snap. Warm bg |
+| **Phase 3: World After** | Not present on current homepage | 4 artifacts: Today mockup, weekly letter, relationship letter, deeper conversation. App-mockup aesthetic + dark callback | All new: `TodayScreenMockup`, `WeeklyLetterCard`, `RelationshipLetterFragment`, `DeeperConversationCallback` |
+| **Reassurance** | `HowItWorks` component (if built) or missing | `ReassuranceCards` — 3 fear-resolving cards, renamed "Before you start", intentionally still | Restyle/rename existing or build new |
+| **Positioning/copy** | Want-framing: "Not a personality quiz" | Need-framing: names a gap the visitor already feels. No test references | All copy locked. Dynamic hook (§16.3.1), conversation thread (§16.14 artifacts 1-3), weekly letter, relationship letter, deeper conversation callback — all voice-matched to Nerin persona. Meta tags updated |
+| **Founder section** | Beats 10/10b — Vincent's reveal + portrait excerpt | Removed from homepage. Moved to `/about` | Remove founder beats. Create `/about` page (separate task) |
+| **OG meta tags** | Test-frame references in title + description | Updated to match need-positioning. No test references | Update `head()` in route file |
+| **Scroll tracking** | `DepthScrollProvider` + `DepthMeter` calibrated for 14 beats | Same components, recalibrated for new timeline length | Update scroll percentage calculations |
+| **Data-testid** | Existing `data-testid` on current components | Preserve all existing `data-testid`. Add new ones for new components | Do not remove any `data-testid`. Add to new components |
+| **Performance** | Static content, no API calls. LCP ~2.5s | Static content maintained. Target LCP < 1s. SSR for timeline Phase 1 + auth panel | Ensure Phase 1 + auth panel server-rendered. Phases 2-3 can lazy-load via `whileInView` |
 
 ---
 

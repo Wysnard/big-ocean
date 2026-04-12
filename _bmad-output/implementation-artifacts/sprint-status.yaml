@@ -1,5 +1,5 @@
-# generated: 2026-04-10T15:19:13+0200
-# last_updated: 2026-04-10T15:19:13+0200
+# generated: 2026-04-12T18:00:00+0200
+# last_updated: 2026-04-12T18:00:00+0200
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -31,38 +31,107 @@
 # ===============
 # - Epic transitions to 'in-progress' automatically when first story is created
 # - Stories can be worked in parallel if team capacity allows
-# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-04-10T15:19:13+0200
-last_updated: 2026-04-10T15:19:13+0200
+generated: 2026-04-12T18:00:00+0200
+last_updated: 2026-04-12T18:00:00+0200
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  # Epic 1: Conversation Calibration — 15-Turn Assessment
-  epic-1: done
-  1-1-schema-migration-table-renames: done
-  1-2-repository-and-domain-layer-renames: done
-  1-3-handler-contract-and-frontend-renames: done
-  1-4-fk-column-migration: done
-  1-5-fk-column-code-cascade: done
-  1-6-assessment-turn-count-25-to-15: done
-  1-7-dead-code-cleanup: done
-  epic-1-retrospective: done
+  # Epic 1: Legacy Cleanup & Three-Space Foundation
+  epic-1: backlog
+  1-1-bottomnav-component-and-three-space-route-shells: backlog
+  1-2-dashboard-retirement-and-nav-cleanup: backlog
+  1-3-deprecated-component-and-pwyw-cleanup: backlog
+  1-4-retired-homepage-component-cleanup: backlog
+  epic-1-retrospective: optional
 
-  # Epic 2: Conversation Extension Cleanup
-  epic-2: done
-  2-1-gate-extension-use-case-and-remove-ui-surface: done
+  # Epic 2: Post-Assessment Transition & Portrait Reading
+  epic-2: backlog
+  2-1-show-me-what-you-found-closing-button: backlog
+  2-2-portrait-reading-generating-state-with-nerin-voice: backlog
+  2-3-portrait-reading-copy-and-end-of-letter-transition: backlog
+  2-4-portrait-retry-with-exponential-backoff: backlog
+  2-5-return-seed-and-notification-permission-on-first-me-page-visit: backlog
   epic-2-retrospective: optional
 
-  # Epic 3: Accessibility Foundations
-  epic-3: done
-  3-1-skip-link-and-semantic-landmarks: done
-  3-2-conversation-ui-accessibility: done
-  3-3-results-page-and-portrait-accessibility: done
-  3-4-modal-and-focus-management: done
-  3-5-touch-targets-and-contrast-audit: done
+  # Epic 3: Me Page — Identity Sanctuary
+  epic-3: backlog
+  3-1-me-page-route-and-section-layout: backlog
+  3-2-identity-hero-section: backlog
+  3-3-geometricsignature-component: backlog
+  3-4-your-public-face-section: backlog
+  3-5-subscription-pitch-section: backlog
+  3-6-your-circle-preview-and-account-link: backlog
   epic-3-retrospective: optional
+
+  # Epic 4: Silent Daily Journal & Mood Calendar
+  epic-4: backlog
+  4-1-daily-check-in-data-model-and-api: backlog
+  4-2-checkinform-component: backlog
+  4-3-post-check-in-journal-view-and-week-dots: backlog
+  4-4-mood-calendar-view: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Weekly Letter from Nerin
+  epic-5: backlog
+  5-1-weekly-summary-data-model-and-generation-pipeline: backlog
+  5-2-weekly-letter-reading-view-and-route: backlog
+  5-3-weekly-letter-inline-card-and-notifications: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Circle & Invite Ceremony
+  epic-6: backlog
+  6-1-circle-page-and-person-cards: backlog
+  6-2-invite-ceremony-dialog: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Relationship Letter — Living Relational Space
+  epic-7: backlog
+  7-1-usersummary-data-model-and-generator: backlog
+  7-2-relationship-letter-generation-with-usersummary: backlog
+  7-3-relationship-letter-page-living-relational-space: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Subscription & Conversation Extension
+  epic-8: backlog
+  8-1-subscription-event-types-and-entitlement-derivation: backlog
+  8-2-subscription-checkout-flow: backlog
+  8-3-conversation-extension-activation: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Homepage Conversion
+  epic-9: backlog
+  9-1-split-layout-architecture-and-sticky-auth-panel: backlog
+  9-2-dynamic-hook-with-animated-gradient: backlog
+  9-3-timeline-phases-product-artifacts: backlog
+  9-4-reassurance-section-and-fear-addressing-cards: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Transactional Emails & Re-Engagement
+  epic-10: backlog
+  10-1-three-lifecycle-email-templates: backlog
+  10-2-relationship-letter-ready-notification: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11: Cost Ceiling & Operational Safety
+  epic-11: backlog
+  11-1-cost-ceiling-architecture: backlog
+  epic-11-retrospective: optional
+
+  # Epic 12: Knowledge Library (SEO)
+  epic-12: backlog
+  12-1-knowledge-library-architecture-and-first-10-pages: backlog
+  12-2-knowledge-library-content-expansion: backlog
+  epic-12-retrospective: optional
+
+  # Epic 13: Accessibility Foundations (MVP)
+  epic-13: backlog
+  13-1-skip-link-landmarks-and-heading-hierarchy: backlog
+  13-2-conversation-and-chat-accessibility: backlog
+  13-3-results-portrait-and-modal-accessibility: backlog
+  epic-13-retrospective: optional
