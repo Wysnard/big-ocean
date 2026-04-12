@@ -20,7 +20,7 @@ import {
 	PortraitRepository,
 } from "@workspace/domain";
 import { PortraitGenerationError } from "@workspace/domain/repositories/portrait-generator.repository";
-import { Effect, Layer } from "effect";
+import { Effect, Fiber, Layer, TestClock, TestContext } from "effect";
 import { vi } from "vitest";
 import { generateFullPortrait } from "../generate-full-portrait.use-case";
 
@@ -214,26 +214,38 @@ describe("generateFullPortrait Use Case (queue-based)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should insert failed portrait when LLM generation fails", () =>
+	it.scoped("should insert failed portrait when LLM generation fails after 3 attempts", () =>
 		Effect.gen(function* () {
+			// Track actual effect executions (not mock function calls) since
+			// Effect.retry re-runs the same Effect instance, not the function
+			let llmExecCount = 0;
 			mockPortraitGen.generatePortrait.mockReturnValue(
-				Effect.fail(
-					new PortraitGenerationError({
-						sessionId: "session_123",
-						message: "LLM error",
-					}),
-				),
+				Effect.suspend(() => {
+					llmExecCount++;
+					return Effect.fail(
+						new PortraitGenerationError({
+							sessionId: "session_123",
+							message: "LLM error",
+						}),
+					);
+				}),
 			);
 
-			yield* generateFullPortrait({ sessionId: "session_123" });
+			const fiber = yield* Effect.fork(generateFullPortrait({ sessionId: "session_123" }));
+			// Advance TestClock past exponential backoff delays (5s + 10s)
+			yield* TestClock.adjust("5 seconds");
+			yield* TestClock.adjust("10 seconds");
+			yield* Fiber.join(fiber);
 
+			// Exponential backoff: 3 total attempts (initial + 2 retries)
+			expect(llmExecCount).toBe(3);
 			expect(mockPortraitRepo.insertFailed).toHaveBeenCalledWith({
 				assessmentResultId: "result_456",
 				tier: "full",
 				failedAt: expect.any(Date),
 			});
 			expect(mockPortraitRepo.insertWithContent).not.toHaveBeenCalled();
-		}).pipe(Effect.provide(createTestLayer())),
+		}).pipe(Effect.provide(Layer.merge(createTestLayer(), TestContext.TestContext))),
 	);
 
 	it.effect("should call portrait generator with correct input shape", () =>

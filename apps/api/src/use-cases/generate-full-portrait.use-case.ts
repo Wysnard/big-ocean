@@ -24,7 +24,7 @@ import {
 	PortraitRepository,
 } from "@workspace/domain";
 import type { EvidenceInput } from "@workspace/domain/types/evidence";
-import { Effect } from "effect";
+import { Effect, Schedule } from "effect";
 
 export interface GenerateFullPortraitInput {
 	readonly sessionId: string;
@@ -109,7 +109,10 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 				})),
 			})
 			.pipe(
-				Effect.retry({ times: 2 }),
+				Effect.retry({
+					times: 2,
+					schedule: Schedule.exponential("5 seconds"),
+				}),
 				Effect.map((content) => ({ _tag: "success" as const, content })),
 				Effect.catchAll((error) =>
 					Effect.sync(() => {

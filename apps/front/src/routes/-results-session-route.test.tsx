@@ -66,6 +66,11 @@ vi.mock("@/hooks/usePortraitStatus", () => ({
 	usePortraitStatus: () => ({ data: null, refetch: vi.fn() }),
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+	useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+	useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 vi.mock("@/components/ResultsAuthGate", () => ({
 	ResultsAuthGate: () => <div data-testid="mock-auth-gate">Mock Auth Gate</div>,
 }));
