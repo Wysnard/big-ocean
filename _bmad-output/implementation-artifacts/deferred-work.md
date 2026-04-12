@@ -60,3 +60,10 @@
 ## Deferred from: code review of 2-4-portrait-retry-with-exponential-backoff (2026-04-12)
 
 - Successful retry transitions user out of portrait view with no generating indicator — when retry succeeds and status goes to "generating", the `view=portrait` branch falls through to ProfileView because neither "failed" nor "fullContent" matches. Pre-existing UX flow, not introduced by this change.
+
+## Deferred from: code review of 10-1-three-lifecycle-email-templates (2026-04-12)
+
+- Entitlement exclusion only checks `extended_conversation_unlocked` purchase events — when additional purchase types are added, the eligibility query in `lifecycle-email.drizzle.repository.ts` will need to include them
+- `thresholdDays` / `thresholdHours` config values accept 0 or negative — no validation at config level; 0 would make all users immediately eligible. Pre-existing pattern across all lifecycle email threshold configs.
+- Hardcoded engagement thresholds (>= 3 return visits OR >= 1 relationship letter) embedded in raw SQL in `lifecycle-email.drizzle.repository.ts:109-112` — not configurable, requires code change to adjust
+- `Effect.tap` callbacks in all three lifecycle use-cases mutate `emailsSent++` via closure — correct in current sequential for-loop but would race under concurrent `Effect.forEach`

@@ -1,5 +1,5 @@
 /**
- * Email Handler (Story 31-7, Story 38-1, Story 38-2)
+ * Email Handler (Story 31-7, Story 38-1, Story 10-1)
  *
  * Thin HTTP adapter for email-related operations.
  */
@@ -9,13 +9,13 @@ import { BigOceanApi } from "@workspace/contracts";
 import { Effect } from "effect";
 import { checkCheckIn } from "../use-cases/check-check-in.use-case";
 import { checkDropOff } from "../use-cases/check-drop-off.use-case";
-import { checkRecapture } from "../use-cases/check-recapture.use-case";
+import { checkSubscriptionNudge } from "../use-cases/check-subscription-nudge.use-case";
 
 export const EmailGroupLive = HttpApiBuilder.group(BigOceanApi, "email", (handlers) =>
 	Effect.gen(function* () {
 		return handlers
 			.handle("checkDropOff", () => checkDropOff)
 			.handle("checkCheckIn", () => checkCheckIn)
-			.handle("checkRecapture", () => checkRecapture);
+			.handle("checkSubscriptionNudge", () => checkSubscriptionNudge);
 	}),
 );

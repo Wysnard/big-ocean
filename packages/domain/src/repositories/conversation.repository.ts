@@ -259,31 +259,6 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 		 * @param sessionId - Session to mark
 		 */
 		readonly markCheckInEmailSent: (sessionId: string) => Effect.Effect<void, DatabaseError, never>;
-
-		/**
-		 * Find sessions eligible for deferred portrait recapture email (Story 38-2)
-		 *
-		 * Returns sessions where:
-		 * - status is 'completed'
-		 * - updatedAt is older than thresholdDays ago
-		 * - recaptureEmailSentAt IS NULL (not yet emailed)
-		 * - userId IS NOT NULL (authenticated sessions only)
-		 * - user has NO portrait_unlocked purchase event (AC: #4)
-		 *
-		 * JOINs with user table to include email and name.
-		 *
-		 * @param thresholdDays - Days since completion before session is eligible for recapture
-		 */
-		readonly findRecaptureEligibleSessions: (
-			thresholdDays: number,
-		) => Effect.Effect<Array<RecaptureEligibleSession>, DatabaseError, never>;
-
-		/**
-		 * Mark a session as having had its recapture email sent (Story 38-2)
-		 *
-		 * @param sessionId - Session to mark
-		 */
-		readonly markRecaptureEmailSent: (sessionId: string) => Effect.Effect<void, DatabaseError, never>;
 	}
 >() {}
 
@@ -298,15 +273,6 @@ export interface DropOffSession {
 
 /** Check-in eligible session record returned by findCheckInEligibleSessions (Story 38-1) */
 export interface CheckInEligibleSession {
-	readonly sessionId: string;
-	readonly userId: string;
-	readonly userEmail: string;
-	readonly userName: string;
-	readonly updatedAt: Date;
-}
-
-/** Recapture eligible session record returned by findRecaptureEligibleSessions (Story 38-2) */
-export interface RecaptureEligibleSession {
 	readonly sessionId: string;
 	readonly userId: string;
 	readonly userEmail: string;

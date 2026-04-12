@@ -30,6 +30,7 @@ CREATE TABLE "user" (
 	"email" text NOT NULL UNIQUE,
 	"email_verified" boolean DEFAULT false NOT NULL,
 	"image" text,
+	"subscription_nudge_email_sent_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -87,7 +88,6 @@ CREATE TABLE "conversations" (
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"drop_off_email_sent_at" timestamp,
 	"check_in_email_sent_at" timestamp,
-	"recapture_email_sent_at" timestamp,
 	"parent_conversation_id" uuid,
 	"conversation_type" "conversation_type" NOT NULL DEFAULT 'assessment',
 	"metadata" jsonb

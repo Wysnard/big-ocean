@@ -2,7 +2,7 @@
  * Check Check-in Use Case (Story 38-1)
  *
  * Finds completed sessions that are past the check-in threshold (~2 weeks)
- * and sends a one-shot Nerin check-in email referencing the last conversation territory.
+ * and sends a one-shot Nerin check-in email referencing the strongest recent theme.
  *
  * Fire-and-forget: email failures are logged but never propagate.
  * One-shot: sessions are marked before email send to prevent duplicates.
@@ -10,6 +10,7 @@
 
 import {
 	AppConfig,
+	AssessmentResultRepository,
 	ConversationRepository,
 	ExchangeRepository,
 	LoggerRepository,
@@ -17,6 +18,7 @@ import {
 } from "@workspace/domain";
 import { renderCheckInEmail } from "@workspace/infrastructure/email-templates/nerin-check-in";
 import { Effect } from "effect";
+import { deriveCheckInTheme } from "./lifecycle-email-copy";
 
 /**
  * Check for completed sessions eligible for Nerin check-in and send emails.
@@ -27,6 +29,7 @@ export const checkCheckIn = Effect.gen(function* () {
 	const config = yield* AppConfig;
 	const sessionRepo = yield* ConversationRepository;
 	const exchangeRepo = yield* ExchangeRepository;
+	const assessmentResultRepo = yield* AssessmentResultRepository;
 	const emailRepo = yield* ResendEmailRepository;
 	const logger = yield* LoggerRepository;
 
@@ -45,24 +48,34 @@ export const checkCheckIn = Effect.gen(function* () {
 
 	for (const session of eligibleSessions) {
 		// Mark session BEFORE sending to prevent duplicate emails on concurrent runs
-		yield* sessionRepo.markCheckInEmailSent(session.sessionId).pipe(
+		const marked = yield* sessionRepo.markCheckInEmailSent(session.sessionId).pipe(
+			Effect.as(true),
 			Effect.catchAll((err) => {
 				logger.error("Failed to mark check-in email sent", {
 					sessionId: session.sessionId,
 					error: err instanceof Error ? err.message : String(err),
 				});
-				return Effect.void;
+				return Effect.succeed(false);
 			}),
 		);
 
-		// Look up last territory from assessment exchanges
-		const _exchanges = yield* exchangeRepo
-			.findBySession(session.sessionId)
-			.pipe(Effect.catchAll(() => Effect.succeed([] as Array<{ selectedTerritory: string | null }>)));
+		if (!marked) {
+			continue;
+		}
 
-		// Story 43-1: selectedTerritory removed from exchange table.
-		// Territory description for check-in email defaults to generic.
-		const territoryDescription = "your personality";
+		const exchanges = yield* exchangeRepo
+			.findBySession(session.sessionId)
+			.pipe(Effect.catchAll(() => Effect.succeed([])));
+		const assessmentResult = yield* assessmentResultRepo.getBySessionId(session.sessionId).pipe(
+			Effect.catchAll((err) => {
+				logger.error("Failed to fetch assessment result for check-in theme (fail-open)", {
+					sessionId: session.sessionId,
+					error: err instanceof Error ? err.message : String(err),
+				});
+				return Effect.succeed(null);
+			}),
+		);
+		const territoryDescription = deriveCheckInTheme(exchanges, assessmentResult);
 
 		const resultsUrl = `${config.frontendUrl}/results`;
 

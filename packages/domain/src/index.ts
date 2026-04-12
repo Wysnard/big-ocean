@@ -169,7 +169,6 @@ export {
 	type CheckInEligibleSession,
 	ConversationRepository,
 	type DropOffSession,
-	type RecaptureEligibleSession,
 } from "./repositories/conversation.repository";
 // Conversation evidence repository (Story 10.1)
 export {
@@ -186,6 +185,10 @@ export {
 	type ExchangeUpdateInput,
 } from "./repositories/exchange.repository";
 export { FacetEvidenceRepository } from "./repositories/facet-evidence.repository";
+export {
+	LifecycleEmailRepository,
+	type SubscriptionNudgeEligibleUser,
+} from "./repositories/lifecycle-email.repository";
 export {
 	type LoggerMethods,
 	LoggerRepository,

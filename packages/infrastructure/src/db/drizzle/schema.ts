@@ -83,6 +83,7 @@ export const user = pgTable("user", {
 	email: text("email").notNull().unique(),
 	emailVerified: boolean("email_verified").default(false).notNull(),
 	image: text("image"),
+	subscriptionNudgeEmailSentAt: timestamp("subscription_nudge_email_sent_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
 		.defaultNow()
@@ -174,7 +175,6 @@ export const conversation = pgTable(
 			.notNull(),
 		dropOffEmailSentAt: timestamp("drop_off_email_sent_at"),
 		checkInEmailSentAt: timestamp("check_in_email_sent_at"),
-		recaptureEmailSentAt: timestamp("recapture_email_sent_at"),
 		parentConversationId: uuid("parent_conversation_id"),
 		conversationType: conversationTypeEnum("conversation_type").notNull().default("assessment"),
 		metadata: jsonb("metadata"),
