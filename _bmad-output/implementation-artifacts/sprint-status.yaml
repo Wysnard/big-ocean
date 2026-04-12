@@ -1,5 +1,5 @@
 # generated: 2026-04-12T18:00:00+0200
-# last_updated: 2026-04-12T22:00:00+0200
+# last_updated: 2026-04-12
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-12T18:00:00+0200
-last_updated: 2026-04-12T18:36:40Z
+last_updated: 2026-04-12
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -51,11 +51,11 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Post-Assessment Transition & Portrait Reading
-  epic-2: backlog
+  epic-2: in-progress
   2-1-show-me-what-you-found-closing-button: backlog
   2-2-portrait-reading-generating-state-with-nerin-voice: backlog
   2-3-portrait-reading-copy-and-end-of-letter-transition: backlog
-  2-4-portrait-retry-with-exponential-backoff: backlog
+  2-4-portrait-retry-with-exponential-backoff: done
   2-5-return-seed-and-notification-permission-on-first-me-page-visit: backlog
   epic-2-retrospective: optional
 
@@ -105,8 +105,8 @@ development_status:
   epic-8-retrospective: optional
 
   # Epic 9: Homepage Conversion
-  epic-9: backlog
-  9-1-split-layout-architecture-and-sticky-auth-panel: backlog
+  epic-9: in-progress
+  9-1-split-layout-architecture-and-sticky-auth-panel: review
   9-2-dynamic-hook-with-animated-gradient: backlog
   9-3-timeline-phases-product-artifacts: backlog
   9-4-reassurance-section-and-fear-addressing-cards: backlog

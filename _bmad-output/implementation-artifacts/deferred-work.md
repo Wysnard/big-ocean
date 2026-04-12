@@ -57,6 +57,10 @@
 
 - 4 component files are now orphaned dead code with zero imports: `ChatBubble.tsx`, `MessageGroup.tsx`, `HoroscopeVsPortraitComparison.tsx`, `RelationshipCta.tsx` in `apps/front/src/components/home/`. Intentionally preserved per story spec's DO-NOT-DELETE list — these components are needed for the Epic 9 split-layout homepage redesign.
 
+## Deferred from: code review of 2-4-portrait-retry-with-exponential-backoff (2026-04-12)
+
+- Successful retry transitions user out of portrait view with no generating indicator — when retry succeeds and status goes to "generating", the `view=portrait` branch falls through to ProfileView because neither "failed" nor "fullContent" matches. Pre-existing UX flow, not introduced by this change.
+
 ## Deferred from: code review of 10-1-three-lifecycle-email-templates (2026-04-12)
 
 - Entitlement exclusion only checks `extended_conversation_unlocked` purchase events — when additional purchase types are added, the eligibility query in `lifecycle-email.drizzle.repository.ts` will need to include them
