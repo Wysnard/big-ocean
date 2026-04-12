@@ -20,7 +20,6 @@ So that my personality profile feels personal and understandable.
 
 ## Tasks / Subtasks
 
-<<<<<<< HEAD
 - [x] Task 1: Extend FacetResultSchema with level fields (AC: #3)
   - [x] 1.1: Update `packages/domain/src/schemas/result-schemas.ts`:
     - Add `level: S.String` — the two-letter facet level code (e.g., "OV", "CP")
