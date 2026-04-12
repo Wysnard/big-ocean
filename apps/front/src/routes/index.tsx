@@ -1,13 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChatInputBar } from "../components/home/ChatInputBar";
-import { DepthMeter } from "../components/home/DepthMeter";
-import { DepthScrollProvider } from "../components/home/DepthScrollProvider";
-import { FinalCta } from "../components/home/FinalCta";
-import { HeroSection } from "../components/home/HeroSection";
-import { HowItWorks } from "../components/home/HowItWorks";
+import { SplitHomepageLayout } from "../components/home/SplitHomepageLayout";
+import { StickyAuthPanel } from "../components/home/StickyAuthPanel";
+import { StickyBottomCTA } from "../components/home/StickyBottomCTA";
+import { TimelinePlaceholder } from "../components/home/TimelinePlaceholder";
 import { PageMain } from "../components/PageMain";
+import { getServerSession } from "../lib/auth.server";
 
 export const Route = createFileRoute("/")({
+	beforeLoad: async () => {
+		try {
+			const session = await getServerSession();
+			return { isAuthenticated: !!session?.user };
+		} catch {
+			return { isAuthenticated: false };
+		}
+	},
+	loader: async ({ context }) => ({
+		isAuthenticated: context.isAuthenticated,
+	}),
 	component: HomePage,
 	head: () => ({
 		meta: [
@@ -33,24 +43,15 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+	const { isAuthenticated } = Route.useLoaderData();
+
 	return (
 		<PageMain>
-			<DepthScrollProvider>
-				{/* Hero — full-viewport intro */}
-				<HeroSection />
-
-				{/* Conversation section removed — Epic 9 will implement split-layout redesign */}
-
-				{/* How It Works — scannable 3-step overview */}
-				<HowItWorks />
-
-				{/* Final conversion CTA */}
-				<FinalCta />
-
-				{/* Fixed UI elements */}
-				<DepthMeter />
-				<ChatInputBar />
-			</DepthScrollProvider>
+			<SplitHomepageLayout
+				timeline={<TimelinePlaceholder />}
+				authPanel={<StickyAuthPanel isAuthenticated={isAuthenticated} />}
+				bottomCta={<StickyBottomCTA isAuthenticated={isAuthenticated} />}
+			/>
 		</PageMain>
 	);
 }
