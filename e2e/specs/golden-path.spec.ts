@@ -11,12 +11,12 @@ const goldenPassword = "OceanDepth#Nerin42xQ";
 /**
  * Golden Path Journey
  *
- * Landing → Sign Up → Verify Email → Login → /chat (authenticated, creates session) → Message → Farewell → View Results → Results → Share → Public Profile → Continue Chat (read-only) → Dashboard
+ * Landing → Sign Up → Verify Email → Login → /chat (authenticated, creates session) → Message → Farewell → View Results → Results → Share → Public Profile → Dashboard
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
  */
-test("golden path: landing → signup → chat → results → share → public profile → continue chat → dashboard @critical", async ({
+test("golden path: landing → signup → chat → results → share → public profile → dashboard @critical", async ({
 	page,
 	apiContext,
 }) => {
@@ -194,7 +194,7 @@ test("golden path: landing → signup → chat → results → share → public 
 		await page.getByTestId("public-profile-cta").waitFor({ state: "visible" });
 	});
 
-	await test.step("navigate back to results and click Continue Chat", async () => {
+	await test.step("navigate to dashboard via Quick Actions and verify identity card", async () => {
 		await page.goto(`/results/${sessionId}`);
 		// Dismiss PWYW modal if it appears on revisit
 		const pwywRevisit = page.getByTestId("pwyw-modal");
@@ -207,47 +207,14 @@ test("golden path: landing → signup → chat → results → share → public 
 			state: "visible",
 			timeout: 15_000,
 		});
-		await page.getByTestId("results-continue-chat").scrollIntoViewIfNeeded();
-		await page.getByTestId("results-continue-chat").click();
-		await page.waitForURL(/\/chat\?sessionId=/, { timeout: 10_000 });
-	});
 
-	await test.step("chat page loads for completed session", async () => {
-		// For completed sessions, chat may show read-only messages or redirect to results.
-		// Wait for either chat-bubble (read-only mode) or redirect back to results.
-		const chatBubble = page.locator("[data-slot='chat-bubble']").first();
-		const loaded = await chatBubble
-			.waitFor({ state: "visible", timeout: 15_000 })
-			.then(() => true)
-			.catch(() => false);
-
-		if (loaded) {
-			// Chat input should NOT be visible for completed sessions
-			await expect(page.locator("[data-slot='chat-input']")).not.toBeVisible();
-		}
-
-		// Navigate back to results for the profile step
-		await page.goto(`/results/${sessionId}`);
-		// Dismiss PWYW if it appears
-		const pwywChat = page.getByTestId("pwyw-modal");
-		await pwywChat.waitFor({ state: "visible", timeout: 5_000 }).catch(() => {});
-		if (await pwywChat.isVisible()) {
-			await page.locator("[data-slot='dialog-close']").click();
-			await pwywChat.waitFor({ state: "hidden", timeout: 5_000 });
-		}
-		await page.getByTestId("archetype-hero-section").waitFor({
-			state: "visible",
-			timeout: 15_000,
-		});
-	});
-
-	await test.step("dashboard shows identity card with archetype", async () => {
-		// Use client-side navigation via user nav dropdown (avoids auth race on cold page.goto)
-		const avatarButton = page.getByTestId("user-nav-avatar");
-		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
-		await avatarButton.click();
-		await page.getByRole("menuitem", { name: "Dashboard" }).click();
-		await page.waitForURL(/\/dashboard\/?$/);
+		// Click "View Dashboard" in Quick Actions card
+		const dashboardLink = page
+			.locator("[data-slot='quick-actions-card']")
+			.getByRole("link", { name: "View Dashboard" });
+		await dashboardLink.scrollIntoViewIfNeeded();
+		await dashboardLink.click();
+		await page.waitForURL(/\/dashboard\/?$/, { timeout: 10_000 });
 		await page.getByTestId("dashboard-identity-card").waitFor({
 			state: "visible",
 			timeout: 10_000,
