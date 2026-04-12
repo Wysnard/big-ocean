@@ -136,6 +136,17 @@ export interface AppConfigService {
 	/** Days after assessment completion before sending the subscription conversion nudge (default: 21) */
 	readonly subscriptionNudgeThresholdDays: number;
 
+	// ─── Push Notifications (Story 10-2) ───────────────────────────────
+
+	/** VAPID public key used by the browser Push API */
+	readonly pushVapidPublicKey?: string;
+
+	/** VAPID private key used to sign Web Push requests */
+	readonly pushVapidPrivateKey?: Redacted.Redacted<string>;
+
+	/** Contact subject used in VAPID JWT claims, typically a mailto: URL */
+	readonly pushVapidSubject?: string;
+
 	// ─── Cost Guard Configuration (Story 31-6) ─────────────────────────
 
 	/** Per-session LLM cost limit in cents (default: 2000 = $0.20, matching NFR6) */

@@ -9,7 +9,14 @@ import { HttpApiBuilder } from "@effect/platform";
 import { BigOceanApi } from "@workspace/contracts";
 import { AuthenticatedUser } from "@workspace/domain";
 import { Effect } from "effect";
-import { completeFirstVisit, deleteAccount, getFirstVisitState } from "../use-cases/index";
+import {
+	completeFirstVisit,
+	consumePushNotifications,
+	deleteAccount,
+	getFirstVisitState,
+	removePushSubscription,
+	savePushSubscription,
+} from "../use-cases/index";
 
 export const AccountGroupLive = HttpApiBuilder.group(BigOceanApi, "account", (handlers) =>
 	Effect.gen(function* () {
@@ -37,6 +44,31 @@ export const AccountGroupLive = HttpApiBuilder.group(BigOceanApi, "account", (ha
 					return {
 						success: result.success,
 					};
+				}),
+			)
+			.handle("savePushSubscription", ({ payload }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* savePushSubscription({
+						userId,
+						endpoint: payload.endpoint,
+						keys: payload.keys,
+					});
+				}),
+			)
+			.handle("removePushSubscription", ({ payload }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* removePushSubscription({
+						userId,
+						endpoint: payload.endpoint,
+					});
+				}),
+			)
+			.handle("consumePushNotifications", () =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* consumePushNotifications(userId);
 				}),
 			);
 	}),

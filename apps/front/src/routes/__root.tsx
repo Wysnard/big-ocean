@@ -13,6 +13,7 @@ import Header from "../components/Header";
 import { NotFound } from "../components/NotFound";
 import { PageMain, SkipToContentLink } from "../components/PageMain";
 import { ThemeProvider } from "../components/ThemeProvider";
+import { usePushSubscriptionSync } from "../hooks/use-push-subscription-sync";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
@@ -80,6 +81,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	usePushSubscriptionSync();
+
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<head>

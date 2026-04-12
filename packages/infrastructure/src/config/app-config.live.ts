@@ -116,6 +116,13 @@ const configSchema = Config.all({
 		Config.withDefault(21),
 	),
 
+	// Push notifications (Story 10-2)
+	pushVapidPublicKey: Config.string("PUSH_VAPID_PUBLIC_KEY").pipe(Config.withDefault("")),
+	pushVapidPrivateKey: Config.redacted("PUSH_VAPID_PRIVATE_KEY").pipe(
+		Config.withDefault(Redacted.make("")),
+	),
+	pushVapidSubject: Config.string("PUSH_VAPID_SUBJECT").pipe(Config.withDefault("")),
+
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: Config.number("SESSION_COST_LIMIT_CENTS").pipe(Config.withDefault(2000)),
 
@@ -148,11 +155,19 @@ const configSchema = Config.all({
  * If required variables are missing, the effect will fail with ConfigError
  * before the program runs, providing fail-fast behavior.
  */
+const normalizeVapidConfig = (config: Effect.Effect.Success<typeof configSchema>) => ({
+	...config,
+	pushVapidPublicKey: config.pushVapidPublicKey || undefined,
+	pushVapidPrivateKey:
+		Redacted.value(config.pushVapidPrivateKey).length > 0 ? config.pushVapidPrivateKey : undefined,
+	pushVapidSubject: config.pushVapidSubject || undefined,
+});
+
 export const AppConfigLive = Layer.effect(
 	AppConfig,
 	Effect.gen(function* () {
 		const config = yield* configSchema;
-		return config;
+		return normalizeVapidConfig(config);
 	}),
 );
 
@@ -170,4 +185,5 @@ export const AppConfigLive = Layer.effect(
  * });
  * ```
  */
-export const loadConfig: Effect.Effect<AppConfigService, ConfigError.ConfigError> = configSchema;
+export const loadConfig: Effect.Effect<AppConfigService, ConfigError.ConfigError> =
+	configSchema.pipe(Effect.map(normalizeVapidConfig));

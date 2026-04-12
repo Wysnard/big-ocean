@@ -241,6 +241,17 @@ export {
 export type { InsertPurchaseEvent } from "./repositories/purchase-event.repository";
 // Purchase event repository (Story 13.1)
 export { PurchaseEventRepository } from "./repositories/purchase-event.repository";
+export {
+	PushNotificationQueueRepository,
+	type QueuedPushNotification,
+	type QueuePushNotificationInput,
+} from "./repositories/push-notification-queue.repository";
+export {
+	type PushSubscriptionInput,
+	type PushSubscriptionKeys,
+	type PushSubscriptionRecord,
+	PushSubscriptionRepository,
+} from "./repositories/push-subscription.repository";
 // QR token repository (Story 34-1)
 export { QrTokenRepository } from "./repositories/qr-token.repository";
 export {
@@ -271,6 +282,12 @@ export {
 export { UserAccountRepository } from "./repositories/user-account.repository";
 // Waitlist repository (Story 15.3)
 export { WaitlistRepository } from "./repositories/waitlist.repository";
+export {
+	PushDeliveryError,
+	PushSubscriptionExpiredError,
+	PushUnavailableError,
+	WebPushRepository,
+} from "./repositories/web-push.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)
 export {
 	type AnalyzerResponse,

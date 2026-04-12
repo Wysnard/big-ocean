@@ -16,6 +16,15 @@ export interface RelationshipAnalysisReadyEmailProps {
 	readonly analysisUrl: string;
 }
 
+export function buildRelationshipLetterReadySubject(partnerName: string): string {
+	const safePartnerName =
+		partnerName
+			.trim()
+			// biome-ignore lint/suspicious/noControlCharactersInRegex: intentional sanitization of control chars from user input
+			.replace(/[\r\n\x00-\x1f]/g, "") || "Someone";
+	return `${safePartnerName} and you - Nerin has something to share`;
+}
+
 /**
  * Renders the relationship analysis ready notification email as an HTML string.
  *
@@ -33,7 +42,7 @@ export function renderRelationshipAnalysisReadyEmail(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Your relationship analysis is ready</title>
+  <title>Your relationship letter is ready</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #0a0e1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0e1a;">
@@ -53,17 +62,17 @@ ${renderEmailHeader()}
                 Hey ${escapeHtml(displayName)},
               </h2>
               <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #94a3b8;">
-                Something special just surfaced. Your relationship analysis with <strong style="color: #c4b5fd;">${escapeHtml(partnerName)}</strong> is ready to explore.
+                Something intimate just surfaced. Your relationship letter with <strong style="color: #c4b5fd;">${escapeHtml(partnerName)}</strong> is ready.
               </p>
               <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.6; color: #94a3b8;">
-                Nerin looked at both of your conversations and found the currents running between you. Come see what he discovered.
+                Nerin has written a letter about your dynamic. Open it when you have a quiet minute.
               </p>
               <!-- CTA Button -->
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                 <tr>
                   <td style="border-radius: 8px; background-color: #7c3aed;">
                     <a href="${escapeHtml(analysisUrl)}" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: 500; color: #ffffff; text-decoration: none; border-radius: 8px;">
-                      View your analysis
+                      Read your letter
                     </a>
                   </td>
                 </tr>
@@ -74,7 +83,7 @@ ${renderEmailHeader()}
           <tr>
             <td style="padding: 32px 0 0 0; text-align: center;">
               <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #475569;">
-                You received this email because you participated in a relationship analysis on big ocean.
+                You received this email because you participated in a relationship letter on big ocean.
               </p>
             </td>
           </tr>

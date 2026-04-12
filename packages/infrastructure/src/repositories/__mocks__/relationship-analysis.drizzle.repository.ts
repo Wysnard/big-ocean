@@ -79,8 +79,10 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.succeed(
 				const analysis = store.get(analysisId);
 				if (!analysis) return null;
 				return {
+					userAId: analysis.userAId,
 					userAEmail: "usera@test.com",
 					userAName: "User A",
+					userBId: analysis.userBId,
 					userBEmail: "userb@test.com",
 					userBName: "User B",
 				};

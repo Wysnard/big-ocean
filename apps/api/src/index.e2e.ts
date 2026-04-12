@@ -34,11 +34,14 @@ import {
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	PushNotificationQueueDrizzleRepositoryLive,
+	PushSubscriptionDrizzleRepositoryLive,
 	QrTokenDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorMockRepositoryLive,
 	ResendEmailResendRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
+	WebPushFetchRepositoryLive,
 } from "@workspace/infrastructure";
 import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
@@ -134,12 +137,15 @@ const RepositoryLayers = Layer.mergeAll(
 	PortraitDrizzleRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	PushNotificationQueueDrizzleRepositoryLive,
+	PushSubscriptionDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
 	RelationshipAnalysisGeneratorMockRepositoryLive,
 	QrTokenDrizzleRepositoryLive,
 	UserAccountDrizzleRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 	ResendEmailResendRepositoryLive,
+	WebPushFetchRepositoryLive,
 );
 
 /**
