@@ -52,3 +52,7 @@
 - W3: Task 7.3/7.4 manual mobile-sized walkthrough and light/dark contrast verification not completed. Acknowledged in story completion notes.
 - W4: No regression tests for shared `Input` min-height change (`h-9` → `min-h-11`) or `Button` size contract changes. Task 6.1 says to add tests if changes are material.
 - W5: No reduced-motion regression tests for `motion-reduce:animate-none` additions to dialog, sheet, and tooltip. Motion behavior is hard to test in JSDOM; manual verification is more appropriate.
+
+## Deferred from: code review of 1-4-retired-homepage-component-cleanup (2026-04-12)
+
+- 4 component files are now orphaned dead code with zero imports: `ChatBubble.tsx`, `MessageGroup.tsx`, `HoroscopeVsPortraitComparison.tsx`, `RelationshipCta.tsx` in `apps/front/src/components/home/`. Intentionally preserved per story spec's DO-NOT-DELETE list — these components are needed for the Epic 9 split-layout homepage redesign.
