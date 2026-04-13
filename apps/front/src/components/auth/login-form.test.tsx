@@ -137,7 +137,7 @@ describe("LoginForm", () => {
 		});
 	});
 
-	it("navigates to /profile by default after login", async () => {
+	it("navigates to /today by default after login", async () => {
 		mockSignInEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
 		renderLoginForm();
@@ -149,7 +149,7 @@ describe("LoginForm", () => {
 		fireEvent.submit(screen.getByRole("button", { name: "Sign In" }));
 
 		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/dashboard" });
+			expect(mockNavigate).toHaveBeenCalledWith({ to: "/today" });
 		});
 	});
 

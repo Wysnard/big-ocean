@@ -17,6 +17,9 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as TodayIndexRouteImport } from './routes/today/index'
+import { Route as MeIndexRouteImport } from './routes/me/index'
+import { Route as CircleIndexRouteImport } from './routes/circle/index'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as ResultsConversationSessionIdRouteImport } from './routes/results/$conversationSessionId'
@@ -65,6 +68,21 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TodayIndexRoute = TodayIndexRouteImport.update({
+  id: '/today/',
+  path: '/today/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeIndexRoute = MeIndexRouteImport.update({
+  id: '/me/',
+  path: '/me/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CircleIndexRoute = CircleIndexRouteImport.update({
+  id: '/circle/',
+  path: '/circle/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -118,13 +136,16 @@ const RelationshipAnalysisIdRitualRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/circle/': typeof CircleIndexRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/me/': typeof MeIndexRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/today/': typeof TodayIndexRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
@@ -137,13 +158,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/circle': typeof CircleIndexRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/me': typeof MeIndexRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/today': typeof TodayIndexRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
@@ -157,13 +181,16 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/circle/': typeof CircleIndexRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/me/': typeof MeIndexRoute
   '/reset-password': typeof ResetPasswordRoute
   '/results': typeof ResultsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/today/': typeof TodayIndexRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
@@ -178,13 +205,16 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/circle/'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/me/'
     | '/reset-password'
     | '/results'
     | '/settings'
     | '/signup'
+    | '/today/'
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
@@ -197,13 +227,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/circle'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/me'
     | '/reset-password'
     | '/results'
     | '/settings'
     | '/signup'
+    | '/today'
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
@@ -216,13 +249,16 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/circle/'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
+    | '/me/'
     | '/reset-password'
     | '/results'
     | '/settings'
     | '/signup'
+    | '/today/'
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
@@ -236,13 +272,16 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CircleIndexRoute: typeof CircleIndexRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  MeIndexRoute: typeof MeIndexRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResultsRoute: typeof ResultsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  TodayIndexRoute: typeof TodayIndexRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   DevComponentsRoute: typeof DevComponentsRoute
   DevEmailsRoute: typeof DevEmailsRoute
@@ -309,6 +348,27 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/today/': {
+      id: '/today/'
+      path: '/today'
+      fullPath: '/today/'
+      preLoaderRoute: typeof TodayIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/': {
+      id: '/me/'
+      path: '/me'
+      fullPath: '/me/'
+      preLoaderRoute: typeof MeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/circle/': {
+      id: '/circle/'
+      path: '/circle'
+      fullPath: '/circle/'
+      preLoaderRoute: typeof CircleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -390,13 +450,16 @@ const ResultsRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CircleIndexRoute: CircleIndexRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  MeIndexRoute: MeIndexRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResultsRoute: ResultsRouteWithChildren,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  TodayIndexRoute: TodayIndexRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   DevComponentsRoute: DevComponentsRoute,
   DevEmailsRoute: DevEmailsRoute,

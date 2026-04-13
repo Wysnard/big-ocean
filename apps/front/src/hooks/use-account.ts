@@ -9,6 +9,20 @@ import { useMutation } from "@tanstack/react-query";
 import { Effect } from "effect";
 import { makeApiClient } from "../lib/api-client";
 
+export function fetchFirstVisitState() {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.account.getFirstVisitState({});
+	}).pipe(Effect.runPromise);
+}
+
+export function completeFirstVisit() {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.account.completeFirstVisit({});
+	}).pipe(Effect.runPromise);
+}
+
 /**
  * Delete the authenticated user's account
  */

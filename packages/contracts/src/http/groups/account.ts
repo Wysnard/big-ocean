@@ -17,13 +17,33 @@ export const DeleteAccountResponseSchema = S.Struct({
 	success: S.Boolean,
 });
 
+export const FirstVisitStateResponseSchema = S.Struct({
+	firstVisitCompleted: S.Boolean,
+});
+
 /**
  * Account API Group
  *
  * Routes:
+ * - GET /api/account/first-visit - Read authenticated user's first-visit flag
+ * - POST /api/account/first-visit/complete - Mark first visit complete
  * - DELETE /api/account - Delete authenticated user's account
  */
 export const AccountGroup = HttpApiGroup.make("account")
+	.add(
+		HttpApiEndpoint.get("getFirstVisitState", "/first-visit")
+			.addSuccess(FirstVisitStateResponseSchema)
+			.addError(AccountNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.post("completeFirstVisit", "/first-visit/complete")
+			.addSuccess(FirstVisitStateResponseSchema)
+			.addError(AccountNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.add(
 		HttpApiEndpoint.del("deleteAccount", "/")
 			.addSuccess(DeleteAccountResponseSchema)
@@ -36,3 +56,4 @@ export const AccountGroup = HttpApiGroup.make("account")
 
 // Export TypeScript types for frontend use
 export type DeleteAccountResponse = typeof DeleteAccountResponseSchema.Type;
+export type FirstVisitStateResponse = typeof FirstVisitStateResponseSchema.Type;

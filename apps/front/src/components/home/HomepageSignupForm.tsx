@@ -55,7 +55,7 @@ export function HomepageSignupForm() {
 					value.password,
 					value.name,
 					undefined,
-					`${window.location.origin}/dashboard`,
+					`${window.location.origin}/today`,
 				);
 
 				await navigate({

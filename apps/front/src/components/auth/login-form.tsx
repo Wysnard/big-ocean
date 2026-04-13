@@ -58,7 +58,7 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 						params: { conversationSessionId: anonymousSessionId },
 					});
 				} else {
-					await navigate({ to: "/dashboard" });
+					await navigate({ to: "/today" });
 				}
 			} catch (err) {
 				// 403 = email not verified — redirect to verify-email page (AC6, ADR-24)

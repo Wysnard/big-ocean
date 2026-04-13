@@ -6,6 +6,7 @@
  * are designed to be easily testable.
  */
 
+export { completeFirstVisit } from "./complete-first-visit.use-case";
 export {
 	type CreateShareableProfileInput,
 	type CreateShareableProfileOutput,
@@ -24,6 +25,7 @@ export {
 	type GetFinalizationStatusInput,
 	getFinalizationStatus,
 } from "./get-finalization-status.use-case";
+export { getFirstVisitState } from "./get-first-visit-state.use-case";
 export {
 	type GetMessageEvidenceInput,
 	getMessageEvidence,

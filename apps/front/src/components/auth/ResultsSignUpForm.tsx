@@ -76,7 +76,7 @@ export function ResultsSignUpForm({
 					value.password,
 					undefined,
 					sessionId,
-					`${window.location.origin}/dashboard`,
+					`${window.location.origin}/today`,
 				);
 				await refreshSession();
 				onSuccess();

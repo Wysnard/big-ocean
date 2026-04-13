@@ -22,6 +22,20 @@ export class UserAccountRepository extends Context.Tag("UserAccountRepository")<
 	UserAccountRepository,
 	{
 		/**
+		 * Read whether the authenticated user's first Me-page visit has been completed.
+		 *
+		 * @returns false for users who have not yet completed their first visit
+		 */
+		readonly getFirstVisitCompleted: (userId: string) => Effect.Effect<boolean, DatabaseError>;
+
+		/**
+		 * Mark the authenticated user's first Me-page visit as completed.
+		 *
+		 * @returns true if the user existed and was updated, false if the user was not found
+		 */
+		readonly markFirstVisitCompleted: (userId: string) => Effect.Effect<boolean, DatabaseError>;
+
+		/**
 		 * Delete a user account and all associated data.
 		 *
 		 * All child rows are removed via PostgreSQL onDelete: "cascade" FKs.

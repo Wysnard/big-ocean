@@ -42,7 +42,7 @@ function VerifyEmailPage() {
 		try {
 			await authClient.sendVerificationEmail({
 				email,
-				callbackURL: `${window.location.origin}/dashboard`,
+				callbackURL: `${window.location.origin}/today`,
 			});
 			setResendSuccess(true);
 		} catch {

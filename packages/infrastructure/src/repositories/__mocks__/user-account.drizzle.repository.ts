@@ -8,8 +8,12 @@ import { DatabaseError } from "@workspace/domain/errors/http.errors";
 import { UserAccountRepository } from "@workspace/domain/repositories/user-account.repository";
 import { Effect, Layer } from "effect";
 
-/** Set of user IDs that "exist" in the mock */
-const existingUsers = new Set<string>();
+interface MockUserRecord {
+	firstVisitCompleted: boolean;
+}
+
+/** In-memory users keyed by id */
+const existingUsers = new Map<string, MockUserRecord>();
 
 /** Track deleted users for test assertions */
 const deletedUsers = new Set<string>();
@@ -18,8 +22,24 @@ const deletedUsers = new Set<string>();
 let shouldFailWithDbError = false;
 
 export const addMockUser = (userId: string) => {
-	existingUsers.add(userId);
+	existingUsers.set(userId, { firstVisitCompleted: false });
 };
+
+export const setMockFirstVisitCompleted = (userId: string, firstVisitCompleted: boolean) => {
+	const existing = existingUsers.get(userId);
+	if (!existing) {
+		existingUsers.set(userId, { firstVisitCompleted });
+		return;
+	}
+
+	existingUsers.set(userId, { ...existing, firstVisitCompleted });
+};
+
+export const getMockFirstVisitCompleted = (userId: string) =>
+	existingUsers.get(userId)?.firstVisitCompleted ?? false;
+
+export const wasMockFirstVisitMarked = (userId: string) =>
+	existingUsers.get(userId)?.firstVisitCompleted ?? false;
 
 export const wasMockUserDeleted = (userId: string) => deletedUsers.has(userId);
 
@@ -36,6 +56,26 @@ export const resetMockUsers = () => {
 export const UserAccountDrizzleRepositoryLive = Layer.succeed(
 	UserAccountRepository,
 	UserAccountRepository.of({
+		getFirstVisitCompleted: (userId: string) => {
+			if (shouldFailWithDbError) {
+				return Effect.fail(new DatabaseError({ message: "mock database error" }));
+			}
+			return Effect.sync(() => existingUsers.get(userId)?.firstVisitCompleted ?? false);
+		},
+		markFirstVisitCompleted: (userId: string) => {
+			if (shouldFailWithDbError) {
+				return Effect.fail(new DatabaseError({ message: "mock database error" }));
+			}
+			return Effect.sync(() => {
+				const existing = existingUsers.get(userId);
+				if (!existing) {
+					return false;
+				}
+
+				existingUsers.set(userId, { ...existing, firstVisitCompleted: true });
+				return true;
+			});
+		},
 		deleteAccount: (userId: string) => {
 			if (shouldFailWithDbError) {
 				return Effect.fail(new DatabaseError({ message: "mock database error" }));

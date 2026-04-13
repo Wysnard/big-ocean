@@ -58,7 +58,7 @@ development_status:
 
   # Epic 1: Legacy Cleanup & Three-Space Foundation
   epic-1: in-progress
-  1-1-bottomnav-component-and-three-space-route-shells: backlog
+  1-1-bottomnav-component-and-three-space-route-shells: in-progress
   1-2-dashboard-retirement-and-nav-cleanup: backlog
   1-3-deprecated-component-and-pwyw-cleanup: done
   1-4-retired-homepage-component-cleanup: done
