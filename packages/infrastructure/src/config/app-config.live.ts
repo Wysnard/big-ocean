@@ -115,6 +115,7 @@ const configSchema = Config.all({
 	subscriptionNudgeThresholdDays: Config.number("SUBSCRIPTION_NUDGE_THRESHOLD_DAYS").pipe(
 		Config.withDefault(21),
 	),
+	recaptureThresholdDays: Config.number("RECAPTURE_THRESHOLD_DAYS").pipe(Config.withDefault(3)),
 
 	// Push notifications (Story 10-2)
 	pushVapidPublicKey: Config.string("PUSH_VAPID_PUBLIC_KEY").pipe(Config.withDefault("")),

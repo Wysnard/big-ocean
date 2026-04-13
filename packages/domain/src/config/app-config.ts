@@ -136,6 +136,9 @@ export interface AppConfigService {
 	/** Days after assessment completion before sending the subscription conversion nudge (default: 21) */
 	readonly subscriptionNudgeThresholdDays: number;
 
+	/** Days after portrait is ready before sending the recapture email (default: 3) */
+	readonly recaptureThresholdDays: number;
+
 	// ─── Push Notifications (Story 10-2) ───────────────────────────────
 
 	/** VAPID public key used by the browser Push API */
