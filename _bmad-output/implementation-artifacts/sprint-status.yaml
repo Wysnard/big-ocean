@@ -33,6 +33,15 @@
 # - Stories can be worked in parallel if team capacity allows
 # - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+#
+# EPIC DOCUMENTS:
+# ===============
+# - epics.md: Main MVP epic breakdown (Epics 1-13) — ACTIVE
+# - epics-innovation-strategy.md: Innovation strategy (is-epic-1 to is-epic-7) — COMPLETED (retros Feb 2026)
+# - epics-conversation-pipeline.md: V1 pipeline rewrite (cp-epic-1 to cp-epic-5) — COMPLETED (superseded)
+# - epics-conversation-pacing.md: Pacing pipeline (pacing-epic-1 to pacing-epic-5) — COMPLETED (superseded by director model)
+# - epics-nerin-steering-format.md: Steering format (steering-epic-1 to steering-epic-2) — COMPLETED (superseded by director model)
+# - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
 generated: 2026-04-12T18:00:00+0200
 last_updated: 2026-04-13
@@ -42,6 +51,11 @@ tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
+
+  # ============================================================
+  # ACTIVE: epics.md — Main MVP Epic Breakdown
+  # ============================================================
+
   # Epic 1: Legacy Cleanup & Three-Space Foundation
   epic-1: in-progress
   1-1-bottomnav-component-and-three-space-route-shells: backlog
@@ -135,3 +149,189 @@ development_status:
   13-2-conversation-and-chat-accessibility: backlog
   13-3-results-portrait-and-modal-accessibility: backlog
   epic-13-retrospective: optional
+
+  # ============================================================
+  # COMPLETED: epics-innovation-strategy.md — Innovation Strategy
+  # Retros: epic-10-retro (Feb 23), epic-11-retro (Feb 24), epic-12-15-retro (Feb 28)
+  # ============================================================
+
+  # IS Epic 1: Conversational Assessment (global prefix 10)
+  is-epic-1: done
+  is-1-1-assessment-pipeline-schema-and-migration: done
+  is-1-2-anonymous-session-and-auth-foundation: done
+  is-1-3-chat-ui-with-streaming: done
+  is-1-4-sequential-effect-pipeline-and-nerin-integration: done
+  is-1-5-conversanalyzer-haiku-integration: done
+  is-1-6-formula-functions-and-confidence-scoring: done
+  is-1-7-formula-driven-steering: done
+  is-1-8-cost-tracking-and-rate-limiting: done
+  is-epic-1-retrospective: done
+
+  # IS Epic 2: Finalization & Scoring (global prefix 11)
+  is-epic-2: done
+  is-2-1-finalization-trigger-and-auth-gate: done
+  is-2-2-finanalyzer-sonnet-integration: done
+  is-2-3-score-computation-and-ocean-code-generation: done
+  is-2-4-archetype-system: done
+  is-2-5-finalization-pipeline-orchestration: done
+  is-epic-2-retrospective: done
+
+  # IS Epic 3: Results Experience (global prefix 12)
+  is-epic-3: done
+  is-3-1-results-page-and-trait-display: done
+  is-3-2-bidirectional-evidence-highlighting: done
+  is-3-3-teaser-portrait-generation-and-display: done
+  is-epic-3-retrospective: done
+
+  # IS Epic 4: Monetization & Full Portrait (global prefix 13)
+  is-epic-4: done
+  is-4-1-purchase-events-schema-and-capability-derivation: done
+  is-4-2-polar-sh-checkout-and-webhook-integration: done
+  is-4-3-full-portrait-async-generation: done
+  is-epic-4-retrospective: done
+
+  # IS Epic 5: Relationship Analysis (global prefix 14)
+  is-epic-5: done
+  is-5-1-relationship-credits-and-purchase-flow: done
+  is-5-2-invitation-system: done
+  is-5-3-invitee-assessment-flow: done
+  is-5-4-relationship-analysis-generation: done
+  is-epic-5-retrospective: done
+
+  # IS Epic 6: Growth & Operational Safety (global prefix 15)
+  is-epic-6: done
+  is-6-1-shareable-profile-and-public-url: done
+  is-6-2-archetype-card-generation: done
+  is-6-3-waitlist-and-circuit-breaker: done
+  is-epic-6-retrospective: done
+
+  # IS Epic 7: Privacy & Compliance (Phase 2)
+  is-epic-7: backlog
+  is-7-1-encryption-at-rest: backlog
+  is-7-2-gdpr-deletion-and-portability: backlog
+  is-7-3-comprehensive-audit-logging: backlog
+  is-epic-7-retrospective: optional
+
+  # ============================================================
+  # COMPLETED: epics-conversation-pipeline.md — Conversation Pipeline V1 Rewrite
+  # Superseded by conversation-pacing and director-model pipelines
+  # ============================================================
+
+  # CP Epic 1: Consistent Scoring & Results Accuracy (global prefix 16)
+  cp-epic-1: done
+  cp-1-1-migrate-display-use-cases-to-read-persisted-results: done
+  cp-1-2-delete-legacy-scoring-system: done
+  cp-1-3-tune-steering-parameters-and-add-observability: done
+  cp-1-4-dead-code-cleanup: done
+  cp-epic-1-retrospective: done
+
+  # CP Epic 2: Natural Conversation Steering (global prefix 17)
+  cp-epic-2: done
+  cp-2-1-all-30-facets-steering-with-ocean-round-robin-tiebreaker: done
+  cp-2-2-micro-intent-realizer: done
+  cp-2-3-domain-streak-computation-and-conversanalyzer-retry-bump: done
+  cp-epic-2-retrospective: done
+
+  # CP Epic 3: Smarter Evidence, Better Scores (global prefix 18)
+  cp-epic-3: done
+  cp-3-1-evidence-v2-schema-and-conversanalyzer-prompt-update: done
+  cp-3-2-rewrite-compute-facet-metrics-for-evidence-v2: done
+  cp-3-3-rolling-evidence-budget-and-cap-enforcement: done
+  cp-3-4-rewrite-finalization-pipeline-with-staged-idempotency: done
+  cp-3-5-delete-finanalyzer-infrastructure: done
+  cp-3-6-update-portrait-generators-to-use-conversation-evidence: done
+  cp-epic-3-retrospective: done
+
+  # CP Epic 4: Portrait Quality & Recognition (global prefix 19)
+  cp-epic-4: done
+  cp-4-1-remove-quote-constraint-from-portrait-prompts: done
+  cp-4-2-portrait-telemetry-placeholder: done
+  cp-epic-4-retrospective: done
+
+  # CP Epic 5: Conversation Evidence Review (global prefix 20)
+  cp-epic-5: backlog
+  cp-5-1-evidence-annotations-api-endpoint: backlog
+  cp-5-2-conversation-review-ui-with-inline-annotations: backlog
+  cp-epic-5-retrospective: optional
+
+  # ============================================================
+  # COMPLETED: epics-conversation-pacing.md — Conversation Pacing Pipeline
+  # Superseded by director model architecture
+  # ============================================================
+
+  # Pacing Epic 1: Conversation State Foundation (global prefix 23)
+  pacing-epic-1: done
+  pacing-1-1-pipeline-domain-types: done
+  pacing-1-2-territory-catalog-evolution-and-band-mapping: done
+  pacing-1-3-exchange-table-and-schema-migration: done
+  pacing-epic-1-retrospective: done
+
+  # Pacing Epic 2: User State Extraction (global prefix 24)
+  pacing-epic-2: done
+  pacing-2-1-conversanalyzer-v2-schemas-and-repository-methods: done
+  pacing-2-2-three-tier-extraction-pipeline: done
+  pacing-epic-2-retrospective: done
+
+  # Pacing Epic 3: Adaptive Pacing & Territory Scoring (global prefix 25)
+  pacing-epic-3: done
+  pacing-3-1-e-target-pacing-formula: done
+  pacing-3-2-territory-scorer: done
+  pacing-3-3-territory-selector: done
+  pacing-epic-3-retrospective: done
+
+  # Pacing Epic 4: Conversational Intelligence (global prefix 26)
+  pacing-epic-4: done
+  pacing-4-1-observation-focus-strength-formulas-and-per-domain-confidence: done
+  pacing-4-2-observation-gating-and-competition: done
+  pacing-4-3-move-governor: done
+  pacing-epic-4-retrospective: done
+
+  # Pacing Epic 5: Prompt Composition & Pipeline Integration (global prefix 27)
+  pacing-epic-5: done
+  pacing-5-1-character-bible-decomposition: done
+  pacing-5-2-prompt-builder: done
+  pacing-5-3-pipeline-integration: done
+  pacing-epic-5-retrospective: done
+
+  # ============================================================
+  # COMPLETED: epics-nerin-steering-format.md — Nerin Steering Format
+  # Superseded by director model architecture
+  # ============================================================
+
+  # Steering Epic 1: Desire-Framed Steering System (global prefix 28)
+  steering-epic-1: done
+  steering-1-1-territory-catalog-enrichment: done
+  steering-1-2-common-layer-reform: done
+  steering-1-3-intent-observation-templates-and-pressure-modifiers: done
+  steering-1-4-prompt-builder-skeleton-swap: done
+  steering-epic-1-retrospective: done
+
+  # Steering Epic 2: Bridge Transitions & Contextual Mirrors (global prefix 29)
+  steering-epic-2: done
+  steering-2-1-bridge-intent-and-governor-integration: done
+  steering-2-2-bridge-templates-and-threading-dissolution: done
+  steering-2-3-contextual-mirror-system: done
+  steering-2-4-rename-amplify-to-close-and-final-cleanup: done
+  steering-epic-2-retrospective: done
+
+  # ============================================================
+  # COMPLETED: epics-director-model.md — Director Model
+  # Retro: epic-45-retro (Apr 2026)
+  # ============================================================
+
+  # DM Epic 1: Director-Steered Conversations (global prefix 43)
+  dm-epic-1: done
+  dm-1-1-exchange-table-migration-and-schema-changes: done
+  dm-1-2-coverage-analyzer-evidence-to-target-pure-function: done
+  dm-1-3-nerin-director-repository-prompt-and-langchain-implementation: done
+  dm-1-4-nerin-actor-persona-rewrite-prompt-and-repository-adaptation: done
+  dm-1-5-pipeline-orchestrator-rewrite-4-step-sequential-pipeline: done
+  dm-1-6-conversanalyzer-cleanup-strip-user-state-extraction: done
+  dm-epic-1-retrospective: done
+
+  # DM Epic 2: Director Model Codebase Cleanup & Development Tools (global prefix 44)
+  dm-epic-2: done
+  dm-2-1-delete-old-pipeline-code-functions-constants-and-types: done
+  dm-2-2-seed-script-and-exchange-builder-rewrite-for-director-model: done
+  dm-2-3-barrel-export-cleanup-and-conversanalyzer-mock-removal: done
+  dm-epic-2-retrospective: done
