@@ -14,7 +14,7 @@ test.describe("owner access granted", () => {
 		});
 	});
 
-	test("chat resume shows View Results for completed session @critical", async ({
+	test("chat resume shows Show me what you found → for completed session @critical", async ({
 		page,
 		testSessionId,
 	}) => {
@@ -22,8 +22,8 @@ test.describe("owner access granted", () => {
 			await page.goto(`/chat?sessionId=${testSessionId}`);
 		});
 
-		await test.step("verify View Results link and navigate to results", async () => {
-			const viewResultsLink = page.getByRole("link", { name: "View Results" });
+		await test.step("verify Show me what you found → link and navigate to results", async () => {
+			const viewResultsLink = page.getByRole("link", { name: "Show me what you found →" });
 			await viewResultsLink.waitFor({ state: "visible", timeout: 15_000 });
 			await viewResultsLink.click();
 			await page.waitForURL(/\/results\//, { timeout: 15_000 });

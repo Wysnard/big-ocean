@@ -9,7 +9,7 @@ const goldenPassword = "OceanDepth#Nerin42xQ";
 /**
  * Golden Path Journey
  *
- * Landing → Sign Up → Verify Email → Login → /chat (authenticated, creates session) → Message → Farewell → View Results → Results → Share → Public Profile → Today
+ * Landing → Sign Up → Verify Email → Login → /chat (authenticated, creates session) → Message → Farewell → Show me what you found → → Results → Share → Public Profile → Today
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
@@ -64,15 +64,15 @@ test("golden path: landing → signup → chat → results → share → public 
 		await page.getByTestId("chat-send-btn").click();
 
 		// With assessmentTurnCount=1, the 1st user message triggers farewell.
-		// User is authenticated, so "View Results" link appears directly (no auth gate).
-		await page.getByRole("link", { name: "View Results" }).waitFor({
+		// User is authenticated, so "Show me what you found →" link appears directly (no auth gate).
+		await page.getByRole("link", { name: "Show me what you found →" }).waitFor({
 			state: "visible",
 			timeout: 30_000,
 		});
 	});
 
-	await test.step("click View Results to navigate to results page", async () => {
-		const viewResultsLink = page.getByRole("link", { name: "View Results" });
+	await test.step("click Show me what you found → to navigate to results page", async () => {
+		const viewResultsLink = page.getByRole("link", { name: "Show me what you found →" });
 		await viewResultsLink.waitFor({ state: "visible", timeout: 15_000 });
 		await viewResultsLink.click();
 		await page.waitForURL(/\/results\//, { timeout: 15_000 });
@@ -112,15 +112,20 @@ test("golden path: landing → signup → chat → results → share → public 
 		// deterministic test behavior.
 		await seedFullPortrait(sessionId);
 		await page.reload();
-		await page.getByTestId("archetype-hero-section").waitFor({
+
+		// Page is on ?view=portrait, so with portrait data it shows the reading view
+		await page.getByTestId("portrait-reading-mode").waitFor({
 			state: "visible",
 			timeout: 15_000,
 		});
 
-		// PersonalPortrait component should render
-		const portrait = page.locator("[data-slot='personal-portrait']");
-		await portrait.scrollIntoViewIfNeeded();
-		await expect(portrait).toBeVisible();
+		// Navigate back to profile view for share/privacy steps
+		await page.getByTestId("view-full-profile-btn").click();
+		await page.waitForURL(new RegExp(`/results/${sessionId}$`), { timeout: 10_000 });
+		await page.getByTestId("archetype-hero-section").waitFor({
+			state: "visible",
+			timeout: 15_000,
+		});
 	});
 
 	await test.step("wait for auto-generated share link", async () => {

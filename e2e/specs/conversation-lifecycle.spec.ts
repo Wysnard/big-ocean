@@ -71,14 +71,14 @@ test.describe("Conversation Lifecycle", () => {
 			await chatInput.fill("I find deep satisfaction in understanding complex systems and patterns.");
 			await page.getByTestId("chat-send-btn").click();
 
-			// With assessmentTurnCount=1, the first user message triggers farewell + View Results link
+			// With assessmentTurnCount=1, the first user message triggers farewell + Show me what you found → link
 			await page
-				.getByRole("link", { name: "View Results" })
+				.getByRole("link", { name: "Show me what you found →" })
 				.waitFor({ state: "visible", timeout: 30_000 });
 		});
 
-		await test.step("View Results link appears → navigate to results", async () => {
-			const viewResults = page.getByRole("link", { name: "View Results" });
+		await test.step("Show me what you found → link appears → navigate to results", async () => {
+			const viewResults = page.getByRole("link", { name: "Show me what you found →" });
 			await viewResults.waitFor({ state: "visible", timeout: 15_000 });
 			await viewResults.click();
 			await page.waitForURL(/\/results\//, { timeout: 15_000 });
