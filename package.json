@@ -6,6 +6,7 @@
 		"build": "turbo build",
 		"build:api": "turbo run build --filter=api",
 		"build:front": "turbo run build --filter=front",
+		"build:sitemap": "pnpm --filter front run build:sitemap",
 		"dev": "./scripts/dev.sh",
 		"lint": "turbo lint",
 		"typecheck": "turbo typecheck",

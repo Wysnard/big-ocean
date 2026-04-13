@@ -96,3 +96,9 @@
 - Status "ready" with null/empty content falls through to generating state [`$conversationSessionId.tsx`:402] — backend `deriveStatus` prevents this via truthiness check on `portrait?.content`, but frontend has no defensive guard. Unlikely to manifest unless backend logic changes.
 - Retry mutation race — polling may not restart if backend hasn't transitioned [`$conversationSessionId.tsx`:114-128] — if backend returns "failed" before state update propagates after retry, single refetch keeps "failed" status and polling stays stopped.
 - Failed state "Back to your profile" uses `<button>` + `navigate()` instead of `<Link>` [`$conversationSessionId.tsx`:386-393] — violates CLAUDE.md navigation rule. Pre-existing from Story 2.4.
+
+## Deferred from: code review of 12-1-knowledge-library-architecture-and-first-10-pages (2026-04-13)
+
+- W1: `SITE_ORIGIN` (`import.meta.env.VITE_APP_URL`) evaluated at Vite build time — canonical URLs and JSON-LD are baked into the SSR output. Multi-env deploy from same artifact gets wrong origins. Pre-existing pattern used project-wide.
+- W2: Sitemap script is `build-sitemap.mjs` (plain JS) instead of `build-sitemap.ts` as specified in spec file map. Functional but deviates from spec. Workaround from offline workspace environment.
+- W3: `LibraryNav` tier pills all link to `/library` regardless of tier — no tier index routes exist yet. Will need updating when tier-specific listing routes are created.
