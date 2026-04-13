@@ -40,6 +40,8 @@ export { QrTokenGroup } from "./http/groups/qr-token";
 // Relationship HTTP Schemas and Types (Story 14.2, updated Story 34-1)
 export * from "./http/groups/relationship";
 export { RelationshipGroup } from "./http/groups/relationship";
+export * from "./http/groups/today";
+export { TodayGroup } from "./http/groups/today";
 // Auth Middleware (Story 1.4)
 export { AuthMiddleware, OptionalAuthMiddleware } from "./middleware/auth";
 // Shared Schemas & Types

@@ -16,6 +16,7 @@ import { ProfileGroup } from "./groups/profile";
 import { PurchaseGroup } from "./groups/purchase";
 import { QrTokenGroup } from "./groups/qr-token";
 import { RelationshipGroup } from "./groups/relationship";
+import { TodayGroup } from "./groups/today";
 import { WaitlistGroup } from "./groups/waitlist";
 
 /**
@@ -33,6 +34,7 @@ export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(PurchaseGroup.prefix("/api")) // /api/purchase/verify (authenticated)
 	.add(QrTokenGroup.prefix("/api")) // /api/relationship/qr/* (authenticated)
 	.add(RelationshipGroup.prefix("/api")) // /api/relationship/* (authenticated)
+	.add(TodayGroup.prefix("/api")) // /api/today/* (authenticated)
 	.add(WaitlistGroup.prefix("/api")) // /api/waitlist/signup (public)
 	.add(EmailGroup.prefix("/api")) // /api/email/check-drop-off (internal)
 	.add(AccountGroup.prefix("/api")) {} // /api/account (authenticated)

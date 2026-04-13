@@ -41,6 +41,8 @@ export {
 	type GetResultsOutput,
 	getResults,
 } from "./get-results.use-case";
+export { getTodayCheckIn } from "./get-today-check-in.use-case";
+export { getTodayWeekGrid } from "./get-today-week.use-case";
 export {
 	type GetTranscriptInput,
 	type GetTranscriptOutput,
@@ -75,6 +77,10 @@ export {
 	startAuthenticatedConversation,
 	startConversation,
 } from "./start-conversation.use-case";
+export {
+	type SubmitDailyCheckInInput,
+	submitDailyCheckIn,
+} from "./submit-daily-check-in.use-case";
 export {
 	type ToggleProfileVisibilityInput,
 	type ToggleProfileVisibilityOutput,

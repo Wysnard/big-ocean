@@ -34,6 +34,7 @@ export { ConversationDrizzleRepositoryLive } from "./repositories/conversation.d
 export { ConversationEvidenceDrizzleRepositoryLive } from "./repositories/conversation-evidence.drizzle.repository";
 // CostGuard repository implementation
 export { CostGuardRedisRepositoryLive } from "./repositories/cost-guard.redis.repository";
+export { DailyCheckInDrizzleRepositoryLive } from "./repositories/daily-check-in.drizzle.repository";
 // Assessment exchange repository implementation (Story 23-3)
 export { ExchangeDrizzleRepositoryLive } from "./repositories/exchange.drizzle.repository";
 // Facet evidence repository — queries conversation_evidence, maps to SavedFacetEvidence contract
