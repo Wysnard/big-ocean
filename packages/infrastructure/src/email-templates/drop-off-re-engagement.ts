@@ -5,6 +5,8 @@
  * No JSX/React Email — plain template literals for zero-dependency rendering.
  */
 
+import { renderEmailHeader } from "./email-header";
+
 export interface DropOffEmailProps {
 	readonly userName: string;
 	readonly territoryName: string;
@@ -36,9 +38,7 @@ export function renderDropOffEmail(props: DropOffEmailProps): string {
           <!-- Header -->
           <tr>
             <td style="padding: 0 0 32px 0; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #e0e7ff; letter-spacing: -0.02em;">
-                big ocean
-              </h1>
+${renderEmailHeader()}
             </td>
           </tr>
           <!-- Body -->

@@ -8,6 +8,8 @@
  * References the last conversation territory as a tension/theme.
  */
 
+import { renderEmailHeader } from "./email-header";
+
 export interface CheckInEmailProps {
 	readonly userName: string;
 	readonly territoryDescription: string;
@@ -39,9 +41,7 @@ export function renderCheckInEmail(props: CheckInEmailProps): string {
           <!-- Header -->
           <tr>
             <td style="padding: 0 0 32px 0; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #e0e7ff; letter-spacing: -0.02em;">
-                big ocean
-              </h1>
+${renderEmailHeader()}
             </td>
           </tr>
           <!-- Body -->

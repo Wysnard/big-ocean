@@ -22,6 +22,7 @@ import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as ResultsConversationSessionIdRouteImport } from './routes/results/$conversationSessionId'
 import { Route as RelationshipAnalysisIdRouteImport } from './routes/relationship/$analysisId'
 import { Route as PublicProfilePublicProfileIdRouteImport } from './routes/public-profile.$publicProfileId'
+import { Route as DevEmailsRouteImport } from './routes/dev/emails'
 import { Route as DevComponentsRouteImport } from './routes/dev/components'
 import { Route as RelationshipQrTokenRouteImport } from './routes/relationship/qr/$token'
 import { Route as RelationshipAnalysisIdRitualRouteImport } from './routes/relationship/$analysisId_.ritual'
@@ -93,6 +94,11 @@ const PublicProfilePublicProfileIdRoute =
     path: '/public-profile/$publicProfileId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DevEmailsRoute = DevEmailsRouteImport.update({
+  id: '/dev/emails',
+  path: '/dev/emails',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevComponentsRoute = DevComponentsRouteImport.update({
   id: '/dev/components',
   path: '/dev/components',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dev/emails': typeof DevEmailsRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dev/emails': typeof DevEmailsRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dev/emails': typeof DevEmailsRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/dev/components'
+    | '/dev/emails'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
     | '/results/$conversationSessionId'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/dev/components'
+    | '/dev/emails'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
     | '/results/$conversationSessionId'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/dev/components'
+    | '/dev/emails'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
     | '/results/$conversationSessionId'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   DevComponentsRoute: typeof DevComponentsRoute
+  DevEmailsRoute: typeof DevEmailsRoute
   PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute
   RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute
   ChatIndexRoute: typeof ChatIndexRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProfilePublicProfileIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/emails': {
+      id: '/dev/emails'
+      path: '/dev/emails'
+      fullPath: '/dev/emails'
+      preLoaderRoute: typeof DevEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/components': {
       id: '/dev/components'
       path: '/dev/components'
@@ -379,6 +399,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   DevComponentsRoute: DevComponentsRoute,
+  DevEmailsRoute: DevEmailsRoute,
   PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
   RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
   ChatIndexRoute: ChatIndexRoute,
