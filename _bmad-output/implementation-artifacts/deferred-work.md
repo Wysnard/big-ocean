@@ -102,3 +102,9 @@
 - W1: `SITE_ORIGIN` (`import.meta.env.VITE_APP_URL`) evaluated at Vite build time — canonical URLs and JSON-LD are baked into the SSR output. Multi-env deploy from same artifact gets wrong origins. Pre-existing pattern used project-wide.
 - W2: Sitemap script is `build-sitemap.mjs` (plain JS) instead of `build-sitemap.ts` as specified in spec file map. Functional but deviates from spec. Workaround from offline workspace environment.
 - W3: `LibraryNav` tier pills all link to `/library` regardless of tier — no tier index routes exist yet. Will need updating when tier-specific listing routes are created.
+
+## Deferred from: code review of 3-1-me-page-route-and-section-layout (2026-04-13)
+
+- `archived` session status falls through to `/chat` redirect in `/me` route's `beforeLoad` — user with only archived sessions is redirected as if no assessment exists. No archived sessions in production yet; handle when archive feature is built.
+- Pre-existing `overallConfidence * 100` bug in `ArchetypeHeroSection.tsx:177` — does `Math.round(overallConfidence * 100)` but the API returns 0-100 scale (contracts test uses `68`, backend unit test expects `60`). Would display "6800% confidence" with real data. Frontend tests mask this by using 0-1 scale mocks (`0.82`, `0.78`). Not caused by this change.
+- BottomNav "Me" active tab not tested (AC6) — BottomNav mock is a stub rendering `<div data-testid="bottom-nav-root" />` with no tabs. AC6 requires "Me" tab as active but this cannot be verified through current test setup. Pre-existing from Story 1.1.
