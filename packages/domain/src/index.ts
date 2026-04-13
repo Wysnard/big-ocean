@@ -178,6 +178,13 @@ export {
 	ConversationEvidenceRepository,
 } from "./repositories/conversation-evidence.repository";
 export { CostGuardRepository } from "./repositories/cost-guard.repository";
+export {
+	type DailyCheckIn,
+	type DailyCheckInMood,
+	DailyCheckInRepository,
+	type DailyCheckInVisibility,
+	type UpsertDailyCheckIn,
+} from "./repositories/daily-check-in.repository";
 // Assessment exchange repository (Story 23-3)
 export {
 	type ExchangeRecord,

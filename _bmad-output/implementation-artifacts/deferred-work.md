@@ -108,3 +108,10 @@
 - `archived` session status falls through to `/chat` redirect in `/me` route's `beforeLoad` — user with only archived sessions is redirected as if no assessment exists. No archived sessions in production yet; handle when archive feature is built.
 - Pre-existing `overallConfidence * 100` bug in `ArchetypeHeroSection.tsx:177` — does `Math.round(overallConfidence * 100)` but the API returns 0-100 scale (contracts test uses `68`, backend unit test expects `60`). Would display "6800% confidence" with real data. Frontend tests mask this by using 0-1 scale mocks (`0.82`, `0.78`). Not caused by this change.
 - BottomNav "Me" active tab not tested (AC6) — BottomNav mock is a stub rendering `<div data-testid="bottom-nav-root" />` with no tabs. AC6 requires "Me" tab as active but this cannot be verified through current test setup. Pre-existing from Story 1.1.
+
+## Deferred from: code review of 4-1-daily-check-in-data-model-and-api (2026-04-14)
+
+- `toDatabaseError` swallows original error cause — logs the error message but does not attach it as `cause` to the returned `DatabaseError`. Follows existing repo pattern (`conversation.drizzle.repository.ts`). Pre-existing pattern.
+- No `updatedAt` column on `daily_check_ins` — after upsert update, `createdAt` still reflects first insert. No way to know when a record was last modified. Schema design decision not required by spec.
+- No test coverage for `getTodayWeekGrid` ISO week parsing logic — complex date arithmetic (W53, year boundaries) has no unit tests. Story AC only requires submit/upsert tests (Task 6.2).
+- `note` field has no length constraint in contract schema or DB column — accepts arbitrarily large strings. General system boundary concern, not unique to this story.

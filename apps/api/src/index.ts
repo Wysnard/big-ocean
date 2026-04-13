@@ -23,6 +23,7 @@ import {
 	ConversanalyzerAnthropicRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	CostGuardRedisRepositoryLive,
+	DailyCheckInDrizzleRepositoryLive,
 	DatabaseStack,
 	ExchangeDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
@@ -61,6 +62,7 @@ import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive } from "./handlers/purchase";
 import { QrTokenGroupLive } from "./handlers/qr-token";
 import { RelationshipGroupLive } from "./handlers/relationship";
+import { TodayGroupLive } from "./handlers/today";
 import { WaitlistGroupLive } from "./handlers/waitlist";
 import { AuthMiddlewareLive, OptionalAuthMiddlewareLive } from "./middleware/auth.middleware";
 import { createBetterAuthHandler } from "./middleware/better-auth";
@@ -140,6 +142,7 @@ const RepositoryLayers = Layer.mergeAll(
 	PortraitDrizzleRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,
+	DailyCheckInDrizzleRepositoryLive,
 	PushNotificationQueueDrizzleRepositoryLive,
 	PushSubscriptionDrizzleRepositoryLive,
 	RelationshipAnalysisDrizzleRepositoryLive,
@@ -181,6 +184,7 @@ const HttpGroupsLive = Layer.mergeAll(
 	PurchaseGroupLive,
 	QrTokenGroupLive,
 	RelationshipGroupLive,
+	TodayGroupLive,
 	WaitlistGroupLive,
 	EmailGroupLive,
 	LoggerPinoRepositoryLive,

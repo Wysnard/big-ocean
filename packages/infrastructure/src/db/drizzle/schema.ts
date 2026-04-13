@@ -26,6 +26,7 @@ import { PURCHASE_EVENT_TYPES } from "@workspace/domain/types/purchase.types";
 import { defineRelations, sql } from "drizzle-orm";
 import {
 	boolean,
+	date,
 	index,
 	integer,
 	jsonb,
@@ -74,6 +75,18 @@ export const purchaseEventTypeEnum = pgEnum("purchase_event_type", PURCHASE_EVEN
 
 const CONVERSATION_TYPES = ["assessment", "extension", "coach", "journal", "career"] as const;
 export const conversationTypeEnum = pgEnum("conversation_type", CONVERSATION_TYPES);
+export const dailyCheckInMoodEnum = pgEnum("daily_check_in_mood", [
+	"great",
+	"good",
+	"okay",
+	"uneasy",
+	"rough",
+]);
+export const dailyCheckInVisibilityEnum = pgEnum("daily_check_in_visibility", [
+	"private",
+	"inner_circle",
+	"public_pulse",
+]);
 
 // ─── Better Auth tables ───────────────────────────────────────────────────
 
@@ -549,6 +562,27 @@ export const pushNotificationQueue = pgTable(
 	],
 );
 
+// ─── Daily Check-ins (Story 4.1) ───────────────────────────────────────────
+
+export const dailyCheckIns = pgTable(
+	"daily_check_ins",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		localDate: date("local_date").notNull(),
+		mood: dailyCheckInMoodEnum("mood").notNull(),
+		note: text("note"),
+		visibility: dailyCheckInVisibilityEnum("visibility").notNull().default("private"),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		index("daily_check_ins_user_created_idx").on(table.userId, table.createdAt.desc()),
+		uniqueIndex("daily_check_ins_user_local_date_unique").on(table.userId, table.localDate),
+	],
+);
+
 // ─── Portrait Ratings (Story 19-2 — portrait quality telemetry) ───────────
 
 /**
@@ -597,6 +631,7 @@ export const relations = defineRelations(
 		relationshipAnalyses,
 		pushSubscriptions,
 		pushNotificationQueue,
+		dailyCheckIns,
 		portraitRatings,
 	},
 	(r) => ({
@@ -612,6 +647,7 @@ export const relations = defineRelations(
 			}),
 			pushSubscriptions: r.many.pushSubscriptions(),
 			pushNotifications: r.many.pushNotificationQueue(),
+			dailyCheckIns: r.many.dailyCheckIns(),
 		},
 		session: {
 			user: r.one.user({
@@ -746,6 +782,12 @@ export const relations = defineRelations(
 		pushNotificationQueue: {
 			user: r.one.user({
 				from: r.pushNotificationQueue.userId,
+				to: r.user.id,
+			}),
+		},
+		dailyCheckIns: {
+			user: r.one.user({
+				from: r.dailyCheckIns.userId,
 				to: r.user.id,
 			}),
 		},
