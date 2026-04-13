@@ -1,4 +1,5 @@
 import type { GetResultsResponse } from "@workspace/contracts";
+import { GeometricSignature } from "@workspace/ui/components/geometric-signature";
 import { ArchetypeHeroSection } from "@/components/results/ArchetypeHeroSection";
 import { ConfidenceRingCard } from "@/components/results/ConfidenceRingCard";
 import { OceanCodeStrand } from "@/components/results/OceanCodeStrand";
@@ -40,6 +41,10 @@ export function IdentityHeroSection({ results }: IdentityHeroSectionProps) {
 				/* No showScrollIndicator — only for the results hero */
 				/* No sectionLabel — MePageSection owns the landmark */
 			/>
+
+			<div className="flex justify-center px-6 py-4 sm:px-8">
+				<GeometricSignature oceanCode5={results.oceanCode5} size="hero" />
+			</div>
 
 			{/* OceanCodeStrand — full width */}
 			<div className="px-6 pb-6 pt-4 space-y-5 sm:px-8 sm:pb-8">

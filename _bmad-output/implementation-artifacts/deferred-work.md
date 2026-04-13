@@ -115,3 +115,7 @@
 - No `updatedAt` column on `daily_check_ins` — after upsert update, `createdAt` still reflects first insert. No way to know when a record was last modified. Schema design decision not required by spec.
 - No test coverage for `getTodayWeekGrid` ISO week parsing logic — complex date arithmetic (W53, year boundaries) has no unit tests. Story AC only requires submit/upsert tests (Task 6.2).
 - `note` field has no length constraint in contract schema or DB column — accepts arbitrarily large strings. General system boundary concern, not unique to this story.
+
+## Deferred from: code review of story-3.3 (2026-04-14)
+
+- 4-letter `oceanCode` in `archetype-card-template.tsx` renders fallback circle for 5th (neuroticism) shape — `oceanCode: string` prop accepts any length, and `oceanLetters[4]` is `undefined` for 4-char codes, triggering the fallback. Pre-existing: slicing logic and untyped prop pre-date this change.
