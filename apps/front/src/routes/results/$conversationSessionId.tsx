@@ -414,7 +414,7 @@ function ResultsSessionPage() {
 								: undefined
 						}
 					>
-						<PortraitReadingView content={fullContent} onViewFullProfile={handleBackToProfile} />
+						<PortraitReadingView content={fullContent} sessionId={conversationSessionId} />
 					</div>
 				</PageMain>
 			);

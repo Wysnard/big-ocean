@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
 import {
@@ -9,7 +9,7 @@ import {
 
 interface PortraitReadingViewProps {
 	content: string;
-	onViewFullProfile: () => void;
+	sessionId: string;
 }
 
 /**
@@ -19,7 +19,7 @@ interface PortraitReadingViewProps {
  */
 export const PortraitReadingView = memo(function PortraitReadingView({
 	content,
-	onViewFullProfile,
+	sessionId,
 }: PortraitReadingViewProps) {
 	const sections = useMemo(() => splitMarkdownSections(content), [content]);
 	const firstLevel1Index = sections.findIndex((s) => s.level === 1);
@@ -75,17 +75,17 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 					</>
 				)}
 
-				{/* Transition to full profile */}
+				{/* End-of-letter transition (FR95) */}
 				<div className="mt-16 pt-8 border-t border-border/20 text-center">
-					<button
-						type="button"
-						onClick={onViewFullProfile}
+					<Link
+						to="/results/$conversationSessionId"
+						params={{ conversationSessionId: sessionId }}
+						search={{}}
 						data-testid="view-full-profile-btn"
-						className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-heading text-base"
+						className="inline-block text-foreground/60 hover:text-foreground/80 transition-colors font-heading text-base"
 					>
-						See your full personality profile
-						<ArrowRight className="w-4 h-4" />
-					</button>
+						There's more to see →
+					</Link>
 				</div>
 			</article>
 		</div>
