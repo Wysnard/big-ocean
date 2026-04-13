@@ -45,7 +45,6 @@ export function GeometricSignature({
 		<span
 			data-slot="geometric-signature"
 			data-testid="geometric-signature"
-			aria-label={`Personality signature: ${letters.join(" ")}`}
 			className={cn(className)}
 			style={{ display: "inline-flex", alignItems: "center", gap: "0.2em" }}
 		>

@@ -11,10 +11,18 @@ describe("GeometricSignature", () => {
 		expect(container.querySelectorAll("svg")).toHaveLength(5);
 	});
 
-	it('sets the container aria-label for "OCEAR"', () => {
+	it("provides accessible trait labels on each glyph", () => {
 		render(<GeometricSignature oceanCode5={"OCEAR"} size="profile" />);
 
-		expect(screen.getByLabelText("Personality signature: O C E A R")).toBeInTheDocument();
+		for (const trait of [
+			"openness",
+			"conscientiousness",
+			"extraversion",
+			"agreeableness",
+			"neuroticism",
+		]) {
+			expect(screen.getByRole("img", { name: trait })).toBeInTheDocument();
+		}
 	});
 
 	it("renders trait-labeled image wrappers in OCEAN order", () => {
