@@ -14,3 +14,42 @@
 .animate-pulse-highlight {
 	animation: pulse-highlight 0.75s ease-in-out 2;
 }
+
+@keyframes homepage-gradient-drift {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+.homepage-gradient-keyword {
+	animation: homepage-gradient-drift 6s ease infinite;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.homepage-gradient-keyword[data-reduced-motion="true"] {
+	animation: none;
+	background-position: 50% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.homepage-gradient-keyword {
+		animation: none;
+		background-position: 50% 50%;
+	}
+}
+
+@media (forced-colors: active) {
+	.homepage-gradient-keyword {
+		background: none;
+		color: CanvasText;
+		-webkit-text-fill-color: CanvasText;
+	}
+}

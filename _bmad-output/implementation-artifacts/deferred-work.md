@@ -67,3 +67,7 @@
 - `thresholdDays` / `thresholdHours` config values accept 0 or negative — no validation at config level; 0 would make all users immediately eligible. Pre-existing pattern across all lifecycle email threshold configs.
 - Hardcoded engagement thresholds (>= 3 return visits OR >= 1 relationship letter) embedded in raw SQL in `lifecycle-email.drizzle.repository.ts:109-112` — not configurable, requires code change to adjust
 - `Effect.tap` callbacks in all three lifecycle use-cases mutate `emailsSent++` via closure — correct in current sequential for-loop but would race under concurrent `Effect.forEach`
+
+## Deferred from: code review of 9-2-dynamic-hook-with-animated-gradient (2026-04-13)
+
+- Orphaned homepage components (`ChatInputBar.tsx`, `DepthMeter.tsx`, `FinalCta.tsx`, `HeroSection.tsx`, `HowItWorks.tsx`) no longer imported from `apps/front/src/routes/index.tsx` after homepage redesign. Still on disk as dead code. Should be cleaned up in a follow-up cleanup story.

@@ -104,7 +104,7 @@ test.describe("Session Resume", () => {
 
 		await test.step("navigate to homepage", async () => {
 			await page.goto("/");
-			await page.locator("[data-slot='hero-section']").waitFor({ state: "visible" });
+			await page.locator("[data-slot='sticky-auth-panel']").waitFor({ state: "visible" });
 		});
 
 		await test.step("navigate back to chat with session ID → resumes", async () => {

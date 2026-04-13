@@ -18,7 +18,7 @@ test("signup from home → redirects to verify-email → sign in → navigate to
 
 	await test.step("navigate to landing page", async () => {
 		await page.goto("/");
-		await page.locator("[data-slot='hero-section']").waitFor({ state: "visible" });
+		await page.locator("[data-slot='sticky-auth-panel']").waitFor({ state: "visible" });
 	});
 
 	await test.step("go to signup page with redirectTo=/", async () => {

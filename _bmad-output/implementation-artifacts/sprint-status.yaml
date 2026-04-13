@@ -1,5 +1,5 @@
 # generated: 2026-04-12T18:00:00+0200
-# last_updated: 2026-04-12
+# last_updated: 2026-04-13
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-12T18:00:00+0200
-last_updated: 2026-04-12
+last_updated: 2026-04-13
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -107,7 +107,7 @@ development_status:
   # Epic 9: Homepage Conversion
   epic-9: in-progress
   9-1-split-layout-architecture-and-sticky-auth-panel: review
-  9-2-dynamic-hook-with-animated-gradient: backlog
+  9-2-dynamic-hook-with-animated-gradient: done
   9-3-timeline-phases-product-artifacts: backlog
   9-4-reassurance-section-and-fear-addressing-cards: backlog
   epic-9-retrospective: optional
