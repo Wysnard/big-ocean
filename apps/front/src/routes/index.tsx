@@ -1,23 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SplitHomepageLayout } from "../components/home/SplitHomepageLayout";
+import { DepthScrollProvider } from "../components/home/DepthScrollProvider";
+import { HomepageTimeline } from "../components/home/HomepageTimeline";
+import { MobileHero } from "../components/home/MobileHero";
 import { StickyAuthPanel } from "../components/home/StickyAuthPanel";
-import { StickyBottomCTA } from "../components/home/StickyBottomCTA";
-import { TimelinePlaceholder } from "../components/home/TimelinePlaceholder";
 import { PageMain } from "../components/PageMain";
-import { getServerSession } from "../lib/auth.server";
 
 export const Route = createFileRoute("/")({
-	beforeLoad: async () => {
-		try {
-			const session = await getServerSession();
-			return { isAuthenticated: !!session?.user };
-		} catch {
-			return { isAuthenticated: false };
-		}
-	},
-	loader: async ({ context }) => ({
-		isAuthenticated: context.isAuthenticated,
-	}),
 	component: HomePage,
 	head: () => ({
 		meta: [
@@ -43,15 +31,17 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-	const { isAuthenticated } = Route.useLoaderData();
-
 	return (
-		<PageMain>
-			<SplitHomepageLayout
-				timeline={<TimelinePlaceholder />}
-				authPanel={<StickyAuthPanel isAuthenticated={isAuthenticated} />}
-				bottomCta={<StickyBottomCTA isAuthenticated={isAuthenticated} />}
-			/>
+		<PageMain className="bg-slate-100">
+			<DepthScrollProvider>
+				<div className="lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.95fr)]">
+					<div className="min-w-0">
+						<MobileHero />
+						<HomepageTimeline />
+					</div>
+					<StickyAuthPanel />
+				</div>
+			</DepthScrollProvider>
 		</PageMain>
 	);
 }
