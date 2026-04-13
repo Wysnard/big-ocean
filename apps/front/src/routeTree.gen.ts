@@ -20,6 +20,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TodayIndexRouteImport } from './routes/today/index'
 import { Route as MeIndexRouteImport } from './routes/me/index'
+import { Route as LibraryIndexRouteImport } from './routes/library/index'
 import { Route as CircleIndexRouteImport } from './routes/circle/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as ResultsConversationSessionIdRouteImport } from './routes/results/$conversationSessionId'
@@ -29,6 +30,11 @@ import { Route as DevEmailsRouteImport } from './routes/dev/emails'
 import { Route as DevComponentsRouteImport } from './routes/dev/components'
 import { Route as RelationshipQrTokenRouteImport } from './routes/relationship/qr/$token'
 import { Route as RelationshipAnalysisIdRitualRouteImport } from './routes/relationship/$analysisId_.ritual'
+import { Route as LibraryTraitSlugRouteImport } from './routes/library/trait.$slug'
+import { Route as LibraryScienceSlugRouteImport } from './routes/library/science.$slug'
+import { Route as LibraryGuidesSlugRouteImport } from './routes/library/guides.$slug'
+import { Route as LibraryFacetSlugRouteImport } from './routes/library/facet.$slug'
+import { Route as LibraryArchetypeSlugRouteImport } from './routes/library/archetype.$slug'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -85,6 +91,11 @@ const MeIndexRoute = MeIndexRouteImport.update({
   path: '/me/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LibraryIndexRoute = LibraryIndexRouteImport.update({
+  id: '/library/',
+  path: '/library/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CircleIndexRoute = CircleIndexRouteImport.update({
   id: '/circle/',
   path: '/circle/',
@@ -133,6 +144,31 @@ const RelationshipAnalysisIdRitualRoute =
     path: '/relationship/$analysisId/ritual',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LibraryTraitSlugRoute = LibraryTraitSlugRouteImport.update({
+  id: '/library/trait/$slug',
+  path: '/library/trait/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryScienceSlugRoute = LibraryScienceSlugRouteImport.update({
+  id: '/library/science/$slug',
+  path: '/library/science/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryGuidesSlugRoute = LibraryGuidesSlugRouteImport.update({
+  id: '/library/guides/$slug',
+  path: '/library/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryFacetSlugRoute = LibraryFacetSlugRouteImport.update({
+  id: '/library/facet/$slug',
+  path: '/library/facet/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryArchetypeSlugRoute = LibraryArchetypeSlugRouteImport.update({
+  id: '/library/archetype/$slug',
+  path: '/library/archetype/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -151,8 +187,14 @@ export interface FileRoutesByFullPath {
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/chat/': typeof ChatIndexRoute
   '/circle/': typeof CircleIndexRoute
+  '/library/': typeof LibraryIndexRoute
   '/me/': typeof MeIndexRoute
   '/today/': typeof TodayIndexRoute
+  '/library/archetype/$slug': typeof LibraryArchetypeSlugRoute
+  '/library/facet/$slug': typeof LibraryFacetSlugRoute
+  '/library/guides/$slug': typeof LibraryGuidesSlugRoute
+  '/library/science/$slug': typeof LibraryScienceSlugRoute
+  '/library/trait/$slug': typeof LibraryTraitSlugRoute
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
 }
@@ -173,8 +215,14 @@ export interface FileRoutesByTo {
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/chat': typeof ChatIndexRoute
   '/circle': typeof CircleIndexRoute
+  '/library': typeof LibraryIndexRoute
   '/me': typeof MeIndexRoute
   '/today': typeof TodayIndexRoute
+  '/library/archetype/$slug': typeof LibraryArchetypeSlugRoute
+  '/library/facet/$slug': typeof LibraryFacetSlugRoute
+  '/library/guides/$slug': typeof LibraryGuidesSlugRoute
+  '/library/science/$slug': typeof LibraryScienceSlugRoute
+  '/library/trait/$slug': typeof LibraryTraitSlugRoute
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
 }
@@ -196,8 +244,14 @@ export interface FileRoutesById {
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/chat/': typeof ChatIndexRoute
   '/circle/': typeof CircleIndexRoute
+  '/library/': typeof LibraryIndexRoute
   '/me/': typeof MeIndexRoute
   '/today/': typeof TodayIndexRoute
+  '/library/archetype/$slug': typeof LibraryArchetypeSlugRoute
+  '/library/facet/$slug': typeof LibraryFacetSlugRoute
+  '/library/guides/$slug': typeof LibraryGuidesSlugRoute
+  '/library/science/$slug': typeof LibraryScienceSlugRoute
+  '/library/trait/$slug': typeof LibraryTraitSlugRoute
   '/relationship/$analysisId_/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
 }
@@ -220,8 +274,14 @@ export interface FileRouteTypes {
     | '/results/$conversationSessionId'
     | '/chat/'
     | '/circle/'
+    | '/library/'
     | '/me/'
     | '/today/'
+    | '/library/archetype/$slug'
+    | '/library/facet/$slug'
+    | '/library/guides/$slug'
+    | '/library/science/$slug'
+    | '/library/trait/$slug'
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
   fileRoutesByTo: FileRoutesByTo
@@ -242,8 +302,14 @@ export interface FileRouteTypes {
     | '/results/$conversationSessionId'
     | '/chat'
     | '/circle'
+    | '/library'
     | '/me'
     | '/today'
+    | '/library/archetype/$slug'
+    | '/library/facet/$slug'
+    | '/library/guides/$slug'
+    | '/library/science/$slug'
+    | '/library/trait/$slug'
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
   id:
@@ -264,8 +330,14 @@ export interface FileRouteTypes {
     | '/results/$conversationSessionId'
     | '/chat/'
     | '/circle/'
+    | '/library/'
     | '/me/'
     | '/today/'
+    | '/library/archetype/$slug'
+    | '/library/facet/$slug'
+    | '/library/guides/$slug'
+    | '/library/science/$slug'
+    | '/library/trait/$slug'
     | '/relationship/$analysisId_/ritual'
     | '/relationship/qr/$token'
   fileRoutesById: FileRoutesById
@@ -286,8 +358,14 @@ export interface RootRouteChildren {
   RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute
   ChatIndexRoute: typeof ChatIndexRoute
   CircleIndexRoute: typeof CircleIndexRoute
+  LibraryIndexRoute: typeof LibraryIndexRoute
   MeIndexRoute: typeof MeIndexRoute
   TodayIndexRoute: typeof TodayIndexRoute
+  LibraryArchetypeSlugRoute: typeof LibraryArchetypeSlugRoute
+  LibraryFacetSlugRoute: typeof LibraryFacetSlugRoute
+  LibraryGuidesSlugRoute: typeof LibraryGuidesSlugRoute
+  LibraryScienceSlugRoute: typeof LibraryScienceSlugRoute
+  LibraryTraitSlugRoute: typeof LibraryTraitSlugRoute
   RelationshipAnalysisIdRitualRoute: typeof RelationshipAnalysisIdRitualRoute
   RelationshipQrTokenRoute: typeof RelationshipQrTokenRoute
 }
@@ -371,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/library/': {
+      id: '/library/'
+      path: '/library'
+      fullPath: '/library/'
+      preLoaderRoute: typeof LibraryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/circle/': {
       id: '/circle/'
       path: '/circle'
@@ -434,6 +519,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RelationshipAnalysisIdRitualRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/library/trait/$slug': {
+      id: '/library/trait/$slug'
+      path: '/library/trait/$slug'
+      fullPath: '/library/trait/$slug'
+      preLoaderRoute: typeof LibraryTraitSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library/science/$slug': {
+      id: '/library/science/$slug'
+      path: '/library/science/$slug'
+      fullPath: '/library/science/$slug'
+      preLoaderRoute: typeof LibraryScienceSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library/guides/$slug': {
+      id: '/library/guides/$slug'
+      path: '/library/guides/$slug'
+      fullPath: '/library/guides/$slug'
+      preLoaderRoute: typeof LibraryGuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library/facet/$slug': {
+      id: '/library/facet/$slug'
+      path: '/library/facet/$slug'
+      fullPath: '/library/facet/$slug'
+      preLoaderRoute: typeof LibraryFacetSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library/archetype/$slug': {
+      id: '/library/archetype/$slug'
+      path: '/library/archetype/$slug'
+      fullPath: '/library/archetype/$slug'
+      preLoaderRoute: typeof LibraryArchetypeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -464,8 +584,14 @@ const rootRouteChildren: RootRouteChildren = {
   RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
   ChatIndexRoute: ChatIndexRoute,
   CircleIndexRoute: CircleIndexRoute,
+  LibraryIndexRoute: LibraryIndexRoute,
   MeIndexRoute: MeIndexRoute,
   TodayIndexRoute: TodayIndexRoute,
+  LibraryArchetypeSlugRoute: LibraryArchetypeSlugRoute,
+  LibraryFacetSlugRoute: LibraryFacetSlugRoute,
+  LibraryGuidesSlugRoute: LibraryGuidesSlugRoute,
+  LibraryScienceSlugRoute: LibraryScienceSlugRoute,
+  LibraryTraitSlugRoute: LibraryTraitSlugRoute,
   RelationshipAnalysisIdRitualRoute: RelationshipAnalysisIdRitualRoute,
   RelationshipQrTokenRoute: RelationshipQrTokenRoute,
 }
