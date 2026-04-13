@@ -145,13 +145,13 @@ export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysis
 			contentLength: result.content.length,
 		});
 
-		// 5. Send email notifications to both participants (fire-and-forget, Story 35-5)
+		// 5. Send relationship-letter ready notifications to both participants (fail-open)
 		if (contentWasWritten) {
 			yield* sendRelationshipAnalysisNotification({
 				analysisId: input.analysisId,
 			}).pipe(
 				Effect.catchAll((err) => {
-					logger.error("Failed to send relationship analysis notification (fail-open)", {
+					logger.error("Failed to send relationship letter notification (fail-open)", {
 						analysisId: input.analysisId,
 						error: err instanceof Error ? err.message : String(err),
 					});

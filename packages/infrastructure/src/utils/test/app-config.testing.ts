@@ -61,6 +61,10 @@ export const defaultTestConfig: AppConfigService = {
 	dropOffThresholdHours: 24,
 	checkInThresholdDays: 14,
 	subscriptionNudgeThresholdDays: 21,
+	recaptureThresholdDays: 3,
+	pushVapidPublicKey: undefined,
+	pushVapidPrivateKey: undefined,
+	pushVapidSubject: undefined,
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: 2000,
 	// Nerin Director (Story 43-3)

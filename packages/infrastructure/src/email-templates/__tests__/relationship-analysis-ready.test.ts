@@ -2,7 +2,18 @@
  * Relationship Analysis Ready Email Template Tests (Story 35-5)
  */
 import { describe, expect, it } from "vitest";
-import { renderRelationshipAnalysisReadyEmail } from "../relationship-analysis-ready";
+import {
+	buildRelationshipLetterReadySubject,
+	renderRelationshipAnalysisReadyEmail,
+} from "../relationship-analysis-ready";
+
+describe("buildRelationshipLetterReadySubject", () => {
+	it("uses relationship-letter language and Nerin voice", () => {
+		expect(buildRelationshipLetterReadySubject("Bob")).toBe(
+			"Bob and you - Nerin has something to share",
+		);
+	});
+});
 
 describe("renderRelationshipAnalysisReadyEmail", () => {
 	it("renders HTML with user name and partner name", () => {
@@ -25,7 +36,7 @@ describe("renderRelationshipAnalysisReadyEmail", () => {
 			analysisUrl: "https://bigocean.dev/relationship/abc-123",
 		});
 
-		expect(html).toContain("View your analysis");
+		expect(html).toContain("Read your letter");
 	});
 
 	it("does NOT expose personality data or analysis content", () => {
@@ -71,6 +82,18 @@ describe("renderRelationshipAnalysisReadyEmail", () => {
 			analysisUrl: "https://bigocean.dev/relationship/abc-123",
 		});
 
-		expect(html).toContain("relationship analysis");
+		expect(html).toContain("relationship letter");
+	});
+
+	it("keeps the copy free of sensitive relationship content", () => {
+		const html = renderRelationshipAnalysisReadyEmail({
+			userName: "Charlie",
+			partnerName: "Dana",
+			analysisUrl: "https://bigocean.dev/relationship/abc-123",
+		});
+
+		expect(html).not.toContain("score");
+		expect(html).not.toContain("excerpt");
+		expect(html).not.toContain("facet");
 	});
 });

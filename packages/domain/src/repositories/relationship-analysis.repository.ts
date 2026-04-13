@@ -68,8 +68,10 @@ export class RelationshipAnalysisRepository extends Context.Tag("RelationshipAna
 
 		readonly getParticipantEmails: (analysisId: string) => Effect.Effect<
 			{
+				userAId: string;
 				userAEmail: string;
 				userAName: string;
+				userBId: string;
 				userBEmail: string;
 				userBName: string;
 			} | null,

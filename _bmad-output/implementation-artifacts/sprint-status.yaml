@@ -44,7 +44,7 @@
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
 generated: 2026-04-12T18:00:00+0200
-last_updated: 2026-04-13
+last_updated: 2026-04-13T12:00:00+0200
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -129,7 +129,7 @@ development_status:
   # Epic 10: Transactional Emails & Re-Engagement
   epic-10: in-progress
   10-1-three-lifecycle-email-templates: in-progress
-  10-2-relationship-letter-ready-notification: backlog
+  10-2-relationship-letter-ready-notification: done
   epic-10-retrospective: optional
 
   # Epic 11: Cost Ceiling & Operational Safety

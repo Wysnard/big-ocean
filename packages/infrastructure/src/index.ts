@@ -65,6 +65,9 @@ export { ProfileAccessLogDrizzleRepositoryLive } from "./repositories/profile-ac
 export { PublicProfileDrizzleRepositoryLive } from "./repositories/public-profile.drizzle.repository";
 // Purchase event repository implementation (Story 13.1)
 export { PurchaseEventDrizzleRepositoryLive } from "./repositories/purchase-event.drizzle.repository";
+// Push notification infrastructure (Story 10-2)
+export { PushNotificationQueueDrizzleRepositoryLive } from "./repositories/push-notification-queue.drizzle.repository";
+export { PushSubscriptionDrizzleRepositoryLive } from "./repositories/push-subscription.drizzle.repository";
 // QR token repository implementation (Story 34-1)
 export { QrTokenDrizzleRepositoryLive } from "./repositories/qr-token.drizzle.repository";
 // Redis repository implementation
@@ -80,3 +83,4 @@ export { ResendEmailResendRepositoryLive } from "./repositories/resend-email.res
 export { UserAccountDrizzleRepositoryLive } from "./repositories/user-account.drizzle.repository";
 // Waitlist repository implementation (Story 15.3)
 export { WaitlistDrizzleRepositoryLive } from "./repositories/waitlist.drizzle.repository";
+export { WebPushFetchRepositoryLive } from "./repositories/web-push.fetch.repository";
