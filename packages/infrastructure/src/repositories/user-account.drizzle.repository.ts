@@ -20,6 +20,50 @@ export const UserAccountDrizzleRepositoryLive = Layer.effect(
 		const logger = yield* LoggerRepository;
 
 		return UserAccountRepository.of({
+			getFirstVisitCompleted: (userId: string) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.select({ firstVisitCompleted: user.firstVisitCompleted })
+						.from(user)
+						.where(eq(user.id, userId))
+						.limit(1)
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new DatabaseError({
+										message: `Failed to read first visit state: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					return rows[0]?.firstVisitCompleted ?? false;
+				}),
+			markFirstVisitCompleted: (userId: string) =>
+				Effect.gen(function* () {
+					const updated = yield* db
+						.update(user)
+						.set({ firstVisitCompleted: true })
+						.where(eq(user.id, userId))
+						.returning({ id: user.id })
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new DatabaseError({
+										message: `Failed to update first visit state: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					const wasUpdated = updated.length > 0;
+
+					if (wasUpdated) {
+						logger.info("First visit marked complete", { userId });
+					} else {
+						logger.warn("First visit update: user not found", { userId });
+					}
+
+					return wasUpdated;
+				}),
 			deleteAccount: (userId: string) =>
 				Effect.gen(function* () {
 					// Single DELETE — all child rows removed via FK cascades

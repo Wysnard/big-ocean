@@ -9,7 +9,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, Sun } from "lucide-react";
 import { useAuth } from "../hooks/use-auth";
 import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
 
@@ -97,9 +97,9 @@ export function UserNav() {
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
 						<DropdownMenuItem asChild>
-							<Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
-								<LayoutDashboard className="size-4" />
-								Dashboard
+							<Link to="/today" className="flex items-center gap-2 cursor-pointer">
+								<Sun className="size-4" />
+								Today
 							</Link>
 						</DropdownMenuItem>
 						<DropdownMenuItem asChild>

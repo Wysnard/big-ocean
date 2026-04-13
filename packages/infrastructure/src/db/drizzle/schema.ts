@@ -83,6 +83,7 @@ export const user = pgTable("user", {
 	email: text("email").notNull().unique(),
 	emailVerified: boolean("email_verified").default(false).notNull(),
 	image: text("image"),
+	firstVisitCompleted: boolean("first_visit_completed").default(false).notNull(),
 	subscriptionNudgeEmailSentAt: timestamp("subscription_nudge_email_sent_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")

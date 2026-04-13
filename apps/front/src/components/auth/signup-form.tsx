@@ -61,7 +61,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 					value.password,
 					value.name,
 					anonymousSessionId,
-					`${window.location.origin}/dashboard`,
+					`${window.location.origin}/today`,
 				);
 
 				await navigate({

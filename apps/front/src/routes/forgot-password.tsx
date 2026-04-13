@@ -18,7 +18,7 @@ export const Route = createFileRoute("/forgot-password")({
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (session?.user) {
-			throw redirect({ to: "/dashboard" });
+			throw redirect({ to: "/today" });
 		}
 	},
 	component: ForgotPasswordPage,
