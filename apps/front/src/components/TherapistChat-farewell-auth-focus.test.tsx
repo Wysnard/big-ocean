@@ -32,7 +32,7 @@ describe("TherapistChat", () => {
 			expect(fadeWrapper?.className).toContain("pointer-events-none");
 		});
 
-		it("removes input area when isCompleted is true (replaced by View Results)", () => {
+		it("replaces the input with a single portrait CTA when assessment is completed", () => {
 			mockHookReturn.isCompleted = true;
 
 			const { container } = renderWithProviders(
@@ -41,7 +41,26 @@ describe("TherapistChat", () => {
 
 			const textarea = container.querySelector("[data-slot='chat-input']");
 			expect(textarea).toBeNull();
-			expect(screen.getByText("View Results")).toBeTruthy();
+			expect(screen.queryByText("View Results")).toBeNull();
+			expect(screen.getAllByRole("link", { name: "Show me what you found →" })).toHaveLength(1);
+		});
+
+		it("targets the portrait reading route and hides competing CTAs after farewell", () => {
+			mockHookReturn.isFarewellReceived = true;
+
+			const { container } = renderWithProviders(
+				<TherapistChat sessionId="session-123" isAuthenticated={true} />,
+			);
+
+			const portraitLink = screen.getByRole("link", { name: "Show me what you found →" });
+			const textarea = container.querySelector("[data-slot='chat-input']") as HTMLElement;
+			const fadeWrapper = textarea?.closest("[class*='opacity-0']");
+
+			expect(textarea).toBeTruthy();
+			expect(fadeWrapper).toBeTruthy();
+			expect(portraitLink).toHaveAttribute("href", "/results/session-123?view=portrait");
+			expect(screen.queryByText("View Results")).toBeNull();
+			expect(screen.getAllByTestId("post-assessment-transition-button")).toHaveLength(1);
 		});
 
 		it("does not fade input area during normal chat", () => {

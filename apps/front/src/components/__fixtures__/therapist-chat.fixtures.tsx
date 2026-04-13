@@ -77,16 +77,34 @@ vi.mock("@tanstack/react-router", () => ({
 	Link: ({
 		children,
 		to,
+		params,
+		search,
 		...props
 	}: {
 		children: React.ReactNode;
 		to: string;
+		params?: Record<string, string>;
+		search?: Record<string, string>;
 		[key: string]: unknown;
-	}) => (
-		<a href={to} {...props}>
-			{children}
-		</a>
-	),
+	}) => {
+		let href = to;
+
+		if (params) {
+			for (const [key, value] of Object.entries(params)) {
+				href = href.replace(`$${key}`, value);
+			}
+		}
+
+		if (search && Object.keys(search).length > 0) {
+			href = `${href}?${new URLSearchParams(search).toString()}`;
+		}
+
+		return (
+			<a href={href} {...props}>
+				{children}
+			</a>
+		);
+	},
 }));
 
 // Mock chat-placeholders

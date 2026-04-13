@@ -4,7 +4,6 @@ import {
 	isRedirect,
 	notFound,
 	redirect,
-	useNavigate,
 } from "@tanstack/react-router";
 import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
 import { Effect, Schema as S } from "effect";
@@ -130,7 +129,6 @@ function RouteComponent() {
 		highlightScore,
 	} = Route.useSearch();
 	const { user, isAuthenticated } = useAuth();
-	const navigate = useNavigate();
 	const [sessionNotFound, setSessionNotFound] = useState(false);
 
 	// Authenticated users hitting a missing session → show NotFound
@@ -140,17 +138,6 @@ function RouteComponent() {
 		},
 		[],
 	);
-
-	// Story 7.18: Navigate to portrait reading view when user clicks "Read what Nerin wrote"
-	const handlePortraitReveal = useCallback(() => {
-		if (sessionId) {
-			navigate({
-				to: "/results/$conversationSessionId",
-				params: { conversationSessionId: sessionId },
-				search: { view: "portrait" },
-			});
-		}
-	}, [sessionId, navigate]);
 
 	if (sessionNotFound) {
 		return (
@@ -194,7 +181,6 @@ function RouteComponent() {
 				userName={user?.name}
 				userImage={user?.image}
 				isAuthenticated={isAuthenticated}
-				onPortraitReveal={handlePortraitReveal}
 				highlightMessageId={highlightMessageId}
 				highlightQuote={highlightQuote}
 				highlightStart={highlightStart}
