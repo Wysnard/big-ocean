@@ -33,6 +33,8 @@ interface ArchetypeHeroSectionProps {
 	framingLine?: string;
 	/** Accessible label for the hero landmark when this section should be navigable as a region. */
 	sectionLabel?: string;
+	/** Use a non-landmark wrapper when embedding the hero inside another semantic section. */
+	containerElement?: "section" | "div";
 }
 
 function ScrollIndicator() {
@@ -67,17 +69,19 @@ export function ArchetypeHeroSection({
 	showScrollIndicator,
 	framingLine,
 	sectionLabel,
+	containerElement = "section",
 }: ArchetypeHeroSectionProps) {
 	const tooltipBaseId = useId();
+	const Container = containerElement;
 
 	const resolvedSubtitle =
 		subtitle ??
 		(displayName ? `${displayName}\u2019s Personality Archetype` : "Your Personality Archetype");
 
 	return (
-		<section
+		<Container
 			data-testid="archetype-hero-section"
-			aria-label={sectionLabel}
+			aria-label={containerElement === "section" ? sectionLabel : undefined}
 			className={`relative overflow-hidden px-6 py-16 md:py-24 ${showScrollIndicator ? "min-h-[70vh] flex items-center justify-center" : ""}`}
 		>
 			{/* Color block composition — decorative geometric shapes */}
@@ -187,6 +191,6 @@ export function ArchetypeHeroSection({
 			</div>
 
 			{showScrollIndicator && <ScrollIndicator />}
-		</section>
+		</Container>
 	);
 }

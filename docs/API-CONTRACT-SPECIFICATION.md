@@ -52,7 +52,7 @@ Every field must include at least one example:
 
 ```typescript
 /** @example 73 */        // For simple values
-/** @example "HHMHM" */   // For string patterns
+/** @example "OCBAV" */   // For string patterns
 /** @example { score: 15, confidence: 80 } */ // For objects
 ```
 
@@ -152,7 +152,7 @@ traitScore: S.Number.pipe(S.int(), S.between(0, 120))
  * 5-letter personality code (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism).
  * Format: /^[LMH]{5}$/ (exactly 5 characters, each L/M/H)
  * Type: OceanCode5 (template literal type)
- * Example: "HHMHM"
+ * Example: "OCBAV"
  */
 oceanCode: S.String.pipe(S.pattern(/^[LMH]{5}$/))
 ```

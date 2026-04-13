@@ -68,7 +68,7 @@ Generated: 2026-02-12 | Scan Level: Deep | Mode: Initial Scan
 ### Domain Types
 
 - **Big Five Framework:** 5 traits x 6 facets = 30 facets total
-- **OCEAN Code:** 5-letter code (e.g., "HHMHM") mapping traits to levels (L/M/H)
+- **OCEAN Code:** 5-letter semantic code (e.g., `OCBAV`, `OCEAR`, `TFIDR`) mapping O/C/E/A/N trait bands to trait-specific letters
 - **Branded Types:** `UserId`, `SessionId` for type-safe IDs
 
 ---

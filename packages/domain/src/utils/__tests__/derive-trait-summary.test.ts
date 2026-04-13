@@ -2,36 +2,36 @@ import { describe, expect, it } from "vitest";
 import { deriveTraitSummary } from "../derive-trait-summary";
 
 describe("deriveTraitSummary", () => {
-	it("maps a 5-letter OCEAN code to correct trait-level record", () => {
-		const result = deriveTraitSummary("HHMHM");
+	it("maps a valid 5-letter OCEAN code to the correct trait-letter record", () => {
+		const result = deriveTraitSummary("MSBPV");
 		expect(result).toEqual({
-			openness: "H",
-			conscientiousness: "H",
-			extraversion: "M",
-			agreeableness: "H",
-			neuroticism: "M",
+			openness: "M",
+			conscientiousness: "S",
+			extraversion: "B",
+			agreeableness: "P",
+			neuroticism: "V",
 		});
 	});
 
-	it("maps all-high code to all H values", () => {
-		const result = deriveTraitSummary("HHHHH");
+	it("maps the all-high code OCEAN correctly", () => {
+		const result = deriveTraitSummary("OCEAN");
 		expect(result).toEqual({
-			openness: "H",
-			conscientiousness: "H",
-			extraversion: "H",
-			agreeableness: "H",
-			neuroticism: "H",
+			openness: "O",
+			conscientiousness: "C",
+			extraversion: "E",
+			agreeableness: "A",
+			neuroticism: "N",
 		});
 	});
 
-	it("maps all-low code to all L values", () => {
-		const result = deriveTraitSummary("LLLLL");
+	it("maps the all-low code TFIDR correctly", () => {
+		const result = deriveTraitSummary("TFIDR");
 		expect(result).toEqual({
-			openness: "L",
-			conscientiousness: "L",
-			extraversion: "L",
-			agreeableness: "L",
-			neuroticism: "L",
+			openness: "T",
+			conscientiousness: "F",
+			extraversion: "I",
+			agreeableness: "D",
+			neuroticism: "R",
 		});
 	});
 });

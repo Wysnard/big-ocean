@@ -96,4 +96,15 @@ describe("ArchetypeHeroSection", () => {
 		);
 		expect(screen.getByRole("region", { name: "Your archetype" })).toBeInTheDocument();
 	});
+
+	it("can render inside another section without creating a nested landmark", () => {
+		renderWithTooltipProvider(
+			<section aria-label="Outer section">
+				<ArchetypeHeroSection {...defaultProps} containerElement="div" sectionLabel="Inner archetype" />
+			</section>,
+		);
+
+		expect(screen.getByRole("region", { name: "Outer section" })).toBeInTheDocument();
+		expect(screen.queryByRole("region", { name: "Inner archetype" })).not.toBeInTheDocument();
+	});
 });

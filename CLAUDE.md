@@ -160,14 +160,25 @@ export function useDeleteAccount() {
 
 ### OCEAN Code Generation
 
-Pure deterministic function: 30 facet scores → 5-letter OCEAN code (e.g., "HHMHM").
+Pure deterministic function: 30 facet scores → 5-letter semantic OCEAN code (e.g., `OCEAR`, `OCBAV`, `TFIDR`).
 
-**Algorithm:** Sum 6 facets per trait (0-120) → map to level (L/M/H) → concatenate OCEAN order.
-**Thresholds:** 0-40=L, 40-80=M, 80-120=H
+**Algorithm:** Sum 6 facets per trait (0-120) → derive low/mid/high band → map each trait to its trait-specific semantic letter → concatenate in OCEAN order.
+
+**Band thresholds:**
+- 0-40 = low
+- 40-80 = mid
+- 80-120 = high
+
+**Letter mapping:**
+- Openness: `T` / `M` / `O`
+- Conscientiousness: `F` / `S` / `C`
+- Extraversion: `I` / `B` / `E`
+- Agreeableness: `D` / `P` / `A`
+- Neuroticism: `R` / `V` / `N`
 
 ```typescript
 import { generateOceanCode } from "@workspace/domain";
-const code = generateOceanCode(facetScoresMap); // → "HHMHM"
+const code = generateOceanCode(facetScoresMap); // → "OCBAV"
 ```
 
 ### Database

@@ -164,8 +164,8 @@ Get complete assessment results including archetype, traits, and facets.
 
 ```json
 {
-  "oceanCode5": "HHMHM",
-  "oceanCode4": "3232",
+  "oceanCode5": "OCBAV",
+  "oceanCode4": "OCBA",
   "archetypeName": "The Contemplative Explorer",
   "archetypeDescription": "A thoughtful individual who balances introspection with curiosity...",
   "archetypeColor": "#4A90D9",
@@ -315,7 +315,7 @@ View a public profile with archetype and personality scores.
 ```json
 {
   "archetypeName": "The Contemplative Explorer",
-  "oceanCode": "HHMHM",
+  "oceanCode": "OCBAV",
   "description": "A thoughtful individual who balances introspection with curiosity...",
   "color": "#4A90D9",
   "traitSummary": {

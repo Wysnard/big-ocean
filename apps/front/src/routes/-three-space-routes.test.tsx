@@ -11,6 +11,7 @@ const {
 	mockLoaderData,
 	mockListSessionsQuery,
 	mockUseGetResults,
+	mockIdentityHeroSection,
 } = vi.hoisted(() => ({
 	mockSession: vi.fn(),
 	mockFetchFirstVisitState: vi.fn(),
@@ -18,6 +19,7 @@ const {
 	mockLoaderData: vi.fn(),
 	mockListSessionsQuery: vi.fn(),
 	mockUseGetResults: vi.fn(),
+	mockIdentityHeroSection: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -56,6 +58,13 @@ vi.mock("@/hooks/use-conversation", () => ({
 
 vi.mock("@/components/BottomNav", () => ({
 	BottomNav: () => <div data-testid="bottom-nav-root" />,
+}));
+
+vi.mock("@/components/me/IdentityHeroSection", () => ({
+	IdentityHeroSection: (props: { results: unknown }) => {
+		mockIdentityHeroSection(props);
+		return <div data-testid="mock-identity-hero-section" />;
+	},
 }));
 
 import { Route as CircleRoute } from "./circle/index";
@@ -99,10 +108,11 @@ describe("three-space route guards", () => {
 			data: {
 				archetypeName: "Deep Current",
 				archetypeDescription: "A calm, observant presence.",
-				oceanCode5: "HHMHM",
+				oceanCode5: "OCEAR",
 				overallConfidence: 82,
 				messageCount: 24,
 				isPublic: false,
+				traits: [],
 			},
 			isLoading: false,
 			error: null,
@@ -164,10 +174,11 @@ describe("Me route layout", () => {
 			data: {
 				archetypeName: "Deep Current",
 				archetypeDescription: "A calm, observant presence.",
-				oceanCode5: "HHMHM",
+				oceanCode5: "OCEAR",
 				overallConfidence: 82,
 				messageCount: 24,
 				isPublic: false,
+				traits: [],
 			},
 			isLoading: false,
 			error: null,
@@ -190,6 +201,16 @@ describe("Me route layout", () => {
 		expect(screen.getByTestId("me-section-account")).toBeTruthy();
 		expect(await screen.findByTestId("me-settings-link")).toHaveAttribute("href", "/settings");
 		expect(mockUseGetResults).toHaveBeenCalledWith("session-completed");
+		expect(mockIdentityHeroSection).toHaveBeenCalledWith(
+			expect.objectContaining({
+				results: expect.objectContaining({
+					archetypeName: "Deep Current",
+					oceanCode5: "OCEAR",
+					overallConfidence: 82,
+					messageCount: 24,
+				}),
+			}),
+		);
 		await waitFor(() => {
 			expect(mockCompleteFirstVisit).toHaveBeenCalledTimes(1);
 		});

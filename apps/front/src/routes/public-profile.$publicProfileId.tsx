@@ -31,6 +31,7 @@ import { PsychedelicBackground } from "@/components/results/PsychedelicBackgroun
 import type { AuthState } from "@/components/results/PublicProfileCTA";
 import { PublicProfileCTA } from "@/components/results/PublicProfileCTA";
 import { TraitBand } from "@/components/results/TraitBand";
+import { getDominantTrait } from "@/lib/trait-utils";
 import { useListConversations } from "../hooks/use-conversation";
 import { getPublicProfileQueryOptions, useGetPublicProfile } from "../hooks/use-profile";
 import { getSession } from "../lib/auth-client";
@@ -133,12 +134,6 @@ function deriveTraitData(facets: ApiFacets, traitSummary: Record<string, string>
 			confidence: count > 0 ? Math.round(totalConfidence / count) : 0,
 		};
 	});
-}
-
-function getDominantTrait(traits: TraitResult[]): TraitName {
-	if (traits.length === 0) return "openness";
-	const sorted = [...traits].sort((a, b) => b.score - a.score);
-	return sorted[0].name;
 }
 
 function getSecondaryTrait(traits: TraitResult[]): TraitName {

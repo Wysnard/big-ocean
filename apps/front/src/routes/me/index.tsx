@@ -1,10 +1,11 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import type { GetResultsResponse } from "@workspace/contracts";
 import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
-import { BottomNav } from "@/components/BottomNav";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
-import { PageMain } from "@/components/PageMain";
+import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { completeFirstVisit } from "@/hooks/use-account";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
 import { getSession } from "@/lib/auth-client";
@@ -98,30 +99,48 @@ function MePage() {
 			: "We couldn't load your latest assessment yet. Try again.";
 
 	return (
-		<PageMain
+		<ThreeSpaceLayout
 			title="Me"
 			data-slot="me-page"
 			data-testid="me-page"
 			className="min-h-[calc(100dvh-3.5rem)] bg-background pb-28 lg:pb-0"
 		>
-			<BottomNav />
-			<div className="mx-auto w-full max-w-[720px] px-4 py-8 sm:px-6 lg:px-0">
-				{error && isErrorVisible ? (
-					<ErrorBanner
-						message={errorMessage}
-						onRetry={() => {
-							void refetch().then((result) => {
-								setIsErrorVisible(!!result.error);
-							});
-						}}
-						onDismiss={() => setIsErrorVisible(false)}
-						autoDismissMs={0}
-					/>
-				) : null}
+			{error && isErrorVisible ? (
+				<ErrorBanner
+					message={errorMessage}
+					onRetry={() => {
+						void refetch().then((result) => {
+							setIsErrorVisible(!!result.error);
+						});
+					}}
+					onDismiss={() => setIsErrorVisible(false)}
+					autoDismissMs={0}
+				/>
+			) : null}
 
-				{isLoading ? <MePageSkeleton /> : <MePageSections results={results} />}
+			{isLoading ? <MePageSkeleton /> : <MePageSections results={results} />}
+		</ThreeSpaceLayout>
+	);
+}
+
+function IdentityHeroSkeleton() {
+	return (
+		<div className="animate-pulse space-y-5">
+			{/* Archetype name placeholder */}
+			<div className="h-10 w-3/4 rounded-full bg-muted" />
+			{/* OCEAN code — 5 circle placeholders */}
+			<div className="flex gap-3">
+				{Array.from({ length: 5 }).map((_, i) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
+					<div key={i} className="h-8 w-8 rounded-full bg-muted" />
+				))}
 			</div>
-		</PageMain>
+			{/* Radar chart circle + confidence ring side-by-side */}
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+				<div className="aspect-square max-h-[200px] w-full rounded-full bg-muted" />
+				<div className="aspect-square max-h-[200px] w-full rounded-full bg-muted" />
+			</div>
+		</div>
 	);
 }
 
@@ -139,32 +158,23 @@ function MePageSkeleton() {
 					{...(section.hidden ? { "data-state": "hidden" } : {})}
 					aria-busy="true"
 				>
-					<div className="animate-pulse space-y-3">
-						<div className="h-4 w-28 rounded-full bg-muted" />
-						<div className="h-5 w-3/4 rounded-full bg-muted" />
-						<div className="h-4 w-full rounded-full bg-muted" />
-						<div className="h-4 w-5/6 rounded-full bg-muted" />
-					</div>
+					{section.key === "identity-hero" ? (
+						<IdentityHeroSkeleton />
+					) : (
+						<div className="animate-pulse space-y-3">
+							<div className="h-4 w-28 rounded-full bg-muted" />
+							<div className="h-5 w-3/4 rounded-full bg-muted" />
+							<div className="h-4 w-full rounded-full bg-muted" />
+							<div className="h-4 w-5/6 rounded-full bg-muted" />
+						</div>
+					)}
 				</MePageSection>
 			))}
 		</div>
 	);
 }
 
-function MePageSections({
-	results,
-}: {
-	results:
-		| {
-				archetypeName: string;
-				archetypeDescription: string;
-				oceanCode5: string;
-				overallConfidence: number;
-				messageCount: number;
-				isPublic: boolean | null;
-		  }
-		| undefined;
-}) {
+function MePageSections({ results }: { results: GetResultsResponse | undefined }) {
 	return (
 		<div className="space-y-10">
 			<MePageSection
@@ -172,28 +182,14 @@ function MePageSections({
 				data-slot="me-section-identity-hero"
 				data-testid="me-section-identity-hero"
 			>
-				<p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-					Space Two
-				</p>
-				<p className="mt-3 font-heading text-3xl font-bold text-foreground">
-					{results?.archetypeName ?? "Me is your identity sanctuary."}
-				</p>
-				<p className="mt-4 text-base leading-7 text-muted-foreground">
-					{results?.archetypeDescription ??
-						"Your portrait, archetype, and long-form identity details now live together in one place."}
-				</p>
-				<div className="mt-6 flex flex-wrap gap-3 text-sm text-muted-foreground">
-					<div className="rounded-full border border-border px-4 py-2">
-						OCEAN code:{" "}
-						<span className="font-medium text-foreground">{results?.oceanCode5 ?? "-----"}</span>
-					</div>
-					<div className="rounded-full border border-border px-4 py-2">
-						Confidence:{" "}
-						<span className="font-medium text-foreground">
-							{results ? `${Math.round(results.overallConfidence)}%` : "Pending"}
-						</span>
-					</div>
-				</div>
+				{results ? (
+					<IdentityHeroSection results={results} />
+				) : (
+					<p className="text-base leading-7 text-muted-foreground">
+						Your identity — archetype, OCEAN code, and personality shape — will appear here once results
+						load.
+					</p>
+				)}
 			</MePageSection>
 
 			<MePageSection
