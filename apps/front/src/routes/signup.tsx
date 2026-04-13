@@ -2,7 +2,7 @@
  * Signup Page
  *
  * User registration with Better Auth.
- * Redirects authenticated users to /assessment or /profile (AC #5).
+ * Redirects authenticated users to /today (AC #5).
  */
 
 import { createFileRoute, redirect } from "@tanstack/react-router";

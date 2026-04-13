@@ -18,7 +18,7 @@ import {
 	seedSessionForResults,
 	sendAssessmentMessage,
 } from "./factories/conversation.factory.js";
-import { createUser } from "./factories/user.factory.js";
+import { createUser, markFirstVisitCompleted } from "./factories/user.factory.js";
 import { createApiContext } from "./utils/api-client.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname, "..");
@@ -90,7 +90,11 @@ async function createAuthState(): Promise<void> {
 	);
 	console.log("[global-setup] Sent user message to reach assessment threshold");
 
-	// 6. Save owner storage state (cookies auto-captured by Playwright request context)
+	// 6. Mark first visit as completed so /today doesn't redirect to /me
+	await markFirstVisitCompleted(OWNER_USER.email);
+	console.log("[global-setup] Marked owner first visit as completed");
+
+	// 7. Save owner storage state (cookies auto-captured by Playwright request context)
 	await ownerApi.storageState({ path: AUTH_FILES.owner });
 	console.log(`[global-setup] Saved owner storage state → ${AUTH_FILES.owner}`);
 	await ownerApi.dispose();
@@ -100,6 +104,9 @@ async function createAuthState(): Promise<void> {
 	const otherApi = await createApiContext();
 	await createUser(otherApi, OTHER_USER);
 	console.log(`[global-setup] Other user signed up: ${OTHER_USER.email}`);
+
+	await markFirstVisitCompleted(OTHER_USER.email);
+	console.log("[global-setup] Marked other-user first visit as completed");
 
 	await otherApi.storageState({ path: AUTH_FILES.otherUser });
 	console.log(`[global-setup] Saved other-user storage state → ${AUTH_FILES.otherUser}`);

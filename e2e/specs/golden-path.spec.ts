@@ -9,12 +9,12 @@ const goldenPassword = "OceanDepth#Nerin42xQ";
 /**
  * Golden Path Journey
  *
- * Landing → Sign Up → Verify Email → Login → /chat (authenticated, creates session) → Message → Farewell → View Results → Results → Share → Public Profile → Dashboard
+ * Landing → Sign Up → Verify Email → Login → /chat (authenticated, creates session) → Message → Farewell → View Results → Results → Share → Public Profile → Today
  *
  * Single long user journey exercising the core happy path.
  * Uses data-testid and data-slot selectors — never matches on LLM output text.
  */
-test("golden path: landing → signup → chat → results → share → public profile → dashboard @critical", async ({
+test("golden path: landing → signup → chat → results → share → public profile → today @critical", async ({
 	page,
 	apiContext,
 }) => {
@@ -181,17 +181,16 @@ test("golden path: landing → signup → chat → results → share → public 
 		});
 	});
 
-	await test.step("dashboard shows identity card with archetype", async () => {
+	await test.step("today page loads via user nav", async () => {
 		// Use client-side navigation via user nav dropdown (avoids auth race on cold page.goto)
 		const avatarButton = page.getByTestId("user-nav-avatar");
 		await avatarButton.waitFor({ state: "visible", timeout: 10_000 });
 		await avatarButton.click();
-		await page.getByRole("menuitem", { name: "Dashboard" }).click();
-		await page.waitForURL(/\/dashboard\/?$/);
-		await page.getByTestId("dashboard-identity-card").waitFor({
+		await page.getByRole("menuitem", { name: "Today" }).click();
+		await page.waitForURL(/\/today/);
+		await page.getByTestId("today-page").waitFor({
 			state: "visible",
 			timeout: 10_000,
 		});
-		await expect(page.getByTestId("dashboard-archetype-name")).toBeVisible();
 	});
 });
