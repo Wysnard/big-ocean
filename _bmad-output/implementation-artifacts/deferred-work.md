@@ -90,3 +90,9 @@
 - No E2E test for unauthenticated user hitting `/dashboard` — redirect chain `/dashboard` → `/today` → `/login` is untested. Pre-existing gap; `/today` has its own auth guard and unauth tests cover other routes.
 - New MDX devDependencies (`@mdx-js/rollup`, `remark-frontmatter`, `remark-mdx-frontmatter`) added to `apps/front` lockfile — unrelated to story 1-2 scope, likely from concurrent work in the same worktree.
 - `apps/front/src/hooks/use-auth.ts:37` JSDoc `@example` still references `<Dashboard user={user} />` — stale illustrative pseudocode, file was not touched in this story.
+
+## Deferred from: code review of 12-1-knowledge-library-architecture-and-first-10-pages (2026-04-13)
+
+- W1: `SITE_ORIGIN` (`import.meta.env.VITE_APP_URL`) evaluated at Vite build time — canonical URLs and JSON-LD are baked into the SSR output. Multi-env deploy from same artifact gets wrong origins. Pre-existing pattern used project-wide.
+- W2: Sitemap script is `build-sitemap.mjs` (plain JS) instead of `build-sitemap.ts` as specified in spec file map. Functional but deviates from spec. Workaround from offline workspace environment.
+- W3: `LibraryNav` tier pills all link to `/library` regardless of tier — no tier index routes exist yet. Will need updating when tier-specific listing routes are created.
