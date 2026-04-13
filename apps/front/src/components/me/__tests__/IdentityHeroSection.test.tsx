@@ -9,11 +9,13 @@ const {
 	mockOceanCodeStrand,
 	mockPersonalityRadarChart,
 	mockConfidenceRingCard,
+	mockGeometricSignature,
 } = vi.hoisted(() => ({
 	mockArchetypeHeroSection: vi.fn(),
 	mockOceanCodeStrand: vi.fn(),
 	mockPersonalityRadarChart: vi.fn(),
 	mockConfidenceRingCard: vi.fn(),
+	mockGeometricSignature: vi.fn(),
 }));
 
 // Mock all child components that contain Recharts / Radix Tooltip.
@@ -54,6 +56,13 @@ vi.mock("@/components/results/ConfidenceRingCard", () => ({
 	ConfidenceRingCard: (props: { confidence: number; messageCount: number }) => {
 		mockConfidenceRingCard(props);
 		return <div data-slot="confidence-ring-card" />;
+	},
+}));
+
+vi.mock("@workspace/ui/components/geometric-signature", () => ({
+	GeometricSignature: (props: { oceanCode5: string; size: string }) => {
+		mockGeometricSignature(props);
+		return <div data-slot="geometric-signature" />;
 	},
 }));
 
@@ -115,6 +124,11 @@ describe("IdentityHeroSection", () => {
 		expect(container.querySelector('[data-slot="confidence-ring-card"]')).toBeInTheDocument();
 	});
 
+	it("renders GeometricSignature via data-slot", () => {
+		const { container } = render(<IdentityHeroSection results={mockResults} />);
+		expect(container.querySelector('[data-slot="geometric-signature"]')).toBeInTheDocument();
+	});
+
 	it("derives the dominant trait and normalises confidence before passing props down", () => {
 		render(<IdentityHeroSection results={mockResults} />);
 
@@ -131,6 +145,10 @@ describe("IdentityHeroSection", () => {
 		expect(mockConfidenceRingCard).toHaveBeenCalledWith({
 			confidence: 0.75,
 			messageCount: 24,
+		});
+		expect(mockGeometricSignature).toHaveBeenCalledWith({
+			oceanCode5: "OCEAR",
+			size: "hero",
 		});
 	});
 

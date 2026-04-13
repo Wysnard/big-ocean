@@ -1,3 +1,6 @@
+import { OCEAN_HIEROGLYPHS, type TraitLevel } from "@workspace/domain";
+import { createElement } from "react";
+
 /**
  * ArchetypeCardTemplate — Satori-compatible React component
  *
@@ -30,129 +33,33 @@ const TRAIT_ORDER = [
 	"neuroticism",
 ];
 
-/**
- * Renders the correct inline SVG shape for a given OCEAN code letter.
- * All shapes use SVG path/polygon only — no CSS transforms (Satori requirement).
- */
-function renderLetterShape(
+function renderHieroglyphShape(
 	letter: string,
 	size: number,
 	color: string,
 	key: string,
 ): React.ReactNode {
-	switch (letter) {
-		// Openness
-		case "O": // High — Full circle
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<circle cx="12" cy="12" r="10" fill={color} />
-				</svg>
-			);
-		case "M": // Mid — Square with inverted triangle cut
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<path d="M2 2h20v20H2z M12 2L6 14h12z" fill={color} fillRule="evenodd" />
-				</svg>
-			);
-		case "T": // Low — Equilateral cross upright
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z" fill={color} />
-				</svg>
-			);
+	const def = OCEAN_HIEROGLYPHS[letter as TraitLevel];
 
-		// Conscientiousness
-		case "C": // High — Half-circle (flat edge)
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<path d="M18 2 A10 10 0 0 0 18 22 Z" fill={color} />
-				</svg>
-			);
-		case "S": // Mid — Two quarter-circles facing outward
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<path d="M2 2v10A10 10 0 0 0 12 2z" fill={color} />
-					<path d="M22 22V12A10 10 0 0 0 12 22z" fill={color} />
-				</svg>
-			);
-		case "F": // Low — Three-quarter square
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<path d="M2 2h20v4H6v14h18v4H2z" fill={color} />
-				</svg>
-			);
-
-		// Extraversion
-		case "E": // High — Tall rectangle
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<rect x="7" y="2" width="10" height="20" rx="1" fill={color} />
-				</svg>
-			);
-		case "B": // Mid — Quarter-circle
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<path d="M2 2v20A20 20 0 0 0 22 2z" fill={color} />
-				</svg>
-			);
-		case "I": // Low — Vertical ellipse
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<ellipse cx="12" cy="12" rx="6" ry="10" fill={color} />
-				</svg>
-			);
-
-		// Agreeableness
-		case "A": // High — Equilateral triangle
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<polygon points="12,2 22,22 2,22" fill={color} />
-				</svg>
-			);
-		case "P": // Mid — Square on one stick (lollipop)
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<rect x="5" y="2" width="14" height="14" fill={color} />
-					<rect x="10" y="16" width="4" height="6" fill={color} />
-				</svg>
-			);
-		case "D": // Low — Half-circle reversed
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<path d="M6 2 A10 10 0 0 1 6 22 Z" fill={color} />
-				</svg>
-			);
-
-		// Neuroticism
-		case "N": // High — Diamond
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<polygon points="12,1 23,12 12,23 1,12" fill={color} />
-				</svg>
-			);
-		case "V": // Mid — Inverted triangle
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<polygon points="2,2 22,2 12,22" fill={color} />
-				</svg>
-			);
-		case "R": // Low — Square on two sticks (table)
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<rect x="2" y="2" width="20" height="14" fill={color} />
-					<rect x="5" y="16" width="4" height="6" fill={color} />
-					<rect x="15" y="16" width="4" height="6" fill={color} />
-				</svg>
-			);
-
-		// Fallback — circle
-		default:
-			return (
-				<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-					<circle cx="12" cy="12" r="10" fill={color} />
-				</svg>
-			);
+	if (!def) {
+		return (
+			<svg key={key} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+				<circle cx="12" cy="12" r="10" fill={color} />
+			</svg>
+		);
 	}
+
+	return (
+		<svg key={key} width={size} height={size} viewBox={def.viewBox} aria-hidden="true">
+			{def.elements.map((element, index) =>
+				createElement(element.tag, {
+					key: index,
+					...element.attrs,
+					fill: color,
+				}),
+			)}
+		</svg>
+	);
 }
 
 export interface ArchetypeCardTemplateProps {
@@ -332,7 +239,7 @@ export function ArchetypeCardTemplate({
 							? shapeBaseSize + ((traitScores[trait] ?? 60) / 120) * shapeMaxExtra
 							: shapeSize;
 
-						return renderLetterShape(letter, size, color, trait);
+						return renderHieroglyphShape(letter, size, color, trait);
 					})}
 				</div>
 

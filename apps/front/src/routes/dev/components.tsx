@@ -28,6 +28,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@workspace/ui/components/dialog";
+import { GeometricSignature } from "@workspace/ui/components/geometric-signature";
 import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
@@ -677,6 +678,62 @@ function IdentitySection() {
 							</span>
 						</div>
 					))}
+				</div>
+			</SubSection>
+
+			<SubSection title="Geometric Signature">
+				<div className="space-y-6">
+					<div>
+						<p className="text-sm text-muted-foreground mb-4">
+							Satori-safe personality signature component with named size variants for identity surfaces.
+						</p>
+						<div className="flex flex-wrap gap-6">
+							{(
+								[
+									{ label: "Hero (28px)", size: "hero" },
+									{ label: "Profile (18px)", size: "profile" },
+									{ label: "Card (12px)", size: "card" },
+									{ label: "Mini (10px)", size: "mini" },
+								] as const
+							).map((variant) => (
+								<div key={variant.size} className="flex flex-col items-center gap-3">
+									<GeometricSignature oceanCode5={"OCEAR" as OceanCode5} size={variant.size} />
+									<span
+										className="text-sm font-data font-bold tracking-widest"
+										style={{ fontFamily: "var(--font-data)" }}
+									>
+										{variant.label}
+									</span>
+								</div>
+							))}
+						</div>
+					</div>
+
+					<div>
+						<p className="text-sm text-muted-foreground mb-4">
+							Alternate code example to spot-check a different signature vocabulary.
+						</p>
+						<div className="flex flex-wrap gap-6">
+							{(
+								[
+									{ label: "Hero (28px)", size: "hero" },
+									{ label: "Profile (18px)", size: "profile" },
+									{ label: "Card (12px)", size: "card" },
+									{ label: "Mini (10px)", size: "mini" },
+								] as const
+							).map((variant) => (
+								<div key={variant.size} className="flex flex-col items-center gap-3">
+									<GeometricSignature oceanCode5={"TFIDR" as OceanCode5} size={variant.size} />
+									<span
+										className="text-sm font-data font-bold tracking-widest"
+										style={{ fontFamily: "var(--font-data)" }}
+									>
+										TFIDR · {variant.label}
+									</span>
+								</div>
+							))}
+						</div>
+					</div>
 				</div>
 			</SubSection>
 		</section>
