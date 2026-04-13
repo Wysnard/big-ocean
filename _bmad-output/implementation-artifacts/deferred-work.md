@@ -90,3 +90,9 @@
 - No E2E test for unauthenticated user hitting `/dashboard` — redirect chain `/dashboard` → `/today` → `/login` is untested. Pre-existing gap; `/today` has its own auth guard and unauth tests cover other routes.
 - New MDX devDependencies (`@mdx-js/rollup`, `remark-frontmatter`, `remark-mdx-frontmatter`) added to `apps/front` lockfile — unrelated to story 1-2 scope, likely from concurrent work in the same worktree.
 - `apps/front/src/hooks/use-auth.ts:37` JSDoc `@example` still references `<Dashboard user={user} />` — stale illustrative pseudocode, file was not touched in this story.
+
+## Deferred from: code review of 2-2-portrait-reading-generating-state-with-nerin-voice (2026-04-13)
+
+- Status "ready" with null/empty content falls through to generating state [`$conversationSessionId.tsx`:402] — backend `deriveStatus` prevents this via truthiness check on `portrait?.content`, but frontend has no defensive guard. Unlikely to manifest unless backend logic changes.
+- Retry mutation race — polling may not restart if backend hasn't transitioned [`$conversationSessionId.tsx`:114-128] — if backend returns "failed" before state update propagates after retry, single refetch keeps "failed" status and polling stays stopped.
+- Failed state "Back to your profile" uses `<button>` + `navigate()` instead of `<Link>` [`$conversationSessionId.tsx`:386-393] — violates CLAUDE.md navigation rule. Pre-existing from Story 2.4.
