@@ -54,7 +54,7 @@ export async function signUpAndLoginViaBrowser(
 	try {
 		for (let i = 0; i < 15; i++) {
 			const result = await client.query(
-				`UPDATE "user" SET "email_verified" = true WHERE "email" = $1 RETURNING id`,
+				`UPDATE "user" SET "email_verified" = true, "first_visit_completed" = true WHERE "email" = $1 RETURNING id`,
 				[input.email],
 			);
 			if (result.rowCount && result.rowCount > 0) {

@@ -73,6 +73,24 @@ async function verifyUserEmail(email: string): Promise<void> {
 }
 
 /**
+ * Mark a user's first visit as completed directly in the database.
+ * Prevents the /today → /me redirect for E2E test users.
+ */
+export async function markFirstVisitCompleted(email: string): Promise<void> {
+	const pool = new Pool(TEST_DB_CONFIG);
+	const client = await pool.connect();
+
+	try {
+		await client.query(`UPDATE "user" SET "first_visit_completed" = true WHERE "email" = $1`, [
+			email,
+		]);
+	} finally {
+		client.release();
+		await pool.end();
+	}
+}
+
+/**
  * Sign in an existing user via Better Auth email/password endpoint.
  * The response cookies are automatically stored in the APIRequestContext.
  */

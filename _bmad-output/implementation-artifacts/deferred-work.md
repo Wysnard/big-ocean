@@ -84,3 +84,9 @@
 ## Deferred from: code review of 10-2-relationship-letter-ready-notification (2026-04-13)
 
 - W1: Use-case imports directly from `@workspace/infrastructure` — `send-relationship-analysis-notification.use-case.ts` imports `buildRelationshipLetterReadySubject` and `renderRelationshipAnalysisReadyEmail` from `@workspace/infrastructure/email-templates/relationship-analysis-ready`, bypassing the hexagonal boundary. Pre-existing from Story 35-5, widened by this change.
+
+## Deferred from: code review of 1-2-dashboard-retirement-and-nav-cleanup (2026-04-13)
+
+- No E2E test for unauthenticated user hitting `/dashboard` — redirect chain `/dashboard` → `/today` → `/login` is untested. Pre-existing gap; `/today` has its own auth guard and unauth tests cover other routes.
+- New MDX devDependencies (`@mdx-js/rollup`, `remark-frontmatter`, `remark-mdx-frontmatter`) added to `apps/front` lockfile — unrelated to story 1-2 scope, likely from concurrent work in the same worktree.
+- `apps/front/src/hooks/use-auth.ts:37` JSDoc `@example` still references `<Dashboard user={user} />` — stale illustrative pseudocode, file was not touched in this story.

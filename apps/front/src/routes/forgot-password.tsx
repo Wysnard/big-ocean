@@ -3,7 +3,7 @@
  *
  * Email input form that triggers a password reset email.
  * Always shows success message after submission to prevent email enumeration.
- * Redirects authenticated users to /profile.
+ * Redirects authenticated users to /today.
  */
 
 import { createFileRoute, redirect } from "@tanstack/react-router";

@@ -38,8 +38,20 @@ vi.mock("@/components/BottomNav", () => ({
 }));
 
 import { Route as CircleRoute } from "./circle/index";
+import { Route as DashboardRoute } from "./dashboard";
 import { Route as MeRoute } from "./me/index";
 import { Route as TodayRoute } from "./today/index";
+
+describe("dashboard redirect", () => {
+	it("redirects /dashboard to /today with 301 status", () => {
+		expect(() => DashboardRoute.beforeLoad?.()).toThrow();
+		try {
+			DashboardRoute.beforeLoad?.();
+		} catch (e) {
+			expect(e).toMatchObject({ to: "/today", statusCode: 301 });
+		}
+	});
+});
 
 describe("three-space route guards", () => {
 	beforeEach(() => {
