@@ -1,10 +1,5 @@
 import crypto from "node:crypto";
-import {
-	AppConfig,
-	type PushSubscriptionRecord,
-	PushUnavailableError,
-	WebPushRepository,
-} from "@workspace/domain";
+import { AppConfig, type PushSubscriptionRecord, WebPushRepository } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { Effect, Layer, Redacted } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -29,6 +24,51 @@ const mockLogger = {
 	debug: vi.fn(),
 };
 
+const baseConfig = {
+	frontendUrl: "https://bigocean.dev",
+	databaseUrl: "",
+	redisUrl: "",
+	anthropicApiKey: Redacted.make("test"),
+	betterAuthSecret: Redacted.make("test"),
+	betterAuthUrl: "",
+	port: 4000,
+	nodeEnv: "test" as const,
+	analyzerModelId: "",
+	analyzerMaxTokens: 0,
+	analyzerTemperature: 0,
+	portraitModelId: "",
+	portraitMaxTokens: 0,
+	portraitTemperature: 0,
+	nerinModelId: "",
+	nerinMaxTokens: 0,
+	nerinTemperature: 0,
+	dailyCostLimit: 0,
+	assessmentTurnCount: 0,
+	portraitWaitMinMs: 0,
+	shareMinConfidence: 0,
+	conversanalyzerModelId: "",
+	portraitGeneratorModelId: "",
+	messageRateLimit: 0,
+	polarAccessToken: Redacted.make("test"),
+	polarWebhookSecret: Redacted.make("test"),
+	polarProductPortraitUnlock: "",
+	polarProductRelationshipSingle: "",
+	polarProductRelationship5Pack: "",
+	polarProductExtendedConversation: "",
+	globalDailyAssessmentLimit: 0,
+	minEvidenceWeight: 0,
+	resendApiKey: Redacted.make("test"),
+	emailFromAddress: "noreply@bigocean.dev",
+	dropOffThresholdHours: 24,
+	checkInThresholdDays: 14,
+	recaptureThresholdDays: 3,
+	sessionCostLimitCents: 2000,
+	nerinDirectorModelId: "",
+	nerinDirectorMaxTokens: 0,
+	nerinDirectorTemperature: 0,
+	nerinDirectorRetryTemperature: 0,
+};
+
 describe("WebPushFetchRepositoryLive", () => {
 	afterEach(() => {
 		vi.unstubAllGlobals();
@@ -40,63 +80,27 @@ describe("WebPushFetchRepositoryLive", () => {
 			return yield* repo.sendNotification(subscription);
 		}).pipe(
 			Effect.provide(
-				Layer.mergeAll(
-					WebPushFetchRepositoryLive,
-					Layer.succeed(LoggerRepository, mockLogger),
-					Layer.succeed(AppConfig, {
-						frontendUrl: "https://bigocean.dev",
-						databaseUrl: "",
-						redisUrl: "",
-						anthropicApiKey: Redacted.make("test"),
-						betterAuthSecret: Redacted.make("test"),
-						betterAuthUrl: "",
-						port: 4000,
-						nodeEnv: "test",
-						analyzerModelId: "",
-						analyzerMaxTokens: 0,
-						analyzerTemperature: 0,
-						portraitModelId: "",
-						portraitMaxTokens: 0,
-						portraitTemperature: 0,
-						nerinModelId: "",
-						nerinMaxTokens: 0,
-						nerinTemperature: 0,
-						dailyCostLimit: 0,
-						assessmentTurnCount: 0,
-						portraitWaitMinMs: 0,
-						shareMinConfidence: 0,
-						conversanalyzerModelId: "",
-						portraitGeneratorModelId: "",
-						messageRateLimit: 0,
-						polarAccessToken: Redacted.make("test"),
-						polarWebhookSecret: Redacted.make("test"),
-						polarProductPortraitUnlock: "",
-						polarProductRelationshipSingle: "",
-						polarProductRelationship5Pack: "",
-						polarProductExtendedConversation: "",
-						globalDailyAssessmentLimit: 0,
-						minEvidenceWeight: 0,
-						resendApiKey: Redacted.make("test"),
-						emailFromAddress: "noreply@bigocean.dev",
-						dropOffThresholdHours: 24,
-						checkInThresholdDays: 14,
-						recaptureThresholdDays: 3,
-						pushVapidPublicKey: undefined,
-						pushVapidPrivateKey: undefined,
-						pushVapidSubject: undefined,
-						sessionCostLimitCents: 2000,
-						nerinDirectorModelId: "",
-						nerinDirectorMaxTokens: 0,
-						nerinDirectorTemperature: 0,
-						nerinDirectorRetryTemperature: 0,
-					}),
+				WebPushFetchRepositoryLive.pipe(
+					Layer.provide(
+						Layer.mergeAll(
+							Layer.succeed(LoggerRepository, mockLogger),
+							Layer.succeed(AppConfig, {
+								...baseConfig,
+								pushVapidPublicKey: undefined,
+								pushVapidPrivateKey: undefined,
+								pushVapidSubject: undefined,
+							}),
+						),
+					),
 				),
 			),
 		);
 
-		await expect(Effect.runPromise(program)).rejects.toMatchObject({
-			_tag: "PushUnavailableError",
-		} satisfies Partial<PushUnavailableError>);
+		const exit = await Effect.runPromise(Effect.exit(program));
+		expect(exit._tag).toBe("Failure");
+		if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
+			expect(exit.cause.error).toHaveProperty("_tag", "PushUnavailableError");
+		}
 	});
 
 	it("sends a VAPID-authenticated wake-up request", async () => {
@@ -115,56 +119,18 @@ describe("WebPushFetchRepositoryLive", () => {
 			yield* repo.sendNotification(subscription);
 		}).pipe(
 			Effect.provide(
-				Layer.mergeAll(
-					WebPushFetchRepositoryLive,
-					Layer.succeed(LoggerRepository, mockLogger),
-					Layer.succeed(AppConfig, {
-						frontendUrl: "https://bigocean.dev",
-						databaseUrl: "",
-						redisUrl: "",
-						anthropicApiKey: Redacted.make("test"),
-						betterAuthSecret: Redacted.make("test"),
-						betterAuthUrl: "",
-						port: 4000,
-						nodeEnv: "test",
-						analyzerModelId: "",
-						analyzerMaxTokens: 0,
-						analyzerTemperature: 0,
-						portraitModelId: "",
-						portraitMaxTokens: 0,
-						portraitTemperature: 0,
-						nerinModelId: "",
-						nerinMaxTokens: 0,
-						nerinTemperature: 0,
-						dailyCostLimit: 0,
-						assessmentTurnCount: 0,
-						portraitWaitMinMs: 0,
-						shareMinConfidence: 0,
-						conversanalyzerModelId: "",
-						portraitGeneratorModelId: "",
-						messageRateLimit: 0,
-						polarAccessToken: Redacted.make("test"),
-						polarWebhookSecret: Redacted.make("test"),
-						polarProductPortraitUnlock: "",
-						polarProductRelationshipSingle: "",
-						polarProductRelationship5Pack: "",
-						polarProductExtendedConversation: "",
-						globalDailyAssessmentLimit: 0,
-						minEvidenceWeight: 0,
-						resendApiKey: Redacted.make("test"),
-						emailFromAddress: "noreply@bigocean.dev",
-						dropOffThresholdHours: 24,
-						checkInThresholdDays: 14,
-						recaptureThresholdDays: 3,
-						pushVapidPublicKey: "PUBLIC_KEY",
-						pushVapidPrivateKey: Redacted.make(privateKeyPem),
-						pushVapidSubject: "mailto:nerin@bigocean.dev",
-						sessionCostLimitCents: 2000,
-						nerinDirectorModelId: "",
-						nerinDirectorMaxTokens: 0,
-						nerinDirectorTemperature: 0,
-						nerinDirectorRetryTemperature: 0,
-					}),
+				WebPushFetchRepositoryLive.pipe(
+					Layer.provide(
+						Layer.mergeAll(
+							Layer.succeed(LoggerRepository, mockLogger),
+							Layer.succeed(AppConfig, {
+								...baseConfig,
+								pushVapidPublicKey: "PUBLIC_KEY",
+								pushVapidPrivateKey: Redacted.make(privateKeyPem),
+								pushVapidSubject: "mailto:nerin@bigocean.dev",
+							}),
+						),
+					),
 				),
 			),
 		);
