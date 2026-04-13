@@ -158,8 +158,10 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 				const userB = alias(user, "userB");
 				return db
 					.select({
+						userAId: userA.id,
 						userAEmail: userA.email,
 						userAName: userA.name,
+						userBId: userB.id,
 						userBEmail: userB.email,
 						userBName: userB.name,
 					})

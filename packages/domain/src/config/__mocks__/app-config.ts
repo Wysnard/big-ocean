@@ -54,6 +54,7 @@ export const mockAppConfig: AppConfigService = {
 	dropOffThresholdHours: 24,
 	checkInThresholdDays: 14,
 	subscriptionNudgeThresholdDays: 21,
+	recaptureThresholdDays: 3,
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: 2000,
 	// Nerin Director (Story 43-3)

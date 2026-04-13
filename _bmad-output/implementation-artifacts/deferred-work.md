@@ -71,3 +71,7 @@
 ## Deferred from: code review of 9-2-dynamic-hook-with-animated-gradient (2026-04-13)
 
 - Orphaned homepage components (`ChatInputBar.tsx`, `DepthMeter.tsx`, `FinalCta.tsx`, `HeroSection.tsx`, `HowItWorks.tsx`) no longer imported from `apps/front/src/routes/index.tsx` after homepage redesign. Still on disk as dead code. Should be cleaned up in a follow-up cleanup story.
+
+## Deferred from: code review of 10-2-relationship-letter-ready-notification (2026-04-13)
+
+- W1: Use-case imports directly from `@workspace/infrastructure` — `send-relationship-analysis-notification.use-case.ts` imports `buildRelationshipLetterReadySubject` and `renderRelationshipAnalysisReadyEmail` from `@workspace/infrastructure/email-templates/relationship-analysis-ready`, bypassing the hexagonal boundary. Pre-existing from Story 35-5, widened by this change.

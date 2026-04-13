@@ -502,6 +502,53 @@ export const relationshipAnalyses = pgTable("relationship_analyses", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ─── Push Notifications (Story 10-2) ─────────────────────────────────────
+
+export const pushSubscriptions = pgTable(
+	"push_subscriptions",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		endpoint: text("endpoint").notNull(),
+		p256dh: text("p256dh").notNull(),
+		auth: text("auth").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.notNull()
+			.defaultNow()
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		index("push_subscriptions_user_id_idx").on(table.userId),
+		uniqueIndex("push_subscriptions_endpoint_unique").on(table.endpoint),
+	],
+);
+
+export const pushNotificationQueue = pgTable(
+	"push_notification_queue",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		title: text("title").notNull(),
+		body: text("body").notNull(),
+		url: text("url").notNull(),
+		tag: text("tag"),
+		dedupeKey: text("dedupe_key").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		expiresAt: timestamp("expires_at", { withTimezone: true })
+			.notNull()
+			.default(sql`now() + interval '7 days'`),
+	},
+	(table) => [
+		index("push_notification_queue_user_id_idx").on(table.userId),
+		uniqueIndex("push_notification_queue_user_dedupe_unique").on(table.userId, table.dedupeKey),
+	],
+);
+
 // ─── Portrait Ratings (Story 19-2 — portrait quality telemetry) ───────────
 
 /**
@@ -548,6 +595,8 @@ export const relations = defineRelations(
 		profileAccessLog,
 		relationshipQrTokens,
 		relationshipAnalyses,
+		pushSubscriptions,
+		pushNotificationQueue,
 		portraitRatings,
 	},
 	(r) => ({
@@ -561,6 +610,8 @@ export const relations = defineRelations(
 				from: r.user.id,
 				to: r.relationshipQrTokens.userId,
 			}),
+			pushSubscriptions: r.many.pushSubscriptions(),
+			pushNotifications: r.many.pushNotificationQueue(),
 		},
 		session: {
 			user: r.one.user({
@@ -684,6 +735,18 @@ export const relations = defineRelations(
 			userBResult: r.one.assessmentResults({
 				from: r.relationshipAnalyses.userBResultId,
 				to: r.assessmentResults.id,
+			}),
+		},
+		pushSubscriptions: {
+			user: r.one.user({
+				from: r.pushSubscriptions.userId,
+				to: r.user.id,
+			}),
+		},
+		pushNotificationQueue: {
+			user: r.one.user({
+				from: r.pushNotificationQueue.userId,
+				to: r.user.id,
 			}),
 		},
 		portraitRatings: {

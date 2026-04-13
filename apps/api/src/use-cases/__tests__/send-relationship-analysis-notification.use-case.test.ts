@@ -12,8 +12,11 @@ import {
 	AppConfig,
 	EmailError,
 	LoggerRepository,
+	PushNotificationQueueRepository,
+	PushSubscriptionRepository,
 	RelationshipAnalysisRepository,
 	ResendEmailRepository,
+	WebPushRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { beforeEach, vi } from "vitest";
@@ -31,6 +34,23 @@ const mockAnalysisRepo = {
 
 const mockEmailRepo = {
 	sendEmail: vi.fn(),
+};
+
+const mockPushSubscriptionRepo = {
+	upsert: vi.fn(),
+	listByUserId: vi.fn(),
+	deleteByEndpoint: vi.fn(),
+	deleteByUserId: vi.fn(),
+};
+
+const mockPushQueueRepo = {
+	enqueue: vi.fn(),
+	consumeByUserId: vi.fn(),
+	deleteByDedupeKey: vi.fn(),
+};
+
+const mockWebPushRepo = {
+	sendNotification: vi.fn(),
 };
 
 const mockLogger = {
@@ -79,6 +99,13 @@ const mockConfig = {
 	checkInThresholdDays: 14,
 	subscriptionNudgeThresholdDays: 21,
 	sessionCostLimitCents: 2000,
+	pushVapidPublicKey: undefined,
+	pushVapidPrivateKey: undefined,
+	pushVapidSubject: undefined,
+	nerinDirectorModelId: "claude-haiku-4-5-20251001",
+	nerinDirectorMaxTokens: 1024,
+	nerinDirectorTemperature: 0.7,
+	nerinDirectorRetryTemperature: 0.9,
 };
 
 const ANALYSIS_ID = "analysis-123";
@@ -87,6 +114,9 @@ const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(RelationshipAnalysisRepository, mockAnalysisRepo),
 		Layer.succeed(ResendEmailRepository, mockEmailRepo),
+		Layer.succeed(PushSubscriptionRepository, mockPushSubscriptionRepo),
+		Layer.succeed(PushNotificationQueueRepository, mockPushQueueRepo),
+		Layer.succeed(WebPushRepository, mockWebPushRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.succeed(AppConfig, mockConfig),
 	);
@@ -97,34 +127,66 @@ describe("sendRelationshipAnalysisNotification (Story 35-5)", () => {
 
 		mockAnalysisRepo.getParticipantEmails.mockReturnValue(
 			Effect.succeed({
+				userAId: "user-a",
 				userAEmail: "alice@example.com",
 				userAName: "Alice",
+				userBId: "user-b",
 				userBEmail: "bob@example.com",
 				userBName: "Bob",
 			}),
 		);
 		mockEmailRepo.sendEmail.mockReturnValue(Effect.void);
+		mockPushSubscriptionRepo.listByUserId.mockReturnValue(Effect.succeed([]));
+		mockPushSubscriptionRepo.deleteByEndpoint.mockReturnValue(Effect.void);
+		mockPushQueueRepo.enqueue.mockImplementation(({ userId, title, body, url, tag, dedupeKey }) =>
+			Effect.succeed({
+				id: `queue-${userId}`,
+				userId,
+				title,
+				body,
+				url,
+				tag,
+				dedupeKey,
+				createdAt: new Date(),
+				expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+			}),
+		);
+		mockPushQueueRepo.deleteByDedupeKey.mockReturnValue(Effect.void);
+		mockWebPushRepo.sendNotification.mockReturnValue(Effect.void);
 	});
 
-	it.effect("should send email to both participants", () =>
+	it.effect("should attempt push first and skip email when subscriptions exist", () =>
+		Effect.gen(function* () {
+			mockPushSubscriptionRepo.listByUserId.mockImplementation((userId: string) =>
+				Effect.succeed([
+					{
+						id: `sub-${userId}`,
+						userId,
+						endpoint: `https://push.example/${userId}`,
+						keys: { p256dh: "p256dh", auth: "auth" },
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					},
+				]),
+			);
+
+			yield* sendRelationshipAnalysisNotification({ analysisId: ANALYSIS_ID });
+
+			expect(mockWebPushRepo.sendNotification).toHaveBeenCalledTimes(2);
+			expect(mockPushQueueRepo.enqueue).toHaveBeenCalledTimes(2);
+			expect(mockEmailRepo.sendEmail).not.toHaveBeenCalled();
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("should fall back to email when no push subscription exists", () =>
 		Effect.gen(function* () {
 			yield* sendRelationshipAnalysisNotification({ analysisId: ANALYSIS_ID });
 
 			expect(mockEmailRepo.sendEmail).toHaveBeenCalledTimes(2);
-
-			// First call — User A receives email with partner name "Bob"
 			const firstCall = mockEmailRepo.sendEmail.mock.calls[0][0];
-			expect(firstCall.to).toBe("alice@example.com");
-			expect(firstCall.subject).toBe("Your relationship analysis is ready");
-			expect(firstCall.html).toContain("Alice");
-			expect(firstCall.html).toContain("Bob");
+			expect(firstCall.subject).toBe("Bob and you - Nerin has something to share");
+			expect(firstCall.html).toContain("relationship letter");
 			expect(firstCall.html).toContain(`https://bigocean.dev/relationship/${ANALYSIS_ID}`);
-
-			// Second call — User B receives email with partner name "Alice"
-			const secondCall = mockEmailRepo.sendEmail.mock.calls[1][0];
-			expect(secondCall.to).toBe("bob@example.com");
-			expect(secondCall.html).toContain("Bob");
-			expect(secondCall.html).toContain("Alice");
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
@@ -136,27 +198,75 @@ describe("sendRelationshipAnalysisNotification (Story 35-5)", () => {
 
 			expect(mockEmailRepo.sendEmail).not.toHaveBeenCalled();
 			expect(mockLogger.warn).toHaveBeenCalledWith(
-				"Cannot send notification: participant data not found",
+				"Cannot send relationship letter notification: participant data not found",
 				expect.objectContaining({ analysisId: ANALYSIS_ID }),
 			);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should swallow email send errors (fire-and-forget)", () =>
+	it.effect("should fall back to email when push delivery fails", () =>
 		Effect.gen(function* () {
-			mockEmailRepo.sendEmail.mockReturnValue(Effect.fail(new EmailError("SMTP failure")));
+			mockPushSubscriptionRepo.listByUserId.mockImplementation((userId: string) =>
+				Effect.succeed([
+					{
+						id: `sub-${userId}`,
+						userId,
+						endpoint: `https://push.example/${userId}`,
+						keys: { p256dh: "p256dh", auth: "auth" },
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					},
+				]),
+			);
+			mockWebPushRepo.sendNotification.mockReturnValue(
+				Effect.fail({
+					_tag: "PushDeliveryError",
+					endpoint: "https://push.example/user-a",
+					reason: "gateway timeout",
+				}),
+			);
 
-			// Should not throw
 			yield* sendRelationshipAnalysisNotification({ analysisId: ANALYSIS_ID });
 
-			expect(mockLogger.error).toHaveBeenCalledWith(
-				"Failed to send relationship analysis notification (fail-open)",
+			expect(mockEmailRepo.sendEmail).toHaveBeenCalledTimes(2);
+			expect(mockPushQueueRepo.deleteByDedupeKey).toHaveBeenCalledTimes(2);
+			expect(mockLogger.warn).toHaveBeenCalledWith(
+				"Relationship letter push delivery failed",
 				expect.objectContaining({ analysisId: ANALYSIS_ID }),
 			);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should not expose personality data in email", () =>
+	it.effect("should isolate one participant failure and continue the other leg", () =>
+		Effect.gen(function* () {
+			mockPushSubscriptionRepo.listByUserId.mockImplementation((userId: string) =>
+				Effect.succeed(userId === "user-a" ? [] : []),
+			);
+			mockEmailRepo.sendEmail
+				.mockReturnValueOnce(Effect.fail(new EmailError("SMTP failure")))
+				.mockReturnValueOnce(Effect.void);
+
+			yield* sendRelationshipAnalysisNotification({ analysisId: ANALYSIS_ID });
+
+			expect(mockEmailRepo.sendEmail).toHaveBeenCalledTimes(2);
+			expect(mockLogger.error).toHaveBeenCalledWith(
+				"Relationship letter notification leg failed (fail-open)",
+				expect.objectContaining({
+					analysisId: ANALYSIS_ID,
+					participantRole: "user-a",
+				}),
+			);
+			expect(mockLogger.info).toHaveBeenCalledWith(
+				"Relationship letter notification delivered via email fallback",
+				expect.objectContaining({
+					analysisId: ANALYSIS_ID,
+					participantRole: "user-b",
+				}),
+			);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("should not expose personality data in fallback email", () =>
 		Effect.gen(function* () {
 			yield* sendRelationshipAnalysisNotification({ analysisId: ANALYSIS_ID });
 

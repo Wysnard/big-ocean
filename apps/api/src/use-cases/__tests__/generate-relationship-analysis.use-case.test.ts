@@ -19,9 +19,12 @@ import {
 	ConversationEvidenceRepository,
 	ConversationRepository,
 	LoggerRepository,
+	PushNotificationQueueRepository,
+	PushSubscriptionRepository,
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
 	ResendEmailRepository,
+	WebPushRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { vi } from "vitest";
@@ -39,6 +42,23 @@ const mockAnalysisRepo = {
 
 const mockEmailRepo = {
 	sendEmail: vi.fn(),
+};
+
+const mockPushSubscriptionRepo = {
+	upsert: vi.fn(),
+	listByUserId: vi.fn(),
+	deleteByEndpoint: vi.fn(),
+	deleteByUserId: vi.fn(),
+};
+
+const mockPushQueueRepo = {
+	enqueue: vi.fn(),
+	consumeByUserId: vi.fn(),
+	deleteByDedupeKey: vi.fn(),
+};
+
+const mockWebPushRepo = {
+	sendNotification: vi.fn(),
 };
 
 const mockConfig = {
@@ -80,6 +100,13 @@ const mockConfig = {
 	checkInThresholdDays: 14,
 	subscriptionNudgeThresholdDays: 21,
 	sessionCostLimitCents: 2000,
+	pushVapidPublicKey: undefined,
+	pushVapidPrivateKey: undefined,
+	pushVapidSubject: undefined,
+	nerinDirectorModelId: "claude-haiku-4-5-20251001",
+	nerinDirectorMaxTokens: 1024,
+	nerinDirectorTemperature: 0.7,
+	nerinDirectorRetryTemperature: 0.9,
 };
 
 const mockAnalysisGen = {
@@ -128,6 +155,9 @@ const createTestLayer = () =>
 		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.succeed(ResendEmailRepository, mockEmailRepo),
+		Layer.succeed(PushSubscriptionRepository, mockPushSubscriptionRepo),
+		Layer.succeed(PushNotificationQueueRepository, mockPushQueueRepo),
+		Layer.succeed(WebPushRepository, mockWebPushRepo),
 		Layer.succeed(AppConfig, mockConfig),
 	);
 
@@ -202,13 +232,30 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 		mockAnalysisRepo.incrementRetryCount.mockReturnValue(Effect.succeed(undefined));
 		mockAnalysisRepo.getParticipantEmails.mockReturnValue(
 			Effect.succeed({
+				userAId: INVITER_ID,
 				userAEmail: "alice@example.com",
 				userAName: "Alice",
+				userBId: INVITEE_ID,
 				userBEmail: "bob@example.com",
 				userBName: "Bob",
 			}),
 		);
 		mockEmailRepo.sendEmail.mockReturnValue(Effect.void);
+		mockPushSubscriptionRepo.listByUserId.mockReturnValue(Effect.succeed([]));
+		mockPushQueueRepo.enqueue.mockImplementation(({ userId, title, body, url, tag, dedupeKey }) =>
+			Effect.succeed({
+				id: `queue-${userId}`,
+				userId,
+				title,
+				body,
+				url,
+				tag,
+				dedupeKey,
+				createdAt: new Date(),
+			}),
+		);
+		mockPushQueueRepo.deleteByDedupeKey.mockReturnValue(Effect.void);
+		mockWebPushRepo.sendNotification.mockReturnValue(Effect.void);
 	});
 
 	it.effect("should generate analysis and update placeholder on success", () =>
