@@ -6,10 +6,15 @@ const APP_ROOT = process.cwd();
 const CONTENT_ROOT = path.join(APP_ROOT, "src", "content", "library");
 const OUTPUT_PATH = path.join(APP_ROOT, "public", "sitemap.xml");
 
+function escapeXml(value) {
+	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function stripWrappingQuotes(value) {
 	if (
-		(value.startsWith('"') && value.endsWith('"')) ||
-		(value.startsWith("'") && value.endsWith("'"))
+		value.length >= 2 &&
+		((value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'")))
 	) {
 		return value.slice(1, -1);
 	}
@@ -18,7 +23,8 @@ function stripWrappingQuotes(value) {
 }
 
 function parseFrontmatter(source) {
-	const match = source.match(/^---\n([\s\S]*?)\n---\n?/);
+	const normalized = source.replace(/\r\n/g, "\n");
+	const match = normalized.match(/^---\n([\s\S]*?)\n---\n?/);
 
 	if (!match) {
 		throw new Error("Missing frontmatter block");
@@ -104,8 +110,9 @@ function buildPublicProfileEntries() {
 }
 
 function renderUrl(entry) {
+	const loc = escapeXml(`${SITE_ORIGIN}${entry.pathname}`);
 	return `  <url>
-    <loc>${SITE_ORIGIN}${entry.pathname}</loc>
+    <loc>${loc}</loc>
     <lastmod>${entry.lastmod}</lastmod>
     <changefreq>${entry.changefreq}</changefreq>
   </url>`;

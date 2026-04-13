@@ -6,7 +6,7 @@ const DEFAULT_CTA_COPY: Record<LibraryTier, string> = {
 	archetype: "Discover your archetype in 30 minutes",
 	trait: "Where do you fall on the spectrum? Find out free",
 	facet: "See how the finer-grained facets show up in you",
-	science: "See the Big Five in action with the free assessment",
+	science: "See the Big Five in action — free assessment",
 	guides: "Turn reflection into a clearer self-portrait",
 };
 
@@ -21,7 +21,7 @@ export function AssessmentCTA({ tier, ctaText }: AssessmentCTAProps) {
 	return (
 		<section
 			data-testid="library-assessment-cta"
-			className="rounded-[2rem] border border-border/70 bg-linear-to-br from-[#eef6ff] via-background to-[#fff7ed] px-6 py-8 shadow-sm"
+			className="rounded-[2rem] border border-border/70 bg-linear-to-br from-primary/[0.04] via-background to-primary/[0.07] px-6 py-8 shadow-sm"
 		>
 			<p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
 				Free Assessment

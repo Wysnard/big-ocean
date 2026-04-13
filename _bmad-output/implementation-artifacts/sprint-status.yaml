@@ -139,7 +139,7 @@ development_status:
 
   # Epic 12: Knowledge Library (SEO)
   epic-12: in-progress
-  12-1-knowledge-library-architecture-and-first-10-pages: in-progress
+  12-1-knowledge-library-architecture-and-first-10-pages: done
   12-2-knowledge-library-content-expansion: backlog
   epic-12-retrospective: optional
 

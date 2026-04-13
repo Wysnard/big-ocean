@@ -9,16 +9,7 @@ interface LibraryPlaceholderPageProps {
 
 export function LibraryPlaceholderPage({ title, description, tier }: LibraryPlaceholderPageProps) {
 	return (
-		<KnowledgeArticleLayout
-			title={title}
-			description={description}
-			tier={tier}
-			breadcrumbs={[
-				{ label: "Home", to: "/" },
-				{ label: "Library", to: "/library" },
-				{ label: title },
-			]}
-		>
+		<KnowledgeArticleLayout title={title} description={description} tier={tier}>
 			<div className="space-y-4">
 				<p>
 					This section is scaffolded so the route is live, indexable, and ready for the next batch of

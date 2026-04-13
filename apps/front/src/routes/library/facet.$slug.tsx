@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { LibraryPlaceholderPage } from "@/components/library/LibraryPlaceholderPage";
 import {
 	buildBreadcrumbSchema,
@@ -9,6 +9,9 @@ import {
 const SITE_ORIGIN = import.meta.env.VITE_APP_URL ?? "https://bigocean.dev";
 
 export const Route = createFileRoute("/library/facet/$slug")({
+	loader: () => {
+		throw notFound();
+	},
 	head: () => ({
 		meta: [
 			{ title: "Facet Library | big-ocean" },

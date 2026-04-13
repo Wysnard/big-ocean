@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { KnowledgeArticleLayout } from "@/components/library/KnowledgeArticleLayout";
 import { getLibraryEntry, getLibraryEntryData, type LibraryEntryData } from "@/lib/library-content";
 import { buildArchetypeSchema, buildBreadcrumbSchema, buildJsonLdGraph } from "@/lib/schema-org";
@@ -84,7 +84,6 @@ export const Route = createFileRoute("/library/archetype/$slug")({
 							buildBreadcrumbSchema([
 								{ name: "Home", url: `${SITE_ORIGIN}/` },
 								{ name: "Library", url: `${SITE_ORIGIN}/library` },
-								{ name: "Archetypes", url: `${SITE_ORIGIN}/library` },
 								{ name: loaderData.entry.title, url: `${SITE_ORIGIN}${loaderData.entry.pathname}` },
 							]),
 						]),
@@ -101,20 +100,24 @@ function CompatibleArchetypes({
 }: {
 	compatibleArchetypes: Array<{ title: string; description: string; pathname: string }>;
 }) {
+	if (compatibleArchetypes.length === 0) {
+		return null;
+	}
+
 	return (
 		<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
 			<h2 className="text-lg font-semibold tracking-tight text-foreground">Compatible archetypes</h2>
 			<div className="mt-4 space-y-3">
 				{compatibleArchetypes.map((archetype) => (
-					<a
+					<Link
 						key={archetype.pathname}
-						href={archetype.pathname}
+						to={archetype.pathname}
 						data-testid={`compatible-archetype-${archetype.pathname.split("/").pop()}`}
 						className="block rounded-[1.25rem] border border-border/70 bg-background p-4 transition-transform hover:-translate-y-0.5"
 					>
 						<h3 className="text-base font-semibold text-foreground">{archetype.title}</h3>
 						<p className="mt-2 text-sm leading-6 text-muted-foreground">{archetype.description}</p>
-					</a>
+					</Link>
 				))}
 			</div>
 		</section>
@@ -123,12 +126,7 @@ function CompatibleArchetypes({
 
 function ArchetypeArticlePage() {
 	const { entry, compatibleArchetypes } = Route.useLoaderData();
-	const article = getLibraryEntry("archetype", entry.slug);
-
-	if (!article) {
-		return null;
-	}
-
+	const article = getLibraryEntry("archetype", entry.slug)!;
 	const Content = article.Content;
 
 	return (
@@ -137,12 +135,6 @@ function ArchetypeArticlePage() {
 			description={entry.description}
 			tier="archetype"
 			ctaText={entry.cta}
-			breadcrumbs={[
-				{ label: "Home", to: "/" },
-				{ label: "Library", to: "/library" },
-				{ label: "Archetypes", to: "/library" },
-				{ label: entry.title },
-			]}
 			supplementary={<CompatibleArchetypes compatibleArchetypes={compatibleArchetypes} />}
 		>
 			<Content />

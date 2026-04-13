@@ -10,8 +10,6 @@ declare module "*.mdx" {
 		cta: string;
 	};
 
-	export const rawContent: string;
-
 	const Component: ComponentType;
 	export default Component;
 }

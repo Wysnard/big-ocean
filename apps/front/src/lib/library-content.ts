@@ -17,12 +17,10 @@ export interface LibraryFrontmatter {
 type LibraryModule = {
 	default: ComponentType;
 	frontmatter: LibraryFrontmatter;
-	rawContent: string;
 };
 
 export interface LibraryEntry extends LibraryFrontmatter {
 	Content: ComponentType;
-	bodyText: string;
 	pathname: string;
 }
 
@@ -34,6 +32,14 @@ export const LIBRARY_TIER_LABELS: Record<LibraryTier, string> = {
 	facet: "Facets",
 	science: "Science",
 	guides: "Guides",
+};
+
+export const LIBRARY_TIER_SINGULAR_LABELS: Record<LibraryTier, string> = {
+	archetype: "Archetype",
+	trait: "Trait",
+	facet: "Facet",
+	science: "Science",
+	guides: "Guide",
 };
 
 export const LIBRARY_TIER_DESCRIPTIONS: Record<LibraryTier, string> = {
@@ -65,9 +71,13 @@ function isLibrarySchemaType(value: string): value is LibrarySchemaType {
 }
 
 function assertFrontmatter(
-	frontmatter: LibraryFrontmatter,
+	frontmatter: LibraryFrontmatter | undefined,
 	modulePath: string,
 ): LibraryFrontmatter {
+	if (!frontmatter) {
+		throw new Error(`Missing frontmatter in ${modulePath} — ensure the MDX file has a --- block`);
+	}
+
 	if (!frontmatter.title || !frontmatter.description || !frontmatter.slug || !frontmatter.cta) {
 		throw new Error(`Incomplete library frontmatter in ${modulePath}`);
 	}
@@ -93,7 +103,6 @@ function toEntry(modulePath: string, module: LibraryModule): LibraryEntry {
 	return {
 		...frontmatter,
 		Content: module.default,
-		bodyText: module.rawContent.trim(),
 		pathname: buildLibraryPath(frontmatter.tier, frontmatter.slug),
 	};
 }

@@ -5,9 +5,11 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import { fileURLToPath, URL } from 'node:url'
 
+import mdx from '@mdx-js/rollup'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
-import { libraryMdxPlugin } from './scripts/library-mdx-plugin'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 
 const isE2E = process.env.VITE_E2E === 'true'
 
@@ -39,7 +41,9 @@ const config = defineConfig({
   },
   plugins: [
     externalPackagesPlugin,
-    libraryMdxPlugin(),
+    { enforce: 'pre' as const, ...mdx({
+      remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
+    }) },
     ...isE2E ? [] : [devtools()],
     // this is the plugin that enables path aliases
     viteTsConfigPaths({

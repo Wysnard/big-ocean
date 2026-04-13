@@ -88,7 +88,6 @@ export const Route = createFileRoute("/library/trait/$slug")({
 							buildBreadcrumbSchema([
 								{ name: "Home", url: `${SITE_ORIGIN}/` },
 								{ name: "Library", url: `${SITE_ORIGIN}/library` },
-								{ name: "Traits", url: `${SITE_ORIGIN}/library` },
 								{ name: loaderData.entry.title, url: `${SITE_ORIGIN}${loaderData.entry.pathname}` },
 							]),
 						]),
@@ -153,12 +152,7 @@ function FacetBreakdown({
 
 function TraitArticlePage() {
 	const { entry, tagline, spectrum, facets } = Route.useLoaderData();
-	const article = getLibraryEntry("trait", entry.slug);
-
-	if (!article) {
-		return null;
-	}
-
+	const article = getLibraryEntry("trait", entry.slug)!;
 	const Content = article.Content;
 
 	return (
@@ -167,12 +161,6 @@ function TraitArticlePage() {
 			description={entry.description}
 			tier="trait"
 			ctaText={entry.cta}
-			breadcrumbs={[
-				{ label: "Home", to: "/" },
-				{ label: "Library", to: "/library" },
-				{ label: "Traits", to: "/library" },
-				{ label: entry.title },
-			]}
 			supplementary={
 				<div className="space-y-6">
 					<SpectrumCard tagline={tagline} spectrum={spectrum} />

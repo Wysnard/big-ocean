@@ -1,6 +1,9 @@
 # TanStack Start
 .tanstack/tmp/
 
+# Generated files
+/public/sitemap.xml
+
 # Playwright
 /test-results/
 /playwright-report/

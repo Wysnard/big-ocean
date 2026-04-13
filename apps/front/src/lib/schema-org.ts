@@ -86,14 +86,11 @@ export function buildArchetypeSchema({
 			mainEntityOfPage: url,
 			url,
 			offers: offer,
-		},
-		{
-			"@type": "DefinedTerm",
-			name: entry.title,
-			description: entry.description,
-			url,
-			inDefinedTermSet: toAbsoluteUrl(origin, "/library/archetype"),
-			sameAs: compatibleArchetypes.map((item) => toAbsoluteUrl(origin, item.pathname)),
+			mentions: compatibleArchetypes.map((item) => ({
+				"@type": "Thing",
+				name: item.title,
+				url: toAbsoluteUrl(origin, item.pathname),
+			})),
 		},
 	];
 }
@@ -126,6 +123,7 @@ export function buildTraitSchema({
 			credentialCategory: "Psychology explainer",
 			competencyRequired: facetNames,
 			url,
+			offers: offer,
 		},
 	];
 }
