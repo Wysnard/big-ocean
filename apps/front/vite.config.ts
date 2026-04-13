@@ -30,7 +30,7 @@ const config = defineConfig({
     },
   },
   ssr: {
-    external: ['@resvg/resvg-js', 'satori'],
+    external: ['@resvg/resvg-js', 'satori', '@workspace/infrastructure'],
   },
   optimizeDeps: {
     exclude: ['@resvg/resvg-js', 'satori'],
@@ -54,7 +54,7 @@ const config = defineConfig({
       config: {
         scanDirs: ['server'],
         externals: {
-          external: ['@resvg/resvg-js', /^@resvg\/resvg-js-/, 'satori'],
+          external: ['@resvg/resvg-js', /^@resvg\/resvg-js-/, 'satori', /^@workspace\/infrastructure/],
         },
       },
     }),
