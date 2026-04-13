@@ -10,14 +10,15 @@ import { nitro } from 'nitro/vite'
 
 const isE2E = process.env.VITE_E2E === 'true'
 
-// Mark @resvg/resvg-js platform-specific native binaries as external so Nitro's
-// nf3 plugin doesn't try to resolve packages that only exist for other platforms
-// (e.g. @resvg/resvg-js-android-arm-eabi on a Linux x64 CI runner).
-const resvgExternalPlugin = {
-  name: 'resvg-external',
+// Mark packages as external so Rollup doesn't try to resolve them when they
+// aren't installed in the build environment (e.g. Docker).
+// - @resvg/resvg-js-*: platform-specific native binaries
+// - @workspace/infrastructure: only used by dev-only email preview (not in prod Dockerfile)
+const externalPackagesPlugin = {
+  name: 'external-packages',
   enforce: 'pre' as const,
   resolveId(id: string) {
-    if (/^@resvg\/resvg-js-/.test(id)) {
+    if (/^@resvg\/resvg-js-/.test(id) || /^@workspace\/infrastructure/.test(id)) {
       return { id, external: true }
     }
   },
@@ -30,13 +31,13 @@ const config = defineConfig({
     },
   },
   ssr: {
-    external: ['@resvg/resvg-js', 'satori', '@workspace/infrastructure'],
+    external: ['@resvg/resvg-js', 'satori'],
   },
   optimizeDeps: {
     exclude: ['@resvg/resvg-js', 'satori'],
   },
   plugins: [
-    resvgExternalPlugin,
+    externalPackagesPlugin,
     ...isE2E ? [] : [devtools()],
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
@@ -54,7 +55,7 @@ const config = defineConfig({
       config: {
         scanDirs: ['server'],
         externals: {
-          external: ['@resvg/resvg-js', /^@resvg\/resvg-js-/, 'satori', /^@workspace\/infrastructure/],
+          external: ['@resvg/resvg-js', /^@resvg\/resvg-js-/, 'satori'],
         },
       },
     }),
