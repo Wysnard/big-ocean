@@ -21,7 +21,7 @@ test.describe("dashboard: auth user without assessment", () => {
 	test("home → header avatar → dashboard shows empty state", async ({ page }) => {
 		await test.step("navigate to home page", async () => {
 			await page.goto("/");
-			await page.locator("[data-slot='hero-section']").waitFor({ state: "visible" });
+			await page.locator("[data-slot='sticky-auth-panel']").waitFor({ state: "visible" });
 		});
 
 		await test.step("click dashboard link in user nav dropdown", async () => {

@@ -3,8 +3,7 @@
  *
  * Verifies the homepage split layout renders correctly:
  * - Skip-to-content accessibility
- * - Desktop: sticky auth panel with signup form + login link
- * - Desktop: hero section visible in left pane
+ * - Desktop: sticky auth panel with signup + login links
  */
 
 import { expect, test } from "@playwright/test";
@@ -26,18 +25,17 @@ test.describe("Homepage & Acquisition Funnel", () => {
 		await expect(main).toBeFocused();
 	});
 
-	test("desktop split layout shows auth panel with signup form @smoke", async ({ page }) => {
+	test("desktop split layout shows auth panel with signup link @smoke", async ({ page }) => {
 		await test.step("load homepage and verify split layout", async () => {
 			await page.goto("/");
-			await page.locator("[data-slot='hero-section']").waitFor({ state: "visible" });
+			await page.locator("[data-slot='sticky-auth-panel']").waitFor({ state: "visible" });
 
-			// Desktop: sticky auth panel with inline signup form is visible
-			await expect(page.getByTestId("sticky-auth-panel")).toBeVisible();
-			await expect(page.getByTestId("homepage-signup-form")).toBeVisible();
+			// Desktop: sticky auth panel with signup and login links
+			await expect(page.getByRole("link", { name: /start yours/i })).toBeVisible();
 		});
 
 		await test.step("login link navigates to /login", async () => {
-			const loginLink = page.getByTestId("login-link");
+			const loginLink = page.getByRole("link", { name: /log in/i });
 			await expect(loginLink).toBeVisible();
 			await loginLink.click();
 			await page.waitForURL(/\/login/, { timeout: 10_000 });

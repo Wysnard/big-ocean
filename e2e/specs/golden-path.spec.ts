@@ -21,9 +21,9 @@ test("golden path: landing → signup → chat → results → share → public 
 	test.setTimeout(90_000); // Long journey — multiple API calls, auth, navigation
 	await test.step("navigate to landing page and verify split layout", async () => {
 		await page.goto("/");
-		await page.locator("[data-slot='hero-section']").waitFor({ state: "visible" });
-		// Desktop shows the sticky auth panel with inline signup form (hero-cta is mobile-only)
-		await expect(page.getByTestId("homepage-signup-form")).toBeVisible();
+		await page.locator("[data-slot='sticky-auth-panel']").waitFor({ state: "visible" });
+		// Desktop shows the sticky auth panel with signup link
+		await expect(page.getByRole("link", { name: /start yours/i })).toBeVisible();
 	});
 
 	await test.step("sign up, verify email, and login", async () => {
