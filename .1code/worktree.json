@@ -1,7 +1,7 @@
 {
 	"setup-worktree": [
 		"cp $ROOT_WORKTREE_PATH/.npmrc .npmrc",
-		"pnpm install",
+		"pnpm install --prefer-offline",
 		"cp $ROOT_WORKTREE_PATH/.env .env",
 		"cp $ROOT_WORKTREE_PATH/.env.test .env.test",
 		"cp $ROOT_WORKTREE_PATH/.env.e2e .env.e2e",

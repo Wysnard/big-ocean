@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
@@ -19,6 +18,7 @@ import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
 import { DepthMeter } from "./chat/DepthMeter";
 import { ASSESSMENT_MILESTONES, isMilestoneReached } from "./chat/depth-milestones";
+import { PostAssessmentTransitionButton } from "./chat/PostAssessmentTransitionButton";
 import { GeometricOcean } from "./sea-life/GeometricOcean";
 
 interface TherapistChatProps {
@@ -27,7 +27,6 @@ interface TherapistChatProps {
 	userName?: string | null;
 	userImage?: string | null;
 	isAuthenticated?: boolean;
-	onPortraitReveal?: () => void;
 	highlightMessageId?: string;
 	highlightQuote?: string;
 	highlightStart?: number;
@@ -162,7 +161,6 @@ export function TherapistChat({
 	userName,
 	userImage,
 	isAuthenticated = false,
-	onPortraitReveal: _onPortraitReveal,
 	highlightMessageId,
 	highlightQuote: _highlightQuote,
 	highlightStart,
@@ -450,7 +448,7 @@ function ChatInputBar({
 					onKeyDown={handleKeyDown}
 					onFocus={onFocus}
 					placeholder={placeholder}
-					disabled={isLoading || isCompleted}
+					disabled={isLoading || isCompleted || isFarewellReceived}
 					maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
 					rows={1}
 					className="flex-1 px-4 py-2 max-h-[120px] rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none [field-sizing:content]"
@@ -459,7 +457,7 @@ function ChatInputBar({
 					data-testid="chat-send-btn"
 					aria-label="Send message"
 					onClick={handleSendMessage}
-					disabled={!inputValue.trim() || isLoading || isCompleted}
+					disabled={!inputValue.trim() || isLoading || isCompleted || isFarewellReceived}
 					size="sm"
 					className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
 				>
@@ -554,6 +552,8 @@ function ChatContent({
 	isOnline: boolean;
 	wasOffline: boolean;
 }) {
+	const showCompletionCta = isAuthenticated && (isCompleted || isFarewellReceived);
+
 	return (
 		<>
 			{/* Depth Meter — fixed sidebar, desktop only */}
@@ -731,16 +731,18 @@ function ChatContent({
 				</div>
 
 				{/* Input Area — fades on farewell / completion (Story 7.18) */}
-				{(isCompleted || isFarewellReceived) && isAuthenticated ? (
-					<div className="flex justify-center py-4 px-4">
-						<Button asChild variant="outline" className="min-h-11">
-							<Link to="/results/$conversationSessionId" params={{ conversationSessionId: sessionId }}>
-								View Results
-							</Link>
-						</Button>
-					</div>
-				) : (
+				{showCompletionCta && (
 					<div
+						data-slot="post-assessment-transition"
+						data-testid="post-assessment-transition"
+						className="flex justify-center px-4 pt-2 pb-4"
+					>
+						<PostAssessmentTransitionButton sessionId={sessionId} />
+					</div>
+				)}
+				{!isCompleted && (
+					<div
+						aria-hidden={showCompletionCta || undefined}
 						className={cn(
 							isFarewellReceived &&
 								"opacity-0 pointer-events-none motion-safe:transition-opacity motion-safe:duration-300",

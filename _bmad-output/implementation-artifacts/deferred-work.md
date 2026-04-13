@@ -1,5 +1,14 @@
 # Deferred Work
 
+## Deferred from: code review of 2-1-show-me-what-you-found-closing-button (2026-04-13)
+
+- `sessionId` empty-string guard absent in `PostAssessmentTransitionButton` — route validates before mount so low risk; guard could be added defensively
+- Race condition: `isFarewellReceived` fires before server writes final portrait data — CTA click may hit results before data is ready; Story 2.2 owns generating-state UX
+- Arrow `→` in button label may produce odd screen-reader announcement depending on AT/locale — consider `aria-hidden` on the arrow character
+- Mock `Link` fixture types `search` as `Record<string, string>` narrower than TanStack Router's actual generic — works today but may mask type mismatches in future tests
+- No test for `isFarewellReceived=true, isAuthenticated=false` state (results in blank action area with no affordance)
+- `data-slot="post-assessment-transition"` wrapper div lives in `TherapistChat.tsx` rather than inside `PostAssessmentTransitionButton` — component reuse will not carry the wrapper selector
+
 ## Deferred from: code review of 45-2-repository-and-domain-layer-renames (2026-04-07)
 
 - `mockAssessmentMessageRepo` in `start-assessment.fixtures.ts:35` is missing `updateExchangeId` and `getMessagesByUserId` methods required by `MessageRepository` interface
