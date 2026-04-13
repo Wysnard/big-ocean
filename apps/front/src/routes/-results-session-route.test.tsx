@@ -3,15 +3,21 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockUseParams, mockUseSearch, mockNavigate, mockUseAuth, mockUseGetResults } = vi.hoisted(
-	() => ({
-		mockUseParams: vi.fn(() => ({ conversationSessionId: "session-123" })),
-		mockUseSearch: vi.fn(() => ({ scrollToFacet: undefined })),
-		mockNavigate: vi.fn(),
-		mockUseAuth: vi.fn(),
-		mockUseGetResults: vi.fn(),
-	}),
-);
+const {
+	mockUseParams,
+	mockUseSearch,
+	mockNavigate,
+	mockUseAuth,
+	mockUseGetResults,
+	mockUsePortraitStatus,
+} = vi.hoisted(() => ({
+	mockUseParams: vi.fn(() => ({ conversationSessionId: "session-123" })),
+	mockUseSearch: vi.fn(() => ({ scrollToFacet: undefined })),
+	mockNavigate: vi.fn(),
+	mockUseAuth: vi.fn(),
+	mockUseGetResults: vi.fn(),
+	mockUsePortraitStatus: vi.fn(() => ({ data: null, isError: false, refetch: vi.fn() })),
+}));
 
 vi.mock("@tanstack/react-router", () => ({
 	createFileRoute: () => (options: Record<string, unknown>) => ({
@@ -63,7 +69,7 @@ vi.mock("@/hooks/use-profile", () => ({
 }));
 
 vi.mock("@/hooks/usePortraitStatus", () => ({
-	usePortraitStatus: () => ({ data: null, refetch: vi.fn() }),
+	usePortraitStatus: (...args: unknown[]) => mockUsePortraitStatus(...args),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -127,6 +133,10 @@ vi.mock("@/components/sharing/archetype-share-card", () => ({
 
 vi.mock("@/components/results/PortraitReadingView", () => ({
 	PortraitReadingView: () => <div data-testid="portrait-reading" />,
+}));
+
+vi.mock("@/components/results/PortraitGeneratingState", () => ({
+	PortraitGeneratingState: () => <div data-testid="portrait-generating-state" />,
 }));
 
 // Static import — all heavy deps are mocked above (vi.mock is hoisted)
@@ -227,5 +237,163 @@ describe("results/$conversationSessionId route behavior", () => {
 		render(<Component />);
 
 		expect(screen.queryByText("Continue Assessment")).toBeNull();
+	});
+});
+
+const resultsData = {
+	archetypeName: "Navigator",
+	oceanCode5: "OCEAV",
+	archetypeDescription: "Description",
+	overallConfidence: 0.78,
+	isCurated: true,
+	traits: [{ name: "openness" as const, score: 60, level: "O", confidence: 0.8 }],
+	facets: [
+		{ name: "intellect" as const, traitName: "openness" as const, score: 60, confidence: 0.8 },
+	],
+	archetypeColor: "#000",
+	oceanCode4: "OCEA",
+	messageCount: 24,
+};
+
+function setupAuthenticatedWithResults() {
+	mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+	mockUseGetResults.mockReturnValue({ data: resultsData, isLoading: false, error: null });
+}
+
+describe("Story 2.2: Portrait generating state and fade-in transition", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		window.localStorage.clear();
+		mockUseGetResults.mockReturnValue({ data: null, isLoading: false, error: null });
+		mockUsePortraitStatus.mockReturnValue({ data: null, isError: false, refetch: vi.fn() });
+	});
+
+	it("shows generating state when portrait is generating", () => {
+		setupAuthenticatedWithResults();
+		mockUseSearch.mockReturnValue({ view: "portrait" });
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "generating", portrait: null },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		render(<Component />);
+
+		expect(screen.getByTestId("portrait-generating-state")).toBeTruthy();
+		expect(screen.queryByTestId("portrait-reading")).toBeNull();
+	});
+
+	it("shows reading view when portrait is ready with content", () => {
+		setupAuthenticatedWithResults();
+		mockUseSearch.mockReturnValue({ view: "portrait" });
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "ready", portrait: { content: "Your portrait letter..." } },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		render(<Component />);
+
+		expect(screen.getByTestId("portrait-reading")).toBeTruthy();
+		expect(screen.queryByTestId("portrait-generating-state")).toBeNull();
+	});
+
+	it("applies fade-in animation class when transitioning from generating to ready", () => {
+		setupAuthenticatedWithResults();
+		mockUseSearch.mockReturnValue({ view: "portrait" });
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "generating", portrait: null },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		const { rerender } = render(<Component />);
+		expect(screen.getByTestId("portrait-generating-state")).toBeTruthy();
+
+		// Transition to ready
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "ready", portrait: { content: "Your portrait letter..." } },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		rerender(<Component />);
+
+		const readingWrapper = screen.getByTestId("portrait-reading").parentElement;
+		expect(readingWrapper?.className).toContain("motion-safe:animate-in");
+		expect(readingWrapper?.className).toContain("motion-safe:fade-in-0");
+	});
+
+	it("does not apply fade-in animation when portrait is already ready on mount", () => {
+		setupAuthenticatedWithResults();
+		mockUseSearch.mockReturnValue({ view: "portrait" });
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "ready", portrait: { content: "Your portrait letter..." } },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		render(<Component />);
+
+		const readingWrapper = screen.getByTestId("portrait-reading").parentElement;
+		expect(readingWrapper?.className ?? "").not.toContain("animate-in");
+	});
+
+	it("uses motion-safe prefix for reduced motion fallback", () => {
+		setupAuthenticatedWithResults();
+		mockUseSearch.mockReturnValue({ view: "portrait" });
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "generating", portrait: null },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		const { rerender } = render(<Component />);
+
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "ready", portrait: { content: "Your portrait letter..." } },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		rerender(<Component />);
+
+		const readingWrapper = screen.getByTestId("portrait-reading").parentElement;
+		const className = readingWrapper?.className ?? "";
+		// All animation classes must be gated by motion-safe: prefix
+		expect(className).toContain("motion-safe:animate-in");
+		expect(className).toContain("motion-safe:fade-in-0");
+		expect(className).toContain("motion-safe:slide-in-from-bottom-2");
+		expect(className).toContain("motion-safe:duration-500");
+	});
+
+	it("falls through to profile view when portrait status is 'none'", () => {
+		setupAuthenticatedWithResults();
+		mockUseSearch.mockReturnValue({ view: "portrait" });
+		mockUsePortraitStatus.mockReturnValue({
+			data: { status: "none", portrait: null },
+			isError: false,
+			refetch: vi.fn(),
+		});
+
+		render(<Component />);
+
+		expect(screen.queryByTestId("portrait-generating-state")).toBeNull();
+		expect(screen.getByTestId("results-content")).toBeTruthy();
+	});
+
+	it("falls through to profile view when portrait status query errors", () => {
+		setupAuthenticatedWithResults();
+		mockUseSearch.mockReturnValue({ view: "portrait" });
+		mockUsePortraitStatus.mockReturnValue({
+			data: null,
+			isError: true,
+			refetch: vi.fn(),
+		});
+
+		render(<Component />);
+
+		expect(screen.queryByTestId("portrait-generating-state")).toBeNull();
+		expect(screen.getByTestId("results-content")).toBeTruthy();
 	});
 });

@@ -13,6 +13,7 @@ import { RelationshipAnalysesList } from "@/components/relationship/Relationship
 import { RelationshipCard } from "@/components/relationship/RelationshipCard";
 import { DetailZone } from "@/components/results/DetailZone";
 import { EvidencePanel } from "@/components/results/EvidencePanel";
+import { PortraitGeneratingState } from "@/components/results/PortraitGeneratingState";
 import { PortraitReadingView } from "@/components/results/PortraitReadingView";
 import { ProfileView } from "@/components/results/ProfileView";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
@@ -102,7 +103,7 @@ function ResultsSessionPage() {
 	const toggleVisibility = useToggleVisibility();
 
 	// Story 13.3: Poll portrait status when authenticated
-	const { data: portraitStatusData } = usePortraitStatus(
+	const { data: portraitStatusData, isError: isPortraitError } = usePortraitStatus(
 		canLoadResults ? conversationSessionId : "",
 	);
 
@@ -267,6 +268,18 @@ function ResultsSessionPage() {
 		void navigate({ to: "/chat", search: { sessionId: undefined } });
 	};
 
+	// Story 2.2: Track if user saw generating state for fade-in transition
+	const sawGeneratingRef = useRef(false);
+	useEffect(() => {
+		if (view !== "portrait") {
+			sawGeneratingRef.current = false;
+			return;
+		}
+		if (portraitStatus === "generating") {
+			sawGeneratingRef.current = true;
+		}
+	}, [view, portraitStatus]);
+
 	// Story 7.18 + 13.3: Back to profile from reading view
 	const handleBackToProfile = useCallback(
 		() =>
@@ -394,7 +407,28 @@ function ResultsSessionPage() {
 		if (fullContent) {
 			return (
 				<PageMain className="bg-background">
-					<PortraitReadingView content={fullContent} onViewFullProfile={handleBackToProfile} />
+					<div
+						className={
+							sawGeneratingRef.current
+								? "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500"
+								: undefined
+						}
+					>
+						<PortraitReadingView content={fullContent} onViewFullProfile={handleBackToProfile} />
+					</div>
+				</PageMain>
+			);
+		}
+
+		// Story 2.2: Fall back to profile if portrait status is "none" or query errored
+		if (portraitStatus === "none" || isPortraitError) {
+			// No portrait generation in progress — show profile instead of infinite spinner
+			// Falls through to the ProfileView below
+		} else {
+			// Story 2.2: Generating state (catches generating or initial poll-in-progress)
+			return (
+				<PageMain className="bg-background">
+					<PortraitGeneratingState />
 				</PageMain>
 			);
 		}
