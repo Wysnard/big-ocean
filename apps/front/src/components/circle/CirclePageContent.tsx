@@ -1,4 +1,5 @@
 import { Button } from "@workspace/ui/components/button";
+import { InviteCeremonyCard } from "@/components/invite/InviteCeremonyCard";
 import { useRelationshipAnalysesList } from "@/hooks/useRelationshipAnalysesList";
 import { CirclePersonCard } from "./CirclePersonCard";
 import { CIRCLE_PAGE_EMPTY_STATE } from "./circle-empty-messages";
@@ -68,6 +69,10 @@ export function CirclePageContent() {
 						<CirclePersonCard key={analysis.analysisId} item={analysis} />
 					))
 				)}
+			</section>
+
+			<section aria-label="Invite someone into your Circle" className="w-full">
+				<InviteCeremonyCard placement="circle-bottom" />
 			</section>
 		</div>
 	);

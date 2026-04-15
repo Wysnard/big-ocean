@@ -10,6 +10,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "@workspace/ui/components/sonner";
 import { TooltipProvider } from "@workspace/ui/components/tooltip";
 import Header from "../components/Header";
+import { InviteCeremonyProvider } from "../components/invite/InviteCeremonyProvider";
 import { NotFound } from "../components/NotFound";
 import { PageMain, SkipToContentLink } from "../components/PageMain";
 import { ThemeProvider } from "../components/ThemeProvider";
@@ -91,10 +92,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<body>
 				<ThemeProvider>
 					<TooltipProvider>
-						<SkipToContentLink />
-						<Header />
-						{children}
-						<Toaster position="top-center" />
+						<InviteCeremonyProvider>
+							<SkipToContentLink />
+							<Header />
+							{children}
+							<Toaster position="top-center" />
+						</InviteCeremonyProvider>
 					</TooltipProvider>
 				</ThemeProvider>
 				{!import.meta.env.VITE_E2E && (

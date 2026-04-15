@@ -34,7 +34,7 @@ import { TraitBand } from "@/components/results/TraitBand";
 import { getDominantTrait } from "@/lib/trait-utils";
 import { useListConversations } from "../hooks/use-conversation";
 import { getPublicProfileQueryOptions, useGetPublicProfile } from "../hooks/use-profile";
-import { getSession } from "../lib/auth-client";
+import { getSession, useSession } from "../lib/auth-client";
 import { generateOgMetaTags } from "../lib/og-meta-tags";
 
 // ---------------------------------------------------------------------------
@@ -244,7 +244,12 @@ function ProfileErrorState({ error }: { error?: Error }) {
 function ProfilePage() {
 	const { publicProfileId } = Route.useParams();
 	const loaderData = Route.useLoaderData();
-	const isAuthenticated = loaderData?.isAuthenticated ?? false;
+	const { data: session, isPending: isSessionPending } = useSession();
+	const loaderAuth = loaderData?.isAuthenticated ?? false;
+	// Loader `beforeLoad` may not see auth cookies on some direct navigations / SSR; prefer client session.
+	const isAuthenticated = Boolean(session?.user) || loaderAuth;
+	// Avoid treating the viewer as logged-out while Better Auth is still resolving the session.
+	const authHydrationPending = isSessionPending && !session?.user && !loaderAuth;
 
 	// Client-side data (SSR pre-fetched in loader via ensureQueryData, this provides reactivity)
 	const { data: hookProfile, isLoading, error } = useGetPublicProfile(publicProfileId);
@@ -323,7 +328,11 @@ function ProfilePage() {
 			</section>
 
 			{/* Inline CTA — between trait strata and "How it works" */}
-			<ProfileInlineCTA authState={authState} isOwnProfile={isOwnProfile} />
+			<ProfileInlineCTA
+				authState={authState}
+				authPending={authHydrationPending}
+				isOwnProfile={isOwnProfile}
+			/>
 
 			{/* How It Works micro-preview */}
 			<ProfileHowItWorks />
@@ -342,6 +351,7 @@ function ProfilePage() {
 				displayName={displayName}
 				publicProfileId={publicProfileId}
 				authState={authState}
+				authPending={authHydrationPending}
 				isOwnProfile={isOwnProfile}
 			/>
 		</PageMain>
