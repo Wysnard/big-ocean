@@ -11,6 +11,8 @@ interface PublicProfileCTAProps {
 	displayName: string;
 	publicProfileId: string;
 	authState: AuthState;
+	/** Session still hydrating; avoid flashing the logged-out CTA before cookies resolve */
+	authPending?: boolean;
 	isOwnProfile?: boolean;
 }
 
@@ -37,9 +39,34 @@ export function PublicProfileCTA({
 	displayName,
 	publicProfileId,
 	authState,
+	authPending = false,
 	isOwnProfile = false,
 }: PublicProfileCTAProps) {
 	const { openCeremony } = useInviteCeremony();
+
+	if (authPending) {
+		return (
+			<section
+				data-testid="public-profile-cta-pending"
+				data-slot="public-profile-cta"
+				data-public-profile-id={publicProfileId}
+				className="py-16 md:py-24"
+				style={{
+					background:
+						"linear-gradient(135deg, oklch(0.67 0.13 181 / 0.08), oklch(0.55 0.24 293 / 0.06))",
+				}}
+				aria-busy="true"
+				aria-label="Loading sign-in state"
+			>
+				<div className="mx-auto max-w-[600px] px-6 text-center">
+					<div className="h-8 bg-muted/60 rounded-md mx-auto mb-3 max-w-[min(100%,20rem)] motion-safe:animate-pulse" />
+					<div className="h-4 bg-muted/50 rounded-md mx-auto mb-8 max-w-[28rem] motion-safe:animate-pulse" />
+					<div className="h-12 bg-muted/60 rounded-xl mx-auto max-w-[400px] motion-safe:animate-pulse" />
+					<p className="text-sm text-muted-foreground mt-8">-- big-ocean --</p>
+				</div>
+			</section>
+		);
+	}
 
 	// When viewing own profile as an authenticated-assessed user, show the generic CTA
 	const effectiveAuthState =
@@ -82,7 +109,7 @@ export function PublicProfileCTA({
 						data-testid="public-profile-cta-button"
 						className="bg-primary text-primary-foreground text-lg py-4 px-8 rounded-xl font-semibold min-h-[44px] w-full max-w-[400px]"
 						onClick={() => {
-							openCeremony({ presetName: displayName });
+							openCeremony();
 						}}
 					>
 						{content.buttonLabel}

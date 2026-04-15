@@ -15,8 +15,16 @@ vi.mock("@/lib/qr-token-api", () => ({
 	fetchTokenStatus: (...args: unknown[]) => mockFetchTokenStatus(...args),
 }));
 
-import { InviteCeremonyCard } from "../InviteCeremonyCard";
-import { InviteCeremonyProvider } from "../InviteCeremonyProvider";
+import { InviteCeremonyProvider, useInviteCeremony } from "../InviteCeremonyProvider";
+
+function OpenButton() {
+	const { openCeremony } = useInviteCeremony();
+	return (
+		<button type="button" onClick={() => openCeremony()}>
+			Open invite
+		</button>
+	);
+}
 
 function createWrapper() {
 	const qc = new QueryClient({
@@ -32,30 +40,26 @@ function createWrapper() {
 	);
 }
 
-describe("InviteCeremonyCard", () => {
+describe("InviteCeremonyProvider", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockGenerateToken.mockResolvedValue({
-			token: "card-test-token",
-			shareUrl: "https://app.example/relationship/qr/card-test-token",
+			token: "provider-test-token",
+			shareUrl: "https://app.example/relationship/qr/provider-test-token",
 			expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
 		});
 		mockFetchTokenStatus.mockResolvedValue({ status: "valid" as const });
 	});
 
-	it("renders with stable test id and accessible name", () => {
-		render(<InviteCeremonyCard placement="circle-bottom" />, { wrapper: createWrapper() });
-		const card = screen.getByTestId("invite-ceremony-card");
-		expect(card).toHaveAttribute("data-placement", "circle-bottom");
-		expect(card).toHaveAccessibleName(/Invite someone you care about into your Circle/i);
-	});
-
-	it("opens invite QR drawer when activated", async () => {
+	it("opens QR drawer content when openCeremony is called", async () => {
 		const user = userEvent.setup();
-		render(<InviteCeremonyCard placement="me-section" />, { wrapper: createWrapper() });
-		await user.click(screen.getByTestId("invite-ceremony-card"));
+		render(<OpenButton />, { wrapper: createWrapper() });
+		await user.click(screen.getByRole("button", { name: /open invite/i }));
 		await waitFor(() => {
 			expect(screen.getByTestId("invite-qr-drawer")).toBeInTheDocument();
+		});
+		await waitFor(() => {
+			expect(screen.getByTestId("qr-drawer-code")).toBeInTheDocument();
 		});
 	});
 });

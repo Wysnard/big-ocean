@@ -153,4 +153,19 @@ describe("PublicProfileCTA", () => {
 		const button = screen.getByTestId("public-profile-cta-button");
 		expect(button.closest("a")).toBeNull();
 	});
+
+	it("renders a skeleton while auth is pending instead of the unauthenticated CTA", () => {
+		render(
+			<PublicProfileCTA
+				displayName="Alice"
+				publicProfileId="abc123"
+				authState="unauthenticated"
+				authPending
+			/>,
+			{ wrapper: createWrapper() },
+		);
+		expect(screen.getByTestId("public-profile-cta-pending")).toBeInTheDocument();
+		expect(screen.queryByText("What's YOUR code?")).not.toBeInTheDocument();
+		expect(screen.queryByTestId("public-profile-cta-button")).not.toBeInTheDocument();
+	});
 });

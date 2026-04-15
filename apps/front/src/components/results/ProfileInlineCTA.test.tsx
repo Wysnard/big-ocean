@@ -58,4 +58,9 @@ describe("ProfileInlineCTA", () => {
 		render(<ProfileInlineCTA authState="unauthenticated" isOwnProfile={false} />);
 		expect(screen.getByTestId("profile-inline-cta-button")).toBeInTheDocument();
 	});
+
+	it("does NOT render while auth is pending", () => {
+		render(<ProfileInlineCTA authState="unauthenticated" authPending />);
+		expect(screen.queryByTestId("profile-inline-cta-button")).not.toBeInTheDocument();
+	});
 });
