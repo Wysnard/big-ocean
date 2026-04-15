@@ -358,6 +358,39 @@ Your imagination isn't idle daydreaming; it's an active force that shapes how yo
 There's an interesting tension in your personality: you value deep, meaningful connections with others, yet you also need space to explore on your own terms. This isn't contradictory — it's what makes your relationships feel authentic rather than performative.`;
 
 /**
+ * Check that a user_summaries row exists for a given session (via assessment_results join).
+ * Returns the row or null.
+ */
+export async function getUserSummaryBySessionId(
+	sessionId: string,
+): Promise<{ id: string; userId: string; summaryText: string; version: number } | null> {
+	const pool = new Pool(TEST_DB_CONFIG);
+	const client = await pool.connect();
+
+	try {
+		const result = await client.query(
+			`SELECT us.id, us.user_id, us.summary_text, us.version
+			 FROM user_summaries us
+			 JOIN assessment_results ar ON ar.id = us.assessment_result_id
+			 WHERE ar.conversation_id = $1
+			 LIMIT 1`,
+			[sessionId],
+		);
+		if (result.rows.length === 0) return null;
+		const row = result.rows[0];
+		return {
+			id: row.id,
+			userId: row.user_id,
+			summaryText: row.summary_text,
+			version: row.version,
+		};
+	} finally {
+		client.release();
+		await pool.end();
+	}
+}
+
+/**
  * Look up a user by email in the Better Auth user table.
  */
 export async function getUserByEmail(email: string): Promise<{ id: string } | null> {

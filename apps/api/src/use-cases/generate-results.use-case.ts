@@ -24,6 +24,7 @@ import {
 	SessionNotFound,
 } from "@workspace/domain";
 import { Effect } from "effect";
+import { generateUserSummary } from "./generate-user-summary.use-case";
 
 export interface GenerateResultsInput {
 	readonly sessionId: string;
@@ -192,6 +193,22 @@ export const generateResults = (input: GenerateResultsInput) =>
 						totalDurationMs: scoringDuration,
 					});
 				}
+			}
+
+			// ═══════════════════════════════════════════════════════
+			// STAGE: USER SUMMARY (Story 7.1) — before completion
+			// ═══════════════════════════════════════════════════════
+
+			if (session.userId != null) {
+				yield* generateUserSummary({
+					sessionId: input.sessionId,
+					userId: session.userId,
+					parentConversationId: session.parentConversationId ?? null,
+				});
+			} else {
+				logger.info("Generate results: skipping UserSummary (no userId on session)", {
+					sessionId: input.sessionId,
+				});
 			}
 
 			// ═══════════════════════════════════════════════════════

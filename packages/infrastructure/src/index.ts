@@ -82,6 +82,9 @@ export { ResendEmailMockRepositoryLive } from "./repositories/resend-email.mock.
 export { ResendEmailResendRepositoryLive } from "./repositories/resend-email.resend.repository";
 // User account repository implementation (Story 30-2)
 export { UserAccountDrizzleRepositoryLive } from "./repositories/user-account.drizzle.repository";
+export { UserSummaryDrizzleRepositoryLive } from "./repositories/user-summary.drizzle.repository";
+export { UserSummaryGeneratorAnthropicRepositoryLive } from "./repositories/user-summary-generator.anthropic.repository";
+export { UserSummaryGeneratorMockRepositoryLive } from "./repositories/user-summary-generator.mock.repository";
 // Waitlist repository implementation (Story 15.3)
 export { WaitlistDrizzleRepositoryLive } from "./repositories/waitlist.drizzle.repository";
 export { WebPushFetchRepositoryLive } from "./repositories/web-push.fetch.repository";

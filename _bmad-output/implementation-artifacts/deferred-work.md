@@ -179,6 +179,16 @@
 - Auth redirect clears `redirectTo` — pre-existing pattern across all Today-space routes; users won't return to `/today/calendar` after login redirect
 - Diff includes non-story-4.4 changes (weekly letter wiring, first-visit gate removal) — acknowledged in story completion notes
 
+## Deferred from: code review of 7-1-usersummary-data-model-and-generator (2026-04-15)
+
+- Unbounded evidence / prompt size for extension sessions — `findByUserId` returns all user evidence with no cap; prompt can exceed model context window. Pre-existing pattern across generators.
+- TOCTOU race on concurrent requests — two concurrent calls can both pass the "already exists" check, causing duplicate LLM spend. Outer session lock mitigates; direct use-case call outside lock would race.
+- No timeout / AbortSignal on LLM invoke — `model.invoke()` has no deadline; stall holds session lock indefinitely. Pre-existing pattern in weekly-summary and relationship generators.
+- Shallow JSONB mapping trusts stored data — `mapThemes`/`mapQuotes` check for key existence but not value types. Pre-existing pattern in other Drizzle repos.
+- No size caps on themes array or summary_text — schema validates structure but not size. Operational concern.
+- Loss of structured error context from Anthropic — `Effect.tryPromise` catch stringifies errors, dropping status codes and request IDs. Pre-existing pattern.
+- No retry/backoff for transient Anthropic failures — single LLM failure fails the entire finalization. Pre-existing across all generators.
+
 ## Deferred from: code review of 5-1-weekly-summary-data-model-and-generation-pipeline (2026-04-15)
 
 - TOCTOU race on idempotency — concurrent requests for same weekId both proceed to LLM call before either saves; `onConflictDoUpdate` prevents duplicate rows but not duplicate LLM spend. Same pattern as relationship analysis. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:80-81`]
