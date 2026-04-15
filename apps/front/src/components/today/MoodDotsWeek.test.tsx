@@ -7,6 +7,7 @@ import { MoodDotsWeek } from "./MoodDotsWeek";
 
 const sevenDays: WeekGridResponse = {
 	weekId: "2026-W16",
+	weeklyLetter: { status: "none" },
 	days: [
 		{ localDate: "2026-04-13", checkIn: null },
 		{ localDate: "2026-04-14", checkIn: null },

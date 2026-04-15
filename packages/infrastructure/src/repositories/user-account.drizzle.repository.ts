@@ -21,6 +21,29 @@ export const UserAccountDrizzleRepositoryLive = Layer.effect(
 		const logger = yield* LoggerRepository;
 
 		return UserAccountRepository.of({
+			getEmailAndNameForUser: (userId: string) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.select({ email: user.email, name: user.name })
+						.from(user)
+						.where(eq(user.id, userId))
+						.limit(1)
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new DatabaseError({
+										message: `Failed to read user contact: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					const row = rows[0];
+					if (!row) {
+						return null;
+					}
+
+					return { email: row.email, name: row.name };
+				}),
 			getFirstVisitCompleted: (userId: string) =>
 				Effect.gen(function* () {
 					const rows = yield* db

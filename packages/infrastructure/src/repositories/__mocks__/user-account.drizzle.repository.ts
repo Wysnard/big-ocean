@@ -10,6 +10,8 @@ import { UserAccountRepository } from "@workspace/domain/repositories/user-accou
 import { Effect, Layer } from "effect";
 
 interface MockUserRecord {
+	email?: string;
+	name?: string;
 	firstVisitCompleted: boolean;
 	firstDailyPromptScheduledFor: Date | null;
 }
@@ -23,8 +25,10 @@ const deletedUsers = new Set<string>();
 /** When true, deleteAccount fails with DatabaseError */
 let shouldFailWithDbError = false;
 
-export const addMockUser = (userId: string) => {
+export const addMockUser = (userId: string, contact?: { email: string; name: string }) => {
 	existingUsers.set(userId, {
+		email: contact?.email,
+		name: contact?.name,
 		firstVisitCompleted: false,
 		firstDailyPromptScheduledFor: null,
 	});
@@ -64,6 +68,18 @@ export const resetMockUsers = () => {
 export const UserAccountDrizzleRepositoryLive = Layer.succeed(
 	UserAccountRepository,
 	UserAccountRepository.of({
+		getEmailAndNameForUser: (userId: string) => {
+			if (shouldFailWithDbError) {
+				return Effect.fail(new DatabaseError({ message: "mock database error" }));
+			}
+			return Effect.sync(() => {
+				const row = existingUsers.get(userId);
+				if (!row) {
+					return null;
+				}
+				return { email: row.email ?? "", name: row.name ?? "there" };
+			});
+		},
 		getFirstVisitCompleted: (userId: string) => {
 			if (shouldFailWithDbError) {
 				return Effect.fail(new DatabaseError({ message: "mock database error" }));
