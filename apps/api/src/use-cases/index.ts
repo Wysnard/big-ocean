@@ -66,6 +66,10 @@ export {
 } from "./resume-session.use-case";
 export { savePushSubscription } from "./save-push-subscription.use-case";
 export {
+	type ScheduleFirstDailyPromptInput,
+	scheduleFirstDailyPrompt,
+} from "./schedule-first-daily-prompt.use-case";
+export {
 	type SendMessageInput,
 	type SendMessageOutput,
 	sendMessage,

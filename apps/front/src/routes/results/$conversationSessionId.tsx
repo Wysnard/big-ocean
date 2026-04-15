@@ -6,6 +6,7 @@ import { Effect, Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
+import { ReturnSeedSection } from "@/components/me/ReturnSeedSection";
 import { NotFound } from "@/components/NotFound";
 import { PageMain } from "@/components/PageMain";
 import { ResultsAuthGate } from "@/components/ResultsAuthGate";
@@ -19,6 +20,11 @@ import { ProfileView } from "@/components/results/ProfileView";
 import { ShareProfileSection } from "@/components/results/ShareProfileSection";
 import { useTraitEvidence } from "@/components/results/useTraitEvidence";
 import { ArchetypeShareCard } from "@/components/sharing/archetype-share-card";
+import {
+	completeFirstVisit,
+	fetchFirstVisitState,
+	scheduleFirstDailyPrompt,
+} from "@/hooks/use-account";
 import { useAuth } from "@/hooks/use-auth";
 import {
 	getResultsQueryOptions,
@@ -27,6 +33,7 @@ import {
 } from "@/hooks/use-conversation";
 import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
+import { syncPushSubscription } from "@/hooks/use-push-subscription-sync";
 import { useShareFlow } from "@/hooks/use-share-flow";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
 import { makeApiClient } from "@/lib/api-client";
@@ -101,6 +108,9 @@ function ResultsSessionPage() {
 	const canLoadResults = isAuthenticated && !isAuthPending;
 	const { data: results, isLoading, error } = useGetResults(conversationSessionId, canLoadResults);
 	const toggleVisibility = useToggleVisibility();
+	const [firstVisitCompleted, setFirstVisitCompleted] = useState<boolean | null>(null);
+	const [keepReturnSeedVisible, setKeepReturnSeedVisible] = useState(false);
+	const returnSeedCompletionAttemptedRef = useRef(false);
 
 	// Story 13.3: Poll portrait status when authenticated
 	const { data: portraitStatusData, isError: isPortraitError } = usePortraitStatus(
@@ -197,6 +207,30 @@ function ResultsSessionPage() {
 		setIsGateExpired(false);
 	}, [isAuthenticated, conversationSessionId]);
 
+	useEffect(() => {
+		if (!canLoadResults) return;
+
+		let cancelled = false;
+
+		void fetchFirstVisitState()
+			.then((state) => {
+				if (cancelled) return;
+				setFirstVisitCompleted(state.firstVisitCompleted);
+				if (!state.firstVisitCompleted) {
+					setKeepReturnSeedVisible(true);
+				}
+			})
+			.catch(() => {
+				if (!cancelled) {
+					setFirstVisitCompleted(true);
+				}
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [canLoadResults]);
+
 	// Initialize share state from results data (profile created eagerly by backend)
 	useEffect(() => {
 		if (!results || !isAuthenticated || shareState) return;
@@ -253,6 +287,44 @@ function ResultsSessionPage() {
 	const handleCloseEvidencePanel = useCallback(() => {
 		setSelectedFacet(null);
 	}, []);
+
+	const consumeFirstVisit = useCallback(async () => {
+		if (firstVisitCompleted !== false) return;
+
+		await completeFirstVisit();
+		setFirstVisitCompleted(true);
+	}, [firstVisitCompleted]);
+
+	useEffect(() => {
+		if (!results || view === "portrait" || firstVisitCompleted !== false) return;
+		if (returnSeedCompletionAttemptedRef.current) return;
+
+		returnSeedCompletionAttemptedRef.current = true;
+
+		void consumeFirstVisit().catch((visitError) => {
+			console.warn("Failed to mark first return-seed visit complete", visitError);
+			// Do not reset the ref — retrying indefinitely on persistent failure
+			// would create an unbounded loop. The user can still interact with the
+			// return-seed section, which also calls consumeFirstVisit on accept/decline.
+		});
+	}, [consumeFirstVisit, firstVisitCompleted, results, view]);
+
+	const handleReturnSeedDecline = useCallback(() => {
+		void consumeFirstVisit().catch(() => {
+			// Keep the current page usable even if the account update fails.
+		});
+	}, [consumeFirstVisit]);
+
+	const handleReturnSeedPermissionGranted = useCallback(
+		async (scheduledFor: Date) => {
+			await consumeFirstVisit().catch(() => {
+				// The results page should stay usable even if the visit flag update races.
+			});
+			await syncPushSubscription({ respectSessionCache: false });
+			await scheduleFirstDailyPrompt({ scheduledFor: scheduledFor.toISOString() });
+		},
+		[consumeFirstVisit],
+	);
 
 	const handleAuthSuccess = () => {
 		clearPendingResultsGateSession(conversationSessionId);
@@ -356,6 +428,7 @@ function ResultsSessionPage() {
 	const selectedTraitData = selectedTrait
 		? results.traits.find((t) => t.name === selectedTrait)
 		: null;
+	const showReturnSeed = keepReturnSeedVisible || firstVisitCompleted === false;
 
 	if (view === "portrait") {
 		// Story 2.4: Failed state with retry button
@@ -514,6 +587,15 @@ function ResultsSessionPage() {
 							</div>
 						)}
 					</div>
+
+					{showReturnSeed ? (
+						<div className="pt-8">
+							<ReturnSeedSection
+								onPermissionGranted={handleReturnSeedPermissionGranted}
+								onDecline={handleReturnSeedDecline}
+							/>
+						</div>
+					) : null}
 				</div>
 			</ProfileView>
 		</PageMain>

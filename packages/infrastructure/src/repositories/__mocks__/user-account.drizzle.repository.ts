@@ -5,11 +5,13 @@
  */
 
 import { DatabaseError } from "@workspace/domain/errors/http.errors";
+import type { ScheduleFirstDailyPromptOutcome } from "@workspace/domain/repositories/user-account.repository";
 import { UserAccountRepository } from "@workspace/domain/repositories/user-account.repository";
 import { Effect, Layer } from "effect";
 
 interface MockUserRecord {
 	firstVisitCompleted: boolean;
+	firstDailyPromptScheduledFor: Date | null;
 }
 
 /** In-memory users keyed by id */
@@ -22,13 +24,16 @@ const deletedUsers = new Set<string>();
 let shouldFailWithDbError = false;
 
 export const addMockUser = (userId: string) => {
-	existingUsers.set(userId, { firstVisitCompleted: false });
+	existingUsers.set(userId, {
+		firstVisitCompleted: false,
+		firstDailyPromptScheduledFor: null,
+	});
 };
 
 export const setMockFirstVisitCompleted = (userId: string, firstVisitCompleted: boolean) => {
 	const existing = existingUsers.get(userId);
 	if (!existing) {
-		existingUsers.set(userId, { firstVisitCompleted });
+		existingUsers.set(userId, { firstVisitCompleted, firstDailyPromptScheduledFor: null });
 		return;
 	}
 
@@ -37,6 +42,9 @@ export const setMockFirstVisitCompleted = (userId: string, firstVisitCompleted: 
 
 export const getMockFirstVisitCompleted = (userId: string) =>
 	existingUsers.get(userId)?.firstVisitCompleted ?? false;
+
+export const getMockFirstDailyPromptScheduledFor = (userId: string) =>
+	existingUsers.get(userId)?.firstDailyPromptScheduledFor ?? null;
 
 export const wasMockFirstVisitMarked = (userId: string) =>
 	existingUsers.get(userId)?.firstVisitCompleted ?? false;
@@ -74,6 +82,30 @@ export const UserAccountDrizzleRepositoryLive = Layer.succeed(
 
 				existingUsers.set(userId, { ...existing, firstVisitCompleted: true });
 				return true;
+			});
+		},
+		scheduleFirstDailyPrompt: (userId: string, scheduledFor: Date) => {
+			if (shouldFailWithDbError) {
+				return Effect.fail(new DatabaseError({ message: "mock database error" }));
+			}
+			return Effect.sync((): ScheduleFirstDailyPromptOutcome => {
+				const existing = existingUsers.get(userId);
+				if (!existing) {
+					return { kind: "user_not_found" };
+				}
+
+				if (existing.firstDailyPromptScheduledFor !== null) {
+					return {
+						kind: "already_scheduled",
+						scheduledFor: existing.firstDailyPromptScheduledFor,
+					};
+				}
+
+				existingUsers.set(userId, {
+					...existing,
+					firstDailyPromptScheduledFor: scheduledFor,
+				});
+				return { kind: "inserted" };
 			});
 		},
 		deleteAccount: (userId: string) => {

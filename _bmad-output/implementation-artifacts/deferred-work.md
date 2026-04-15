@@ -1,5 +1,9 @@
 # Deferred Work
 
+## Deferred from: code review of 2-5-return-seed-and-notification-permission-on-first-me-page-visit.md (2026-04-14)
+
+- Results route: on `fetchFirstVisitState` rejection, state is set so the Return Seed section stays hidden; acceptable fail-closed behavior, recovery is refresh when the network recovers
+
 ## Deferred from: code review of 2-1-show-me-what-you-found-closing-button (2026-04-13)
 
 - `sessionId` empty-string guard absent in `PostAssessmentTransitionButton` — route validates before mount so low risk; guard could be added defensively
@@ -119,3 +123,17 @@
 ## Deferred from: code review of story-3.3 (2026-04-14)
 
 - 4-letter `oceanCode` in `archetype-card-template.tsx` renders fallback circle for 5th (neuroticism) shape — `oceanCode: string` prop accepts any length, and `oceanLetters[4]` is `undefined` for 4-char codes, triggering the fallback. Pre-existing: slicing logic and untyped prop pre-date this change.
+
+## Deferred from: code review of story-2.5 (2026-04-14)
+
+- `/today` route `beforeLoad` has no error handling for `fetchFirstVisitState()` failure — if the API is unreachable (offline, server down, 500), the unhandled exception blocks route navigation entirely and renders an error boundary instead of the Today page. A try/catch with fail-open default (assume `firstVisitCompleted: true`) would prevent a network hiccup from blocking access. Pre-existing, not introduced by Story 2.5.
+- Timezone handling for schedule timestamp — `getFirstDailyPromptSchedule` uses `setHours(19)` in user's local timezone, serialized to UTC, stored in timezone-less `timestamp` column. Accepted for MVP: stored UTC instant captures intended local 7 PM. Defer timezone-aware scheduling to future notification scheduler story.
+
+## Deferred from: code review of 4-2-checkinform-component (2026-04-14)
+
+- `hasCheckInRecord` type guard fragile — uses `"id" in value` only; if `CheckInNotFoundResponse` ever gains an `id` field, the form will be permanently hidden
+- No `data-testid` on interactive elements (mood buttons, note, save) — can be added when E2E tests are written; story spec says no E2E
+- `localDate` stale past midnight — `getTodayLocalDate()` evaluated once at hook-call time; user keeping page open past midnight submits previous day's date. Needs design decision about clock-refresh mechanism
+- `FieldLabel asChild` with `<div>` child loses `<label>` semantics for the mood group — a11y improvement, not a regression
+- Mood buttons lack `role="radiogroup"` and arrow-key navigation pattern — a11y enhancement for keyboard-only users
+- `CheckInFormSkeleton` has `aria-busy` but no accessible name — minor a11y improvement, skeleton is temporary loading state

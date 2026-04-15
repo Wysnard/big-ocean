@@ -21,6 +21,18 @@ export const FirstVisitStateResponseSchema = S.Struct({
 	firstVisitCompleted: S.Boolean,
 });
 
+const ISO_8601_UTC_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+const IsoTimestampSchema = S.String.pipe(
+	S.filter((value) => ISO_8601_UTC_RE.test(value) && !Number.isNaN(Date.parse(value)), {
+		message: () =>
+			"scheduledFor must be a valid ISO 8601 UTC timestamp (e.g. 2026-04-15T19:00:00.000Z)",
+	}),
+	S.filter((value) => Date.parse(value) > Date.now(), {
+		message: () => "scheduledFor must be in the future",
+	}),
+);
+
 export const PushSubscriptionPayloadSchema = S.Struct({
 	endpoint: S.String.pipe(
 		S.filter(
@@ -48,6 +60,15 @@ export const PushSubscriptionResponseSchema = S.Struct({
 	success: S.Boolean,
 });
 
+export const ScheduleFirstDailyPromptPayloadSchema = S.Struct({
+	scheduledFor: IsoTimestampSchema,
+});
+
+export const ScheduleFirstDailyPromptResponseSchema = S.Struct({
+	success: S.Boolean,
+	scheduledFor: IsoTimestampSchema,
+});
+
 export const ConsumePushNotificationsResponseSchema = S.Struct({
 	notifications: S.Array(
 		S.Struct({
@@ -66,6 +87,7 @@ export const ConsumePushNotificationsResponseSchema = S.Struct({
  * Routes:
  * - GET /api/account/first-visit - Read authenticated user's first-visit flag
  * - POST /api/account/first-visit/complete - Mark first visit complete
+ * - POST /api/account/daily-prompt/first-schedule - Persist the first daily prompt schedule
  * - DELETE /api/account - Delete authenticated user's account
  */
 export const AccountGroup = HttpApiGroup.make("account")
@@ -79,6 +101,14 @@ export const AccountGroup = HttpApiGroup.make("account")
 	.add(
 		HttpApiEndpoint.post("completeFirstVisit", "/first-visit/complete")
 			.addSuccess(FirstVisitStateResponseSchema)
+			.addError(AccountNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.post("scheduleFirstDailyPrompt", "/daily-prompt/first-schedule")
+			.setPayload(ScheduleFirstDailyPromptPayloadSchema)
+			.addSuccess(ScheduleFirstDailyPromptResponseSchema)
 			.addError(AccountNotFound, { status: 404 })
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
@@ -118,3 +148,4 @@ export type DeleteAccountResponse = typeof DeleteAccountResponseSchema.Type;
 export type FirstVisitStateResponse = typeof FirstVisitStateResponseSchema.Type;
 export type ConsumePushNotificationsResponse = typeof ConsumePushNotificationsResponseSchema.Type;
 export type PushSubscriptionPayload = typeof PushSubscriptionPayloadSchema.Type;
+export type ScheduleFirstDailyPromptPayload = typeof ScheduleFirstDailyPromptPayloadSchema.Type;

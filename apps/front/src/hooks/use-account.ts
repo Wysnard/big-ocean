@@ -23,6 +23,15 @@ export function completeFirstVisit() {
 	}).pipe(Effect.runPromise);
 }
 
+export function scheduleFirstDailyPrompt(input: { scheduledFor: string }) {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.account.scheduleFirstDailyPrompt({
+			payload: input,
+		});
+	}).pipe(Effect.runPromise);
+}
+
 /**
  * Delete the authenticated user's account
  */

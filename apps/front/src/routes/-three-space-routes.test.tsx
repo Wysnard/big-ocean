@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
 	mockSession,
 	mockFetchFirstVisitState,
-	mockCompleteFirstVisit,
 	mockLoaderData,
 	mockListSessionsQuery,
 	mockUseGetResults,
@@ -15,7 +14,6 @@ const {
 } = vi.hoisted(() => ({
 	mockSession: vi.fn(),
 	mockFetchFirstVisitState: vi.fn(),
-	mockCompleteFirstVisit: vi.fn(),
 	mockLoaderData: vi.fn(),
 	mockListSessionsQuery: vi.fn(),
 	mockUseGetResults: vi.fn(),
@@ -45,7 +43,6 @@ vi.mock("@/lib/auth-client", () => ({
 
 vi.mock("@/hooks/use-account", () => ({
 	fetchFirstVisitState: () => mockFetchFirstVisitState(),
-	completeFirstVisit: () => mockCompleteFirstVisit(),
 }));
 
 vi.mock("@/hooks/use-conversation", () => ({
@@ -65,6 +62,12 @@ vi.mock("@/components/me/IdentityHeroSection", () => ({
 		mockIdentityHeroSection(props);
 		return <div data-testid="mock-identity-hero-section" />;
 	},
+}));
+
+vi.mock("@/components/today/TodayCheckInSurface", () => ({
+	TodayCheckInSurface: () => (
+		<div data-testid="today-check-in-surface">How are you feeling this morning?</div>
+	),
 }));
 
 import { Route as CircleRoute } from "./circle/index";
@@ -98,7 +101,6 @@ describe("three-space route guards", () => {
 		vi.clearAllMocks();
 		mockSession.mockResolvedValue({ data: { user: { id: "user-1" } } });
 		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: true });
-		mockCompleteFirstVisit.mockResolvedValue({ firstVisitCompleted: true });
 		mockLoaderData.mockReturnValue({ sessionId: "session-completed" });
 		mockListSessionsQuery.mockResolvedValue({
 			sessions: [{ id: "session-completed", status: "completed" }],
@@ -168,7 +170,6 @@ describe("three-space route guards", () => {
 describe("Me route layout", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockCompleteFirstVisit.mockResolvedValue({ firstVisitCompleted: true });
 		mockLoaderData.mockReturnValue({ sessionId: "session-completed" });
 		mockUseGetResults.mockReturnValue({
 			data: {
@@ -187,7 +188,6 @@ describe("Me route layout", () => {
 	});
 
 	it("renders the seven me-page sections for a completed assessment", async () => {
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 		const Component = MeRoute.component as ComponentType;
 
 		render(<Component />);
@@ -211,15 +211,10 @@ describe("Me route layout", () => {
 				}),
 			}),
 		);
-		await waitFor(() => {
-			expect(mockCompleteFirstVisit).toHaveBeenCalledTimes(1);
-		});
 		expect(screen.getByTestId("bottom-nav-root")).toBeTruthy();
-		warnSpy.mockRestore();
 	});
 
 	it("shows loading skeletons when results are loading", async () => {
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 		mockUseGetResults.mockReturnValue({
 			data: undefined,
 			isLoading: true,
@@ -233,11 +228,9 @@ describe("Me route layout", () => {
 		const heroSection = await screen.findByTestId("me-section-identity-hero");
 		expect(heroSection).toHaveAttribute("aria-busy", "true");
 		expect(screen.getByTestId("me-section-account")).toHaveAttribute("aria-busy", "true");
-		warnSpy.mockRestore();
 	});
 
 	it("shows an error banner when results fail to load", async () => {
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 		mockUseGetResults.mockReturnValue({
 			data: undefined,
 			isLoading: false,
@@ -251,6 +244,24 @@ describe("Me route layout", () => {
 		await waitFor(() => {
 			expect(screen.getByText("Network failure")).toBeTruthy();
 		});
-		warnSpy.mockRestore();
+	});
+
+	it("does not consume first-visit state from the /me scaffold alone", () => {
+		const Component = MeRoute.component as ComponentType;
+
+		render(<Component />);
+
+		expect(mockFetchFirstVisitState).not.toHaveBeenCalled();
+	});
+});
+
+describe("Today route layout", () => {
+	it("renders the real Today surface instead of the placeholder copy", () => {
+		const Component = TodayRoute.component as ComponentType;
+
+		render(<Component />);
+
+		expect(screen.getByTestId("today-check-in-surface")).toBeTruthy();
+		expect(screen.queryByText("Today is your quiet rhythm.")).toBeNull();
 	});
 });

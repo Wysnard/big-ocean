@@ -14,6 +14,15 @@ import { Context, Effect } from "effect";
 import { DatabaseError } from "../errors/http.errors";
 
 /**
+ * Result of persisting the first daily prompt schedule (write-once column).
+ * Idempotent: a second call with an already-set schedule yields `already_scheduled`.
+ */
+export type ScheduleFirstDailyPromptOutcome =
+	| { readonly kind: "inserted" }
+	| { readonly kind: "already_scheduled"; readonly scheduledFor: Date }
+	| { readonly kind: "user_not_found" };
+
+/**
  * User Account Repository Service Tag
  *
  * Service interface has NO requirements - dependencies managed by layer.
@@ -34,6 +43,14 @@ export class UserAccountRepository extends Context.Tag("UserAccountRepository")<
 		 * @returns true if the user existed and was updated, false if the user was not found
 		 */
 		readonly markFirstVisitCompleted: (userId: string) => Effect.Effect<boolean, DatabaseError>;
+
+		/**
+		 * Persist the first daily prompt schedule for the authenticated user (write-once).
+		 */
+		readonly scheduleFirstDailyPrompt: (
+			userId: string,
+			scheduledFor: Date,
+		) => Effect.Effect<ScheduleFirstDailyPromptOutcome, DatabaseError>;
 
 		/**
 		 * Delete a user account and all associated data.

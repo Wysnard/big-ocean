@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -10,6 +10,10 @@ const {
 	mockUseAuth,
 	mockUseGetResults,
 	mockUsePortraitStatus,
+	mockFetchFirstVisitState,
+	mockCompleteFirstVisit,
+	mockScheduleFirstDailyPrompt,
+	mockSyncPushSubscription,
 } = vi.hoisted(() => ({
 	mockUseParams: vi.fn(() => ({ conversationSessionId: "session-123" })),
 	mockUseSearch: vi.fn(() => ({ scrollToFacet: undefined })),
@@ -17,6 +21,10 @@ const {
 	mockUseAuth: vi.fn(),
 	mockUseGetResults: vi.fn(),
 	mockUsePortraitStatus: vi.fn(() => ({ data: null, isError: false, refetch: vi.fn() })),
+	mockFetchFirstVisitState: vi.fn(),
+	mockCompleteFirstVisit: vi.fn(),
+	mockScheduleFirstDailyPrompt: vi.fn(),
+	mockSyncPushSubscription: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -49,6 +57,12 @@ vi.mock("@/hooks/use-auth", () => ({
 	useAuth: () => mockUseAuth(),
 }));
 
+vi.mock("@/hooks/use-account", () => ({
+	fetchFirstVisitState: () => mockFetchFirstVisitState(),
+	completeFirstVisit: () => mockCompleteFirstVisit(),
+	scheduleFirstDailyPrompt: (input: unknown) => mockScheduleFirstDailyPrompt(input),
+}));
+
 vi.mock("@/hooks/use-conversation", () => ({
 	useGetResults: (...args: unknown[]) => mockUseGetResults(...args),
 	getResultsQueryOptions: (sessionId: string) => ({
@@ -70,6 +84,10 @@ vi.mock("@/hooks/use-profile", () => ({
 
 vi.mock("@/hooks/usePortraitStatus", () => ({
 	usePortraitStatus: (...args: unknown[]) => mockUsePortraitStatus(...args),
+}));
+
+vi.mock("@/hooks/use-push-subscription-sync", () => ({
+	syncPushSubscription: (input: unknown) => mockSyncPushSubscription(input),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -148,6 +166,13 @@ describe("results/$conversationSessionId route behavior", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		window.localStorage.clear();
+		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: true });
+		mockCompleteFirstVisit.mockResolvedValue({ firstVisitCompleted: true });
+		mockScheduleFirstDailyPrompt.mockResolvedValue({
+			success: true,
+			scheduledFor: "2026-04-15T19:00:00.000Z",
+		});
+		mockSyncPushSubscription.mockResolvedValue({ status: "saved" });
 		mockUseGetResults.mockReturnValue({
 			data: null,
 			isLoading: false,
@@ -223,6 +248,110 @@ describe("results/$conversationSessionId route behavior", () => {
 		);
 		expect(screen.getByRole("region", { name: "Relationship analyses" })).toContainElement(
 			screen.getByTestId("relationship-analyses-list"),
+		);
+	});
+
+	it("renders the return seed on the first full results visit and consumes the server flag", async () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: false });
+		mockUseGetResults.mockReturnValue({
+			data: {
+				...resultsData,
+				publicProfileId: "public-123",
+				shareableUrl: "https://example.com/profile/public-123",
+				isPublic: true,
+			},
+			isLoading: false,
+			error: null,
+		});
+
+		render(<Component />);
+
+		expect(await screen.findByTestId("return-seed-card")).toBeInTheDocument();
+		await waitFor(() => {
+			expect(mockCompleteFirstVisit).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	it("hides the return seed on subsequent visits", async () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: true });
+		mockUseGetResults.mockReturnValue({
+			data: resultsData,
+			isLoading: false,
+			error: null,
+		});
+
+		render(<Component />);
+
+		await waitFor(() => {
+			expect(mockFetchFirstVisitState).toHaveBeenCalledTimes(1);
+		});
+		expect(screen.queryByTestId("return-seed-card")).toBeNull();
+		expect(mockCompleteFirstVisit).not.toHaveBeenCalled();
+	});
+
+	it("triggers notification permission and scheduling only from the accept path", async () => {
+		const requestPermission = vi.fn().mockResolvedValue("granted");
+		Object.defineProperty(window, "Notification", {
+			configurable: true,
+			value: {
+				permission: "default",
+				requestPermission,
+			},
+		});
+
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: false });
+		mockUseGetResults.mockReturnValue({
+			data: resultsData,
+			isLoading: false,
+			error: null,
+		});
+		const expectedSchedule = new Date();
+		expectedSchedule.setDate(expectedSchedule.getDate() + 1);
+		expectedSchedule.setHours(19, 0, 0, 0);
+
+		render(<Component />);
+
+		fireEvent.click(await screen.findByTestId("return-seed-accept"));
+
+		await waitFor(() => {
+			expect(requestPermission).toHaveBeenCalledTimes(1);
+		});
+		await waitFor(() => {
+			expect(mockSyncPushSubscription).toHaveBeenCalledWith({ respectSessionCache: false });
+		});
+		expect(mockScheduleFirstDailyPrompt).toHaveBeenCalledWith({
+			scheduledFor: expectedSchedule.toISOString(),
+		});
+	});
+
+	it("keeps the decline path graceful without opening the browser prompt", async () => {
+		const requestPermission = vi.fn();
+		Object.defineProperty(window, "Notification", {
+			configurable: true,
+			value: {
+				permission: "default",
+				requestPermission,
+			},
+		});
+
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: false });
+		mockUseGetResults.mockReturnValue({
+			data: resultsData,
+			isLoading: false,
+			error: null,
+		});
+
+		render(<Component />);
+
+		fireEvent.click(await screen.findByTestId("return-seed-decline"));
+
+		expect(requestPermission).not.toHaveBeenCalled();
+		expect(screen.getByTestId("return-seed-feedback")).toHaveTextContent(
+			"That's alright. Come back tomorrow when it feels right.",
 		);
 	});
 

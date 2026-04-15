@@ -16,6 +16,7 @@ import {
 	getFirstVisitState,
 	removePushSubscription,
 	savePushSubscription,
+	scheduleFirstDailyPrompt,
 } from "../use-cases/index";
 
 export const AccountGroupLive = HttpApiBuilder.group(BigOceanApi, "account", (handlers) =>
@@ -33,6 +34,20 @@ export const AccountGroupLive = HttpApiBuilder.group(BigOceanApi, "account", (ha
 					const userId = yield* AuthenticatedUser;
 
 					return yield* completeFirstVisit(userId);
+				}),
+			)
+			.handle("scheduleFirstDailyPrompt", ({ payload }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					const result = yield* scheduleFirstDailyPrompt({
+						userId,
+						scheduledFor: new Date(payload.scheduledFor),
+					});
+
+					return {
+						success: result.success,
+						scheduledFor: result.scheduledFor.toISOString(),
+					};
 				}),
 			)
 			.handle("deleteAccount", () =>

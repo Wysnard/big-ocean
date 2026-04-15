@@ -8,6 +8,7 @@ import type { LoggerRepository } from "@workspace/domain";
 import { UserAccountRepository } from "@workspace/domain";
 import {
 	addMockUser,
+	getMockFirstDailyPromptScheduledFor,
 	getMockFirstVisitCompleted,
 	resetMockUsers,
 	setMockDbError,
@@ -19,6 +20,7 @@ import { Effect, Exit, Layer } from "effect";
 import { beforeEach } from "vitest";
 import { completeFirstVisit } from "../complete-first-visit.use-case";
 import { getFirstVisitState } from "../get-first-visit-state.use-case";
+import { scheduleFirstDailyPrompt } from "../schedule-first-daily-prompt.use-case";
 
 const TestLayer = Layer.mergeAll(
 	UserAccountDrizzleRepositoryLive,
@@ -54,9 +56,67 @@ describe("first visit use cases", () => {
 		}).pipe(Effect.provide(TestLayer)),
 	);
 
+	it.effect("persists the first daily prompt schedule", () =>
+		Effect.gen(function* () {
+			addMockUser(USER_ID);
+			const scheduledFor = new Date("2026-04-15T19:00:00.000Z");
+
+			const result = yield* scheduleFirstDailyPrompt({
+				userId: USER_ID,
+				scheduledFor,
+			});
+
+			expect(result.success).toBe(true);
+			expect(result.scheduledFor.toISOString()).toBe("2026-04-15T19:00:00.000Z");
+			expect(getMockFirstDailyPromptScheduledFor(USER_ID)?.toISOString()).toBe(
+				"2026-04-15T19:00:00.000Z",
+			);
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("succeeds idempotently when the first daily prompt is already scheduled", () =>
+		Effect.gen(function* () {
+			addMockUser(USER_ID);
+			const first = new Date("2026-04-15T19:00:00.000Z");
+			const second = new Date("2026-04-16T19:00:00.000Z");
+
+			yield* scheduleFirstDailyPrompt({
+				userId: USER_ID,
+				scheduledFor: first,
+			});
+
+			const result = yield* scheduleFirstDailyPrompt({
+				userId: USER_ID,
+				scheduledFor: second,
+			});
+
+			expect(result.success).toBe(true);
+			expect(result.scheduledFor.toISOString()).toBe("2026-04-15T19:00:00.000Z");
+			expect(getMockFirstDailyPromptScheduledFor(USER_ID)?.toISOString()).toBe(
+				"2026-04-15T19:00:00.000Z",
+			);
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
 	it.effect("fails with AccountNotFound when completing a missing account", () =>
 		Effect.gen(function* () {
 			const exit = yield* Effect.exit(completeFirstVisit("missing-user"));
+
+			expect(Exit.isFailure(exit)).toBe(true);
+			if (Exit.isFailure(exit)) {
+				expect(exit.cause.toString()).toContain("AccountNotFound");
+			}
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("fails with AccountNotFound when scheduling for a missing account", () =>
+		Effect.gen(function* () {
+			const exit = yield* Effect.exit(
+				scheduleFirstDailyPrompt({
+					userId: "missing-user",
+					scheduledFor: new Date("2026-04-15T19:00:00.000Z"),
+				}),
+			);
 
 			expect(Exit.isFailure(exit)).toBe(true);
 			if (Exit.isFailure(exit)) {

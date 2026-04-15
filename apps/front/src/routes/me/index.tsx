@@ -6,7 +6,6 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
-import { completeFirstVisit } from "@/hooks/use-account";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
 import { getSession } from "@/lib/auth-client";
 
@@ -80,12 +79,6 @@ function MePage() {
 	const { sessionId } = Route.useLoaderData();
 	const { data: results, isLoading, error, refetch } = useGetResults(sessionId);
 	const [isErrorVisible, setIsErrorVisible] = useState(true);
-
-	useEffect(() => {
-		void completeFirstVisit().catch((error) => {
-			console.warn("Failed to mark first visit complete", error);
-		});
-	}, []);
 
 	useEffect(() => {
 		if (error) {

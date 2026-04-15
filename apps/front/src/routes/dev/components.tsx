@@ -44,6 +44,7 @@ import {
 	SheetTrigger,
 } from "@workspace/ui/components/sheet";
 import { Switch } from "@workspace/ui/components/switch";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -458,6 +459,13 @@ function PrimitivesSection() {
 					<Input placeholder="Disabled input" disabled />
 					<Input type="email" placeholder="Email input" />
 					<Input type="password" placeholder="Password input" />
+				</div>
+			</SubSection>
+
+			<SubSection title="Textarea">
+				<div className="max-w-md space-y-3">
+					<Textarea placeholder="Default textarea" />
+					<Textarea placeholder="Disabled textarea" disabled />
 				</div>
 			</SubSection>
 
