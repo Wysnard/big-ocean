@@ -626,7 +626,7 @@ This covers the "server crashed mid-generation" or "worker fiber missed the enqu
 
 **Decision:** Authentication required before the conversation starts. The `/chat` route redirects unauthenticated users to `/login?redirectTo=/chat`. Landing page (`/`) and public profiles (`/public-profile/:id`) remain fully unauthenticated.
 
-**Flow:** Landing page (unauth) → `/chat` → auth gate (redirect to login/signup) → verify email (ADR-24) → return to `/chat` → start assessment (authenticated) → **15 exchanges** (FR1) → closing message + "Show me what you found →" button (FR93) → `/results/$sessionId?view=portrait` focused reading (ADR-46) → `/me` (first visit) / `/today` (subsequent visits) via three-space navigation (ADR-43).
+**Flow:** Landing page (unauth) → `/chat` → auth gate (redirect to login/signup) → verify email (ADR-24) → return to `/chat` → start assessment (authenticated) → **15 exchanges** (FR1) → closing message + "Show me what you found →" button (FR93) → `/results/$sessionId?view=portrait` focused reading (ADR-46) → `/me` for the post-assessment reveal → free navigation across Today / Me / Circle (ADR-43), with `/today` as the primary daily return surface.
 
 **Why:** Auth-gating before the first turn collects email upfront, enabling automated recapture for interrupted sessions (drop-off re-engagement emails). This converts the save-and-resume problem from "lost anonymous user" to "delayed user with a nudge." The UX spec explicitly chose higher upfront friction for better retention.
 
@@ -2960,11 +2960,11 @@ beforeLoad on authenticated root:
   if !session → /login?redirectTo=...
   if !emailVerified → /verify-email
   if !hasCompletedAssessment → /chat
-  if firstVisitPostAssessment(user) → /me  (portrait reveal, FR93-96)
-  else → /today                            (subsequent visits)
+  if arriving from assessment completion / focused reading → /me  (portrait reveal, FR93-96)
+  else → allow requested authenticated route
 ```
 
-`firstVisitPostAssessment` is derived at read time from the presence of any `user_visit_log` row after the assessment completion timestamp (or any bearer of "first visit" state stored on the user row — implementation choice). No new route table.
+There is no persistent Today-space route gate after the reveal. Any first-visit state retained on the user record is for UI concerns like `ReturnSeedSection` visibility, not for blocking `/today`, `/today/calendar`, or `/today/week/$weekId`.
 
 **Deleted components:** `DashboardIdentityCard`, `DashboardInProgressCard`, `DashboardRelationshipsCard`, `DashboardCreditsCard`, `DashboardEmptyState`, `DashboardPortraitCard`, `use-profile.ts` hook (if it had been revived for dashboard).
 

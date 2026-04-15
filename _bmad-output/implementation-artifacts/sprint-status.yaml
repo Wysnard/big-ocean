@@ -1,5 +1,5 @@
-# generated: 2026-04-15T13:17:14+02:00
-# last_updated: 2026-04-15T23:25:00+02:00
+# generated: 2026-04-15T16:27:43+02:00
+# last_updated: 2026-04-15T18:30:00+02:00
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,8 +43,8 @@
 # - epics-nerin-steering-format.md: Steering format (steering-epic-1 to steering-epic-2) — COMPLETED (superseded by director model)
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
-generated: 2026-04-15T13:17:14+02:00
-last_updated: 2026-04-15T22:00:00+02:00
+generated: 2026-04-15T16:27:43+02:00
+last_updated: 2026-04-15T17:08:02+02:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -74,7 +74,7 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Me Page — Identity Sanctuary
-  epic-3: in-progress
+  epic-3: done
   3-1-me-page-route-and-section-layout: done
   3-2-identity-hero-section: done
   3-3-geometricsignature-component: done
@@ -88,19 +88,19 @@ development_status:
   4-1-daily-check-in-data-model-and-api: done
   4-2-checkinform-component: done
   4-3-post-check-in-journal-view-and-week-dots: done
-  4-4-mood-calendar-view: backlog
+  4-4-mood-calendar-view: ready-for-dev
   epic-4-retrospective: optional
 
   # Epic 5: Weekly Letter from Nerin
   epic-5: in-progress
   5-1-weekly-summary-data-model-and-generation-pipeline: done
-  5-2-weekly-letter-reading-view-and-route: backlog
+  5-2-weekly-letter-reading-view-and-route: done
   5-3-weekly-letter-inline-card-and-notifications: backlog
   epic-5-retrospective: optional
 
   # Epic 6: Circle & Invite Ceremony
-  epic-6: backlog
-  6-1-circle-page-and-person-cards: backlog
+  epic-6: in-progress
+  6-1-circle-page-and-person-cards: done
   6-2-invite-ceremony-dialog: backlog
   epic-6-retrospective: optional
 

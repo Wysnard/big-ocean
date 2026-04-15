@@ -165,6 +165,18 @@
 - No `stage === "completed"` check on partner result before deriving archetype — FK set at analysis creation time always points to completed result; fail-open handles edge cases gracefully
 - Redundant `getById` calls for the same `partnerResultId` across multiple analyses — memoization / batching opportunity for users with many relationships; correctness unaffected
 
+## Deferred from: code review of 6-1-circle-page-and-person-cards (2026-04-15)
+
+- `hasContent === true` with `contentCompletedAt === null` falls back to `createdAt` — pre-existing; rows completed before the migration will have null; fallback is intentional and tested in `circle-relationship-copy.test.ts`
+- `formatLastSharedRelative` uses approximate 30/365-day unit constants — pre-existing Intl pattern; calendar-precise relative time would require a date library; cosmetic inaccuracy at month/year boundaries only
+
+## Deferred from: code review of 4-4-mood-calendar-view (2026-04-16)
+
+- `shiftYearMonth` throws raw `Error` on malformed input — edge case only reachable via corrupted local state; consider controlled fallback in future
+- `YourGrowthSection` collapses loading/error/no-data into `null` — acceptable for a conditional Me section; future enhancement could add error distinction
+- Auth redirect clears `redirectTo` — pre-existing pattern across all Today-space routes; users won't return to `/today/calendar` after login redirect
+- Diff includes non-story-4.4 changes (weekly letter wiring, first-visit gate removal) — acknowledged in story completion notes
+
 ## Deferred from: code review of 5-1-weekly-summary-data-model-and-generation-pipeline (2026-04-15)
 
 - TOCTOU race on idempotency — concurrent requests for same weekId both proceed to LLM call before either saves; `onConflictDoUpdate` prevents duplicate rows but not duplicate LLM spend. Same pattern as relationship analysis. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:80-81`]

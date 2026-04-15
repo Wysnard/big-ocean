@@ -104,7 +104,7 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 2. **Conversational trust through Nerin's observations** — The UI environment, pacing, and visual treatment must frame Nerin as a compelling conversation partner worth opening up to. Surface-level responses produce poor assessments — the UX should encourage depth without feeling demanding. Nerin's mid-conversation observations ("I notice that when you talk about creativity, your energy shifts") are the primary trust-building and retention mechanism. These are conversational reflections, never assessment reveals.
 
-3. **Three-space navigation cognitive model** — Today / Me / Circle is a departure from standard "dashboard + profile" IA. Users must instantly grasp that Today is ephemeral (come back tomorrow), Me is persistent identity, and Circle is the few people you care about. The bottom nav must carry this model without a tutorial. Default routing: first post-assessment visit → `/me`; every subsequent visit → `/today`. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. `/settings` is a thin admin route accessed via gear icon on Me, not a fourth tab.
+3. **Three-space navigation cognitive model** — Today / Me / Circle is a departure from standard "dashboard + profile" IA. Users must instantly grasp that Today is ephemeral (come back tomorrow), Me is persistent identity, and Circle is the few people you care about. The bottom nav must carry this model without a tutorial. Assessment completion redirects once to `/me` for the reveal; after that, users can navigate freely across the three spaces, with `/today` acting as the primary daily return surface rather than a forced default. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. `/settings` is a thin admin route accessed via gear icon on Me, not a fourth tab.
 
 4. **The post-assessment transition is the emotional peak** — The transition from conversation close to first portrait read is the single most valuable moment in the product. It must use focused reading, not a cluttered results page. Flow: closing exchange → "Show me what you found →" button (user-voiced) → navigate to `PortraitReadingView` in a "generating" state with OceanSpinner and the line *"Nerin is writing your letter..."* → letter fades in full-screen, distraction-free, max-width 720px → warm "There's more to see →" link at the bottom → full results/Me page with identity hero, inline portrait, return seed, and notification permission request in Nerin's voice. The emotional weight of the first read must not be diluted by navigation or chrome.
 
@@ -222,7 +222,7 @@ The transition between acts should be felt, not announced. The depth meter, ambi
 The authenticated product is organized around **three spaces**, not a dashboard. Each space has a different emotional register, a different visit frequency, and a different job. Bottom nav carries the three tabs: **Today | Me | Circle**.
 
 **1. Today — Daily Ephemeral Companion**
-`/today` — Default landing for every visit after the first. Silent journal check-in, week-so-far dots, mood calendar link, quiet anticipation line, Sunday weekly letter inline card. Visited daily. The page is static after check-in — one action, come back tomorrow. Not a feed. Not a museum. Ephemeral by design: yesterday's page doesn't live here; the mood calendar is a separate view for looking back.
+`/today` — Primary daily landing after the post-assessment reveal. Silent journal check-in, week-so-far dots, mood calendar link, quiet anticipation line, Sunday weekly letter inline card. Visited daily. The page is static after check-in — one action, come back tomorrow. Not a feed. Not a museum. Ephemeral by design: yesterday's page doesn't live here; the mood calendar is a separate view for looking back.
 
 **2. Me — Persistent Identity & Growth Archive**
 `/me` — First visit post-assessment lands here (portrait reveal + identity celebration). Subsequent visits are low-frequency, high-emotion. Contains: Identity Hero (archetype, OCEAN code, radar, confidence), Your Portrait (re-read the letter), Your Growth (mood calendar + pattern observations, conditional on mood history), Your Public Face (preview of what strangers see + public/private toggle + shareable link + card image — NO view counts, NO sign-up attribution metrics), Your Circle preview (with "View all →"), Subscription pitch (for free users) or value summary (for subscribers), Account (gear icon → `/settings`).
@@ -249,8 +249,8 @@ The authenticated product is organized around **three spaces**, not a dashboard.
 
 #### Routing decisions
 
-- **First visit post-assessment:** → `/me` (portrait reveal, identity celebration)
-- **All subsequent authenticated visits:** → `/today` (daily return default)
+- **Assessment completion / first reveal:** → `/me` (portrait reveal, identity celebration)
+- **After that:** users can open Today / Me / Circle freely; `/today` is the primary daily return surface
 - **Unauthenticated visits:** → `/` (homepage)
 - **Relationship letter page first visit:** enters through "Read this together when you can sit with it" ritual screen; subsequent visits bypass ritual by default ("Read Together Again" re-enters ritual mode)
 - No `/dashboard` route — the dashboard concept has been retired. `/dashboard` if hit redirects to `/today`.
@@ -4106,7 +4106,7 @@ The following components are new additions required for the three-space architec
 - On "Yes" → triggers browser permission API → if granted, schedules first daily notification for the next day at default time (MVP: 7pm; post-MVP: personality-typed)
 - On "Not right now" → daily loop still works via organic return, no lock-in
 
-**Visibility:** Renders **only on the first Me page visit** (after the post-assessment transition in Journey 1). Subsequent visits do not show this section. The first-visit flag is stored server-side, not in localStorage.
+**Visibility:** Renders on the first Me/results reveal after the post-assessment transition in Journey 1. Subsequent visits do not show this section. If a first-visit marker is stored server-side, it is for this UI visibility only, not for blocking Today-space navigation.
 
 **Tone rule:** This component is where the Nerin-voice vs system-voice distinction matters most. Every string must be Nerin-voiced. NO "Enable notifications", NO "Allow notifications for the best experience", NO generic permission copy.
 
@@ -4168,7 +4168,7 @@ Page layouts that compose library components with data-fetching concerns. Live i
 | **PortraitReadingView route** | `/results/$sessionId?view=portrait` | `PortraitReadingView` (extended with generating state) + end-of-letter link. First portrait read destination. `BottomNav` hidden. |
 | **ResultsPage / Me (first visit)** | `/results/$sessionId` | Identity hero (ArchetypeHeroSection + GeometricSignature + OceanCodeStrand + PersonalityRadarChart) + inline PersonalPortrait + Your Public Face section + invite ceremony card + subscription pitch + **ReturnSeedSection** (first visit only). `BottomNav` visible. |
 | **TodayPage** | `/today` | BottomNav + CheckInForm (pre-check-in) or JournalEntry + MoodDotsWeek + QuietAnticipationLine + LibraryArticleCard (rate-limited) + WeeklyLetterCard (Sundays). Default authenticated landing. |
-| **MoodCalendarView** | `/today/calendar` | BottomNav + MoodCalendarView component. Separate view for looking back. |
+| **MoodCalendarView** | `/today/calendar` | Focused route shell + MoodCalendarView component. Separate view for looking back; outside BottomNav. |
 | **WeeklyLetterReadingView route** | `/today/week/$weekId` | `WeeklyLetterReadingView` with tier-aware rendering. `BottomNav` hidden. Focused reading. |
 | **MePage** | `/me` | BottomNav + MePageSection ×7: Identity Hero, Your Portrait (inline re-read), Your Growth (conditional), Your Public Face (ProfileVisibilityToggle + share card), Your Circle (preview with View all →), SubscriptionPitchSection or SubscriptionValueSummary, Account (gear → `/settings`) |
 | **CirclePage** | `/circle` | BottomNav + CirclePersonCard (full-width, one per connected person) + InviteCeremonyCard (always at bottom). Empty state: "Big Ocean is made for the few people you care about." |
@@ -4179,7 +4179,7 @@ Page layouts that compose library components with data-fetching concerns. Live i
 
 **Hidden BottomNav routes:** `/chat`, `/results/$sessionId?view=portrait`, `/today/week/$weekId`, `/circle/$personId?ritual=true`, `/public-profile/$id`, unauthenticated routes.
 
-**Authenticated default landing:** First post-assessment visit → `/me`. All subsequent visits → `/today`. Tracked via a server-side `has_visited_me_once` flag on the user record.
+**Authenticated landing behavior:** Assessment completion / focused-reading flow redirects to `/me` for the reveal. After that, authenticated users can navigate freely; `/today` is the primary daily return surface. Any server-side first-visit marker is for `ReturnSeedSection` visibility only.
 
 ### 11.6 Implementation Roadmap
 
@@ -4205,7 +4205,7 @@ Page layouts that compose library components with data-fetching concerns. Live i
 
 - **Satori compatibility** is a hard constraint for GeometricSignature and all 15 ocean shapes. Test in Satori during shape development, not after.
 - **PortraitReadingView generating state** is load-bearing for Journey 1's emotional arc. Budget explicit test coverage for the transition from generating → ready and for the end-of-letter link rendering after scroll.
-- **ReturnSeedSection first-visit flag** must be server-side (user record), not localStorage, to survive device changes and sign-outs.
+- **ReturnSeedSection first-visit marker** should be server-side (user record), not localStorage, if persistence across devices/sign-ins is required. This marker controls the section visibility only; it must not gate Today-space routes.
 - **BottomNav visibility logic** is driven by route metadata — each route exports a `hideBottomNav?: boolean` flag, and the layout root checks it. No per-component conditional rendering.
 - **Nerin-voice vs system-voice audit** required for: ReturnSeedSection, notification permission request, daily notification copy, Sunday weekly letter push notification copy, subscription conversion copy, InviteCeremonyDialog copy. One PR reviewer owns this audit (copy review gate).
 - **Weekly letter generation job** runs Sunday 6pm local time per user. Cron infrastructure + local-time handling required. Generation produces both free and subscriber content in one LLM call.
@@ -5045,8 +5045,8 @@ The Today page composes data from multiple TanStack Query hooks:
 
 | Visit | Behavior |
 |-------|----------|
-| **First post-assessment visit** | User lands here after the PortraitReadingView end-of-letter link ("There's more to see →"). Full page renders + **ReturnSeedSection at bottom**. Sets `has_visited_me_once = true` flag server-side. |
-| **All subsequent visits** | Full page renders, ReturnSeedSection hidden. Subsequent visits are low-frequency; most users return via `/today`, not `/me`. |
+| **First post-assessment visit** | User lands here after the PortraitReadingView end-of-letter link ("There's more to see →"). Full page renders + **ReturnSeedSection at bottom**. If tracked, a first-visit marker is updated for this section only. |
+| **All subsequent visits** | Full page renders, ReturnSeedSection hidden. Subsequent visits are low-frequency; many users return via `/today`, but `/me` remains directly accessible. |
 
 **No first-visit Me divergence.** The Me page has one canonical layout — only the ReturnSeedSection is conditional. No separate "first-visit Me" component tree.
 
@@ -5121,21 +5121,21 @@ Me is NOT a multi-column dashboard. Even on desktop, it's a single-column scroll
 | `usePublicProfileState(userId)` | Is public, shareable URL, card image | Your Public Face |
 | `useCircle(userId)` | First 3 Circle members | Your Circle preview |
 | `useSubscriptionState(userId)` | Free / subscribed, extensionUsed, portraitRegenerated, subscribedSince | Subscription section |
-| `useHasVisitedMeOnce(userId)` | Boolean | ReturnSeedSection conditional |
+| `useHasVisitedMeOnce(userId)` | Boolean | ReturnSeedSection conditional only (not route access) |
 
 **New endpoints required:**
 - `GET /api/me` — aggregated Me page data (optional optimization)
-- `POST /api/me/mark-first-visit` — set `has_visited_me_once = true`
+- `POST /api/me/mark-first-visit` — optional: set a first-visit marker for `ReturnSeedSection` visibility only
 - `GET /api/subscription/state` — current subscription state
 - `POST /api/subscription/extend-conversation` — trigger extension + bundled portrait regen
 
 #### 15.2.9 Implementation Notes
 
-- **ReturnSeedSection is conditional on server-side flag** — localStorage is insufficient because it doesn't survive device changes.
+- **ReturnSeedSection may be conditional on a server-side marker** — localStorage is insufficient because it doesn't survive device changes. This marker is not a Today-space route gate.
 - **Notification permission request is Nerin-voiced** — copy must pass the Nerin-voice audit (§11.7 Implementation Notes).
 - **Subscription section is a control center, not a marketing wall** — after subscription, it becomes a value summary + conversation extension CTA. Never an upsell banner.
 - **Portrait renders inline via `PersonalPortrait`** — not via `PortraitReadingView` (that's for first-read focused reading only).
-- **First-visit flag:** Server sets `has_visited_me_once = true` on the first Me page view after assessment completion. ReturnSeedSection renders only when this flag is false.
+- **First-visit marker:** Server may set a marker on the first Me page view after assessment completion. ReturnSeedSection renders only when this marker indicates the reveal has not yet been acknowledged.
 - **No `/profile` route exists** — Your Public Face section is the control center; the actual public profile lives at `/public-profile/$id`.
 
 ### 15.3 Circle Page Specification (`/circle`)
@@ -6203,13 +6203,13 @@ Public profiles are SEO-critical — server-rendered with unique URLs, structure
 
 This section consolidates all `/results/$sessionId` full-page specifications. The **first portrait read** happens in the focused `PortraitReadingView` at `/results/$sessionId?view=portrait` — that flow is documented in §10.1 Journey 1. This section covers the **full results / Me page** that the user lands on after the focused reading's "There's more to see →" link (first visit) or when they navigate to Me directly (subsequent visits).
 
-**Important terminology:** In the three-space architecture, this page IS the Me page (§15.2). The `/results/$sessionId` route and the `/me` route converge — they render the same page composition. `$sessionId` is a URL param for backward compatibility; the first-visit vs subsequent-visit divergence is controlled by the server-side `has_visited_me_once` flag, not by the route.
+**Important terminology:** In the three-space architecture, this page IS the Me page (§15.2). The `/results/$sessionId` route and the `/me` route converge — they render the same page composition. `$sessionId` is a URL param for backward compatibility; the first-visit vs subsequent-visit divergence is limited to `ReturnSeedSection` visibility, not to route access.
 
 ### 18.1 Results / Me Page Purpose
 
 The full results / Me page is the **personal identity sanctuary** — the surface users return to when they want to re-read their portrait in context, manage their public face, see their Circle preview, or control their subscription. It is NOT where the first portrait read happens — that's the focused `PortraitReadingView` (§11.4 PortraitReadingView extended + §10.1 Journey 1).
 
-**Design principle:** The page is designed for both the emotional first-visit moment (Nerin just wrote you a letter; here's the return seed bridging you into Day 1) AND the low-frequency returning visit (scroll through identity hero, re-read portrait inline, check Circle, manage subscription). Both experiences share the same layout — only the `ReturnSeedSection` is conditional on the first-visit flag.
+**Design principle:** The page is designed for both the emotional first-visit moment (Nerin just wrote you a letter; here's the return seed bridging you into Day 1) AND the low-frequency returning visit (scroll through identity hero, re-read portrait inline, check Circle, manage subscription). Both experiences share the same layout — only the `ReturnSeedSection` is conditional on a first-visit marker.
 
 **No conversion pressure.** The portrait is free. There is no PWYW gate. The subscription pitch is a soft section midway down the page (§15.2), not a modal. Primary subscription conversion lives in the Sunday weekly letter (§10.3 Journey 3 + §20).
 
@@ -6396,8 +6396,8 @@ TraitCard (click) → DetailZone expands below the clicked row
 | Results loaded, portrait ready | Fully visible | `PersonalPortrait` inline | Standard state |
 | Results loaded, portrait generating | Fully visible | Inline skeleton + "Nerin is writing..." | Rare — focused reading view handles generating state upstream |
 | Results loaded, portrait failed | Fully visible | Inline error + retry | Retry re-generates |
-| First visit (has_visited_me_once = false) | Fully visible | `PersonalPortrait` inline | ReturnSeedSection at bottom |
-| Subsequent visit (has_visited_me_once = true) | Fully visible | `PersonalPortrait` inline | ReturnSeedSection hidden |
+| First post-assessment reveal | Fully visible | `PersonalPortrait` inline | ReturnSeedSection at bottom |
+| Subsequent visit | Fully visible | `PersonalPortrait` inline | ReturnSeedSection hidden |
 | Portrait reading mode | Not applicable — user navigates to `/results/$sessionId?view=portrait` which is a different route | — | `BottomNav` hidden |
 | Free user | Fully visible | `PersonalPortrait` | SubscriptionPitchSection in subscription slot |
 | Subscriber | Fully visible | `PersonalPortrait` | SubscriptionValueSummary + conversation extension CTA |
@@ -6467,8 +6467,8 @@ TraitCard (click) → DetailZone expands below the clicked row
 | Header | Standard authenticated header + `BottomNav` at the bottom (three-space tabs) |
 | Back navigation | `BottomNav` replaces "back" button. User navigates laterally to Today, Me, Circle. |
 | Portrait focused reading | `/results/$sessionId?view=portrait` — separate route with `PortraitReadingView`, hides `BottomNav`, full-screen letter format |
-| First-visit redirect | After focused reading end-of-letter link ("There's more to see →"), lands here with `has_visited_me_once = false` → ReturnSeedSection visible |
-| Subsequent visits | Default landing is `/today`, not here. User reaches Me via `BottomNav` Me tab. ReturnSeedSection hidden. |
+| Post-assessment redirect | After focused reading end-of-letter link ("There's more to see →"), lands here and shows ReturnSeedSection |
+| Subsequent visits | `/today` is the primary daily landing surface, not a forced route gate. User can still reach Me via `BottomNav` Me tab. ReturnSeedSection hidden. |
 | Section 5 links | Your Circle preview links to `/circle` for the full Circle page |
 | Section 7 link | Account gear → `/settings` |
 | Subscription section CTAs | Free: inline pitch with "Learn more →" (post-MVP: inline expand). Subscriber: "Extend your conversation with Nerin →" (triggers extension flow + bundled portrait regen) |

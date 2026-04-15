@@ -121,7 +121,7 @@ FR97: Circle page: full-width person cards with archetype, OCEAN code, duration,
 FR98: Circle enforces Intimacy Principle: no counts, no follower language, no sorting, no search
 FR99: Invite ceremony dialog with reward-first copy
 FR100: Invite placement: Me page, Circle page, public profile CTA, weekly letter relational beat
-FR101: Default landing /today. First visit post-assessment lands on /me
+FR101: Assessment completion redirects to /me for the reveal; afterward users can navigate freely across Today / Me / Circle, with /today as the primary daily return surface
 FR102: Three-space bottom nav (Today / Me / Circle). /dashboard removed. /chat outside three-space
 FR103: Public profile separate from authenticated Me page
 
@@ -182,7 +182,7 @@ From Architecture document:
 - Silent daily journal: zero LLM calls on check-in (ADR-44). New daily_check_ins table
 - Weekly letter pipeline (ADR-45): per-user cron Sunday 6pm local. Reads UserSummary + week check-ins. New weekly_summaries table
 - Post-assessment focused reading transition (ADR-46): generating state → letter fade-in → "There's more to see →"
-- Three-space navigation (ADR-43): Today/Me/Circle bottom nav. /dashboard removed. First visit → /me, subsequent → /today
+- Three-space navigation (ADR-43): Today/Me/Circle bottom nav. /dashboard removed. Assessment completion reveals /me once, then users navigate freely with /today as the primary daily return surface
 - Nerin Output Grammar (ADR-48): three visual registers (journal/letter/chat), each with own prompt composition
 - Knowledge library SSR (ADR-49): static generation, Schema.org structured data
 - Cost ceiling (ADR-50): per-user token budgets, global free-tier circuit breaker, >3x threshold triggers rate limiting
@@ -442,7 +442,8 @@ So that I can move between the three spaces of the product.
 **And** route shells exist for /today (placeholder), /me (placeholder), /circle (placeholder)
 **And** /settings route already exists and is accessible via gear icon (no BottomNav tab)
 **And** each route shell has `beforeLoad` auth check redirecting unauthenticated users to /login
-**And** first visit post-assessment routes to /me; all subsequent visits default to /today (server-side `first_visit_completed` flag on user record)
+**And** assessment completion routes to /me for the reveal
+**And** after that, users can navigate freely across /today, /me, and /circle without a persistent first-visit route gate
 
 ### Story 1.2: Dashboard Retirement & Nav Cleanup
 
@@ -594,8 +595,8 @@ So that I'm motivated to return and start the daily check-in habit.
 **And** accepting triggers the browser's notification permission request
 **And** if permission granted, a first daily prompt is scheduled for the next day
 **And** if declined, no lock-in — the section gracefully dismisses
-**And** the ReturnSeedSection only shows on the first visit (not on subsequent visits to /results)
-**And** the first-visit flag is tracked server-side on the user record
+**And** the ReturnSeedSection only shows on the first post-assessment reveal (not on subsequent visits to /results)
+**And** any first-visit marker tracked server-side is for ReturnSeedSection visibility only, not for gating Today-space routes
 
 ---
 
