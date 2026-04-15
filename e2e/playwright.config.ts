@@ -12,6 +12,7 @@ const PROJECT_ROOT = resolve(import.meta.dirname, "..");
  * Projects:
  *   golden-path    → self-contained journey spec (creates its own user)
  *   dashboard-page → /dashboard redirect verification
+ *   three-space-navigation → Today / Me / Circle BottomNav (owner session)
  *   public-profile → anonymous viewer accesses shared profile
  *   unauth         → unauthenticated access denial (no storageState)
  *   auth-other     → other-user access denial (other-user.json)
@@ -51,6 +52,12 @@ export default defineConfig({
 		{
 			name: "dashboard-page",
 			testMatch: "specs/dashboard-page.spec.ts",
+		},
+
+		// ── Three-space nav: Today / Me / Circle via BottomNav ─────────────
+		{
+			name: "three-space-navigation",
+			testMatch: "specs/three-space-navigation.spec.ts",
 		},
 
 		// ── Public profile: anonymous viewer accesses shared profile ─────
