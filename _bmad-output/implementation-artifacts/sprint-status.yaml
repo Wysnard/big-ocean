@@ -1,5 +1,5 @@
-# generated: 2026-04-15T19:12:00+02:00
-# last_updated: 2026-04-15T19:45:00Z
+# generated: 2026-04-16T01:18:25+02:00
+# last_updated: 2026-04-16T01:18:25+02:00
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,8 +43,8 @@
 # - epics-nerin-steering-format.md: Steering format (steering-epic-1 to steering-epic-2) — COMPLETED (superseded by director model)
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
-generated: 2026-04-15T19:12:00+02:00
-last_updated: 2026-04-15T19:45:00Z
+generated: 2026-04-16T01:18:25+02:00
+last_updated: 2026-04-16T01:18:25+02:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -92,14 +92,14 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Weekly Letter from Nerin
-  epic-5: in-progress
+  epic-5: done
   5-1-weekly-summary-data-model-and-generation-pipeline: done
   5-2-weekly-letter-reading-view-and-route: done
   5-3-weekly-letter-inline-card-and-notifications: done
   epic-5-retrospective: optional
 
   # Epic 6: Circle & Invite Ceremony
-  epic-6: in-progress
+  epic-6: done
   6-1-circle-page-and-person-cards: done
   6-2-invite-ceremony-dialog: done
   epic-6-retrospective: optional
