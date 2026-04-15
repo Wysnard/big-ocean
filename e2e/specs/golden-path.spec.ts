@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { seedFullPortrait } from "../factories/conversation.factory.js";
+import { getUserSummaryBySessionId, seedFullPortrait } from "../factories/conversation.factory.js";
 import { expect, test } from "../fixtures/base.fixture.js";
 import { signUpAndLoginViaBrowser } from "../utils/browser-auth.js";
 
@@ -81,6 +81,13 @@ test("golden path: landing → signup → chat → results → share → public 
 	await test.step("assert archetype card is visible", async () => {
 		// Lazy finalization may still be in progress — use a generous timeout
 		await expect(page.getByTestId("archetype-hero-section")).toBeVisible({ timeout: 30_000 });
+	});
+
+	await test.step("verify user summary was generated (Story 7.1)", async () => {
+		const summary = await getUserSummaryBySessionId(sessionId);
+		expect(summary).not.toBeNull();
+		expect(summary?.version).toBe(1);
+		expect(summary?.summaryText).toBeTruthy();
 	});
 
 	await test.step("assert results page trait display (Story 12-1)", async () => {
