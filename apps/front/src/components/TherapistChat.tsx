@@ -8,6 +8,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 import { Info, Loader2, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -437,7 +438,7 @@ function ChatInputBar({
 	return (
 		<ChatInputBarShell className="relative z-10 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
 			<div className="flex gap-2 items-end">
-				<textarea
+				<Textarea
 					ref={textareaRef}
 					data-slot="chat-input"
 					data-testid="chat-input"
@@ -451,7 +452,12 @@ function ChatInputBar({
 					disabled={isLoading || isCompleted || isFarewellReceived}
 					maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
 					rows={1}
-					className="flex-1 px-4 py-2 max-h-[120px] rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] text-foreground placeholder-[var(--input-field-color)] focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none [field-sizing:content]"
+					className={cn(
+						"flex-1 min-h-0 w-full max-h-[120px] resize-none rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] px-4 py-2 text-foreground shadow-none",
+						"placeholder-[var(--input-field-color)]",
+						"focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent focus-visible:ring-2 focus-visible:ring-ring",
+						"[field-sizing:content]",
+					)}
 				/>
 				<Button
 					data-testid="chat-send-btn"

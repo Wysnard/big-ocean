@@ -46,8 +46,11 @@ import {
 import { Switch } from "@workspace/ui/components/switch";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip";
+import { cn } from "@workspace/ui/lib/utils";
+import { Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ChatInputBarShell } from "../../components/chat/ChatInputBarShell";
 import { ArchetypeCard } from "../../components/results/ArchetypeCard";
 import { ConfidenceRingCard } from "../../components/results/ConfidenceRingCard";
 import { DetailZone } from "../../components/results/DetailZone";
@@ -956,6 +959,8 @@ function getMockFacetDetails(traitName: string) {
 /* ── Section 4: Chat ────────────────────────────────────── */
 
 function ChatSection() {
+	const [chatInputDemo, setChatInputDemo] = useState("");
+
 	return (
 		<section className="mb-20">
 			<SectionHeading
@@ -1009,41 +1014,61 @@ function ChatSection() {
 			</SubSection>
 
 			<SubSection title="Chat Input Bar">
-				<div className="max-w-2xl">
-					<div
-						className="flex items-end gap-2 px-6 py-3 border-t"
-						style={{
-							backgroundColor: "var(--input-bar-bg)",
-							borderColor: "var(--input-bar-border)",
-							backdropFilter: "blur(14px)",
-						}}
-					>
-						<div
-							className="flex-1 px-3 py-2 rounded-xl text-sm min-h-[40px]"
-							style={{
-								backgroundColor: "var(--input-field-bg)",
-								border: "1px solid var(--input-field-border)",
-								color: "var(--input-field-color)",
-							}}
-						>
-							Type your message...
-						</div>
-						<Button size="icon" className="shrink-0 rounded-xl" aria-label="Send message">
-							<svg
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								aria-hidden="true"
+				<p className="mb-3 max-w-2xl text-xs text-muted-foreground">
+					Mirrors <code className="text-foreground">TherapistChat</code>{" "}
+					<code className="text-foreground">ChatInputBar</code>:{" "}
+					<code className="text-foreground">ChatInputBarShell</code>, shared{" "}
+					<code className="text-foreground">Textarea</code>, and send{" "}
+					<code className="text-foreground">Button</code>.
+				</p>
+				<div className="max-w-2xl overflow-hidden rounded-xl border border-border">
+					<ChatInputBarShell className="relative z-10 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+						<div className="flex gap-2 items-end">
+							<Textarea
+								data-slot="chat-input"
+								data-testid="chat-input-kitchen-sink"
+								aria-label="Message Nerin"
+								value={chatInputDemo}
+								onChange={(e) => setChatInputDemo(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && !e.shiftKey) {
+										e.preventDefault();
+										if (chatInputDemo.trim()) {
+											toast.message("Kitchen sink", {
+												description: "Enter-to-send is wired like the real chat bar.",
+											});
+										}
+									}
+								}}
+								placeholder="Type your message..."
+								rows={1}
+								className={cn(
+									"flex-1 min-h-0 w-full max-h-[120px] resize-none rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] px-4 py-2 text-foreground shadow-none",
+									"placeholder-[var(--input-field-color)]",
+									"focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent focus-visible:ring-2 focus-visible:ring-ring",
+									"[field-sizing:content]",
+								)}
+							/>
+							<Button
+								type="button"
+								data-testid="chat-send-btn-kitchen-sink"
+								aria-label="Send message"
+								size="sm"
+								className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
+								disabled={!chatInputDemo.trim()}
+								onClick={() => {
+									if (chatInputDemo.trim()) {
+										toast.message("Kitchen sink", { description: chatInputDemo.slice(0, 80) });
+									}
+								}}
 							>
-								<path d="M5 12h14M12 5l7 7-7 7" />
-							</svg>
-						</Button>
-					</div>
+								<Send className="h-4 w-4" />
+							</Button>
+						</div>
+						<span className="sr-only">
+							Press Enter to send your message. Press Shift plus Enter to add a new line.
+						</span>
+					</ChatInputBarShell>
 				</div>
 			</SubSection>
 
