@@ -11,6 +11,7 @@ import { vi } from "vitest";
 // Activate mocking — Vitest auto-resolves to __mocks__ siblings
 vi.mock("@workspace/infrastructure/repositories/assessment-result.drizzle.repository");
 vi.mock("@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/user-summary.drizzle.repository");
 
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -21,6 +22,8 @@ import {
 	LIFE_DOMAINS,
 	LoggerRepository,
 	TRAIT_NAMES,
+	UserSummaryGenerationError,
+	UserSummaryGeneratorRepository,
 } from "@workspace/domain";
 import {
 	AssessmentResultDrizzleRepositoryLive,
@@ -33,6 +36,11 @@ import {
 	_resetMockState as resetConversationEvidence,
 	_seedEvidence as seedConversationEvidence,
 } from "@workspace/infrastructure/repositories/conversation-evidence.drizzle.repository";
+import {
+	_resetUserSummaryMockState as resetUserSummary,
+	UserSummaryDrizzleRepositoryLive,
+} from "@workspace/infrastructure/repositories/user-summary.drizzle.repository";
+import { UserSummaryGeneratorMockRepositoryLive } from "@workspace/infrastructure/repositories/user-summary-generator.mock.repository";
 import { Effect, Layer } from "effect";
 import { generateResults } from "../generate-results.use-case";
 
@@ -76,6 +84,28 @@ const createTestLayer = () =>
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
+		UserSummaryDrizzleRepositoryLive,
+		UserSummaryGeneratorMockRepositoryLive,
+	);
+
+const createTestLayerWithFailingUserSummaryGenerator = () =>
+	Layer.mergeAll(
+		Layer.succeed(ConversationRepository, mockSessionRepo),
+		Layer.succeed(LoggerRepository, mockLoggerRepo),
+		AssessmentResultDrizzleRepositoryLive,
+		ConversationEvidenceDrizzleRepositoryLive,
+		UserSummaryDrizzleRepositoryLive,
+		Layer.succeed(
+			UserSummaryGeneratorRepository,
+			UserSummaryGeneratorRepository.of({
+				generate: () =>
+					Effect.fail(
+						new UserSummaryGenerationError({
+							message: "forced failure for test",
+						}),
+					),
+			}),
+		),
 	);
 
 /** Helper: create conversation evidence records for seeding */
@@ -110,6 +140,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		vi.clearAllMocks();
 		resetResults();
 		resetConversationEvidence();
+		resetUserSummary();
 		mockSessionRepo.getSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
@@ -476,6 +507,65 @@ describe("generateResults Use Case (Story 18-4)", () => {
 				// Final stage should be completed
 				expect(record?.stage).toBe("completed");
 			}).pipe(Effect.provide(createTestLayer())),
+		);
+	});
+
+	describe("User summary (Story 7.1)", () => {
+		it.effect("skips UserSummary when session has no userId", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({ ...mockFinalizingSession, userId: null }),
+				);
+
+				const evidence = makeConversationEvidence("session_123", [
+					{
+						facet: "imagination",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "work",
+						note: "test",
+					},
+				]);
+				seedConversationEvidence(evidence);
+
+				const result = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				expect(result).toEqual({ status: "completed" });
+				expect(mockLoggerRepo.info).toHaveBeenCalledWith(
+					"Generate results: skipping UserSummary (no userId on session)",
+					expect.objectContaining({ sessionId: "session_123" }),
+				);
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("fails pipeline when UserSummary generation fails", () =>
+			Effect.gen(function* () {
+				const evidence = makeConversationEvidence("session_123", [
+					{
+						facet: "imagination",
+						deviation: 1,
+						strength: "moderate",
+						confidence: "medium",
+						domain: "work",
+						note: "test",
+					},
+				]);
+				seedConversationEvidence(evidence);
+
+				const exit = yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				}).pipe(Effect.exit);
+
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("UserSummaryGenerationError");
+				}
+			}).pipe(Effect.provide(createTestLayerWithFailingUserSummaryGenerator())),
 		);
 	});
 });

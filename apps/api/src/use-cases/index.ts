@@ -19,6 +19,10 @@ export {
 	generateResults,
 } from "./generate-results.use-case";
 export {
+	type GenerateUserSummaryInput,
+	generateUserSummary,
+} from "./generate-user-summary.use-case";
+export {
 	type GenerateWeeklySummariesForWeekInput,
 	type GenerateWeeklySummariesForWeekOutput,
 	generateWeeklySummariesForWeek,

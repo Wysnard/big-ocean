@@ -13,6 +13,7 @@
  * - conversationEvidence: Lean evidence for steering (conversanalyzer)
  * - conversationEvidence: Evidence extracted by ConversAnalyzer on every message
  * - assessmentResults: Final scored results with portrait
+ * - userSummaries: Compressed UserSummary per assessment result (Story 7.1)
  * - publicProfile: Shareable profile links
  */
 
@@ -608,6 +609,34 @@ export const weeklySummaries = pgTable(
 	],
 );
 
+// ─── User summaries (Story 7.1) — compressed user-state for Nerin surfaces ─
+
+export const userSummaries = pgTable(
+	"user_summaries",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		assessmentResultId: uuid("assessment_result_id")
+			.notNull()
+			.references(() => assessmentResults.id, { onDelete: "cascade" }),
+		themes: jsonb("themes").notNull(),
+		quoteBank: jsonb("quote_bank").notNull(),
+		summaryText: text("summary_text").notNull(),
+		version: integer("version").notNull().default(1),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.notNull()
+			.defaultNow()
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		uniqueIndex("user_summaries_assessment_result_id_unique").on(table.assessmentResultId),
+		index("user_summaries_user_id_updated_at_desc_idx").on(table.userId, table.updatedAt.desc()),
+	],
+);
+
 // ─── Portrait Ratings (Story 19-2 — portrait quality telemetry) ───────────
 
 /**
@@ -658,6 +687,7 @@ export const relations = defineRelations(
 		pushNotificationQueue,
 		dailyCheckIns,
 		weeklySummaries,
+		userSummaries,
 		portraitRatings,
 	},
 	(r) => ({
@@ -675,6 +705,7 @@ export const relations = defineRelations(
 			pushNotifications: r.many.pushNotificationQueue(),
 			dailyCheckIns: r.many.dailyCheckIns(),
 			weeklySummaries: r.many.weeklySummaries(),
+			userSummaries: r.many.userSummaries(),
 		},
 		session: {
 			user: r.one.user({
@@ -739,6 +770,10 @@ export const relations = defineRelations(
 			}),
 			publicProfile: r.many.publicProfile(),
 			portraits: r.many.portraits(),
+			userSummary: r.one.userSummaries({
+				from: r.assessmentResults.id,
+				to: r.userSummaries.assessmentResultId,
+			}),
 		},
 		portraits: {
 			result: r.one.assessmentResults({
@@ -822,6 +857,16 @@ export const relations = defineRelations(
 			user: r.one.user({
 				from: r.weeklySummaries.userId,
 				to: r.user.id,
+			}),
+		},
+		userSummaries: {
+			user: r.one.user({
+				from: r.userSummaries.userId,
+				to: r.user.id,
+			}),
+			assessmentResult: r.one.assessmentResults({
+				from: r.userSummaries.assessmentResultId,
+				to: r.assessmentResults.id,
 			}),
 		},
 		portraitRatings: {

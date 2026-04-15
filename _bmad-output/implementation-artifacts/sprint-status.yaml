@@ -1,5 +1,5 @@
-# generated: 2026-04-15T18:17:04+02:00
-# last_updated: 2026-04-15T18:17:04+02:00
+# generated: 2026-04-15T19:12:00+02:00
+# last_updated: 2026-04-15T19:40:00+02:00
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,8 +43,8 @@
 # - epics-nerin-steering-format.md: Steering format (steering-epic-1 to steering-epic-2) — COMPLETED (superseded by director model)
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
-generated: 2026-04-15T18:17:04+02:00
-last_updated: 2026-04-15T18:17:04+02:00
+generated: 2026-04-15T19:12:00+02:00
+last_updated: 2026-04-15T19:40:00+02:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -105,8 +105,8 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Relationship Letter — Living Relational Space
-  epic-7: backlog
-  7-1-usersummary-data-model-and-generator: backlog
+  epic-7: in-progress
+  7-1-usersummary-data-model-and-generator: done
   7-2-relationship-letter-generation-with-usersummary: backlog
   7-3-relationship-letter-page-living-relational-space: backlog
   epic-7-retrospective: optional

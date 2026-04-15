@@ -11,6 +11,7 @@ import {
 	FacetResultSchema,
 	MessageContentSchema,
 	TraitResultSchema,
+	UserSummaryGenerationError,
 } from "@workspace/domain";
 import { Schema as S } from "effect";
 import {
@@ -277,7 +278,8 @@ export const ConversationGroup = HttpApiGroup.make("conversation")
 			.addError(ConcurrentMessageError, { status: 409 })
 			.addError(AssessmentResultError, { status: 500 })
 			.addError(ConversationEvidenceError, { status: 500 })
-			.addError(DatabaseError, { status: 500 }),
+			.addError(DatabaseError, { status: 500 })
+			.addError(UserSummaryGenerationError, { status: 500 }),
 	)
 	.add(
 		HttpApiEndpoint.get("getTranscript", "/:sessionId/transcript")

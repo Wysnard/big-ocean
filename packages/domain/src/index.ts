@@ -147,6 +147,10 @@ export {
 	type RelationshipAnalysisPromptInput,
 } from "./prompts/relationship-analysis.prompt";
 export {
+	type BuildUserSummaryPromptInput,
+	buildUserSummaryPrompt,
+} from "./prompts/user-summary.prompt";
+export {
 	buildWeeklySummaryPrompt,
 	type WeeklySummaryPromptParts,
 } from "./prompts/weekly-summary.prompt";
@@ -296,6 +300,19 @@ export {
 	type ScheduleFirstDailyPromptOutcome,
 	UserAccountRepository,
 } from "./repositories/user-account.repository";
+export {
+	type UserSummaryQuoteEntry,
+	type UserSummaryRecord,
+	UserSummaryRepository,
+	type UserSummaryThemeEntry,
+	type UserSummaryUpsertInput,
+} from "./repositories/user-summary.repository";
+export {
+	UserSummaryGenerationError,
+	type UserSummaryGenerationInput,
+	type UserSummaryGenerationOutput,
+	UserSummaryGeneratorRepository,
+} from "./repositories/user-summary-generator.repository";
 // Waitlist repository (Story 15.3)
 export { WaitlistRepository } from "./repositories/waitlist.repository";
 export {
@@ -372,6 +389,13 @@ export {
 	type TraitResult,
 	TraitResultSchema,
 } from "./schemas/result-schemas";
+// UserSummary LLM payload (Story 7.1)
+export {
+	type DecodeUserSummaryLlmPayloadResult,
+	decodeUserSummaryLlmPayload,
+	type UserSummaryLlmPayload,
+	UserSummaryLlmPayloadSchema,
+} from "./schemas/user-summary-llm";
 // Confidence calculation service
 export {
 	calculateTraitConfidence,
