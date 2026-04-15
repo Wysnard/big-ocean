@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
+import { useInviteCeremony } from "@/components/invite/InviteCeremonyProvider";
 
 export type AuthState =
 	| "unauthenticated"
@@ -26,8 +27,9 @@ const CTA_CONTENT: Record<AuthState, { heading: string; subtext: string; buttonL
 	},
 	"authenticated-assessed": {
 		heading: "", // dynamic — set below
-		subtext: "Scan a QR code together to unlock a deep comparison of your personality dynamics.",
-		buttonLabel: "Start Relationship Analysis",
+		subtext:
+			"When you're ready, open a short invitation—you can share a private link, a QR code, or your device's share sheet.",
+		buttonLabel: "Invite into your Circle",
 	},
 };
 
@@ -37,7 +39,9 @@ export function PublicProfileCTA({
 	authState,
 	isOwnProfile = false,
 }: PublicProfileCTAProps) {
-	// When viewing own profile as authenticated-assessed user, show the generic CTA
+	const { openCeremony } = useInviteCeremony();
+
+	// When viewing own profile as an authenticated-assessed user, show the generic CTA
 	const effectiveAuthState =
 		isOwnProfile && authState === "authenticated-assessed" ? "unauthenticated" : authState;
 
@@ -52,12 +56,15 @@ export function PublicProfileCTA({
 			? "/signup"
 			: effectiveAuthState === "authenticated-no-assessment"
 				? "/chat"
-				: `/relationship-analysis?with=${publicProfileId}`;
+				: "/signup";
+
+	const showInviteCeremony = effectiveAuthState === "authenticated-assessed";
 
 	return (
 		<section
 			data-testid="public-profile-cta"
 			data-slot="public-profile-cta"
+			data-public-profile-id={publicProfileId}
 			data-auth-state={authState}
 			className="py-16 md:py-24"
 			style={{
@@ -68,15 +75,29 @@ export function PublicProfileCTA({
 				<h2 className="font-display text-2xl text-foreground mb-3">{heading}</h2>
 				<p className="text-muted-foreground mb-8">{content.subtext}</p>
 
-				<Link to={href}>
+				{showInviteCeremony ? (
 					<Button
+						type="button"
 						data-slot="cta-button"
 						data-testid="public-profile-cta-button"
 						className="bg-primary text-primary-foreground text-lg py-4 px-8 rounded-xl font-semibold min-h-[44px] w-full max-w-[400px]"
+						onClick={() => {
+							openCeremony({ presetName: displayName });
+						}}
 					>
 						{content.buttonLabel}
 					</Button>
-				</Link>
+				) : (
+					<Link to={href}>
+						<Button
+							data-slot="cta-button"
+							data-testid="public-profile-cta-button"
+							className="bg-primary text-primary-foreground text-lg py-4 px-8 rounded-xl font-semibold min-h-[44px] w-full max-w-[400px]"
+						>
+							{content.buttonLabel}
+						</Button>
+					</Link>
+				)}
 
 				<p className="text-sm text-muted-foreground mt-8">-- big-ocean --</p>
 			</div>

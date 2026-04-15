@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
+import { InviteCeremonyCard } from "@/components/invite/InviteCeremonyCard";
 import { useRelationshipAnalysesList } from "@/hooks/useRelationshipAnalysesList";
 
 const EMPTY_STATE_COPY = "Big Ocean is made for the few people you care about";
@@ -75,6 +76,10 @@ export function YourCirclePreviewSection() {
 					Try again
 				</Button>
 			) : null}
+
+			<div data-testid="me-circle-invite" className="pt-2">
+				<InviteCeremonyCard placement="me-section" />
+			</div>
 		</div>
 	);
 }

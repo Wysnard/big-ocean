@@ -183,3 +183,13 @@
 - Partial facets (1–29) crash `computeTraitResults` — if assessment result has fewer than 30 facets, `computeTraitResults` accesses `undefined.score`. Same unguarded pattern as `generate-full-portrait.use-case.ts`. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:106-114`]
 - No `updated_at` column on `weekly_summaries` — upserts from failed→generated have no timestamp for the transition. [`drizzle/20260415140000_weekly_summaries/migration.sql`]
 - `DatabaseError` used for input validation failures (invalid weekId) — returns 500 instead of 400. Same pattern as `get-today-week.use-case.ts`. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:54-57`]
+
+## Deferred from: code review of 6-2-invite-ceremony-dialog.md (2026-04-15)
+
+- `removeQueries` with full `["inviteCeremony","qrToken","status"]` prefix is broad; harmless today with isolated prefix, but collateral risk if prefix reused. [`useInviteCeremonyQrToken.ts:42`]
+- 60s poll + 55min regeneration threshold leaves a brief expired-link window under clock skew — pre-existing from `useQrDrawer`; cosmetic edge at TTL boundary only. [`useInviteCeremonyQrToken.ts:12-13`]
+- `InviteCeremonyCard` teaser copy ("Circle", "Invite someone you care about", subtitle) is hardcoded — card teaser is not part of the §10.7 locked ceremony copy. [`InviteCeremonyCard.tsx`]
+- Teaser `→` is `aria-hidden`; `aria-label` provides full accessible name. If UX ever removes `ChevronRight`, consider making arrow visible to AT. [`InviteCeremonyCard.tsx:28-30`]
+- `presetName` propagation from `PublicProfileCTA` to dialog name input not integration-tested end-to-end — dialog's `presetName` pre-fill is covered directly in `InviteCeremonyDialog.test.tsx`. [`PublicProfileCTA.test.tsx`]
+- UX §10.7 LOCKED block not in repo — exact wording compliance unverifiable from code alone. Process note: copy should be snapshotted in a fixture or test. [`invite-ceremony-copy.ts`]
+- Re-entrant `openCeremony` while dialog is already open reuses live QR session without reset — production-unreachable in current nav model. [`InviteCeremonyProvider.tsx:26-29`]

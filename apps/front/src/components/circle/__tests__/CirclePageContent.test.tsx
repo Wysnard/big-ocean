@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockUseRelationshipAnalysesList } = vi.hoisted(() => ({
@@ -35,7 +36,22 @@ vi.mock("@/hooks/useRelationshipAnalysesList", () => ({
 	useRelationshipAnalysesList: (...args: unknown[]) => mockUseRelationshipAnalysesList(...args),
 }));
 
+import { InviteCeremonyProvider } from "@/components/invite/InviteCeremonyProvider";
 import { CirclePageContent } from "../CirclePageContent";
+
+function renderWithInviteCeremony(ui: ReactElement) {
+	const qc = new QueryClient({
+		defaultOptions: {
+			queries: { retry: false },
+			mutations: { retry: false },
+		},
+	});
+	return render(
+		<QueryClientProvider client={qc}>
+			<InviteCeremonyProvider>{ui}</InviteCeremonyProvider>
+		</QueryClientProvider>,
+	);
+}
 
 describe("CirclePageContent", () => {
 	beforeEach(() => {
@@ -50,7 +66,7 @@ describe("CirclePageContent", () => {
 			refetch: vi.fn(),
 		});
 
-		render(<CirclePageContent />);
+		renderWithInviteCeremony(<CirclePageContent />);
 
 		expect(
 			screen.getByText(
@@ -94,7 +110,7 @@ describe("CirclePageContent", () => {
 			refetch: vi.fn(),
 		});
 
-		render(<CirclePageContent />);
+		renderWithInviteCeremony(<CirclePageContent />);
 
 		const headings = screen.getAllByRole("heading", { level: 2 });
 		expect(headings[0]).toHaveTextContent("Sol");
@@ -115,7 +131,7 @@ describe("CirclePageContent", () => {
 			refetch: vi.fn(),
 		});
 
-		render(<CirclePageContent />);
+		renderWithInviteCeremony(<CirclePageContent />);
 
 		expect(screen.getByText("Your Circle is taking a moment to load.")).toBeInTheDocument();
 	});
