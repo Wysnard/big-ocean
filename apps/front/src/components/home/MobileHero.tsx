@@ -7,10 +7,10 @@ export function MobileHero() {
 		<section
 			data-slot="mobile-homepage-hero"
 			data-testid="mobile-homepage-hero"
-			className="relative overflow-hidden border-b border-slate-200 bg-[linear-gradient(180deg,#eff6ff_0%,#ffffff_55%,#fff7ed_100%)] px-6 py-8 lg:hidden"
+			className="relative overflow-hidden border-b border-slate-200 bg-[linear-gradient(180deg,#eff6ff_0%,#ffffff_55%,#fff7ed_100%)] px-6 py-8 dark:border-border dark:bg-gradient-to-b dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 lg:hidden"
 		>
 			<div className="mx-auto flex max-w-xl flex-col gap-6">
-				<div className="flex items-center gap-2 text-slate-950">
+				<div className="flex items-center gap-2 text-slate-950 dark:text-foreground">
 					<span className="font-heading text-2xl font-bold tracking-tight">big-</span>
 					<OceanHieroglyphSet size={22} />
 				</div>
@@ -24,7 +24,7 @@ export function MobileHero() {
 							sessionId: undefined,
 							redirectTo: undefined,
 						}}
-						className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-slate-950 px-5 text-base font-semibold text-white"
+						className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-slate-950 px-5 text-base font-semibold text-white dark:bg-primary dark:text-primary-foreground"
 					>
 						Start yours &rarr;
 					</Link>
@@ -34,13 +34,13 @@ export function MobileHero() {
 							sessionId: undefined,
 							redirectTo: undefined,
 						}}
-						className="inline-flex min-h-11 flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-5 text-sm font-medium text-slate-700"
+						className="inline-flex min-h-11 flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-5 text-sm font-medium text-slate-700 dark:border-border dark:bg-card/80 dark:text-foreground"
 					>
 						Log in
 					</Link>
 				</div>
 
-				<p className="text-xs font-medium tracking-[0.18em] text-slate-500 uppercase">
+				<p className="text-xs font-medium tracking-[0.18em] text-slate-500 uppercase dark:text-muted-foreground">
 					~30 min · Free · No credit card
 				</p>
 			</div>

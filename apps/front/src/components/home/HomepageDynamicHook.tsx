@@ -41,7 +41,7 @@ export function HomepageDynamicHook({
 			data-phase={currentPhase}
 			data-reduced-motion={reducedMotion ? "true" : "false"}
 			className={cn(
-				"overflow-hidden font-sans text-slate-900 dark:text-slate-50",
+				"overflow-hidden font-sans text-foreground",
 				compact ? "min-h-[7.25rem]" : "min-h-[9rem]",
 				className,
 			)}
@@ -54,7 +54,12 @@ export function HomepageDynamicHook({
 					{...transitionProps}
 				>
 					{config.textBefore ? (
-						<span className={cn("font-medium tracking-tight", compact ? "text-base" : "text-lg")}>
+						<span
+							className={cn(
+								"font-medium tracking-tight text-foreground",
+								compact ? "text-base" : "text-lg",
+							)}
+						>
 							{config.textBefore}
 						</span>
 					) : null}
@@ -72,7 +77,12 @@ export function HomepageDynamicHook({
 					</span>
 
 					{config.textAfter ? (
-						<span className={cn("font-medium tracking-tight", compact ? "text-base" : "text-lg")}>
+						<span
+							className={cn(
+								"font-medium tracking-tight text-foreground",
+								compact ? "text-base" : "text-lg",
+							)}
+						>
 							{config.textAfter}
 						</span>
 					) : null}
