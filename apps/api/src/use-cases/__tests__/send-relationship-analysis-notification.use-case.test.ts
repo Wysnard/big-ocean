@@ -106,6 +106,7 @@ const mockConfig = {
 	nerinDirectorMaxTokens: 1024,
 	nerinDirectorTemperature: 0.7,
 	nerinDirectorRetryTemperature: 0.9,
+	cronSecret: Redacted.make(""),
 };
 
 const ANALYSIS_ID = "analysis-123";

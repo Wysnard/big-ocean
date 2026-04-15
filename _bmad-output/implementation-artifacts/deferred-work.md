@@ -1,5 +1,12 @@
 # Deferred Work
 
+## Deferred from: code review of 4-3-post-check-in-journal-view-and-week-dots.md (2026-04-15)
+
+- `QuietAnticipationLine` uses `new Date().getDay()` (browser TZ) while the check-in flow centers on `localDate` strings — possible mismatch near midnight across timezones; needs product decision if reported
+- `getMoodMeta` fallback maps unknown moods to "okay" — if API extends mood enum without client update, labels mislead; low risk while contract is stable
+- No `aria-live` when MoodDotsWeek transitions loading → ready — enhancement for screen reader announcement of week grid readiness
+- Rename `weekQueryError` prop to something like `weekGridUnavailable` — cosmetic clarity only
+
 ## Deferred from: code review of 3-5-subscription-pitch-section.md (2026-04-15)
 
 - Subscribed users still see the pitch and checkout CTA until Epic 8 adds subscription lifecycle events and a subscriber-facing summary
@@ -157,3 +164,10 @@
 
 - No `stage === "completed"` check on partner result before deriving archetype — FK set at analysis creation time always points to completed result; fail-open handles edge cases gracefully
 - Redundant `getById` calls for the same `partnerResultId` across multiple analyses — memoization / batching opportunity for users with many relationships; correctness unaffected
+
+## Deferred from: code review of 5-1-weekly-summary-data-model-and-generation-pipeline (2026-04-15)
+
+- TOCTOU race on idempotency — concurrent requests for same weekId both proceed to LLM call before either saves; `onConflictDoUpdate` prevents duplicate rows but not duplicate LLM spend. Same pattern as relationship analysis. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:80-81`]
+- Partial facets (1–29) crash `computeTraitResults` — if assessment result has fewer than 30 facets, `computeTraitResults` accesses `undefined.score`. Same unguarded pattern as `generate-full-portrait.use-case.ts`. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:106-114`]
+- No `updated_at` column on `weekly_summaries` — upserts from failed→generated have no timestamp for the transition. [`drizzle/20260415140000_weekly_summaries/migration.sql`]
+- `DatabaseError` used for input validation failures (invalid weekId) — returns 500 instead of 400. Same pattern as `get-today-week.use-case.ts`. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:54-57`]

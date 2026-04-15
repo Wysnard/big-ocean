@@ -584,6 +584,29 @@ export const dailyCheckIns = pgTable(
 	],
 );
 
+// ─── Weekly summaries / Sunday letter (Story 5.1) ─────────────────────────
+
+export const weeklySummaries = pgTable(
+	"weekly_summaries",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		weekStartDate: date("week_start_date").notNull(),
+		weekEndDate: date("week_end_date").notNull(),
+		content: text("content"),
+		generatedAt: timestamp("generated_at", { withTimezone: true }),
+		failedAt: timestamp("failed_at", { withTimezone: true }),
+		retryCount: smallint("retry_count").notNull().default(0),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		uniqueIndex("weekly_summaries_user_week_start_unique").on(table.userId, table.weekStartDate),
+		index("weekly_summaries_user_week_start_desc_idx").on(table.userId, table.weekStartDate.desc()),
+	],
+);
+
 // ─── Portrait Ratings (Story 19-2 — portrait quality telemetry) ───────────
 
 /**
@@ -633,6 +656,7 @@ export const relations = defineRelations(
 		pushSubscriptions,
 		pushNotificationQueue,
 		dailyCheckIns,
+		weeklySummaries,
 		portraitRatings,
 	},
 	(r) => ({
@@ -649,6 +673,7 @@ export const relations = defineRelations(
 			pushSubscriptions: r.many.pushSubscriptions(),
 			pushNotifications: r.many.pushNotificationQueue(),
 			dailyCheckIns: r.many.dailyCheckIns(),
+			weeklySummaries: r.many.weeklySummaries(),
 		},
 		session: {
 			user: r.one.user({
@@ -789,6 +814,12 @@ export const relations = defineRelations(
 		dailyCheckIns: {
 			user: r.one.user({
 				from: r.dailyCheckIns.userId,
+				to: r.user.id,
+			}),
+		},
+		weeklySummaries: {
+			user: r.one.user({
+				from: r.weeklySummaries.userId,
 				to: r.user.id,
 			}),
 		},

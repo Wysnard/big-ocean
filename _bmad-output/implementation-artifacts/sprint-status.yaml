@@ -1,5 +1,5 @@
 # generated: 2026-04-15T13:17:14+02:00
-# last_updated: 2026-04-15T18:30:00+02:00
+# last_updated: 2026-04-15T23:25:00+02:00
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -44,7 +44,7 @@
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
 generated: 2026-04-15T13:17:14+02:00
-last_updated: 2026-04-15T18:30:00+02:00
+last_updated: 2026-04-15T22:00:00+02:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -87,13 +87,13 @@ development_status:
   epic-4: in-progress
   4-1-daily-check-in-data-model-and-api: done
   4-2-checkinform-component: done
-  4-3-post-check-in-journal-view-and-week-dots: ready-for-dev
+  4-3-post-check-in-journal-view-and-week-dots: done
   4-4-mood-calendar-view: backlog
   epic-4-retrospective: optional
 
   # Epic 5: Weekly Letter from Nerin
-  epic-5: backlog
-  5-1-weekly-summary-data-model-and-generation-pipeline: backlog
+  epic-5: in-progress
+  5-1-weekly-summary-data-model-and-generation-pipeline: done
   5-2-weekly-letter-reading-view-and-route: backlog
   5-3-weekly-letter-inline-card-and-notifications: backlog
   epic-5-retrospective: optional

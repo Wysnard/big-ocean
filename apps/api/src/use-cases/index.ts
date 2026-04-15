@@ -19,6 +19,11 @@ export {
 	generateResults,
 } from "./generate-results.use-case";
 export {
+	type GenerateWeeklySummariesForWeekInput,
+	type GenerateWeeklySummariesForWeekOutput,
+	generateWeeklySummariesForWeek,
+} from "./generate-weekly-summary.use-case";
+export {
 	type GetFacetEvidenceInput,
 	getFacetEvidence,
 } from "./get-facet-evidence.use-case";

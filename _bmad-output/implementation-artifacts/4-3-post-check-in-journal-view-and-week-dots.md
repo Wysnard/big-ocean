@@ -1,6 +1,6 @@
 # Story 4.3: Post-Check-in Journal View & Week Dots
 
-Status: ready-for-dev
+Status: done
 
 <!-- Ultimate context engine analysis completed — comprehensive developer guide created -->
 
@@ -44,36 +44,53 @@ so that my daily deposit feels recorded and I can anticipate Sunday's letter.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Extract / implement **`JournalEntry`** (AC: #1, #6)  
-  - [ ] 1.1 Add `JournalEntry` under `apps/front/src/components/today/` (or split file per component) with props driven by `CheckInResponse` / mood meta  
-  - [ ] 1.2 Typography: warm **body** font for note text (use existing theme / `font-serif` or project-approved reading font — match `PortraitReadingView` / letter-reading patterns where applicable, not chat UI fonts)  
-  - [ ] 1.3 Layout: mood emoji at **left margin** (journal marker), note flows as readable paragraphs; optional subtle date/`localDate` via `<time>` if helpful for a11y  
-  - [ ] 1.4 **No** avatar, **no** “sent” indicator, **no** chat bubble chrome  
-  - [ ] 1.5 Visibility: MVP may show 🔒 private affordance only; do not invent Inner Circle / Public Pulse UI  
+- [x] Task 1 — Extract / implement **`JournalEntry`** (AC: #1, #6)  
+  - [x] 1.1 Add `JournalEntry` under `apps/front/src/components/today/` (or split file per component) with props driven by `CheckInResponse` / mood meta  
+  - [x] 1.2 Typography: warm **body** font for note text (use existing theme / `font-serif` or project-approved reading font — match `PortraitReadingView` / letter-reading patterns where applicable, not chat UI fonts)  
+  - [x] 1.3 Layout: mood emoji at **left margin** (journal marker), note flows as readable paragraphs; optional subtle date/`localDate` via `<time>` if helpful for a11y  
+  - [x] 1.4 **No** avatar, **no** “sent” indicator, **no** chat bubble chrome  
+  - [x] 1.5 Visibility: MVP may show 🔒 private affordance only; do not invent Inner Circle / Public Pulse UI  
 
-- [ ] Task 2 — Implement **`MoodDotsWeek`** (AC: #1, #5, #6)  
-  - [ ] 2.1 Input: `WeekGridResponse` from `useTodayCheckIn().weekQuery` (already fetched in Story 4.2) — map `days[]` to 7 dots; `weekId` is informational only  
-  - [ ] 2.2 Filled vs empty: `day.checkIn != null` → filled; use mood-colored fills **or** a single accent — pick one approach and stay consistent with design tokens  
-  - [ ] 2.3 “Today” index: derive from hook `localDate` by finding matching `days[].localDate`  
-  - [ ] 2.4 Accessibility: `role="list"` / `role="listitem"` or equivalent; each dot has an **`aria-label`** describing weekday + status (per UX component spec)  
-  - [ ] 2.5 Loading / error: if `weekQuery` is pending or errored, prefer **non-blocking** UI (dots skeleton or inline calm fallback) — **do not** block the journal entry on week grid failure (align with Story 4.2: week errors don’t block the form)  
+- [x] Task 2 — Implement **`MoodDotsWeek`** (AC: #1, #5, #6)  
+  - [x] 2.1 Input: `WeekGridResponse` from `useTodayCheckIn().weekQuery` (already fetched in Story 4.2) — map `days[]` to 7 dots; `weekId` is informational only  
+  - [x] 2.2 Filled vs empty: `day.checkIn != null` → filled; use mood-colored fills **or** a single accent — pick one approach and stay consistent with design tokens  
+  - [x] 2.3 “Today” index: derive from hook `localDate` by finding matching `days[].localDate`  
+  - [x] 2.4 Accessibility: `role="list"` / `role="listitem"` or equivalent; each dot has an **`aria-label`** describing weekday + status (per UX component spec)  
+  - [x] 2.5 Loading / error: if `weekQuery` is pending or errored, prefer **non-blocking** UI (dots skeleton or inline calm fallback) — **do not** block the journal entry on week grid failure (align with Story 4.2: week errors don’t block the form)  
 
-- [ ] Task 3 — Implement **`QuietAnticipationLine`** (AC: #2, #3)  
-  - [ ] 3.1 Copy **exactly**: `Nerin will write you a letter about your week on Sunday.`  
-  - [ ] 3.2 Show **only** when local weekday is Mon–Sat; **hide** on Sunday  
-  - [ ] 3.3 Do not add countdown variants unless explicitly requested — epic uses locked copy  
+- [x] Task 3 — Implement **`QuietAnticipationLine`** (AC: #2, #3)  
+  - [x] 3.1 Copy **exactly**: `Nerin will write you a letter about your week on Sunday.`  
+  - [x] 3.2 Show **only** when local weekday is Mon–Sat; **hide** on Sunday  
+  - [x] 3.3 Do not add countdown variants unless explicitly requested — epic uses locked copy  
 
-- [ ] Task 4 — Wire **`TodayCheckInSurface`** composition (AC: #4, #5)  
-  - [ ] 4.1 Replace or refactor `CheckInSavedState` in `CheckInForm.tsx` so post-check-in = `JournalEntry` + `MoodDotsWeek` + conditional `QuietAnticipationLine`  
-  - [ ] 4.2 Pre-check-in branch: insert `MoodDotsWeek` **below** prompt/form (or per layout fit) while keeping `CheckInForm` behavior unchanged  
-  - [ ] 4.3 Cross-fade: unify motion on the container or per-section; ensure `motion-safe:` / `motion-reduce:` classes align with Story 4.2 patterns (`TodayCheckInSurface` already animates on `data-state` switch — extend rather than duplicate)  
-  - [ ] 4.4 Preserve `data-testid="today-check-in-surface"` and `data-state` — add testids for new components **without** removing existing ones  
+- [x] Task 4 — Wire **`TodayCheckInSurface`** composition (AC: #4, #5)  
+  - [x] 4.1 Replace or refactor `CheckInSavedState` in `CheckInForm.tsx` so post-check-in = `JournalEntry` + `MoodDotsWeek` + conditional `QuietAnticipationLine`  
+  - [x] 4.2 Pre-check-in branch: insert `MoodDotsWeek` **below** prompt/form (or per layout fit) while keeping `CheckInForm` behavior unchanged  
+  - [x] 4.3 Cross-fade: unify motion on the container or per-section; ensure `motion-safe:` / `motion-reduce:` classes align with Story 4.2 patterns (`TodayCheckInSurface` already animates on `data-state` switch — extend rather than duplicate)  
+  - [x] 4.4 Preserve `data-testid="today-check-in-surface"` and `data-state` — add testids for new components **without** removing existing ones  
 
-- [ ] Task 5 — Tests (AC: all)  
-  - [ ] 5.1 Unit/component tests for `MoodDotsWeek` (filled/empty/today ring; Mon–Sun labels)  
-  - [ ] 5.2 Unit/component tests for `QuietAnticipationLine` visibility (mock “Sunday” vs “Wednesday”)  
-  - [ ] 5.3 Update `CheckInForm` / `TodayCheckInSurface` tests as needed; extend `-three-space-routes.test.tsx` only if route-level behavior changes  
-  - [ ] 5.4 `pnpm --filter front test` and `pnpm --filter front typecheck`  
+- [x] Task 5 — Tests (AC: all)  
+  - [x] 5.1 Unit/component tests for `MoodDotsWeek` (filled/empty/today ring; Mon–Sun labels)  
+  - [x] 5.2 Unit/component tests for `QuietAnticipationLine` visibility (mock “Sunday” vs “Wednesday”)  
+  - [x] 5.3 Update `CheckInForm` / `TodayCheckInSurface` tests as needed; extend `-three-space-routes.test.tsx` only if route-level behavior changes  
+  - [x] 5.4 `pnpm --filter front test` and `pnpm --filter front typecheck`  
+
+### Review Findings
+
+- [x] [Review][Decision] "This week" heading removed — "dots only" per AC1 (chose option A)
+- [x] [Review][Decision] QuietAnticipationLine ordering kept as JournalEntry → dots → anticipation — visual flow preferred (chose option B)
+- [x] [Review][Patch] Hardcoded `id="journal-entry-heading"` — fixed: `useId()` for heading id + `aria-labelledby` [`JournalEntry.tsx`]
+- [x] [Review][Patch] Duplicate saving copy — fixed: removed inline "Saving…" from `JournalEntry`; `CardDescription` remains single source [`CheckInForm.tsx`, `JournalEntry.tsx`]
+- [x] [Review][Patch] Loading skeleton pulse — fixed: `motion-safe:animate-pulse motion-reduce:animate-none` [`MoodDotsWeek.tsx`]
+- [x] [Review][Defer] `QuietAnticipationLine` uses `new Date().getDay()` (browser TZ) while rest of flow uses server-derived `localDate` — timezone mismatch possible but edge-case; deferred, needs design decision
+- [x] [Review][Defer] `getMoodMeta` fallback silently maps unknown moods to "okay" — if API extends moods the UI will mislabel; deferred, pre-existing from Story 4.2 extraction
+- [x] [Review][Defer] No `aria-live` region announcement when MoodDotsWeek transitions from loading to ready — deferred, a11y enhancement
+- [x] [Review][Defer] `weekQueryError` naming is ambiguous (it means "error AND no cached data", not just "errored") — deferred, cosmetic
+- [x] [Review][Dismiss] Transition is fade-in on remount (`key={surfaceState}`) not a true overlapping cross-fade — AC4 says "cross-fade" but the existing Story 4.2 pattern already uses this same `key` swap approach; changing to an actual crossfade would be a larger motion system rework. The current ~400ms fade-in with reduced-motion guard is functionally equivalent.
+- [x] [Review][Dismiss] `data-testid` collision risk for "journal-entry" / "mood-dots-week" — only one instance per page in the current architecture
+- [x] [Review][Dismiss] `text-sm` for QuietAnticipationLine vs UX "small" — `text-sm` (14px) is the project's standard "small" body size
+- [x] [Review][Dismiss] Visibility treatment (inline text vs corner icon) — minor interpretation; spec intent is "subtle" which this satisfies
+- [x] [Review][Dismiss] Server-validated edge cases (duplicate dates, mis-ordered days, invalid localDate format, whitespace-only note) — backend contract + server use-case guarantee validity
 
 ## Dev Notes
 
@@ -151,14 +168,41 @@ Story 4.2 delivered the **pre-check-in** form, optimistic save, and TanStack Que
 
 ### Agent Model Used
 
-_(filled by dev agent)_
+Composer (Cursor agent)
 
 ### Debug Log References
 
+- `pnpm --filter front exec vitest run src/components/today/`
+- `pnpm --filter front typecheck`
+- `pnpm --filter front lint`
+
 ### Completion Notes List
+
+- Added `today-mood-meta.ts`, `JournalEntry.tsx`, `MoodDotsWeek.tsx`, and `QuietAnticipationLine.tsx`; refactored `CheckInSavedState` to compose journal + week dots + anticipation (Mon–Sat only); pre-check-in shows `MoodDotsWeek` in a secondary card below `CheckInForm`.
+- Week grid loading/error paths use non-blocking skeleton and dashed-dot fallback; assistive text uses `sr-only` where Biome disallowed `aria-label` on decorative spans.
+- Extended `TodayCheckInSurface` with `motion-reduce:animate-none` for the pre/post transition.
+- `pnpm --filter front test` (523 tests) and `pnpm --filter front typecheck` pass; `pnpm --filter front lint` passes (existing warnings elsewhere).
+- Code review (2026-04-15): D1 removed "This week" headings; D2 kept JournalEntry → dots → anticipation order; batch patches: `useId()` for journal heading, single saving message in card description, `motion-safe` skeleton pulse.
 
 ### File List
 
+- `apps/front/src/components/today/today-mood-meta.ts`
+- `apps/front/src/components/today/JournalEntry.tsx`
+- `apps/front/src/components/today/JournalEntry.test.tsx`
+- `apps/front/src/components/today/MoodDotsWeek.tsx`
+- `apps/front/src/components/today/MoodDotsWeek.test.tsx`
+- `apps/front/src/components/today/QuietAnticipationLine.tsx`
+- `apps/front/src/components/today/QuietAnticipationLine.test.tsx`
+- `apps/front/src/components/today/CheckInForm.tsx`
+- `apps/front/src/components/today/TodayCheckInSurface.tsx`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/implementation-artifacts/4-3-post-check-in-journal-view-and-week-dots.md`
+
+## Change Log
+
+- 2026-04-15: Implemented Story 4.3 post-check-in journal view, week dots (pre + post), quiet anticipation line, tests, and sprint/story status → review.
+- 2026-04-15: Code review — decisions + patches applied; story and sprint status → **done**.
+
 ---
 
-**Completion status:** ready-for-dev — Ultimate context engine analysis completed — comprehensive developer guide created.
+**Completion status:** Story **done** — implementation and review complete.

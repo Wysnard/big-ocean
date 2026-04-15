@@ -76,5 +76,16 @@ export const DailyCheckInDrizzleRepositoryLive = Layer.succeed(
 					),
 				),
 			),
+
+		listUserIdsWithAtLeastNCheckInsInRange: (minCount, weekStartLocal, weekEndLocal) =>
+			Effect.sync(() => {
+				const counts = new Map<string, number>();
+				for (const checkIn of checkIns.values()) {
+					if (checkIn.localDate >= weekStartLocal && checkIn.localDate <= weekEndLocal) {
+						counts.set(checkIn.userId, (counts.get(checkIn.userId) ?? 0) + 1);
+					}
+				}
+				return [...counts.entries()].filter(([, n]) => n >= minCount).map(([userId]) => userId);
+			}),
 	}),
 );

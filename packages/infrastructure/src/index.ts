@@ -85,3 +85,6 @@ export { UserAccountDrizzleRepositoryLive } from "./repositories/user-account.dr
 // Waitlist repository implementation (Story 15.3)
 export { WaitlistDrizzleRepositoryLive } from "./repositories/waitlist.drizzle.repository";
 export { WebPushFetchRepositoryLive } from "./repositories/web-push.fetch.repository";
+export { WeeklySummaryDrizzleRepositoryLive } from "./repositories/weekly-summary.drizzle.repository";
+export { WeeklySummaryGeneratorAnthropicRepositoryLive } from "./repositories/weekly-summary-generator.anthropic.repository";
+export { WeeklySummaryGeneratorMockRepositoryLive } from "./repositories/weekly-summary-generator.mock.repository";

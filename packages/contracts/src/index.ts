@@ -26,6 +26,8 @@ export { EvidenceGroup } from "./http/groups/evidence";
 export * from "./http/groups/health";
 // HTTP API Groups
 export { HealthGroup } from "./http/groups/health";
+// Internal / cron jobs (Story 5.1)
+export * from "./http/groups/jobs";
 // Portrait HTTP Schemas and Types (Story 13.3)
 export * from "./http/groups/portrait";
 export { PortraitGroup } from "./http/groups/portrait";

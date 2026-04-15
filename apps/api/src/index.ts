@@ -42,6 +42,8 @@ import {
 	ResendEmailResendRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 	WebPushFetchRepositoryLive,
+	WeeklySummaryDrizzleRepositoryLive,
+	WeeklySummaryGeneratorAnthropicRepositoryLive,
 } from "@workspace/infrastructure";
 import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
@@ -57,6 +59,7 @@ import { ConversationGroupLive } from "./handlers/conversation";
 import { EmailGroupLive } from "./handlers/email";
 import { EvidenceGroupLive } from "./handlers/evidence";
 import { HealthGroupLive } from "./handlers/health";
+import { JobsGroupLive } from "./handlers/jobs";
 import { PortraitGroupLive } from "./handlers/portrait";
 import { ProfileGroupLive } from "./handlers/profile";
 import { PurchaseGroupLive } from "./handlers/purchase";
@@ -149,6 +152,8 @@ const RepositoryLayers = Layer.mergeAll(
 	RelationshipAnalysisGeneratorAnthropicRepositoryLive,
 	QrTokenDrizzleRepositoryLive,
 	UserAccountDrizzleRepositoryLive,
+	WeeklySummaryDrizzleRepositoryLive,
+	WeeklySummaryGeneratorAnthropicRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
 	ResendEmailResendRepositoryLive,
 	WebPushFetchRepositoryLive,
@@ -187,6 +192,7 @@ const HttpGroupsLive = Layer.mergeAll(
 	TodayGroupLive,
 	WaitlistGroupLive,
 	EmailGroupLive,
+	JobsGroupLive,
 	LoggerPinoRepositoryLive,
 );
 

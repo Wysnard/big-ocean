@@ -138,6 +138,9 @@ const configSchema = Config.all({
 	nerinDirectorRetryTemperature: Config.number("NERIN_DIRECTOR_RETRY_TEMPERATURE").pipe(
 		Config.withDefault(0.9),
 	),
+
+	// Cron / internal jobs (Story 5.1) — empty disables header check (dev only)
+	cronSecret: Config.redacted("CRON_SECRET").pipe(Config.withDefault(Redacted.make(""))),
 });
 
 /**

@@ -14,6 +14,7 @@ import {
 	CheckInFormSkeleton,
 	CheckInSavedState,
 } from "@/components/today/CheckInForm";
+import { MoodDotsWeek } from "@/components/today/MoodDotsWeek";
 import { hasCheckInRecord, useTodayCheckIn } from "@/hooks/use-today-check-in";
 
 const emptyDraft: CheckInDraft = {
@@ -29,6 +30,8 @@ export function TodayCheckInSurface() {
 	// Keep skeleton until today's check-in state is known; week grid must not hide it early.
 	const isInitialLoading = todayQuery.isPending;
 	const hasBlockingError = todayQuery.isError && !todayQuery.data;
+
+	const weekGridBlocking = weekQuery.isError && !weekQuery.data;
 
 	const handleSubmit = async (payload: CheckInPayload) => {
 		await submitCheckIn.mutateAsync(payload);
@@ -77,18 +80,35 @@ export function TodayCheckInSurface() {
 			data-slot="today-check-in-surface"
 			data-testid="today-check-in-surface"
 			data-state={surfaceState}
-			className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-400"
+			className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-reduce:animate-none motion-reduce:opacity-100"
 		>
 			{checkIn ? (
-				<CheckInSavedState checkIn={checkIn} isSaving={submitCheckIn.isPending} />
-			) : (
-				<CheckInForm
+				<CheckInSavedState
+					checkIn={checkIn}
+					isSaving={submitCheckIn.isPending}
 					localDate={localDate}
-					draft={draft}
-					onDraftChange={setDraft}
-					onSubmit={handleSubmit}
-					isPending={submitCheckIn.isPending}
+					weekGrid={weekQuery.data}
+					weekQueryPending={weekQuery.isPending}
+					weekQueryError={weekGridBlocking}
 				/>
+			) : (
+				<div className="flex w-full flex-col gap-6">
+					<div className="rounded-[2rem] border border-border/50 bg-card/60 px-4 py-5 sm:px-6">
+						<MoodDotsWeek
+							localDate={localDate}
+							weekGrid={weekQuery.data}
+							isLoading={weekQuery.isPending}
+							isError={weekGridBlocking}
+						/>
+					</div>
+					<CheckInForm
+						localDate={localDate}
+						draft={draft}
+						onDraftChange={setDraft}
+						onSubmit={handleSubmit}
+						isPending={submitCheckIn.isPending}
+					/>
+				</div>
 			)}
 		</div>
 	);

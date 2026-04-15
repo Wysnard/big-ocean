@@ -19,6 +19,7 @@ export { deriveCapabilities, hasPortraitForResult } from "./derive-capabilities"
 export { deriveTraitSummary } from "./derive-trait-summary";
 export { toFacetDisplayName } from "./display-name";
 export { getFacetLevel } from "./facet-level";
+export { type IsoWeekBounds, resolveIsoWeekBounds } from "./iso-week";
 export { generateOceanCode } from "./ocean-code-generator";
 export { buildPortraitPrompt } from "./portrait-prompt-builder";
 export {

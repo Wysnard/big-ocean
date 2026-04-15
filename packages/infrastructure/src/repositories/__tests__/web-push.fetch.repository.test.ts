@@ -61,12 +61,14 @@ const baseConfig = {
 	emailFromAddress: "noreply@bigocean.dev",
 	dropOffThresholdHours: 24,
 	checkInThresholdDays: 14,
+	subscriptionNudgeThresholdDays: 21,
 	recaptureThresholdDays: 3,
 	sessionCostLimitCents: 2000,
 	nerinDirectorModelId: "",
 	nerinDirectorMaxTokens: 0,
 	nerinDirectorTemperature: 0,
 	nerinDirectorRetryTemperature: 0,
+	cronSecret: Redacted.make(""),
 };
 
 describe("WebPushFetchRepositoryLive", () => {

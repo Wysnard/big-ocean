@@ -7,7 +7,7 @@ import {
 	LoggerRepository,
 	type UpsertDailyCheckIn,
 } from "@workspace/domain";
-import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, count, eq, gte, lte } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { Database } from "../context/database";
 import { dailyCheckIns } from "../db/drizzle/schema";
@@ -113,6 +113,20 @@ export const DailyCheckInDrizzleRepositoryLive = Layer.effect(
 					.pipe(
 						Effect.map((rows) => rows.map(mapRow)),
 						Effect.mapError((error) => toDatabaseError("list daily check-ins for month", error)),
+					),
+
+			listUserIdsWithAtLeastNCheckInsInRange: (minCount, weekStartLocal, weekEndLocal) =>
+				db
+					.select({ userId: dailyCheckIns.userId })
+					.from(dailyCheckIns)
+					.where(
+						and(gte(dailyCheckIns.localDate, weekStartLocal), lte(dailyCheckIns.localDate, weekEndLocal)),
+					)
+					.groupBy(dailyCheckIns.userId)
+					.having(gte(count(), minCount))
+					.pipe(
+						Effect.map((rows) => rows.map((row) => row.userId)),
+						Effect.mapError((error) => toDatabaseError("list user ids with check-ins in range", error)),
 					),
 		});
 	}),

@@ -168,6 +168,12 @@ export interface AppConfigService {
 
 	/** Nerin Director retry temperature — different temperature on retry (ADR-DM-4) */
 	readonly nerinDirectorRetryTemperature: number;
+
+	/**
+	 * Shared secret for cron / internal job HTTP routes (e.g. weekly summary generation).
+	 * When unset or empty, `x-cron-secret` validation is skipped (local dev only).
+	 */
+	readonly cronSecret: Redacted.Redacted<string>;
 }
 
 /**

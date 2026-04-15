@@ -145,6 +145,10 @@ export {
 	type RelationshipAnalysisPromptInput,
 } from "./prompts/relationship-analysis.prompt";
 export {
+	buildWeeklySummaryPrompt,
+	type WeeklySummaryPromptParts,
+} from "./prompts/weekly-summary.prompt";
+export {
 	type AnalysisTarget,
 	AnalyzerRepository,
 } from "./repositories/analyzer.repository";
@@ -298,6 +302,18 @@ export {
 	PushUnavailableError,
 	WebPushRepository,
 } from "./repositories/web-push.repository";
+export {
+	type WeeklySummary,
+	WeeklySummaryRepository,
+	type WeeklySummarySaveInput,
+} from "./repositories/weekly-summary.repository";
+export {
+	type WeeklySummaryCheckInLine,
+	WeeklySummaryGenerationError,
+	type WeeklySummaryGenerationInput,
+	type WeeklySummaryGenerationOutput,
+	WeeklySummaryGeneratorRepository,
+} from "./repositories/weekly-summary-generator.repository";
 // Agent response schemas for structured LLM output (Story 2.4, Task 13)
 export {
 	type AnalyzerResponse,
@@ -513,7 +529,9 @@ export {
 	getTraitGradient,
 	getTribeGroup,
 	hasPortraitForResult,
+	type IsoWeekBounds,
 	lookupArchetype,
+	resolveIsoWeekBounds,
 	type TraitConfidence,
 	type TribeGroup,
 	toFacetDisplayName,

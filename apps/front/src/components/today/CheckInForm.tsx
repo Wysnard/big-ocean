@@ -1,9 +1,8 @@
 import { useForm } from "@tanstack/react-form";
-import type { CheckInPayload, CheckInResponse } from "@workspace/contracts";
+import type { CheckInPayload, CheckInResponse, WeekGridResponse } from "@workspace/contracts";
 import { Button } from "@workspace/ui/components/button";
 import {
 	Card,
-	CardAction,
 	CardContent,
 	CardDescription,
 	CardHeader,
@@ -13,23 +12,15 @@ import { Field, FieldLabel } from "@workspace/ui/components/field";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 import { Loader2 } from "lucide-react";
+import { JournalEntry } from "./JournalEntry";
+import { MoodDotsWeek } from "./MoodDotsWeek";
+import { QuietAnticipationLine } from "./QuietAnticipationLine";
+import { moodOptions } from "./today-mood-meta";
 
 export type CheckInDraft = {
 	mood: CheckInPayload["mood"] | null;
 	note: string;
 };
-
-const moodOptions: Array<{
-	value: CheckInPayload["mood"];
-	label: string;
-	emoji: string;
-}> = [
-	{ value: "great", label: "Great", emoji: "😄" },
-	{ value: "good", label: "Good", emoji: "🙂" },
-	{ value: "okay", label: "Okay", emoji: "😌" },
-	{ value: "uneasy", label: "Uneasy", emoji: "😕" },
-	{ value: "rough", label: "Rough", emoji: "😣" },
-];
 
 const checkInCardClassName = "w-full rounded-[2rem] border-border/70 bg-card/95 shadow-sm";
 
@@ -37,11 +28,6 @@ const normalizeNote = (value: string) => {
 	const note = value.trim();
 	return note.length > 0 ? note : null;
 };
-
-const fallbackMood = { value: "okay" as CheckInPayload["mood"], label: "Unknown", emoji: "❓" };
-
-const getMoodMeta = (mood: CheckInPayload["mood"]) =>
-	moodOptions.find((item) => item.value === mood) ?? fallbackMood;
 
 interface CheckInFormProps {
 	localDate: string;
@@ -214,39 +200,40 @@ export function CheckInFormSkeleton() {
 export function CheckInSavedState({
 	checkIn,
 	isSaving = false,
+	localDate,
+	weekGrid,
+	weekQueryPending,
+	weekQueryError,
 }: {
 	checkIn: CheckInResponse;
 	isSaving?: boolean;
+	localDate: string;
+	weekGrid: WeekGridResponse | undefined;
+	weekQueryPending: boolean;
+	weekQueryError: boolean;
 }) {
-	const mood = getMoodMeta(checkIn.mood);
-
 	return (
 		<Card className={cn(checkInCardClassName, "gap-0 py-0")} data-slot="today-check-in-saved">
 			<CardHeader className="border-0 px-6 pb-0 pt-6 sm:px-8 sm:pt-8">
-				<div className="space-y-2">
-					<p className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">Today</p>
-					<CardTitle className="font-heading text-3xl font-bold tracking-tight text-foreground">
-						Checked in for today.
-					</CardTitle>
-					<CardDescription className="text-base leading-6">
-						{isSaving ? "Saving your check-in..." : "Your note is here when you want to return."}
-					</CardDescription>
-				</div>
-				<CardAction>
-					<div className="flex min-h-14 min-w-14 items-center justify-center rounded-2xl border border-border/70 bg-background/70 text-3xl">
-						<span aria-hidden="true">{mood.emoji}</span>
-					</div>
-				</CardAction>
+				<p className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">Today</p>
+				<CardTitle className="font-heading text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+					Your check-in
+				</CardTitle>
+				<CardDescription className="text-sm leading-6">
+					{isSaving ? "Saving your check-in…" : "Recorded quietly for your week."}
+				</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-5 px-6 pb-6 pt-2 sm:px-8 sm:pb-8">
-				<div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-					<p className="text-sm font-medium text-foreground">{mood.label}</p>
-					{checkIn.note ? (
-						<p className="mt-2 text-sm leading-6 text-muted-foreground">{checkIn.note}</p>
-					) : (
-						<p className="mt-2 text-sm leading-6 text-muted-foreground">No note today.</p>
-					)}
+			<CardContent className="space-y-8 px-6 pb-6 pt-2 sm:px-8 sm:pb-8">
+				<JournalEntry checkIn={checkIn} />
+				<div className="border-t border-border/40 pt-6">
+					<MoodDotsWeek
+						localDate={localDate}
+						weekGrid={weekGrid}
+						isLoading={weekQueryPending}
+						isError={weekQueryError}
+					/>
 				</div>
+				<QuietAnticipationLine />
 			</CardContent>
 		</Card>
 	);

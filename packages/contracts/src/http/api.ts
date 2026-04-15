@@ -11,6 +11,7 @@ import { ConversationGroup } from "./groups/conversation";
 import { EmailGroup } from "./groups/email";
 import { EvidenceGroup } from "./groups/evidence";
 import { HealthGroup } from "./groups/health";
+import { JobsGroup } from "./groups/jobs";
 import { PortraitGroup } from "./groups/portrait";
 import { ProfileGroup } from "./groups/profile";
 import { PurchaseGroup } from "./groups/purchase";
@@ -37,4 +38,5 @@ export class BigOceanApi extends HttpApi.make("BigOceanApi")
 	.add(TodayGroup.prefix("/api")) // /api/today/* (authenticated)
 	.add(WaitlistGroup.prefix("/api")) // /api/waitlist/signup (public)
 	.add(EmailGroup.prefix("/api")) // /api/email/check-drop-off (internal)
+	.add(JobsGroup.prefix("/api")) // /api/jobs/* (cron / internal)
 	.add(AccountGroup.prefix("/api")) {} // /api/account (authenticated)
