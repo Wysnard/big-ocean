@@ -71,6 +71,7 @@ export const TodayGroupLive = HttpApiBuilder.group(BigOceanApi, "today", (handle
 							localDate: day.localDate,
 							checkIn: day.checkIn ? toCheckInResponse(day.checkIn) : null,
 						})),
+						weeklyLetter: weekGrid.weeklyLetter,
 					};
 				}),
 			)

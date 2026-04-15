@@ -16,6 +16,7 @@ import { JournalEntry } from "./JournalEntry";
 import { MoodDotsWeek } from "./MoodDotsWeek";
 import { QuietAnticipationLine } from "./QuietAnticipationLine";
 import { moodOptions } from "./today-mood-meta";
+import { WeeklyLetterCard } from "./WeeklyLetterCard";
 
 export type CheckInDraft = {
 	mood: CheckInPayload["mood"] | null;
@@ -224,6 +225,7 @@ export function CheckInSavedState({
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-8 px-6 pb-6 pt-2 sm:px-8 sm:pb-8">
+				{weekGrid ? <WeeklyLetterCard localDate={localDate} weekGrid={weekGrid} /> : null}
 				<JournalEntry checkIn={checkIn} />
 				<div className="border-t border-border/40 pt-6">
 					<MoodDotsWeek

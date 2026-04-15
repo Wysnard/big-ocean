@@ -19,13 +19,19 @@ import {
 	generateOceanCode,
 	LoggerRepository,
 	lookupArchetype,
+	PushNotificationQueueRepository,
+	PushSubscriptionRepository,
+	ResendEmailRepository,
 	resolveIsoWeekBounds,
 	TRAIT_NAMES,
 	Unauthorized,
+	UserAccountRepository,
+	WebPushRepository,
 	WeeklySummaryGeneratorRepository,
 	WeeklySummaryRepository,
 } from "@workspace/domain";
 import { Effect, Redacted, Schedule } from "effect";
+import { sendWeeklyLetterReadyNotification } from "./send-weekly-letter-ready-notification.use-case";
 
 const MIN_CHECK_INS = 3;
 /** Parallel LLM + DB work per user; keeps cron HTTP from serializing unbounded wall time. */
@@ -62,6 +68,11 @@ export const generateWeeklySummariesForWeek = (
 	| AssessmentResultRepository
 	| WeeklySummaryGeneratorRepository
 	| LoggerRepository
+	| UserAccountRepository
+	| ResendEmailRepository
+	| PushSubscriptionRepository
+	| PushNotificationQueueRepository
+	| WebPushRepository
 > =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
@@ -177,6 +188,28 @@ export const generateWeeklySummariesForWeek = (
 						generatedAt: new Date(),
 					});
 					logger.info("Weekly summary saved", { userId, weekId: input.weekId });
+
+					yield* sendWeeklyLetterReadyNotification({ userId, weekId: input.weekId }).pipe(
+						Effect.catchAll((error) =>
+							Effect.sync(() => {
+								const tag =
+									error !== null && typeof error === "object" && "_tag" in error
+										? String((error as { _tag: string })._tag)
+										: "unknown";
+								const message =
+									error !== null && typeof error === "object" && "message" in error
+										? String((error as { message: unknown }).message)
+										: String(error);
+								logger.warn("Weekly letter ready notification failed (fail-open)", {
+									userId,
+									weekId: input.weekId,
+									errorTag: tag,
+									message,
+								});
+							}),
+						),
+					);
+
 					return { processed: 1, skipped: 0, failed: 0 };
 				}
 
