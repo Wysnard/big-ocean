@@ -1,6 +1,7 @@
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { NerinMessage } from "@workspace/ui/components/chat";
 import {
 	DropdownMenu,
@@ -8,7 +9,6 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 import { Info, Loader2, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -437,7 +437,7 @@ function ChatInputBar({
 
 	return (
 		<ChatInputBarShell className="relative z-10 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-			<div className="flex gap-2 items-end">
+			<div className="flex items-stretch gap-2">
 				<Textarea
 					ref={textareaRef}
 					data-slot="chat-input"
@@ -453,10 +453,10 @@ function ChatInputBar({
 					maxLength={ASSESSMENT_MESSAGE_MAX_LENGTH}
 					rows={1}
 					className={cn(
-						"flex-1 min-h-0 w-full max-h-[120px] resize-none rounded-lg border border-[var(--input-field-border)] bg-[var(--input-field-bg)] px-4 py-2 text-foreground shadow-none",
-						"placeholder-[var(--input-field-color)]",
+						"min-h-11 w-full flex-1 resize-none border border-[var(--input-field-border)] bg-[var(--input-field-bg)] px-4 py-2 text-base shadow-none outline-none [field-sizing:content]",
+						"max-h-[120px] rounded-lg text-foreground placeholder-[var(--input-field-color)] md:text-base",
 						"focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent focus-visible:ring-2 focus-visible:ring-ring",
-						"[field-sizing:content]",
+						"disabled:cursor-not-allowed disabled:opacity-50",
 					)}
 				/>
 				<Button
@@ -464,8 +464,7 @@ function ChatInputBar({
 					aria-label="Send message"
 					onClick={handleSendMessage}
 					disabled={!inputValue.trim() || isLoading || isCompleted || isFarewellReceived}
-					size="sm"
-					className="min-h-11 min-w-11 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
+					className="h-auto min-h-11 w-11 shrink-0 self-stretch rounded-xl px-0 dark:shadow-[0_0_8px_rgba(0,212,200,0.3)] dark:disabled:opacity-65"
 				>
 					{isLoading ? (
 						<Loader2 className="h-4 w-4 motion-safe:animate-spin" />
