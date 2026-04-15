@@ -1,5 +1,5 @@
-# generated: 2026-04-12T18:00:00+0200
-# last_updated: 2026-04-14T18:00:00+0200
+# generated: 2026-04-15T12:00:00+0200
+# last_updated: 2026-04-15T18:00:00+0200
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,8 +43,8 @@
 # - epics-nerin-steering-format.md: Steering format (steering-epic-1 to steering-epic-2) — COMPLETED (superseded by director model)
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
-generated: 2026-04-12T18:00:00+0200
-last_updated: 2026-04-14T12:00:00+0200
+generated: 2026-04-15T12:00:00+0200
+last_updated: 2026-04-15T18:00:00+0200
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -65,7 +65,7 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Post-Assessment Transition & Portrait Reading
-  epic-2: in-progress
+  epic-2: done
   2-1-show-me-what-you-found-closing-button: done
   2-2-portrait-reading-generating-state-with-nerin-voice: done
   2-3-portrait-reading-copy-and-end-of-letter-transition: done
