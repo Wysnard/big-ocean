@@ -11,6 +11,11 @@ import {
 	DailyCheckInRepository,
 	type FacetName,
 	LoggerRepository,
+	PushNotificationQueueRepository,
+	PushSubscriptionRepository,
+	ResendEmailRepository,
+	UserAccountRepository,
+	WebPushRepository,
 	WeeklySummaryGenerationError,
 	WeeklySummaryGeneratorRepository,
 	WeeklySummaryRepository,
@@ -45,6 +50,29 @@ const mockResultsRepo = {
 
 const mockGenerator = {
 	generateLetter: vi.fn(),
+};
+
+const mockUserAccount = {
+	getEmailAndNameForUser: vi.fn(),
+};
+
+const mockResendEmail = {
+	sendEmail: vi.fn(),
+};
+
+const mockPushSubscription = {
+	listByUserId: vi.fn(),
+	deleteByEndpoint: vi.fn(),
+};
+
+const mockPushQueue = {
+	enqueue: vi.fn(),
+	deleteByDedupeKey: vi.fn(),
+	consumeByUserId: vi.fn(),
+};
+
+const mockWebPush = {
+	sendNotification: vi.fn(),
 };
 
 const mockLogger = {
@@ -170,6 +198,11 @@ const createTestLayer = () =>
 		Layer.succeed(WeeklySummaryGeneratorRepository, mockGenerator),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.succeed(AppConfig, mockConfig),
+		Layer.succeed(UserAccountRepository, mockUserAccount),
+		Layer.succeed(ResendEmailRepository, mockResendEmail),
+		Layer.succeed(PushSubscriptionRepository, mockPushSubscription),
+		Layer.succeed(PushNotificationQueueRepository, mockPushQueue),
+		Layer.succeed(WebPushRepository, mockWebPush),
 	);
 
 const WEEK_ID = "2026-W15";
@@ -187,6 +220,11 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 		mockGenerator.generateLetter.mockReturnValue(
 			Effect.succeed({ content: "# Hello week", modelUsed: "claude-sonnet-test" }),
 		);
+		mockUserAccount.getEmailAndNameForUser.mockReturnValue(
+			Effect.succeed({ email: "weekly@example.com", name: "Weekly User" }),
+		);
+		mockPushSubscription.listByUserId.mockReturnValue(Effect.succeed([]));
+		mockResendEmail.sendEmail.mockReturnValue(Effect.succeed(undefined));
 	});
 
 	it.effect("fails with DatabaseError when weekId is invalid", () =>
@@ -280,6 +318,11 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 					outcome: "generated",
 					userId,
 					content: "# Hello week",
+				}),
+			);
+			expect(mockResendEmail.sendEmail).toHaveBeenCalledWith(
+				expect.objectContaining({
+					to: "weekly@example.com",
 				}),
 			);
 		}),

@@ -31,6 +31,14 @@ export const CheckInNotFoundResponseSchema = S.Struct({
 	found: S.Literal(false),
 });
 
+/** Canonical product copy for the weekly letter ready surface (card + notifications). */
+export const WEEKLY_LETTER_HEADLINE = "Your week with Nerin is ready";
+
+export const WeeklyLetterMetaSchema = S.Union(
+	S.Struct({ status: S.Literal("ready"), generatedAt: S.String }),
+	S.Struct({ status: S.Literal("none") }),
+);
+
 export const WeekGridResponseSchema = S.Struct({
 	weekId: S.String,
 	days: S.Array(
@@ -39,6 +47,7 @@ export const WeekGridResponseSchema = S.Struct({
 			checkIn: S.NullishOr(CheckInResponseSchema),
 		}),
 	),
+	weeklyLetter: WeeklyLetterMetaSchema,
 });
 
 export const CalendarMonthResponseSchema = S.Struct({
@@ -111,6 +120,7 @@ export const TodayGroup = HttpApiGroup.make("today")
 export type CheckInPayload = typeof CheckInPayloadSchema.Type;
 export type CheckInResponse = typeof CheckInResponseSchema.Type;
 export type CheckInNotFoundResponse = typeof CheckInNotFoundResponseSchema.Type;
+export type WeeklyLetterMeta = typeof WeeklyLetterMetaSchema.Type;
 export type WeekGridResponse = typeof WeekGridResponseSchema.Type;
 export type CalendarMonthResponse = typeof CalendarMonthResponseSchema.Type;
 export type HasCheckInsResponse = typeof HasCheckInsResponseSchema.Type;
