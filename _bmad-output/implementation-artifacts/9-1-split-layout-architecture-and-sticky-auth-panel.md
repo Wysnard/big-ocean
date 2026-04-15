@@ -1,6 +1,6 @@
 # Story 9.1: Split-Layout Architecture & Sticky Auth Panel
 
-Status: review
+Status: done
 
 <!-- Ultimate context refresh: 2026-04-15 — aligned to production `index.tsx` and related components. Prior narrative referenced `SplitHomepageLayout` as the live route wrapper; the homepage has since been composed with `DepthScrollProvider` + `HomepageTimeline` + `MobileHero`. -->
 
@@ -14,7 +14,7 @@ so that I can sign up whenever I'm ready without searching for a CTA.
 
 1. **Given** an unauthenticated user visits `/` **When** the homepage renders on desktop (≥1024px) **Then** a 60/40 split layout renders: scrollable timeline left, sticky auth panel right.
 
-2. **Given** the sticky auth panel is visible **When** the user inspects its contents **Then** it contains: logo, dynamic hook line, email + password form, "Start yours →" submit, "Already have an account? Log in" link, "~30 min · Free · No credit card" tagline, 5 OCEAN breathing shapes.
+2. **Given** the sticky auth panel is visible **When** the user inspects its contents **Then** it contains: logo, dynamic hook line, **inline email + password login** (`LoginForm` embed), primary **"Start yours →"** link to `/signup` (dedicated signup page), "~30 min · Free · No credit card" tagline. *(Epic originally described a single combined form; product decision 2026-04-15: login inline, signup on `/signup`.)*
 
 3. **Given** the user initiates signup **When** they complete the flow **Then** signup runs via Better Auth **And** on success they reach the verify-email step (ADR-24).
 
@@ -26,11 +26,12 @@ so that I can sign up whenever I'm ready without searching for a CTA.
 
 ## Product vs codebase (read this first)
 
-| Epic expectation | Current production behavior (2026-04-15) |
+| Epic expectation | Current production behavior (2026-04-15, post–product decisions) |
 |------------------|------------------------------------------|
-| “Email + password form” inside the sticky panel | Desktop sticky panel uses **primary CTA links to `/signup`** and **secondary link to `/login`**, not an inline TanStack Form on `/`. Signup fields live on the dedicated signup route. |
+| “Email + password form” inside the sticky panel | **Login:** inline **`LoginForm` `variant="embed"`** (TanStack Form + shadcn fields). **Signup:** primary **“Start yours →”** goes to **`/signup`** (dedicated page), not inline on `/`. |
 | “Dynamic hook line” in 9.1 | **`HomepageDynamicHook`** (scroll-linked copy) ships with Story **9.2** and is **already imported** in `StickyAuthPanel` and `MobileHero`. Treat hook behavior as owned by 9.2; layout/sticky shell is still 9.1 scope. |
-| Mobile `StickyBottomCTA` fixed to bottom | **`StickyBottomCTA` exists** (`apps/front/src/components/home/StickyBottomCTA.tsx`) **but is not mounted** in `routes/index.tsx`. Mobile conversion uses **`MobileHero`** (above-the-fold CTAs) plus scrollable timeline. Confirm with product whether a persistent bottom bar is still required. |
+| Mobile `StickyBottomCTA` fixed to bottom | **`StickyBottomCTA` is mounted** in `routes/index.tsx` with **`marketingOnly`** (always “Start yours” bar; session ignored on `/`). **`MobileHero`** remains for above-the-fold CTAs; left column has **`pb-24 lg:pb-0`** so content clears the fixed bar. |
+| Authenticated visitors on `/` | **Marketing-only CTAs** on homepage surfaces (decision **3b**): `StickyBottomCTA` does not switch to “Continue to Nerin” on `/`; returning users use global nav. |
 
 **Implication for dev agents:** Bugfixes or refactors for “Epic 9 homepage” must read **`index.tsx`** and **`StickyAuthPanel.tsx`** as source of truth — not only `SplitHomepageLayout.tsx`.
 
@@ -41,14 +42,14 @@ so that I can sign up whenever I'm ready without searching for a CTA.
 ### Route composition
 
 - **File:** `apps/front/src/routes/index.tsx`
-- **Structure:** `PageMain` → **`DepthScrollProvider`** (scroll-linked homepage phase for ≥1024px) → CSS Grid on `lg:`: left column `MobileHero` + **`HomepageTimeline`**, right column **`StickyAuthPanel`**.
+- **Structure:** `PageMain` → **`DepthScrollProvider`** (scroll-linked homepage phase for ≥1024px) → CSS Grid on `lg:`: left column (`pb-24 lg:pb-0`) `MobileHero` + **`HomepageTimeline`**, right column **`StickyAuthPanel`**. **`StickyBottomCTA`** (`marketingOnly`) fixed at bottom on mobile.
 - **Grid:** `lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.95fr)]` — approximately 60/40 with a minimum right-column width; not the older `3fr_2fr` from early drafts.
 - **SSR:** `head()` defines `title`, `description`, `og:title`, `og:description`.
 
 ### Sticky auth panel (desktop)
 
 - **File:** `apps/front/src/components/home/StickyAuthPanel.tsx`
-- **Behavior:** `hidden lg:block`; inner column uses **`sticky top-0`** and full viewport height for the panel column; card UI with logo (`big-` + `OceanHieroglyphSet`), **`HomepageDynamicHook`**, supporting copy, **Link** to `/signup` and `/login` (with `search={{ sessionId: undefined, redirectTo: undefined }}` per TanStack Router contract), tagline, five animated trait-colored shapes (`motion-safe:animate-[breathe_…]`).
+- **Behavior:** `hidden lg:block`; **`sticky top-14`** under global header; card UI with logo (`big-` + `OceanHieroglyphSet`), **`HomepageDynamicHook`**, supporting copy, primary **Link** to `/signup`, embedded **`LoginForm variant="embed"`** (Better Auth sign-in), tagline.
 - **Phase:** `useHomepagePhase()` from `DepthScrollProvider` sets `data-phase` for styling/testing.
 
 ### Timeline (left column)
@@ -75,7 +76,7 @@ These were part of an earlier composition and remain for tests and possible reus
 | `SplitHomepageLayout.tsx` | Grid shell with timeline/auth/bottom CTA slots — **unit-tested**, not used by `index.tsx`. |
 | `TimelinePlaceholder.tsx` | Older left-pane placeholder — **tests only** from a routing perspective. |
 | `HomepageSignupForm.tsx` | Inline signup — **not** wired to `/` in current route; signup is via `/signup`. |
-| `StickyBottomCTA.tsx` | **Not** mounted in `index.tsx`. |
+| `StickyBottomCTA.tsx` | Mounted on **`/`** with **`marketingOnly`** (see route file). |
 
 ---
 
@@ -95,7 +96,7 @@ These were part of an earlier composition and remain for tests and possible reus
 - **Breakpoints:** Match epic: split at **1024px (`lg:`)**; mobile-first stacking below.
 - **Sticky panel:** Epic: `position: sticky; top: 0; height: 100vh` — production uses sticky column with **`top-0`** and **`h-screen`** inside the right grid cell; header offset may differ from older `top-[3.5rem]` drafts — verify visual acceptance against design.
 - **OCEAN shapes:** Five distinct shapes with staggered breathe animation (trait-colored).
-- **Accessibility:** `StickyAuthPanel` uses `<aside aria-label="Sign up">`; keep landmarks coherent when editing.
+- **Accessibility:** `StickyAuthPanel` uses `<aside aria-label="Sign up or log in">`; keep landmarks coherent when editing.
 
 ---
 
@@ -118,10 +119,12 @@ These were part of an earlier composition and remain for tests and possible reus
 - `apps/front/src/components/home/DepthScrollProvider.tsx`
 - `apps/front/src/components/home/homepage-phase-config.ts`
 - `apps/front/src/components/home/HomepageDynamicHook.tsx` (9.2, coupled)
+- `apps/front/src/components/home/StickyBottomCTA.tsx` — used on **`/`** with `marketingOnly`
+- `apps/front/src/components/auth/login-form.tsx` — **`variant="embed"`** for sticky panel
 
 **Secondary / tests / legacy**
 
-- `SplitHomepageLayout.tsx`, `TimelinePlaceholder.tsx`, `HomepageSignupForm.tsx`, `StickyBottomCTA.tsx` — maintain if still imported by tests; do not assume they are the live layout.
+- `SplitHomepageLayout.tsx`, `TimelinePlaceholder.tsx`, `HomepageSignupForm.tsx` — maintain if still imported by tests; do not assume they are the live layout.
 
 ---
 
@@ -169,7 +172,7 @@ These were part of an earlier composition and remain for tests and possible reus
 - [x] Task 2: Sticky auth panel contents (AC: #2)
   - [x] 2.1 Logo (`big-` + `OceanHieroglyphSet`)
   - [x] 2.2 Dynamic hook line placeholder (static text for 9.1; 9.2 replaced with `HomepageDynamicHook`)
-  - [x] 2.3 "Start yours →" CTA (Link to `/signup`), "Already have an account? Log in" (Link to `/login`)
+  - [x] 2.3 Primary "Start yours →" (Link to `/signup`); inline **`LoginForm` `variant="embed"`** for log in (dedicated `/signup` for registration)
   - [x] 2.4 Tagline: "~30 min · Free · No credit card"
   - [x] 2.5 5 OCEAN breathing shapes with staggered `breathe` animation and trait colors
 
@@ -179,7 +182,7 @@ These were part of an earlier composition and remain for tests and possible reus
 
 - [x] Task 4: Mobile conversion surface (AC: #4)
   - [x] 4.1 `MobileHero` component (`lg:hidden`) with brand, hook, signup/login CTAs, tagline
-  - [x] 4.2 `StickyBottomCTA` component created (not mounted in route — `MobileHero` chosen instead)
+  - [x] 4.2 `StickyBottomCTA` mounted on `/` with `marketingOnly` + `pb-24` on mobile column; `MobileHero` retained
 
 - [x] Task 5: SSR + SEO meta tags (AC: #5)
   - [x] 5.1 `head()` function with `title`, `description`, `og:title`, `og:description`
@@ -193,17 +196,17 @@ These were part of an earlier composition and remain for tests and possible reus
 
 **Review scope:** Working-tree diff (`git diff HEAD`) is only the five `// @vitest-environment jsdom` lines in `*.test.tsx` — **Blind Hunter** had no issues on that diff. **Edge Case Hunter** and **Acceptance Auditor** evaluated current production files listed in this story (`index.tsx`, `StickyAuthPanel.tsx`, `MobileHero.tsx`, `DepthScrollProvider.tsx`, `HomepageTimeline.tsx`, route `head()`) against `epics.md` Story 9.1 and this spec.
 
-**decision-needed**
+**decision-needed** — **Resolved 2026-04-15**
 
-- [ ] [Review][Decision] **AC2 — Inline signup vs `/signup` route** — Epic (`epics.md` §9.1) requires an **email + password form** in the sticky panel. Production uses **primary/secondary Links** to `/signup` and `/login`. `HomepageSignupForm.tsx` exists but is not composed into `StickyAuthPanel`. Choose: **(A)** amend epic/story AC to formally accept “CTA to dedicated signup” as the conversion surface, or **(B)** embed the TanStack Form in the panel (reuse `HomepageSignupForm` or extract shared fields).
+- [x] [Review][Decision] **AC2 — Inline signup vs `/signup` route** — **Hybrid:** **(B)** inline **login** in the sticky panel (`LoginForm` embed); **signup stays on dedicated `/signup`** (primary “Start yours →”). Story AC updated above.
 
-- [ ] [Review][Decision] **AC4 — `StickyBottomCTA` vs `MobileHero` only** — Epic text references a **fixed bottom** CTA on small viewports. `StickyBottomCTA` is implemented and tested but **not mounted** in `routes/index.tsx`; `MobileHero` supplies above-the-fold CTAs. Choose: **(A)** mount `StickyBottomCTA` (with scroll padding to avoid overlap), or **(B)** lock the doc/epic to “mobile hero + scroll” and optionally delete or repurpose `StickyBottomCTA`.
+- [x] [Review][Decision] **AC4 — `StickyBottomCTA` vs `MobileHero` only** — **(A)** Mount `StickyBottomCTA` on `/` with bottom spacing (`pb-24` on mobile column). **`marketingOnly`** pairs with **3b** so the bar does not switch to “Continue to Nerin” on `/`.
 
-- [ ] [Review][Decision] **Authenticated visitors on `/`** — `StickyAuthPanel` and `MobileHero` do not read session state; logged-in users still see “Start yours →” / signup. Architecture (ADR-15) allows full access to `/` for all auth states. Choose: **(A)** add session-aware CTAs (e.g. “Continue to Nerin →” to `/chat`) consistent with `StickyBottomCTA`’s authenticated branch, or **(B)** keep marketing-only CTAs and document that returning users use nav elsewhere.
+- [x] [Review][Decision] **Authenticated visitors on `/`** — **(B)** Marketing-only CTAs on homepage; returning users use global nav. Implemented via `StickyBottomCTA` **`marketingOnly`** on `/`.
 
 **patch**
 
-- (none blocking — awaiting decisions above; optional follow-up: mirror `HomepageDynamicHook` reduced-motion tests if a11y regressions are reported.)
+- (none blocking — product decisions implemented 2026-04-15; optional follow-up: mirror `HomepageDynamicHook` reduced-motion tests if a11y regressions are reported.)
 
 **defer**
 
@@ -225,8 +228,10 @@ Dev-story maintenance pass — 2026-04-15.
 - **2026-04-15 (code review):** BMad code-review workflow — three layers (Blind Hunter on diff-only; Edge + Acceptance on production files vs spec). Findings: 3 **decision-needed**, 0 **patch**, 2 **defer**, 0 dismissed. Details in **Review Findings** above. Deferred bullets appended to `_bmad-output/implementation-artifacts/deferred-work.md`.
 - **2026-04-12:** Initial implementation — split-layout homepage with `StickyAuthPanel`, `MobileHero`, `HomepageTimeline`, `StickyBottomCTA`, `HomepageSignupForm`, `SplitHomepageLayout`, `TimelinePlaceholder`. 5 new components + 5 test files.
 - **2026-04-15 (create-story):** Reconciled story doc with production state — `DepthScrollProvider`, `HomepageTimeline`, `MobileHero`, CTA-to-`/signup` pattern, 9.2 hook coupling, `SplitHomepageLayout` not used in route.
-- **2026-04-15 (dev-story):** Fixed 5 broken test files missing `// @vitest-environment jsdom` directive (`SplitHomepageLayout.test.tsx`, `StickyAuthPanel.test.tsx`, `HomepageSignupForm.test.tsx`, `StickyBottomCTA.test.tsx`, `TimelinePlaceholder.test.tsx`). All 51 homepage tests pass. Full suite: 501/503 pass (2 pre-existing failures in `YourPublicFaceSection` — unrelated Story 3-4 backlog).
-- **AC validation (2026-04-15):** AC1 PASS, AC2 PARTIAL (CTA links vs inline form — design decision), AC3 PASS, AC4 PARTIAL (MobileHero replaces StickyBottomCTA — design decision), AC5 PASS.
+- **2026-04-15 (dev-story):** Fixed 5 broken test files missing `// @vitest-environment jsdom` directive (`SplitHomepageLayout.test.tsx`, `StickyAuthPanel.test.tsx`, `HomepageSignupForm.test.tsx`, `StickyBottomCTA.test.tsx`, `TimelinePlaceholder.test.tsx`). All 51 homepage tests pass; full monorepo suite later verified green (see re-run below).
+- **2026-04-15 (dev-story, re-run):** Invoked `/bmad-dev-story` for `9-1` — no open Tasks/Subtasks; implementation work already complete. Full monorepo `pnpm test:run` (turbo) **passed** (e.g. front 505 tests). Story remains **`review`**; three **decision-needed** items in Review Findings are product/epic choices (inline signup vs `/signup`, `StickyBottomCTA` mount, auth-aware CTAs), not unimplemented dev tasks.
+- **2026-04-15 (product decisions → code):** **1:** Inline **`LoginForm` `variant="embed"`** in `StickyAuthPanel`; signup remains **`/signup`**. **2a:** **`StickyBottomCTA`** mounted on `/` with **`marketingOnly`** + mobile **`pb-24`**. **3b:** Homepage stays marketing-only (no session-based “Continue to Nerin” on `/`). Front `pnpm test` **508** passed after changes.
+- **AC validation (2026-04-15, updated):** AC1 PASS, AC2 PASS (aligned to hybrid login + dedicated signup), AC3 PASS, AC4 PASS (`StickyBottomCTA` + `MobileHero`), AC5 PASS.
 
 ### File List
 
@@ -243,11 +248,16 @@ Dev-story maintenance pass — 2026-04-15.
 - `apps/front/src/components/home/StickyBottomCTA.tsx`
 - `apps/front/src/components/home/TimelinePlaceholder.tsx`
 
-**Modified in this session (test fix):**
+**Modified (test fix + product decisions 2026-04-15):**
+- `apps/front/src/components/auth/login-form.tsx` — `variant` **`page` | `embed`**
+- `apps/front/src/components/auth/login-form.test.tsx` — embed variant test
+- `apps/front/src/components/home/StickyAuthPanel.tsx` — embedded login form
+- `apps/front/src/components/home/StickyAuthPanel.test.tsx` — mocks + embed assertions
+- `apps/front/src/components/home/StickyBottomCTA.tsx` — **`marketingOnly`**
+- `apps/front/src/components/home/StickyBottomCTA.test.tsx` — **`marketingOnly`** cases
+- `apps/front/src/routes/index.tsx` — **`StickyBottomCTA`**, **`pb-24`**
 - `apps/front/src/components/home/SplitHomepageLayout.test.tsx` — added `// @vitest-environment jsdom`
-- `apps/front/src/components/home/StickyAuthPanel.test.tsx` — added `// @vitest-environment jsdom`
 - `apps/front/src/components/home/HomepageSignupForm.test.tsx` — added `// @vitest-environment jsdom`
-- `apps/front/src/components/home/StickyBottomCTA.test.tsx` — added `// @vitest-environment jsdom`
 - `apps/front/src/components/home/TimelinePlaceholder.test.tsx` — added `// @vitest-environment jsdom`
 
 ### Debug Log References
@@ -271,10 +281,12 @@ Dev-story maintenance pass — 2026-04-15.
 - **2026-04-12:** Initial Story 9.1 implementation — split-layout homepage, sticky auth panel, mobile hero, timeline, 5 components + 5 test files.
 - **2026-04-15:** Fixed 5 test files missing `// @vitest-environment jsdom` (all 51 tests now pass). Reconciled story doc with production codebase. AC validation documented.
 - **2026-04-15:** Adversarial code review (Blind Hunter / Edge Case Hunter / Acceptance Auditor) — Review Findings section added; 3 product decisions pending.
+- **2026-04-15:** Dev-story workflow re-run — validation only; full `pnpm test:run` green.
+- **2026-04-15:** Product decisions (login embed + dedicated signup, mount bottom CTA, marketing-only `/`) implemented; story status **`done`**.
 
 ---
 
 ## Story completion status
 
 - **BMad create-story analysis:** Completed — comprehensive developer guide updated for **as-built** homepage (2026-04-15).
-- **Sprint file:** `9-1-split-layout-architecture-and-sticky-auth-panel` remains **`review`** in `sprint-status.yaml` (workflow backlog → ready-for-dev **not** applied — story already past backlog).
+- **Sprint file:** `9-1-split-layout-architecture-and-sticky-auth-panel` set to **`done`** in `sprint-status.yaml` after product decisions shipped (2026-04-15).

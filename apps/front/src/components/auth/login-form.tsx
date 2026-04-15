@@ -17,9 +17,12 @@ import { AuthError, useAuth } from "../../hooks/use-auth";
 interface LoginFormProps {
 	anonymousSessionId?: string;
 	redirectTo?: string;
+	/** `embed` = compact block for homepage sticky panel; `page` = full `/login` route */
+	variant?: "page" | "embed";
 }
 
-export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
+export function LoginForm({ anonymousSessionId, redirectTo, variant = "page" }: LoginFormProps) {
+	const isEmbed = variant === "embed";
 	const { signIn, isPending } = useAuth();
 	const navigate = useNavigate();
 	const [serverError, setServerError] = useState<string | null>(null);
@@ -87,36 +90,51 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 	}
 
 	return (
-		<div className="relative mx-auto max-w-md overflow-hidden rounded-3xl bg-card p-8 shadow-lg sm:p-10">
-			{/* Corner geometric decorations */}
-			<div className="pointer-events-none absolute -right-2.5 -top-2.5" aria-hidden="true">
-				<div className="absolute right-4 top-4 h-11 w-11 rounded-full bg-trait-openness opacity-10" />
-				<div
-					className="absolute right-13 top-1 h-0 w-0 opacity-8"
-					style={{
-						borderLeft: "12px solid transparent",
-						borderRight: "12px solid transparent",
-						borderBottom: "20px solid var(--trait-agreeableness)",
-					}}
-				/>
-			</div>
+		<div
+			className={
+				isEmbed
+					? "w-full"
+					: "relative mx-auto max-w-md overflow-hidden rounded-3xl bg-card p-8 shadow-lg sm:p-10"
+			}
+		>
+			{!isEmbed && (
+				<>
+					{/* Corner geometric decorations */}
+					<div className="pointer-events-none absolute -right-2.5 -top-2.5" aria-hidden="true">
+						<div className="absolute right-4 top-4 h-11 w-11 rounded-full bg-trait-openness opacity-10" />
+						<div
+							className="absolute right-13 top-1 h-0 w-0 opacity-8"
+							style={{
+								borderLeft: "12px solid transparent",
+								borderRight: "12px solid transparent",
+								borderBottom: "20px solid var(--trait-agreeableness)",
+							}}
+						/>
+					</div>
 
-			{/* Brand mark */}
-			<div className="mb-5 flex items-center gap-1">
-				<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
-				<OceanHieroglyphSet size={12} />
-			</div>
+					{/* Brand mark */}
+					<div className="mb-5 flex items-center gap-1">
+						<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
+						<OceanHieroglyphSet size={12} />
+					</div>
 
-			{/* Heading with gradient accent */}
-			<h2 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-				Welcome{" "}
-				<span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-					back
-				</span>
-			</h2>
-			<p className="mt-2 mb-6 text-sm text-muted-foreground">Sign in to continue your journey.</p>
+					{/* Heading with gradient accent */}
+					<h2 className="font-heading text-3xl font-bold tracking-tight text-foreground">
+						Welcome{" "}
+						<span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+							back
+						</span>
+					</h2>
+					<p className="mt-2 mb-6 text-sm text-muted-foreground">Sign in to continue your journey.</p>
+				</>
+			)}
+
+			{isEmbed && (
+				<p className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-200">Log in</p>
+			)}
 
 			<form
+				data-testid={isEmbed ? "login-form-embed" : undefined}
 				noValidate
 				onSubmit={(e) => {
 					e.preventDefault();
@@ -222,16 +240,18 @@ export function LoginForm({ anonymousSessionId, redirectTo }: LoginFormProps) {
 					{isLoading ? "Signing in..." : "Sign In"}
 				</button>
 
-				<Link
-					to="/signup"
-					search={{
-						sessionId: anonymousSessionId,
-						redirectTo,
-					}}
-					className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
-				>
-					New here? Create account
-				</Link>
+				{!isEmbed && (
+					<Link
+						to="/signup"
+						search={{
+							sessionId: anonymousSessionId,
+							redirectTo,
+						}}
+						className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+					>
+						New here? Create account
+					</Link>
+				)}
 			</form>
 		</div>
 	);

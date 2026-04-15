@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -8,10 +9,44 @@ vi.mock("@tanstack/react-router", () => ({
 			{children}
 		</a>
 	),
+	useNavigate: () => vi.fn(),
+}));
+
+vi.mock("@/hooks/use-auth", () => ({
+	AuthError: class AuthError extends Error {},
+	useAuth: () => ({
+		signIn: { email: vi.fn() },
+		signUp: { email: vi.fn() },
+		signOut: vi.fn(),
+		refreshSession: vi.fn(),
+		session: null,
+		user: null,
+		isAuthenticated: false,
+		isPending: false,
+		error: null,
+	}),
 }));
 
 vi.mock("@workspace/ui/components/ocean-hieroglyph-set", () => ({
 	OceanHieroglyphSet: () => <span data-testid="ocean-hieroglyphs" />,
+}));
+
+vi.mock("@workspace/ui/components/field", () => ({
+	Field: ({ children, ...props }: { children?: ReactNode }) => (
+		<div {...props}>{children}</div>
+	),
+	FieldLabel: ({ children, htmlFor }: { children?: ReactNode; htmlFor?: string }) => (
+		<label htmlFor={htmlFor}>{children}</label>
+	),
+	FieldError: () => null,
+}));
+
+vi.mock("@workspace/ui/components/input", () => ({
+	Input: (props: Record<string, unknown>) => <input {...props} />,
+}));
+
+vi.mock("@workspace/ui/components/ocean-spinner", () => ({
+	OceanSpinner: () => <span data-testid="ocean-spinner" />,
 }));
 
 vi.mock("./DepthScrollProvider", () => ({
@@ -42,10 +77,12 @@ describe("StickyAuthPanel", () => {
 		expect(screen.getByTestId("homepage-dynamic-hook")).toBeInTheDocument();
 	});
 
-	it("renders signup and login links", () => {
+	it("renders signup link and embedded login form", () => {
 		render(<StickyAuthPanel />);
 		expect(screen.getByText(/start yours/i)).toHaveAttribute("href", "/signup");
-		expect(screen.getByText(/log in/i)).toHaveAttribute("href", "/login");
+		expect(screen.getByTestId("login-form-embed")).toBeInTheDocument();
+		expect(screen.getByLabelText("Email")).toBeInTheDocument();
+		expect(screen.getByLabelText("Password")).toBeInTheDocument();
 	});
 
 	it("renders the tagline text", () => {

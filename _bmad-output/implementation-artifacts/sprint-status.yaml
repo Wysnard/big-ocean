@@ -1,5 +1,5 @@
 # generated: 2026-04-15T12:00:00+0200
-# last_updated: 2026-04-15T05:42:09+02:00
+# last_updated: 2026-04-15T14:10:00+02:00
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -44,7 +44,7 @@
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
 generated: 2026-04-15T12:00:00+0200
-last_updated: 2026-04-15T05:42:09+02:00
+last_updated: 2026-04-15T14:10:00+02:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -120,7 +120,7 @@ development_status:
 
   # Epic 9: Homepage Conversion
   epic-9: in-progress
-  9-1-split-layout-architecture-and-sticky-auth-panel: review
+  9-1-split-layout-architecture-and-sticky-auth-panel: done
   9-2-dynamic-hook-with-animated-gradient: done
   9-3-timeline-phases-product-artifacts: backlog
   9-4-reassurance-section-and-fear-addressing-cards: backlog

@@ -230,4 +230,12 @@ describe("LoginForm", () => {
 		// Should NOT navigate to verify-email
 		expect(mockNavigate).not.toHaveBeenCalledWith(expect.objectContaining({ to: "/verify-email" }));
 	});
+
+	it("embed variant omits page chrome and duplicate signup link", () => {
+		render(<LoginForm variant="embed" />);
+		expect(screen.getByTestId("login-form-embed")).toBeInTheDocument();
+		expect(screen.queryByText(/Welcome/)).not.toBeInTheDocument();
+		expect(screen.queryByText(/New here\? Create account/)).not.toBeInTheDocument();
+		expect(screen.getByText("Log in")).toBeInTheDocument();
+	});
 });

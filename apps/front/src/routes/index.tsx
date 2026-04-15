@@ -3,6 +3,7 @@ import { DepthScrollProvider } from "../components/home/DepthScrollProvider";
 import { HomepageTimeline } from "../components/home/HomepageTimeline";
 import { MobileHero } from "../components/home/MobileHero";
 import { StickyAuthPanel } from "../components/home/StickyAuthPanel";
+import { StickyBottomCTA } from "../components/home/StickyBottomCTA";
 import { PageMain } from "../components/PageMain";
 
 export const Route = createFileRoute("/")({
@@ -35,13 +36,14 @@ function HomePage() {
 		<PageMain className="bg-slate-100">
 			<DepthScrollProvider>
 				<div className="lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.95fr)]">
-					<div className="min-w-0">
+					<div className="min-w-0 pb-24 lg:pb-0">
 						<MobileHero />
 						<HomepageTimeline />
 					</div>
 					<StickyAuthPanel />
 				</div>
 			</DepthScrollProvider>
+			<StickyBottomCTA isAuthenticated={false} marketingOnly />
 		</PageMain>
 	);
 }

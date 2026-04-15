@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
+import { LoginForm } from "../auth/login-form";
 import { useHomepagePhase } from "./DepthScrollProvider";
 import { HomepageDynamicHook } from "./HomepageDynamicHook";
 
@@ -7,7 +8,7 @@ export function StickyAuthPanel() {
 	const currentPhase = useHomepagePhase();
 
 	return (
-		<aside className="hidden lg:block" aria-label="Sign up">
+		<aside className="hidden lg:block" aria-label="Sign up or log in">
 			{/* Match global Header (h-14): sticky below header, height = viewport minus header — avoid h-screen extending past fold */}
 			<div className="sticky top-14 z-10 flex h-[calc(100dvh-3.5rem)] min-h-0 items-center px-6 py-8 xl:px-10">
 				<div
@@ -44,16 +45,7 @@ export function StickyAuthPanel() {
 							>
 								Start yours &rarr;
 							</Link>
-							<Link
-								to="/login"
-								search={{
-									sessionId: undefined,
-									redirectTo: undefined,
-								}}
-								className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white/80 px-5 text-sm font-medium text-slate-800 transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 dark:border-slate-200 dark:bg-white/80 dark:text-slate-800 dark:hover:border-slate-300 dark:hover:bg-slate-50 dark:hover:text-slate-950"
-							>
-								Already have an account? Log in
-							</Link>
+							<LoginForm variant="embed" />
 							<p className="text-xs font-medium tracking-[0.18em] text-slate-600 uppercase dark:text-slate-600">
 								~30 min · Free · No credit card
 							</p>

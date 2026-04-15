@@ -69,6 +69,23 @@ describe("StickyBottomCTA", () => {
 		});
 	});
 
+	describe("when marketingOnly (homepage)", () => {
+		it("always shows signup CTA even when isAuthenticated", () => {
+			render(<StickyBottomCTA isAuthenticated={true} marketingOnly />);
+			const link = screen.getByTestId("mobile-signup-cta");
+			expect(link).toBeInTheDocument();
+			expect(link).toHaveAttribute("href", "/signup");
+			expect(screen.queryByTestId("mobile-continue-cta")).not.toBeInTheDocument();
+		});
+
+		it("sets data-marketing-only on the container", () => {
+			render(<StickyBottomCTA isAuthenticated={false} marketingOnly />);
+			expect(screen.getByTestId("sticky-bottom-cta").getAttribute("data-marketing-only")).toBe(
+				"true",
+			);
+		});
+	});
+
 	it("has data-slot attribute", () => {
 		render(<StickyBottomCTA isAuthenticated={false} />);
 		expect(screen.getByTestId("sticky-bottom-cta").getAttribute("data-slot")).toBe(

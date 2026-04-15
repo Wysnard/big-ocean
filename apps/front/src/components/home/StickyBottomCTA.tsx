@@ -9,16 +9,24 @@ import { Link } from "@tanstack/react-router";
 
 interface StickyBottomCTAProps {
 	isAuthenticated: boolean;
+	/**
+	 * When true (e.g. homepage `/`), always show the marketing signup CTA — ignores session so
+	 * returning users still see the same bar; they use global nav to continue (product decision 3b).
+	 */
+	marketingOnly?: boolean;
 }
 
-export function StickyBottomCTA({ isAuthenticated }: StickyBottomCTAProps) {
+export function StickyBottomCTA({ isAuthenticated, marketingOnly = false }: StickyBottomCTAProps) {
+	const showContinue = !marketingOnly && isAuthenticated;
+
 	return (
 		<div
 			data-slot="sticky-bottom-cta"
 			data-testid="sticky-bottom-cta"
+			data-marketing-only={marketingOnly ? "true" : undefined}
 			className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/50 bg-background/80 px-4 py-3 backdrop-blur-md lg:hidden"
 		>
-			{isAuthenticated ? (
+			{showContinue ? (
 				<Link
 					to="/chat"
 					data-testid="mobile-continue-cta"
