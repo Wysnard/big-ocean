@@ -6,11 +6,13 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 
 export const generateArchetypeCardPng = createServerFn({ method: "GET" })
 	.inputValidator((data: { publicProfileId: string; format: "9:16" | "1:1" }) => data)
 	.handler(async ({ data }) => {
 		const { publicProfileId, format } = data;
+		const cookie = getRequestHeader("cookie");
 
 		const [
 			{ Resvg },
@@ -24,7 +26,7 @@ export const generateArchetypeCardPng = createServerFn({ method: "GET" })
 			import("@/lib/card-generation"),
 		]);
 
-		const { profile, status } = await fetchProfileData(publicProfileId);
+		const { profile, status } = await fetchProfileData(publicProfileId, cookie ?? undefined);
 
 		if (!profile) {
 			const message =

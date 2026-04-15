@@ -23,9 +23,11 @@ interface UseShareFlowOptions {
 		isPublic: boolean;
 	}) => Promise<{ isPublic: boolean }>;
 	onShareStateChange: (update: { isPublic: boolean }) => void;
+	onCopied?: (url: string) => void;
 }
 
 interface UseShareFlowReturn {
+	copyLink: () => Promise<void>;
 	initiateShare: () => Promise<void>;
 	acceptAndShare: () => Promise<void>;
 	declineShare: () => void;
@@ -74,22 +76,43 @@ export function useShareFlow({
 	archetypeName,
 	toggleVisibility,
 	onShareStateChange,
+	onCopied,
 }: UseShareFlowOptions): UseShareFlowReturn {
 	const [promptNeeded, setPromptNeeded] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [isToggling, setIsToggling] = useState(false);
 
+	const markCopied = useCallback(
+		(url: string) => {
+			setCopied(true);
+			onCopied?.(url);
+			setTimeout(() => setCopied(false), 2000);
+		},
+		[onCopied],
+	);
+
+	const copyUrl = useCallback(
+		async (url: string) => {
+			await copyToClipboard(url);
+			markCopied(url);
+		},
+		[markCopied],
+	);
+
 	const performShare = useCallback(
 		async (url: string) => {
 			const shared = await triggerShare(url, archetypeName);
 			if (!shared) {
-				await copyToClipboard(url);
-				setCopied(true);
-				setTimeout(() => setCopied(false), 2000);
+				await copyUrl(url);
 			}
 		},
-		[archetypeName],
+		[archetypeName, copyUrl],
 	);
+
+	const copyLink = useCallback(async () => {
+		if (!shareState) return;
+		await copyUrl(shareState.shareableUrl);
+	}, [shareState, copyUrl]);
 
 	const initiateShare = useCallback(async () => {
 		if (!shareState) return;
@@ -125,6 +148,7 @@ export function useShareFlow({
 	}, []);
 
 	return {
+		copyLink,
 		initiateShare,
 		acceptAndShare,
 		declineShare,

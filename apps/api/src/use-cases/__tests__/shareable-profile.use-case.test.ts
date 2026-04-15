@@ -214,7 +214,7 @@ describe("getPublicProfile Use Case", () => {
 				// Make it public
 				yield* profileRepo.toggleVisibility(profile.id, true);
 
-				const result = yield* getPublicProfile({ publicProfileId: profile.id });
+				const result = yield* getPublicProfile({ publicProfileId: profile.id, viewerUserId: null });
 
 				expect(result.archetypeName).toBe(expectedArchetype.name);
 				expect(result.oceanCode).toBe("OCEAN");
@@ -241,7 +241,9 @@ describe("getPublicProfile Use Case", () => {
 					oceanCode4: "OCBA",
 				});
 
-				const exit = yield* Effect.exit(getPublicProfile({ publicProfileId: profile.id }));
+				const exit = yield* Effect.exit(
+					getPublicProfile({ publicProfileId: profile.id, viewerUserId: null }),
+				);
 
 				expect(exit._tag).toBe("Failure");
 				if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
@@ -256,6 +258,7 @@ describe("getPublicProfile Use Case", () => {
 				const exit = yield* Effect.exit(
 					getPublicProfile({
 						publicProfileId: "00000000-0000-0000-0000-000000000000",
+						viewerUserId: null,
 					}),
 				);
 

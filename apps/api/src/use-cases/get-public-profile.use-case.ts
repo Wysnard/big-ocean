@@ -2,8 +2,8 @@
  * Get Public Profile Use Case
  *
  * Retrieves a public personality profile by its ID.
- * Returns 403 if profile is private, 404 if not found.
- * Increments view count as fire-and-forget (never fails the GET).
+ * Returns 403 if profile is private and the viewer is not the owner, 404 if not found.
+ * Increments view count and audit log only for **public** profile views (not owner preview of a private profile).
  *
  * Archetype fields (name, description, color) and traitSummary are
  * derived at read-time from the stored OCEAN codes.
@@ -28,6 +28,8 @@ import { Effect } from "effect";
 
 export interface GetPublicProfileInput {
 	readonly publicProfileId: string;
+	/** When set to the profile owner's user id, private profiles can be read (e.g. card preview on /me). */
+	readonly viewerUserId: string | null;
 }
 
 export interface GetPublicProfileOutput {
@@ -66,8 +68,13 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 			);
 		}
 
-		// 3. Private check
-		if (!profile.isPublic) {
+		const isOwner =
+			input.viewerUserId !== null &&
+			profile.userId !== null &&
+			input.viewerUserId === profile.userId;
+
+		// 3. Private check — anonymous or non-owners cannot read private profiles
+		if (!profile.isPublic && !isOwner) {
 			return yield* Effect.fail(
 				new ProfilePrivate({
 					publicProfileId: input.publicProfileId,
@@ -76,26 +83,27 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 			);
 		}
 
-		// 4a. Fire-and-forget audit log — never fail the GET
-		const accessLogRepo = yield* ProfileAccessLogRepository;
-		yield* accessLogRepo
-			.logAccess({
-				profileId: profile.id,
-				action: "profile_view",
-			})
-			.pipe(Effect.fork);
-
-		// 4b. Fire-and-forget view count increment — never fail the GET
-		yield* profileRepo.incrementViewCount(profile.id).pipe(
-			Effect.catchAll((error) => {
-				logger.warn("Failed to increment view count (non-blocking)", {
+		// 4. Audit log + view count only for public profile visits (not owner previewing private)
+		if (profile.isPublic) {
+			const accessLogRepo = yield* ProfileAccessLogRepository;
+			yield* accessLogRepo
+				.logAccess({
 					profileId: profile.id,
-					error: error instanceof Error ? error.message : String(error),
-				});
-				return Effect.void;
-			}),
-			Effect.fork,
-		);
+					action: "profile_view",
+				})
+				.pipe(Effect.fork);
+
+			yield* profileRepo.incrementViewCount(profile.id).pipe(
+				Effect.catchAll((error) => {
+					logger.warn("Failed to increment view count (non-blocking)", {
+						profileId: profile.id,
+						error: error instanceof Error ? error.message : String(error),
+					});
+					return Effect.void;
+				}),
+				Effect.fork,
+			);
+		}
 
 		// 5. Read persisted facet scores from assessment_results
 		const result = yield* resultRepo.getBySessionId(profile.sessionId);
@@ -121,7 +129,7 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 		const archetype = lookupArchetype(oceanCode4);
 		const traitSummary = deriveTraitSummary(oceanCode5);
 
-		logger.info("Public profile viewed", {
+		logger.info(profile.isPublic ? "Public profile viewed" : "Private profile viewed by owner", {
 			profileId: profile.id,
 			archetypeName: archetype.name,
 		});

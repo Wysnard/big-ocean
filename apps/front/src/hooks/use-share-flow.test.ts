@@ -18,10 +18,12 @@ describe("useShareFlow", () => {
 
 	let mockToggleVisibility: ReturnType<typeof vi.fn>;
 	let mockOnShareStateChange: ReturnType<typeof vi.fn>;
+	let mockOnCopied: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		mockToggleVisibility = vi.fn().mockResolvedValue({ isPublic: true });
 		mockOnShareStateChange = vi.fn();
+		mockOnCopied = vi.fn();
 		Object.defineProperty(navigator, "share", {
 			value: undefined,
 			writable: true,
@@ -52,6 +54,7 @@ describe("useShareFlow", () => {
 				archetypeName: "The Explorer",
 				toggleVisibility: mockToggleVisibility,
 				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
 			}),
 		);
 
@@ -70,6 +73,7 @@ describe("useShareFlow", () => {
 				archetypeName: "The Explorer",
 				toggleVisibility: mockToggleVisibility,
 				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
 			}),
 		);
 
@@ -79,6 +83,27 @@ describe("useShareFlow", () => {
 
 		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(defaultShareState.shareableUrl);
 		expect(result.current.copied).toBe(true);
+		expect(mockOnCopied).toHaveBeenCalledWith(defaultShareState.shareableUrl);
+	});
+
+	it("copies the link directly when copyLink is called", async () => {
+		const { result } = renderHook(() =>
+			useShareFlow({
+				shareState: defaultShareState,
+				archetypeName: "The Explorer",
+				toggleVisibility: mockToggleVisibility,
+				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
+			}),
+		);
+
+		await act(async () => {
+			await result.current.copyLink();
+		});
+
+		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(defaultShareState.shareableUrl);
+		expect(result.current.copied).toBe(true);
+		expect(mockOnCopied).toHaveBeenCalledWith(defaultShareState.shareableUrl);
 	});
 
 	it("shows prompt when profile is private", async () => {
@@ -88,6 +113,7 @@ describe("useShareFlow", () => {
 				archetypeName: "The Explorer",
 				toggleVisibility: mockToggleVisibility,
 				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
 			}),
 		);
 
@@ -106,6 +132,7 @@ describe("useShareFlow", () => {
 				archetypeName: "The Explorer",
 				toggleVisibility: mockToggleVisibility,
 				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
 			}),
 		);
 
@@ -128,6 +155,7 @@ describe("useShareFlow", () => {
 		expect(result.current.promptNeeded).toBe(false);
 		// Should have triggered copy since Web Share API is unavailable
 		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(privateShareState.shareableUrl);
+		expect(mockOnCopied).toHaveBeenCalledWith(privateShareState.shareableUrl);
 	});
 
 	it("declineShare resets prompt state", async () => {
@@ -137,6 +165,7 @@ describe("useShareFlow", () => {
 				archetypeName: "The Explorer",
 				toggleVisibility: mockToggleVisibility,
 				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
 			}),
 		);
 
@@ -161,6 +190,7 @@ describe("useShareFlow", () => {
 				archetypeName: "The Explorer",
 				toggleVisibility: mockToggleVisibility,
 				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
 			}),
 		);
 
@@ -182,6 +212,7 @@ describe("useShareFlow", () => {
 				archetypeName: "The Explorer",
 				toggleVisibility: mockToggleVisibility,
 				onShareStateChange: mockOnShareStateChange,
+				onCopied: mockOnCopied,
 			}),
 		);
 

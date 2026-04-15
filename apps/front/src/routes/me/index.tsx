@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
+import { YourPublicFaceSection } from "@/components/me/YourPublicFaceSection";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
 import { getSession } from "@/lib/auth-client";
@@ -215,11 +216,13 @@ function MePageSections({ results }: { results: GetResultsResponse | undefined }
 				data-slot="me-section-public-face"
 				data-testid="me-section-public-face"
 			>
-				<p className="text-base leading-7 text-muted-foreground">
-					{results?.isPublic === true
-						? "Your profile is currently public. Story 3.4 will bring the full controls and presentation here."
-						: "Sharing controls and your public profile preview will land here in Story 3.4."}
-				</p>
+				{results ? (
+					<YourPublicFaceSection results={results} />
+				) : (
+					<p className="text-base leading-7 text-muted-foreground">
+						Sharing controls and your public profile preview will appear here once results load.
+					</p>
+				)}
 			</MePageSection>
 
 			<MePageSection title="Your Circle" data-slot="me-section-circle" data-testid="me-section-circle">

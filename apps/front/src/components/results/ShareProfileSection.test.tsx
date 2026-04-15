@@ -16,6 +16,7 @@ const defaultProps = {
 	copied: false,
 	isTogglePending: false,
 	onToggleVisibility: () => {},
+	onCopyAction: () => {},
 	onShareAction: () => {},
 	promptNeeded: false,
 	onAcceptPrompt: () => {},
@@ -52,7 +53,7 @@ describe("ShareProfileSection", () => {
 		expect(screen.getByTestId("share-url")).toHaveTextContent(defaultShareState.shareableUrl);
 	});
 
-	it("shows 'Share' button when Web Share API is available", () => {
+	it("shows a dedicated share button when Web Share API is available", () => {
 		Object.defineProperty(navigator, "share", {
 			value: vi.fn(),
 			writable: true,
@@ -60,12 +61,12 @@ describe("ShareProfileSection", () => {
 		});
 
 		render(<ShareProfileSection {...defaultProps} />);
-		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Share");
+		expect(screen.getByTestId("share-share-btn")).toHaveTextContent("Share");
 	});
 
-	it("shows 'Copy' button when Web Share API is not available", () => {
+	it("shows a dedicated copy-link button", () => {
 		render(<ShareProfileSection {...defaultProps} />);
-		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Copy");
+		expect(screen.getByTestId("share-copy-btn")).toHaveTextContent("Copy link");
 	});
 
 	it("uses a 44px minimum touch target for the share action", () => {
@@ -78,10 +79,17 @@ describe("ShareProfileSection", () => {
 		expect(screen.getByTestId("share-visibility-status")).toHaveTextContent("Public");
 	});
 
+	it("calls onCopyAction when copy-link button is clicked", () => {
+		const onCopyAction = vi.fn();
+		render(<ShareProfileSection {...defaultProps} onCopyAction={onCopyAction} />);
+		fireEvent.click(screen.getByTestId("share-copy-btn"));
+		expect(onCopyAction).toHaveBeenCalledOnce();
+	});
+
 	it("calls onShareAction when share button is clicked", () => {
 		const onShareAction = vi.fn();
 		render(<ShareProfileSection {...defaultProps} onShareAction={onShareAction} />);
-		fireEvent.click(screen.getByTestId("share-copy-btn"));
+		fireEvent.click(screen.getByTestId("share-share-btn"));
 		expect(onShareAction).toHaveBeenCalledOnce();
 	});
 

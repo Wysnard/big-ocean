@@ -5,6 +5,8 @@
  * Uses a server function to generate PNG cards and displays them via blob URLs.
  */
 
+import { Button } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
 import { Download, Loader2, Share2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { generateArchetypeCardPng } from "@/lib/archetype-card.server";
@@ -130,28 +132,34 @@ export function ArchetypeShareCard({ publicProfileId, archetypeName }: Archetype
 
 			{/* Format selector */}
 			<div className="flex gap-2">
-				<button
+				<Button
 					type="button"
+					variant="secondary"
+					size="sm"
 					onClick={() => setActiveFormat("1:1")}
-					className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+					className={cn(
+						"h-9 min-h-9 rounded-lg px-3 py-1.5 font-medium",
 						activeFormat === "1:1"
-							? "bg-foreground text-background"
-							: "bg-muted text-muted-foreground hover:bg-muted/80"
-					}`}
+							? "bg-foreground text-background hover:bg-foreground/90"
+							: "bg-muted text-muted-foreground hover:bg-muted/80",
+					)}
 				>
 					1:1 Post
-				</button>
-				<button
+				</Button>
+				<Button
 					type="button"
+					variant="secondary"
+					size="sm"
 					onClick={() => setActiveFormat("9:16")}
-					className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+					className={cn(
+						"h-9 min-h-9 rounded-lg px-3 py-1.5 font-medium",
 						activeFormat === "9:16"
-							? "bg-foreground text-background"
-							: "bg-muted text-muted-foreground hover:bg-muted/80"
-					}`}
+							? "bg-foreground text-background hover:bg-foreground/90"
+							: "bg-muted text-muted-foreground hover:bg-muted/80",
+					)}
 				>
 					9:16 Story
-				</button>
+				</Button>
 			</div>
 
 			{/* Card preview */}
@@ -183,23 +191,25 @@ export function ArchetypeShareCard({ publicProfileId, archetypeName }: Archetype
 
 			{/* Action buttons */}
 			<div className="flex gap-2">
-				<button
+				<Button
 					type="button"
+					variant="default"
 					onClick={handleDownload}
 					disabled={!blobUrl || loading}
-					className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[oklch(0.67_0.13_181)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[oklch(0.60_0.13_181)] disabled:opacity-50"
+					className="flex flex-1 rounded-lg border-0 bg-[oklch(0.67_0.13_181)] text-white hover:bg-[oklch(0.60_0.13_181)]"
 				>
 					<Download className="h-4 w-4" />
 					Download
-				</button>
-				<button
+				</Button>
+				<Button
 					type="button"
+					variant="outline"
 					onClick={handleShare}
-					className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+					className="flex flex-1 rounded-lg bg-card hover:bg-muted"
 				>
 					<Share2 className="h-4 w-4" />
 					Share
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

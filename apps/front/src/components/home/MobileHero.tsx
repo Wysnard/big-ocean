@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { HomepageDynamicHook } from "./HomepageDynamicHook";
 
 export function MobileHero() {
@@ -10,11 +9,6 @@ export function MobileHero() {
 			className="relative overflow-hidden border-b border-slate-200 bg-[linear-gradient(180deg,#eff6ff_0%,#ffffff_55%,#fff7ed_100%)] px-6 py-8 dark:border-border dark:bg-gradient-to-b dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 lg:hidden"
 		>
 			<div className="mx-auto flex max-w-xl flex-col gap-6">
-				<div className="flex items-center gap-2 text-slate-950 dark:text-foreground">
-					<span className="font-heading text-2xl font-bold tracking-tight">big-</span>
-					<OceanHieroglyphSet size={22} />
-				</div>
-
 				<HomepageDynamicHook phase="conversation" compact />
 
 				<div className="flex flex-col gap-3 sm:flex-row">

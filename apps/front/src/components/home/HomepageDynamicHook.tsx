@@ -8,17 +8,23 @@ interface HomepageDynamicHookProps {
 	phase?: HomepagePhase;
 	compact?: boolean;
 	className?: string;
+	/** Use when the hook sits on a fixed light surface (e.g. sticky auth card). Prevents `text-foreground` from becoming light-on-light when the app is in dark mode. */
+	lightBackground?: boolean;
 }
 
 export function HomepageDynamicHook({
 	phase,
 	compact = false,
 	className,
+	lightBackground = false,
 }: HomepageDynamicHookProps) {
 	const inheritedPhase = useHomepagePhase();
 	const currentPhase = phase ?? inheritedPhase;
 	const config = getHomepagePhaseConfig(currentPhase);
 	const reducedMotion = useReducedMotion();
+	const lineTextClass = lightBackground
+		? "font-medium tracking-tight text-slate-900"
+		: "font-medium tracking-tight text-foreground";
 
 	const transitionProps = reducedMotion
 		? {
@@ -41,8 +47,9 @@ export function HomepageDynamicHook({
 			data-phase={currentPhase}
 			data-reduced-motion={reducedMotion ? "true" : "false"}
 			className={cn(
-				"overflow-hidden font-sans text-foreground",
-				compact ? "min-h-[7.25rem]" : "min-h-[9rem]",
+				"overflow-hidden font-sans",
+				lightBackground ? "text-slate-900" : "text-foreground",
+				"min-h-[9rem]",
 				className,
 			)}
 		>
@@ -56,8 +63,8 @@ export function HomepageDynamicHook({
 					{config.textBefore ? (
 						<span
 							className={cn(
-								"font-medium tracking-tight text-foreground",
-								compact ? "text-base" : "text-lg",
+								lineTextClass,
+								compact ? "text-2xl leading-snug" : "text-lg",
 							)}
 						>
 							{config.textBefore}
@@ -79,8 +86,8 @@ export function HomepageDynamicHook({
 					{config.textAfter ? (
 						<span
 							className={cn(
-								"font-medium tracking-tight text-foreground",
-								compact ? "text-base" : "text-lg",
+								lineTextClass,
+								compact ? "text-2xl leading-snug" : "text-lg",
 							)}
 						>
 							{config.textAfter}

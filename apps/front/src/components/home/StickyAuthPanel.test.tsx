@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -58,10 +59,10 @@ describe("StickyAuthPanel", () => {
 		expect(panel.querySelector("[data-phase='conversation']")).toBeInTheDocument();
 	});
 
-	it("renders OCEAN breathing shapes with aria-hidden", () => {
+	it("sizes the sticky shell below the global header (h-14), not full viewport height", () => {
 		render(<StickyAuthPanel />);
-		const panel = screen.getByRole("complementary", { name: /sign up/i });
-		const shapes = panel.querySelector("[aria-hidden='true']");
-		expect(shapes).toBeInTheDocument();
+		const shell = screen.getByRole("complementary", { name: /sign up/i }).firstElementChild;
+		expect(shell?.className).toContain("top-14");
+		expect(shell?.className).toContain("calc(100dvh-3.5rem)");
 	});
 });

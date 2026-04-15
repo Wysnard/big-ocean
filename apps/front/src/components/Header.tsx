@@ -8,7 +8,7 @@ export default function Header() {
 	return (
 		<header
 			data-slot="header"
-			className="sticky top-0 z-50 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+			className="sticky top-0 z-50 h-14 border-b border-border bg-background"
 		>
 			<div className="flex h-full items-center px-4">
 				<Logo />

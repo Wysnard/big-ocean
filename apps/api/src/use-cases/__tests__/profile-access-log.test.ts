@@ -147,6 +147,24 @@ function createPrivateProfile() {
 	});
 }
 
+/** Private profile with assessment results (owner can load full profile data). */
+function createPrivateProfileWithResults() {
+	return Effect.gen(function* () {
+		const sessionRepo = yield* ConversationRepository;
+		const profileRepo = yield* PublicProfileRepository;
+		const { sessionId } = yield* sessionRepo.createSession("user_private");
+		const { facets, traits } = buildFacetsAndTraits(15, 85);
+		_seedResult(sessionId, { facets, traits });
+		const profile = yield* profileRepo.createProfile({
+			sessionId,
+			userId: "user_private",
+			oceanCode5: "OCBAV",
+			oceanCode4: "OCBA",
+		});
+		return profile;
+	});
+}
+
 describe("Profile Access Log (Story 15.1)", () => {
 	beforeEach(() => {
 		resetSessionState();
@@ -158,7 +176,7 @@ describe("Profile Access Log (Story 15.1)", () => {
 	it.effect("successful profile view creates audit log entry", () =>
 		Effect.gen(function* () {
 			const profile = yield* createPublicProfile();
-			yield* getPublicProfile({ publicProfileId: profile.id });
+			yield* getPublicProfile({ publicProfileId: profile.id, viewerUserId: null });
 
 			// Advance TestClock so forked fiber completes
 			yield* TestClock.adjust("100 millis");
@@ -175,8 +193,28 @@ describe("Profile Access Log (Story 15.1)", () => {
 		Effect.gen(function* () {
 			const profile = yield* createPrivateProfile();
 
-			const exit = yield* getPublicProfile({ publicProfileId: profile.id }).pipe(Effect.exit);
+			const exit = yield* getPublicProfile({ publicProfileId: profile.id, viewerUserId: null }).pipe(
+				Effect.exit,
+			);
 			expect(Exit.isFailure(exit)).toBe(true);
+
+			yield* TestClock.adjust("100 millis");
+			yield* Effect.yieldNow();
+
+			const entries = accessLogEntries as ProfileAccessLogInput[];
+			expect(entries.length).toBe(0);
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("owner preview of private profile does NOT create audit log", () =>
+		Effect.gen(function* () {
+			const profile = yield* createPrivateProfileWithResults();
+
+			const result = yield* getPublicProfile({
+				publicProfileId: profile.id,
+				viewerUserId: "user_private",
+			});
+			expect(result.archetypeName).toBeDefined();
 
 			yield* TestClock.adjust("100 millis");
 			yield* Effect.yieldNow();
@@ -188,7 +226,10 @@ describe("Profile Access Log (Story 15.1)", () => {
 
 	it.effect("non-existent profile (404) does NOT create audit log", () =>
 		Effect.gen(function* () {
-			const exit = yield* getPublicProfile({ publicProfileId: "nonexistent-id" }).pipe(Effect.exit);
+			const exit = yield* getPublicProfile({
+				publicProfileId: "nonexistent-id",
+				viewerUserId: null,
+			}).pipe(Effect.exit);
 			expect(Exit.isFailure(exit)).toBe(true);
 
 			yield* TestClock.adjust("100 millis");
@@ -219,7 +260,7 @@ describe("Profile Access Log (Story 15.1)", () => {
 			);
 
 			// Should succeed despite failing audit log
-			const result = yield* getPublicProfile({ publicProfileId: profile.id }).pipe(
+			const result = yield* getPublicProfile({ publicProfileId: profile.id, viewerUserId: null }).pipe(
 				Effect.provide(FailingTestLayer),
 			);
 			expect(result.archetypeName).toBeDefined();

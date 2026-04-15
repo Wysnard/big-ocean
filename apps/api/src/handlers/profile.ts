@@ -42,7 +42,12 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 			)
 			.handle("getProfile", ({ path: { publicProfileId } }) =>
 				Effect.gen(function* () {
-					const result = yield* getPublicProfile({ publicProfileId }).pipe(
+					const viewerUserId = yield* CurrentUser;
+
+					const result = yield* getPublicProfile({
+						publicProfileId,
+						viewerUserId: viewerUserId ?? null,
+					}).pipe(
 						Effect.catchTag("AssessmentResultError", (error: AssessmentResultError) =>
 							Effect.fail(
 								new DatabaseError({
@@ -52,8 +57,6 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 						),
 					);
 
-					// Own-profile detection: check if the authenticated viewer owns this profile
-					const viewerUserId = yield* CurrentUser;
 					const isOwnProfile = !!viewerUserId && viewerUserId === result.userId;
 
 					return {

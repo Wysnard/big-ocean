@@ -81,4 +81,11 @@ describe("HomepageDynamicHook", () => {
 			"A conversation thatSEESyou.",
 		);
 	});
+
+	it("uses dark text on lightBackground so copy stays visible when the app theme is dark", () => {
+		render(<HomepageDynamicHook phase="conversation" lightBackground />);
+
+		const root = screen.getByTestId("homepage-dynamic-hook");
+		expect(root.className).toContain("text-slate-900");
+	});
 });

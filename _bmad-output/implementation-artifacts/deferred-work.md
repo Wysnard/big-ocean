@@ -1,5 +1,14 @@
 # Deferred Work
 
+## Deferred from: code review of 9-1-split-layout-architecture-and-sticky-auth-panel.md (2026-04-15)
+
+- Unused `SplitHomepageLayout` / `TimelinePlaceholder` / unwired `HomepageSignupForm` kept for tests and potential reuse; production homepage uses `DepthScrollProvider` + inline grid in `index.tsx`
+- `DepthScrollProvider` phase/scroll percent tied to `document.body.scrollHeight` — edge case if above-the-fold images change layout height after load; acceptable unless UX reports phase flicker
+
+## Deferred from: code review of 3-4-your-public-face-section.md (2026-04-15)
+
+- `ArchetypeShareCard` on `/me` triggers PNG generation on section mount; consider lazy-loading or intersection observer if Me page LCP or main-thread cost becomes an issue
+
 ## Deferred from: code review of 2-5-return-seed-and-notification-permission-on-first-me-page-visit.md (2026-04-14)
 
 - Results route: on `fetchFirstVisitState` rejection, state is set so the Return Seed section stays hidden; acceptable fail-closed behavior, recovery is refresh when the network recovers

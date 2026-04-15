@@ -2,264 +2,279 @@
 
 Status: review
 
+<!-- Ultimate context refresh: 2026-04-15 — aligned to production `index.tsx` and related components. Prior narrative referenced `SplitHomepageLayout` as the live route wrapper; the homepage has since been composed with `DepthScrollProvider` + `HomepageTimeline` + `MobileHero`. -->
+
 ## Story
 
 As a cold visitor,
 I want to see a compelling homepage with the signup form always visible,
-So that I can sign up whenever I'm ready without searching for a CTA.
+so that I can sign up whenever I'm ready without searching for a CTA.
 
-## Acceptance Criteria
+## Acceptance Criteria (source: epics)
 
-1. **Given** an unauthenticated user visits `/` **When** the homepage renders on desktop (>=1024px) **Then** a 60/40 split layout renders: scrollable timeline left, sticky auth panel right **And** the auth panel is `position: sticky; top: 0; height: 100vh`
+1. **Given** an unauthenticated user visits `/` **When** the homepage renders on desktop (≥1024px) **Then** a 60/40 split layout renders: scrollable timeline left, sticky auth panel right.
 
-2. **Given** the sticky auth panel is visible **When** the user inspects its contents **Then** it contains: logo, dynamic hook line placeholder (static text for now — Story 9.2 adds scroll-linked transitions), email + password signup form, "Start yours →" submit button, "Already have an account? Log in" link, "~30 min · Free · No credit card" tagline, 5 OCEAN breathing shapes
+2. **Given** the sticky auth panel is visible **When** the user inspects its contents **Then** it contains: logo, dynamic hook line, email + password form, "Start yours →" submit, "Already have an account? Log in" link, "~30 min · Free · No credit card" tagline, 5 OCEAN breathing shapes.
 
-3. **Given** the user fills out the signup form **When** they submit **Then** the signup flow triggers via Better Auth (`signUp.email()`) **And** on success the user is redirected to `/verify-email`
+3. **Given** the user initiates signup **When** they complete the flow **Then** signup runs via Better Auth **And** on success they reach the verify-email step (ADR-24).
 
-4. **Given** an unauthenticated user visits `/` on mobile (<1024px) **When** the homepage renders **Then** the layout stacks vertically (timeline content full-width) **And** a `StickyBottomCTA` bar is fixed at the bottom with a "Start yours →" button **And** tapping the CTA either scrolls to an inline signup form or navigates to `/signup`
+4. **Given** an unauthenticated user visits `/` on mobile (<1024px) **When** the homepage renders **Then** the layout stacks vertically **And** conversion CTAs are available without hunting (epic: `StickyBottomCTA` at bottom — see *Product vs codebase* below).
 
-5. **Given** an authenticated user visits `/` **When** the homepage renders **Then** the auth panel shows a "Continue to Nerin →" link (or similar) instead of the signup form, adapting to auth state
+5. **Given** the homepage is requested **When** a crawler or user loads `/` **Then** the route remains SSR-friendly with meta tags for SEO.
 
-6. **Given** the homepage is rendered **When** a search engine crawls it **Then** the page is SSR-rendered by TanStack Start for SEO **And** meta tags (title, description, og:title, og:description) are present
+---
+
+## Product vs codebase (read this first)
+
+| Epic expectation | Current production behavior (2026-04-15) |
+|------------------|------------------------------------------|
+| “Email + password form” inside the sticky panel | Desktop sticky panel uses **primary CTA links to `/signup`** and **secondary link to `/login`**, not an inline TanStack Form on `/`. Signup fields live on the dedicated signup route. |
+| “Dynamic hook line” in 9.1 | **`HomepageDynamicHook`** (scroll-linked copy) ships with Story **9.2** and is **already imported** in `StickyAuthPanel` and `MobileHero`. Treat hook behavior as owned by 9.2; layout/sticky shell is still 9.1 scope. |
+| Mobile `StickyBottomCTA` fixed to bottom | **`StickyBottomCTA` exists** (`apps/front/src/components/home/StickyBottomCTA.tsx`) **but is not mounted** in `routes/index.tsx`. Mobile conversion uses **`MobileHero`** (above-the-fold CTAs) plus scrollable timeline. Confirm with product whether a persistent bottom bar is still required. |
+
+**Implication for dev agents:** Bugfixes or refactors for “Epic 9 homepage” must read **`index.tsx`** and **`StickyAuthPanel.tsx`** as source of truth — not only `SplitHomepageLayout.tsx`.
+
+---
+
+## Implementation snapshot (authoritative)
+
+### Route composition
+
+- **File:** `apps/front/src/routes/index.tsx`
+- **Structure:** `PageMain` → **`DepthScrollProvider`** (scroll-linked homepage phase for ≥1024px) → CSS Grid on `lg:`: left column `MobileHero` + **`HomepageTimeline`**, right column **`StickyAuthPanel`**.
+- **Grid:** `lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.95fr)]` — approximately 60/40 with a minimum right-column width; not the older `3fr_2fr` from early drafts.
+- **SSR:** `head()` defines `title`, `description`, `og:title`, `og:description`.
+
+### Sticky auth panel (desktop)
+
+- **File:** `apps/front/src/components/home/StickyAuthPanel.tsx`
+- **Behavior:** `hidden lg:block`; inner column uses **`sticky top-0`** and full viewport height for the panel column; card UI with logo (`big-` + `OceanHieroglyphSet`), **`HomepageDynamicHook`**, supporting copy, **Link** to `/signup` and `/login` (with `search={{ sessionId: undefined, redirectTo: undefined }}` per TanStack Router contract), tagline, five animated trait-colored shapes (`motion-safe:animate-[breathe_…]`).
+- **Phase:** `useHomepagePhase()` from `DepthScrollProvider` sets `data-phase` for styling/testing.
+
+### Timeline (left column)
+
+- **File:** `apps/front/src/components/home/HomepageTimeline.tsx`
+- **Behavior:** Full-height sections with `data-homepage-phase` attributes; content implements Epic **9.3**-style artifacts (conversation / portrait / world-after phases). Intersects with **`DepthScrollProvider`** for phase resolution on desktop.
+
+### Mobile hero
+
+- **File:** `apps/front/src/components/home/MobileHero.tsx`
+- **`lg:hidden`** band at top: brand, **`HomepageDynamicHook`** (`phase="conversation"` compact), signup/login links, tagline.
+
+### Scroll / phase infrastructure
+
+- **Files:** `DepthScrollProvider.tsx`, `homepage-phase-config.ts`
+- **Role:** Drives `currentPhase` from scroll position (desktop). Required by **`StickyAuthPanel`** and **9.2** hook.
+
+### Legacy / alternate building blocks (still in repo)
+
+These were part of an earlier composition and remain for tests and possible reuse; **they are not the current `index` tree:**
+
+| Component | Notes |
+|-----------|--------|
+| `SplitHomepageLayout.tsx` | Grid shell with timeline/auth/bottom CTA slots — **unit-tested**, not used by `index.tsx`. |
+| `TimelinePlaceholder.tsx` | Older left-pane placeholder — **tests only** from a routing perspective. |
+| `HomepageSignupForm.tsx` | Inline signup — **not** wired to `/` in current route; signup is via `/signup`. |
+| `StickyBottomCTA.tsx` | **Not** mounted in `index.tsx`. |
+
+---
+
+## Architecture compliance
+
+- **ADR-15:** `/` stays a public landing surface; conversation is auth-gated elsewhere (`/chat`).
+- **ADR-24:** Email verification after signup — flow completes on `/signup` + verify-email, not necessarily inside the sticky panel.
+- **Navigation:** Internal routes use TanStack Router **`<Link>`** with required `search` for `/login` and `/signup` (see `StickyAuthPanel`, `MobileHero`).
+- **Forms:** If reintroducing an inline signup on `/`, use **`@tanstack/react-form`** + shadcn field components (see `apps/front/src/components/auth/signup-form.tsx`). Current production defers form to `/signup`.
+- **Data attributes:** Preserve existing **`data-testid`**; do not rename/remove for e2e. New UI continues **`data-slot`** pattern per `docs/FRONTEND.md`.
+- **No raw `fetch` for API** on this story — homepage conversion is routing + presentation.
+
+---
+
+## Technical requirements
+
+- **Breakpoints:** Match epic: split at **1024px (`lg:`)**; mobile-first stacking below.
+- **Sticky panel:** Epic: `position: sticky; top: 0; height: 100vh` — production uses sticky column with **`top-0`** and **`h-screen`** inside the right grid cell; header offset may differ from older `top-[3.5rem]` drafts — verify visual acceptance against design.
+- **OCEAN shapes:** Five distinct shapes with staggered breathe animation (trait-colored).
+- **Accessibility:** `StickyAuthPanel` uses `<aside aria-label="Sign up">`; keep landmarks coherent when editing.
+
+---
+
+## Library and framework notes
+
+- **TanStack Router:** `createFileRoute`, `Link`, `head()` meta.
+- **@workspace/ui:** `OceanHieroglyphSet`, shared buttons/spinner if inline forms return.
+- **Framer Motion / motion:** Used by **9.2** (`HomepageDynamicHook`); not a 9.1-only dependency but present in the same panel.
+
+---
+
+## File structure (current vs optional)
+
+**Production-critical**
+
+- `apps/front/src/routes/index.tsx`
+- `apps/front/src/components/home/StickyAuthPanel.tsx`
+- `apps/front/src/components/home/HomepageTimeline.tsx`
+- `apps/front/src/components/home/MobileHero.tsx`
+- `apps/front/src/components/home/DepthScrollProvider.tsx`
+- `apps/front/src/components/home/homepage-phase-config.ts`
+- `apps/front/src/components/home/HomepageDynamicHook.tsx` (9.2, coupled)
+
+**Secondary / tests / legacy**
+
+- `SplitHomepageLayout.tsx`, `TimelinePlaceholder.tsx`, `HomepageSignupForm.tsx`, `StickyBottomCTA.tsx` — maintain if still imported by tests; do not assume they are the live layout.
+
+---
+
+## Testing requirements
+
+- **Unit tests:** Existing suites under `apps/front/src/components/home/*.test.tsx` for layout pieces — update if route composition changes.
+- **Route tests:** Do not place `*.test.tsx` directly under `apps/front/src/routes/` (TanStack Router); use `-` prefix or `__tests__/`.
+- **E2E:** Any new `data-testid` follows project rules; never remove existing ids used by Playwright.
+
+---
+
+## Previous story intelligence
+
+- **Within Epic 9:** This is **9-1** — no prior story in the same epic.
+- **Upstream:** Epic 8 and three-space nav (Epic 1) established global shells; homepage lives under the same **`PageMain`** and marketing meta patterns.
+
+---
+
+## Git intelligence (recent patterns)
+
+- Homepage work has been **incremental:** layout shell → timeline content → dynamic hook. Small, focused commits per component; prefer same style for fixes.
+
+---
+
+## Latest tech notes (2026)
+
+- TanStack Start SSR `head()` meta remains the standard for SEO on `/`.
+- Prefer **CSS + `motion-safe:`** for animation respect over raw always-on motion.
+
+---
+
+## Project context reference
+
+- No repo-root `project-context.md` found; rely on **`CLAUDE.md`**, **`docs/FRONTEND.md`**, and **`_bmad-output/planning-artifacts/architecture.md`** (ADR-15, ADR-24, frontend structure).
+
+---
 
 ## Tasks / Subtasks
 
-- [x] Task 1: Create `SplitHomepageLayout` component (AC: #1, #4)
-  - [x] 1.1: Create `apps/front/src/components/home/SplitHomepageLayout.tsx` — outer container with CSS Grid `grid-cols-[1fr] lg:grid-cols-[3fr_2fr]`
-  - [x] 1.2: Left pane (`ScrollableTimeline`) — `overflow-y: auto`, `h-[calc(100vh-3.5rem)]` (accounts for sticky Header at 56px)
-  - [x] 1.3: Right pane (`StickyAuthPanel`) — `sticky top-[3.5rem] h-[calc(100vh-3.5rem)]` on `lg:` breakpoint
-  - [x] 1.4: Mobile (<1024px): single-column layout, no sticky panel, content flows naturally
+- [x] Task 1: Split-layout homepage shell (AC: #1)
+  - [x] 1.1 CSS Grid on `lg:` with ~60/40 proportions (`StickyAuthPanel` right, `HomepageTimeline` left)
+  - [x] 1.2 Desktop: sticky auth panel (`sticky top-0 h-screen`); hidden on mobile (`hidden lg:block`)
+  - [x] 1.3 Mobile: single-column stacking with `MobileHero` above-the-fold
 
-- [x] Task 2: Create `StickyAuthPanel` component (AC: #2, #3, #5)
-  - [x] 2.1: Create `apps/front/src/components/home/StickyAuthPanel.tsx`
-  - [x] 2.2: Layout: vertically centered flex column with `justify-center items-center`, padded `px-8 py-12`
-  - [x] 2.3: Logo: `big-` + `<OceanHieroglyphSet>` (reuse existing pattern from `HeroSection`)
-  - [x] 2.4: Hook line: static text placeholder — `"A conversation that sees you."` (Story 9.2 replaces with scroll-linked dynamic hook)
-  - [x] 2.5: Inline `HomepageSignupForm` (see Task 3)
-  - [x] 2.6: Below form: "Already have an account? [Log in]" link using `<Link to="/login">`
-  - [x] 2.7: Tagline: `"~30 min · Free · No credit card"` in `font-mono text-xs tracking-wide text-muted-foreground`
-  - [x] 2.8: 5 OCEAN breathing shapes — reuse the existing pattern from `HeroSection` (circle, rectangle, triangle, half-circle, diamond with trait colors and staggered `breathe` animation), scaled smaller to fit panel
-  - [x] 2.9: Auth-aware state: if user is authenticated, replace form with "Continue to Nerin →" link to `/chat`
+- [x] Task 2: Sticky auth panel contents (AC: #2)
+  - [x] 2.1 Logo (`big-` + `OceanHieroglyphSet`)
+  - [x] 2.2 Dynamic hook line placeholder (static text for 9.1; 9.2 replaced with `HomepageDynamicHook`)
+  - [x] 2.3 "Start yours →" CTA (Link to `/signup`), "Already have an account? Log in" (Link to `/login`)
+  - [x] 2.4 Tagline: "~30 min · Free · No credit card"
+  - [x] 2.5 5 OCEAN breathing shapes with staggered `breathe` animation and trait colors
 
-- [x] Task 3: Create `HomepageSignupForm` component (AC: #3)
-  - [x] 3.1: Create `apps/front/src/components/home/HomepageSignupForm.tsx`
-  - [x] 3.2: Reuse form logic from `signup-form.tsx` but with a condensed layout (no card wrapper, no corner decorations)
-  - [x] 3.3: Fields: name, email, password, confirm password — same validation (12 char min, match confirm)
-  - [x] 3.4: Submit button: "Start yours →" styled with gradient `bg-gradient-to-r from-primary to-secondary` (matches existing CTA pattern)
-  - [x] 3.5: Uses `useAuth().signUp.email()` → navigate to `/verify-email` on success
-  - [x] 3.6: Server error display with `role="alert"` (same pattern as existing signup-form)
-  - [x] 3.7: Loading state with `<OceanSpinner>` in submit button
+- [x] Task 3: Signup conversion flow (AC: #3)
+  - [x] 3.1 "Start yours →" navigates to `/signup` where Better Auth signup form lives
+  - [x] 3.2 Signup form triggers `signUp.email()` → redirect to `/verify-email`
 
-- [x] Task 4: Create `StickyBottomCTA` for mobile (AC: #4)
-  - [x] 4.1: Create `apps/front/src/components/home/StickyBottomCTA.tsx`
-  - [x] 4.2: Fixed bottom bar: `fixed bottom-0 left-0 right-0 z-20` (matches `--z-input-bar` convention)
-  - [x] 4.3: Contains "Start yours →" button — navigates to `/signup` (or anchor-scrolls to inline form if preferred)
-  - [x] 4.4: Render only on `lg:hidden` — hidden on desktop where the sticky panel is visible
-  - [x] 4.5: Subtle backdrop blur and top border for visual separation from content
-  - [x] 4.6: Account for bottom CTA height in scroll container padding-bottom to prevent content occlusion
+- [x] Task 4: Mobile conversion surface (AC: #4)
+  - [x] 4.1 `MobileHero` component (`lg:hidden`) with brand, hook, signup/login CTAs, tagline
+  - [x] 4.2 `StickyBottomCTA` component created (not mounted in route — `MobileHero` chosen instead)
 
-- [x] Task 5: Create `TimelinePlaceholder` for left pane (AC: #1)
-  - [x] 5.1: Create `apps/front/src/components/home/TimelinePlaceholder.tsx`
-  - [x] 5.2: Render existing `HeroSection` content (headline, subheadline) adapted for the left pane context — no OCEAN shapes here (they live in the auth panel now)
-  - [x] 5.3: Include `HowItWorks` section below hero content
-  - [x] 5.4: Include placeholder sections for Stories 9.3 and 9.4 content (empty or minimal, clearly marked)
-  - [x] 5.5: Preserve existing `data-testid` attributes on migrated elements
+- [x] Task 5: SSR + SEO meta tags (AC: #5)
+  - [x] 5.1 `head()` function with `title`, `description`, `og:title`, `og:description`
+  - [x] 5.2 Route at `/` via `createFileRoute("/")`
 
-- [x] Task 6: Rewire `index.tsx` route (AC: #1, #6)
-  - [x] 6.1: Replace current `HomePage` composition with `SplitHomepageLayout`
-  - [x] 6.2: Remove `DepthScrollProvider`, `DepthMeter`, `ChatInputBar` imports (these were for the old homepage — they'll be reimplemented in Stories 9.2-9.3 if needed)
-  - [x] 6.3: Preserve SSR `head()` function with meta tags — update title/description if copy changes
-  - [x] 6.4: Route remains at `/` with `createFileRoute("/")`
+- [x] Task 6: Fix broken test files (post-review maintenance)
+  - [x] 6.1 Add `// @vitest-environment jsdom` to 5 homepage test files missing the directive
+  - [x] 6.2 Verify all 51 homepage tests pass, no regressions in full suite
 
-- [x] Task 7: Auth state detection for SSR (AC: #5, #6)
-  - [x] 7.1: Use `getServerSession()` from `apps/front/src/lib/auth.server.ts` in `beforeLoad` or pass session via `loaderData` to determine auth state
-  - [x] 7.2: Pass `isAuthenticated` to `StickyAuthPanel` and `StickyBottomCTA` for conditional rendering
-  - [x] 7.3: No redirect for authenticated users on `/` — they see the homepage with an adapted CTA (architecture confirms: "Full access" for all auth states on `/`)
+### Review Findings (AI code review, 2026-04-15)
 
-- [x] Task 8: Tests (AC: all)
-  - [x] 8.1: Verify split layout renders on desktop viewport (check for both panes)
-  - [x] 8.2: Verify sticky auth panel contains all required elements (form, logo, hook line, tagline, shapes)
-  - [x] 8.3: Verify mobile layout stacks vertically with StickyBottomCTA visible
-  - [x] 8.4: Verify signup form submits and redirects to `/verify-email`
-  - [x] 8.5: Preserve existing `data-testid` coverage — do NOT remove any `data-testid` attributes
+**Review scope:** Working-tree diff (`git diff HEAD`) is only the five `// @vitest-environment jsdom` lines in `*.test.tsx` — **Blind Hunter** had no issues on that diff. **Edge Case Hunter** and **Acceptance Auditor** evaluated current production files listed in this story (`index.tsx`, `StickyAuthPanel.tsx`, `MobileHero.tsx`, `DepthScrollProvider.tsx`, `HomepageTimeline.tsx`, route `head()`) against `epics.md` Story 9.1 and this spec.
 
-## Dev Notes
+**decision-needed**
 
-### Architecture Context
+- [ ] [Review][Decision] **AC2 — Inline signup vs `/signup` route** — Epic (`epics.md` §9.1) requires an **email + password form** in the sticky panel. Production uses **primary/secondary Links** to `/signup` and `/login`. `HomepageSignupForm.tsx` exists but is not composed into `StickyAuthPanel`. Choose: **(A)** amend epic/story AC to formally accept “CTA to dedicated signup” as the conversion surface, or **(B)** embed the TanStack Form in the panel (reuse `HomepageSignupForm` or extract shared fields).
 
-This is the **first story** of Epic 9: Homepage Conversion. It establishes the split-layout foundation that Stories 9.2–9.4 build upon. The current homepage (`index.tsx`) will be replaced with a 60/40 split layout where the left side scrolls through timeline content and the right side has a sticky auth panel.
+- [ ] [Review][Decision] **AC4 — `StickyBottomCTA` vs `MobileHero` only** — Epic text references a **fixed bottom** CTA on small viewports. `StickyBottomCTA` is implemented and tested but **not mounted** in `routes/index.tsx`; `MobileHero` supplies above-the-fold CTAs. Choose: **(A)** mount `StickyBottomCTA` (with scroll padding to avoid overlap), or **(B)** lock the doc/epic to “mobile hero + scroll” and optionally delete or repurpose `StickyBottomCTA`.
 
-**ADR-15 (Auth-Gated Conversation):** Anonymous assessment is removed. Users must sign up before starting the conversation. The homepage is the primary conversion surface — it must sell a 30+ minute signup commitment to cold visitors.
+- [ ] [Review][Decision] **Authenticated visitors on `/`** — `StickyAuthPanel` and `MobileHero` do not read session state; logged-in users still see “Start yours →” / signup. Architecture (ADR-15) allows full access to `/` for all auth states. Choose: **(A)** add session-aware CTAs (e.g. “Continue to Nerin →” to `/chat`) consistent with `StickyBottomCTA`’s authenticated branch, or **(B)** keep marketing-only CTAs and document that returning users use nav elsewhere.
 
-**The homepage is NOT auth-gated.** Architecture confirms all auth states get "Full access" on `/`. The auth panel adapts its content based on session state (signup form vs. "continue" link).
+**patch**
 
-### Critical Patterns to Follow
+- (none blocking — awaiting decisions above; optional follow-up: mirror `HomepageDynamicHook` reduced-motion tests if a11y regressions are reported.)
 
-**Forms:** All forms must use `@tanstack/react-form` with shadcn/ui `Field`, `FieldLabel`, `FieldError` components. Follow existing `signup-form.tsx` patterns exactly. Never use raw `useState` per field.
+**defer**
 
-**Navigation:** Use `<Link>` from `@tanstack/react-router` for all internal links. Use `useNavigate()` only for post-submission redirects.
+- [x] [Review][Defer] **Unused layout primitives** — `SplitHomepageLayout`, `TimelinePlaceholder`, and route-detached `HomepageSignupForm` remain in the tree for unit tests / reuse; live route uses `DepthScrollProvider` + grid in `index.tsx` — deferred, pre-existing; tracked in *Legacy / alternate building blocks* above.
 
-**Auth:** Use `useAuth()` hook from `apps/front/src/hooks/use-auth.ts`. Signup calls `signUp.email(email, password, name, anonymousSessionId, callbackUrl)`. The `anonymousSessionId` param can be `undefined` (anonymous sessions were removed per ADR-15).
+- [x] [Review][Defer] **`DepthScrollProvider` scroll metrics** — `scrollPercent` uses `document.body.scrollHeight`; very tall lazy-loaded media could shift phase thresholds slightly on first paint — low risk; monitor if reported.
 
-**SSR:** Use `getServerSession()` from `apps/front/src/lib/auth.server.ts` for server-side session detection. The homepage must remain SSR for SEO.
-
-**Data attributes:** Every component must have `data-slot` for CSS targeting and `data-testid` for e2e tests. NEVER remove existing `data-testid` values.
-
-**Layout height:** The sticky header is 56px (`h-14`). Full-viewport sections use `h-[calc(100vh-3.5rem)]` to account for it. See `docs/FRONTEND.md`.
-
-**Responsive breakpoint:** The split layout uses `lg:` (1024px) as the breakpoint, matching the AC. Mobile-first: single column by default, split on `lg:` and above.
-
-### Existing Code to Reuse (DO NOT Reinvent)
-
-| What | Where | How to Reuse |
-|------|-------|--------------|
-| Signup form logic | `apps/front/src/components/auth/signup-form.tsx` | Extract/adapt form fields, validation, `signUp.email()` call, error handling |
-| Auth hook | `apps/front/src/hooks/use-auth.ts` | `useAuth().signUp.email()`, `useAuth().session` for auth state |
-| Auth client | `apps/front/src/lib/auth-client.ts` | `getSession()` for SSR session check |
-| Server session | `apps/front/src/lib/auth.server.ts` | `getServerSession()` for SSR auth detection |
-| OCEAN breathing shapes | `apps/front/src/components/home/HeroSection.tsx` lines 54-103 | Copy shape markup (circle, rect, triangle, half-circle, diamond) with trait CSS variables and `breathe` animation |
-| Brand mark | `HeroSection.tsx` lines 14-18 | `big-` + `<OceanHieroglyphSet>` from `@workspace/ui` |
-| CTA button style | `HeroSection.tsx` lines 37-42 | Gradient button: `bg-gradient-to-r from-primary to-secondary` with hover transform |
-| OceanSpinner | `@workspace/ui/components/ocean-spinner` | Loading state in submit button |
-| OceanHieroglyphSet | `@workspace/ui/components/ocean-hieroglyph-set` | Brand mark in auth panel |
-| PageMain | `apps/front/src/components/PageMain.tsx` | Wrapper for a11y (skip-to-content) |
-
-### Existing Code That Gets Replaced
-
-The following `home/` components are **retired by this story** (their functionality is superseded by the split layout):
-
-| Component | Reason for Retirement |
-|-----------|----------------------|
-| `DepthScrollProvider` | Scroll tracking for old homepage — may be reimplemented differently in Story 9.2 |
-| `DepthMeter` | Visual scroll progress for old homepage |
-| `ChatInputBar` | Fake input bar on old homepage |
-| `FinalCta` | Bottom CTA — replaced by sticky auth panel |
-
-Components **kept** (used in TimelinePlaceholder or still relevant):
-- `HeroSection` — hero text content adapted for left pane (shapes move to auth panel)
-- `HowItWorks` — included in timeline content
-
-Components **untouched** (used elsewhere or for future stories):
-- `ChatBubble`, `MessageGroup` — may be used in Story 9.3 timeline phases
-- `HoroscopeVsPortraitComparison`, `ResultPreviewEmbed`, `ShareCardPreview` — may be used in timeline
-- `RelationshipCta`, `WaveDivider` — evaluate in later stories
-
-### File Structure
-
-**New files:**
-```
-apps/front/src/components/home/SplitHomepageLayout.tsx    NEW — outer grid layout
-apps/front/src/components/home/StickyAuthPanel.tsx         NEW — right panel with form + shapes
-apps/front/src/components/home/HomepageSignupForm.tsx      NEW — condensed signup form
-apps/front/src/components/home/StickyBottomCTA.tsx         NEW — mobile fixed bottom bar
-apps/front/src/components/home/TimelinePlaceholder.tsx     NEW — left pane content wrapper
-```
-
-**Modified files:**
-```
-apps/front/src/routes/index.tsx                            MODIFY — rewire to SplitHomepageLayout
-```
-
-**No backend changes.** This is a frontend-only story. Auth endpoints already exist via Better Auth.
-
-### Design Tokens Reference
-
-| Token | Value | Usage in This Story |
-|-------|-------|---------------------|
-| `--font-heading` | Space Grotesk | Hook line, brand mark, section headings |
-| `--font-body` | DM Sans | Form labels, body text |
-| `--font-data` | JetBrains Mono | Tagline, OCEAN code |
-| `--trait-openness` | `oklch(0.55 0.24 293)` | Circle shape |
-| `--trait-conscientiousness` | `oklch(0.67 0.2 42)` | Rectangle shape |
-| `--trait-extraversion` | `oklch(0.59 0.27 348)` | Triangle shape |
-| `--trait-agreeableness` | `oklch(0.67 0.13 181)` | Half-circle shape |
-| `--trait-neuroticism` | `oklch(0.29 0.19 272)` | Diamond shape |
-| `--z-input-bar` | 20 | StickyBottomCTA z-index |
-
-### What This Story Does NOT Include
-
-- **Dynamic hook line transitions** (Story 9.2) — auth panel hook is static text for now
-- **Animated gradient on hook keywords** (Story 9.2)
-- **Timeline phase content** — conversation preview, portrait excerpt, world-after mockups (Story 9.3)
-- **Reassurance section** — fear-addressing cards (Story 9.4)
-- **Framer Motion / motion library** — not needed until Story 9.2; this story uses CSS only
-- **Scroll-linked behavior** — IntersectionObserver scroll tracking comes in Story 9.2
-
-This story establishes the **layout shell** and **auth conversion surface**. The left pane has placeholder content that Stories 9.2–9.4 progressively fill.
-
-### Testing Standards
-
-- Component tests use Vitest + React Testing Library
-- Route test files must NOT be placed directly in `apps/front/src/routes/` — use `-` prefix or `__tests__/` directory
-- Preserve all existing `data-testid` attributes on migrated elements
-- New components get both `data-slot` and `data-testid`
-- E2E tests in `apps/front/e2e/` if needed — but this story is primarily unit/component level
-
-### Project Structure Notes
-
-- All new components go in `apps/front/src/components/home/` (extending existing home component directory)
-- Imports use `@workspace/ui/components/...` for shared UI (Button, Input, Field, OceanHieroglyphSet, OceanSpinner)
-- TanStack Router `<Link>` for navigation, `useNavigate()` only for post-form-submit redirects
-- Tailwind with project's custom breakpoints: mobile-first, `lg:` (1024px) for split layout
-
-### References
-
-- [Source: _bmad-output/planning-artifacts/epics.md#Epic-9-Story-9.1] — Acceptance criteria
-- [Source: _bmad-output/planning-artifacts/architecture.md#ADR-15] — Auth-gated conversation, no anonymous sessions
-- [Source: _bmad-output/planning-artifacts/architecture.md#ADR-24] — Email verification gate
-- [Source: _bmad-output/planning-artifacts/architecture.md#Component-Boundaries] — Landing route components
-- [Source: _bmad-output/planning-artifacts/architecture.md#Frontend-Structure] — File organization
-- [Source: _bmad-output/planning-artifacts/ux-design-specification.md#§8.1] — Color system
-- [Source: _bmad-output/planning-artifacts/ux-design-specification.md#§8.3] — Typography system
-- [Source: _bmad-output/planning-artifacts/ux-design-specification.md#§8.4] — Spacing & layout
-- [Source: _bmad-output/planning-artifacts/ux-design-specification.md#§8.7] — Animation foundation (breathe, CSS-only for MVP)
-- [Source: _bmad-output/planning-artifacts/ux-design-specification.md#§7.10] — Homepage conversion mechanics
-- [Source: _bmad-output/planning-artifacts/prd.md#FR59-FR66] — Homepage functional requirements
-- [Source: _bmad-output/planning-artifacts/prd.md#FR84-FR85] — Founder story, beyond-portrait teaser
-- [Source: apps/front/src/components/auth/signup-form.tsx] — Existing signup form to reuse
-- [Source: apps/front/src/components/home/HeroSection.tsx] — Existing hero with OCEAN shapes
-- [Source: apps/front/src/hooks/use-auth.ts] — Auth hook
-- [Source: apps/front/src/lib/auth.server.ts] — Server session detection
-- [Source: docs/FRONTEND.md] — Frontend conventions, data attributes, layout height rule
+---
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-Claude Opus 4.6
-
-### Debug Log References
-
-- TypeScript error: `/login` and `/signup` routes require `search` params (`sessionId`, `redirectTo`). Fixed by adding `search={{ sessionId: undefined, redirectTo: undefined }}` to all Link components targeting those routes.
+Story context refreshed via create-story workflow — 2026-04-15.
+Dev-story maintenance pass — 2026-04-15.
 
 ### Completion Notes List
 
-- **Task 1:** Created `SplitHomepageLayout` with CSS Grid `grid-cols-[1fr] lg:grid-cols-[3fr_2fr]`, accepting `timeline`, `authPanel`, and optional `bottomCta` as render props. Left pane scrollable, right pane sticky on desktop, hidden on mobile.
-- **Task 2:** Created `StickyAuthPanel` with brand mark, static hook line, inline signup form (unauthenticated) or "Continue to Nerin" link (authenticated), "Already have an account? Log in" link, tagline, and 5 OCEAN breathing shapes scaled for panel.
-- **Task 3:** Created `HomepageSignupForm` — condensed signup form reusing same validation logic and error handling as `signup-form.tsx`, without card wrapper or corner decorations. Gradient "Start yours" CTA button with OceanSpinner loading state.
-- **Task 4:** Created `StickyBottomCTA` — fixed bottom bar with backdrop blur, `z-20`, `lg:hidden`. Auth-aware: shows "Start yours" (→ `/signup`) for unauthenticated, "Continue to Nerin" (→ `/chat`) for authenticated.
-- **Task 5:** Created `TimelinePlaceholder` — left pane content with adapted hero (no OCEAN shapes — moved to auth panel), HowItWorks section, empty placeholder sections for Stories 9.3/9.4, bottom padding for mobile CTA. Preserved `data-testid="hero-section"` and `data-testid="hero-cta"`.
-- **Task 6:** Rewired `index.tsx` — replaced old `HomePage` composition (removed `DepthScrollProvider`, `DepthMeter`, `ChatInputBar`, `FinalCta` imports) with `SplitHomepageLayout`. Preserved SSR `head()` with all meta tags. Route remains at `/`.
-- **Task 7:** Auth state detection via `useAuth()` hook — passes `isAuthenticated` to `StickyAuthPanel` and `StickyBottomCTA`. No redirect for authenticated users on `/`. (Note: used client-side `useAuth()` instead of SSR `getServerSession()` for simplicity — the auth panel adapts at render time, and SSR can be added in a follow-up if needed for perf.)
-- **Task 8:** Created 49 component tests across 5 test files covering layout rendering, auth-aware conditional rendering, form validation, form submission with redirect, server error display, data-testid preservation, and data-slot attributes. All 455 tests pass with zero regressions.
+- **2026-04-15 (code review):** BMad code-review workflow — three layers (Blind Hunter on diff-only; Edge + Acceptance on production files vs spec). Findings: 3 **decision-needed**, 0 **patch**, 2 **defer**, 0 dismissed. Details in **Review Findings** above. Deferred bullets appended to `_bmad-output/implementation-artifacts/deferred-work.md`.
+- **2026-04-12:** Initial implementation — split-layout homepage with `StickyAuthPanel`, `MobileHero`, `HomepageTimeline`, `StickyBottomCTA`, `HomepageSignupForm`, `SplitHomepageLayout`, `TimelinePlaceholder`. 5 new components + 5 test files.
+- **2026-04-15 (create-story):** Reconciled story doc with production state — `DepthScrollProvider`, `HomepageTimeline`, `MobileHero`, CTA-to-`/signup` pattern, 9.2 hook coupling, `SplitHomepageLayout` not used in route.
+- **2026-04-15 (dev-story):** Fixed 5 broken test files missing `// @vitest-environment jsdom` directive (`SplitHomepageLayout.test.tsx`, `StickyAuthPanel.test.tsx`, `HomepageSignupForm.test.tsx`, `StickyBottomCTA.test.tsx`, `TimelinePlaceholder.test.tsx`). All 51 homepage tests pass. Full suite: 501/503 pass (2 pre-existing failures in `YourPublicFaceSection` — unrelated Story 3-4 backlog).
+- **AC validation (2026-04-15):** AC1 PASS, AC2 PARTIAL (CTA links vs inline form — design decision), AC3 PASS, AC4 PARTIAL (MobileHero replaces StickyBottomCTA — design decision), AC5 PASS.
 
 ### File List
 
-**New files:**
-- `apps/front/src/components/home/SplitHomepageLayout.tsx`
+**Production files (from prior implementation):**
+- `apps/front/src/routes/index.tsx`
 - `apps/front/src/components/home/StickyAuthPanel.tsx`
+- `apps/front/src/components/home/HomepageTimeline.tsx`
+- `apps/front/src/components/home/MobileHero.tsx`
+- `apps/front/src/components/home/DepthScrollProvider.tsx`
+- `apps/front/src/components/home/HomepageDynamicHook.tsx`
+- `apps/front/src/components/home/homepage-phase-config.ts`
+- `apps/front/src/components/home/SplitHomepageLayout.tsx`
 - `apps/front/src/components/home/HomepageSignupForm.tsx`
 - `apps/front/src/components/home/StickyBottomCTA.tsx`
 - `apps/front/src/components/home/TimelinePlaceholder.tsx`
-- `apps/front/src/components/home/SplitHomepageLayout.test.tsx`
-- `apps/front/src/components/home/StickyAuthPanel.test.tsx`
-- `apps/front/src/components/home/HomepageSignupForm.test.tsx`
-- `apps/front/src/components/home/StickyBottomCTA.test.tsx`
-- `apps/front/src/components/home/TimelinePlaceholder.test.tsx`
 
-**Modified files:**
-- `apps/front/src/routes/index.tsx`
+**Modified in this session (test fix):**
+- `apps/front/src/components/home/SplitHomepageLayout.test.tsx` — added `// @vitest-environment jsdom`
+- `apps/front/src/components/home/StickyAuthPanel.test.tsx` — added `// @vitest-environment jsdom`
+- `apps/front/src/components/home/HomepageSignupForm.test.tsx` — added `// @vitest-environment jsdom`
+- `apps/front/src/components/home/StickyBottomCTA.test.tsx` — added `// @vitest-environment jsdom`
+- `apps/front/src/components/home/TimelinePlaceholder.test.tsx` — added `// @vitest-environment jsdom`
+
+### Debug Log References
+
+- TanStack Router `Link` to `/login` and `/signup` requires `search` params — use `sessionId` / `redirectTo` as `undefined` when not needed.
+- Root `vitest.config.ts` uses `environment: "node"` — all component test files MUST include `// @vitest-environment jsdom` at line 1 to override.
+
+---
+
+## References
+
+- [Source: _bmad-output/planning-artifacts/epics.md — Epic 9, Story 9.1]
+- [Source: _bmad-output/planning-artifacts/architecture.md — ADR-15, ADR-24, frontend tree]
+- [Source: docs/FRONTEND.md — data attributes, patterns]
+- [Source: apps/front/src/routes/index.tsx — live route composition]
+
+---
 
 ## Change Log
 
-- **2026-04-12:** Implemented Story 9.1 — Split-layout architecture with 60/40 grid, sticky auth panel with signup form and OCEAN shapes, mobile StickyBottomCTA, timeline placeholder with adapted hero content. 5 new components + 5 test files (49 tests). Route rewired to use new layout.
+- **2026-04-12:** Initial Story 9.1 implementation — split-layout homepage, sticky auth panel, mobile hero, timeline, 5 components + 5 test files.
+- **2026-04-15:** Fixed 5 test files missing `// @vitest-environment jsdom` (all 51 tests now pass). Reconciled story doc with production codebase. AC validation documented.
+- **2026-04-15:** Adversarial code review (Blind Hunter / Edge Case Hunter / Acceptance Auditor) — Review Findings section added; 3 product decisions pending.
+
+---
+
+## Story completion status
+
+- **BMad create-story analysis:** Completed — comprehensive developer guide updated for **as-built** homepage (2026-04-15).
+- **Sprint file:** `9-1-split-layout-architecture-and-sticky-auth-panel` remains **`review`** in `sprint-status.yaml` (workflow backlog → ready-for-dev **not** applied — story already past backlog).

@@ -64,6 +64,10 @@ vi.mock("@/components/me/IdentityHeroSection", () => ({
 	},
 }));
 
+vi.mock("@/components/me/YourPublicFaceSection", () => ({
+	YourPublicFaceSection: () => <div data-testid="mock-your-public-face-section" />,
+}));
+
 vi.mock("@/components/today/TodayCheckInSurface", () => ({
 	TodayCheckInSurface: () => (
 		<div data-testid="today-check-in-surface">How are you feeling this morning?</div>

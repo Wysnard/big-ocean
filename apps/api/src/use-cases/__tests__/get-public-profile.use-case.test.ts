@@ -97,7 +97,9 @@ describe("getPublicProfile", () => {
 
 	it.effect("fails with ProfileNotFound when profile does not exist", () =>
 		Effect.gen(function* () {
-			const exit = yield* Effect.exit(getPublicProfile({ publicProfileId: "non-existent" }));
+			const exit = yield* Effect.exit(
+				getPublicProfile({ publicProfileId: "non-existent", viewerUserId: null }),
+			);
 
 			expect(Exit.isFailure(exit)).toBe(true);
 			if (Exit.isFailure(exit)) {
@@ -118,7 +120,9 @@ describe("getPublicProfile", () => {
 				oceanCode4: "MCBP",
 			});
 
-			const exit = yield* Effect.exit(getPublicProfile({ publicProfileId: profile.id }));
+			const exit = yield* Effect.exit(
+				getPublicProfile({ publicProfileId: profile.id, viewerUserId: null }),
+			);
 
 			expect(Exit.isFailure(exit)).toBe(true);
 			if (Exit.isFailure(exit)) {
@@ -133,7 +137,7 @@ describe("getPublicProfile", () => {
 		Effect.gen(function* () {
 			const profile = yield* seedPublicProfile(true);
 
-			const result = yield* getPublicProfile({ publicProfileId: profile.id });
+			const result = yield* getPublicProfile({ publicProfileId: profile.id, viewerUserId: null });
 
 			expect(result.archetypeName).toBeDefined();
 			// Derived from facets (all score=15 → trait sum=90 → High for each trait)
@@ -152,10 +156,61 @@ describe("getPublicProfile", () => {
 
 			// Even if incrementViewCount were to fail internally, the use-case
 			// catches the error via fail-open pattern and the GET still succeeds.
-			const result = yield* getPublicProfile({ publicProfileId: profile.id });
+			const result = yield* getPublicProfile({ publicProfileId: profile.id, viewerUserId: null });
 
 			expect(result.archetypeName).toBeDefined();
 			expect(result.isPublic).toBe(true);
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("returns profile data when private but viewer is the owner", () =>
+		Effect.gen(function* () {
+			const repo = yield* PublicProfileRepository;
+			const profile = yield* repo.createProfile({
+				sessionId: SESSION_ID,
+				userId: USER_ID,
+				oceanCode5: "MCBPR",
+				oceanCode4: "MCBP",
+			});
+			const { facets, traits } = buildFacetsAndTraits();
+			_seedResult(SESSION_ID, { facets, traits });
+
+			const result = yield* getPublicProfile({
+				publicProfileId: profile.id,
+				viewerUserId: USER_ID,
+			});
+
+			expect(result.isPublic).toBe(false);
+			expect(result.archetypeName).toBeDefined();
+			expect(result.facets).toBeDefined();
+		}).pipe(Effect.provide(TestLayer)),
+	);
+
+	it.effect("fails with ProfilePrivate when private and viewer is not the owner", () =>
+		Effect.gen(function* () {
+			const repo = yield* PublicProfileRepository;
+			const profile = yield* repo.createProfile({
+				sessionId: SESSION_ID,
+				userId: USER_ID,
+				oceanCode5: "MCBPR",
+				oceanCode4: "MCBP",
+			});
+			const { facets, traits } = buildFacetsAndTraits();
+			_seedResult(SESSION_ID, { facets, traits });
+
+			const exit = yield* Effect.exit(
+				getPublicProfile({
+					publicProfileId: profile.id,
+					viewerUserId: "someone-else",
+				}),
+			);
+
+			expect(Exit.isFailure(exit)).toBe(true);
+			if (Exit.isFailure(exit)) {
+				const error = Cause.failureOption(exit.cause);
+				expect(error._tag).toBe("Some");
+				expect((error as { value: { _tag: string } }).value._tag).toBe("ProfilePrivate");
+			}
 		}).pipe(Effect.provide(TestLayer)),
 	);
 });

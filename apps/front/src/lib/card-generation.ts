@@ -109,14 +109,24 @@ export type ProfileData = {
 
 /**
  * Fetches public profile data from the API backend.
+ * When `cookie` is set (e.g. from a server function), the API can return a **private** profile
+ * if the session user owns it — used for archetype card PNG preview on /me.
  */
 export async function fetchProfileData(
 	publicProfileId: string,
+	cookie?: string,
 ): Promise<{ profile: ProfileData | null; status: number }> {
 	const API_URL = process.env.VITE_API_URL ?? "http://localhost:4000";
 
+	const headers: Record<string, string> = {
+		"Content-Type": "application/json",
+	};
+	if (cookie) {
+		headers.cookie = cookie;
+	}
+
 	const res = await fetch(`${API_URL}/api/public-profile/${publicProfileId}`, {
-		headers: { "Content-Type": "application/json" },
+		headers,
 	});
 
 	if (!res.ok) {

@@ -555,6 +555,7 @@ function ResultsSessionPage() {
 							copied={shareFlow.copied}
 							isTogglePending={toggleVisibility.isPending}
 							onToggleVisibility={handleToggleVisibility}
+							onCopyAction={() => void shareFlow.copyLink()}
 							onShareAction={() => void shareFlow.initiateShare()}
 							promptNeeded={shareFlow.promptNeeded}
 							onAcceptPrompt={() => void shareFlow.acceptAndShare()}
