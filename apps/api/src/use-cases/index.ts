@@ -90,6 +90,10 @@ export {
 	sendMessage,
 } from "./send-message.use-case";
 export {
+	type SendWeeklyLetterReadyNotificationInput,
+	sendWeeklyLetterReadyNotification,
+} from "./send-weekly-letter-ready-notification.use-case";
+export {
 	type StartConversationInput,
 	type StartConversationOutput,
 	startAnonymousConversation,

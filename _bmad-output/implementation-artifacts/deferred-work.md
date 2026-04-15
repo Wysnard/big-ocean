@@ -1,11 +1,13 @@
 # Deferred Work
 
-## Deferred from: code review of 4-3-post-check-in-journal-view-and-week-dots.md (2026-04-15)
+## Deferred from: code review of 5-3-weekly-letter-inline-card-and-notifications (2026-04-15)
 
-- `QuietAnticipationLine` uses `new Date().getDay()` (browser TZ) while the check-in flow centers on `localDate` strings — possible mismatch near midnight across timezones; needs product decision if reported
-- `getMoodMeta` fallback maps unknown moods to "okay" — if API extends mood enum without client update, labels mislead; low risk while contract is stable
-- No `aria-live` when MoodDotsWeek transitions loading → ready — enhancement for screen reader announcement of week grid readiness
-- Rename `weekQueryError` prop to something like `weekGridUnavailable` — cosmetic clarity only
+- **Unbounded push concurrency** — `sendWeeklyLetterReadyNotification` uses `concurrency: "unbounded"` for `Effect.forEach` over push subscriptions. Mirrors existing `send-relationship-analysis-notification` pattern. Low risk in practice (few subs per user) but a spike risk at scale.
+- **PII in logs** — Email address logged on push failures, success, and error paths. Pre-existing pattern across all notification use-cases. Consider hashing or redacting in a future logging hygiene pass.
+- **QuietAnticipationLine / WeeklyLetterCard use different clocks for Sunday** — `QuietAnticipationLine` uses `new Date()` while `WeeklyLetterCard` uses the `localDate` prop. Pre-existing `QuietAnticipationLine` behavior; only matters at timezone boundaries right at midnight.
+- **`letterUrl` double-slash if `frontendUrl` has trailing slash** — `\`${config.frontendUrl}/today/week/${weekId}\`` produces `//` if env var is configured with trailing slash. Same pattern as relationship-analysis notification; fix centrally in a config normalization pass.
+- **Push+email duplicate on uncaught Effect defect in `forEach`** — If a push subscription throws an error type not covered by `catchTags`, the outer `catchAll` returns `pushDelivered = false` and email fallback runs even if some subscriptions were notified. Pre-existing pattern from relationship-analysis; low probability in production.
+
 
 ## Deferred from: code review of 3-5-subscription-pitch-section.md (2026-04-15)
 
@@ -193,3 +195,13 @@
 - Partial facets (1–29) crash `computeTraitResults` — if assessment result has fewer than 30 facets, `computeTraitResults` accesses `undefined.score`. Same unguarded pattern as `generate-full-portrait.use-case.ts`. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:106-114`]
 - No `updated_at` column on `weekly_summaries` — upserts from failed→generated have no timestamp for the transition. [`drizzle/20260415140000_weekly_summaries/migration.sql`]
 - `DatabaseError` used for input validation failures (invalid weekId) — returns 500 instead of 400. Same pattern as `get-today-week.use-case.ts`. [`apps/api/src/use-cases/generate-weekly-summary.use-case.ts:54-57`]
+
+## Deferred from: code review of 6-2-invite-ceremony-dialog.md (2026-04-15)
+
+- `removeQueries` with full `["inviteCeremony","qrToken","status"]` prefix is broad; harmless today with isolated prefix, but collateral risk if prefix reused. [`useInviteCeremonyQrToken.ts:42`]
+- 60s poll + 55min regeneration threshold leaves a brief expired-link window under clock skew — pre-existing from `useQrDrawer`; cosmetic edge at TTL boundary only. [`useInviteCeremonyQrToken.ts:12-13`]
+- `InviteCeremonyCard` teaser copy ("Circle", "Invite someone you care about", subtitle) is hardcoded — card teaser is not part of the §10.7 locked ceremony copy. [`InviteCeremonyCard.tsx`]
+- Teaser `→` is `aria-hidden`; `aria-label` provides full accessible name. If UX ever removes `ChevronRight`, consider making arrow visible to AT. [`InviteCeremonyCard.tsx:28-30`]
+- `presetName` propagation from `PublicProfileCTA` to dialog name input not integration-tested end-to-end — dialog's `presetName` pre-fill is covered directly in `InviteCeremonyDialog.test.tsx`. [`PublicProfileCTA.test.tsx`]
+- UX §10.7 LOCKED block not in repo — exact wording compliance unverifiable from code alone. Process note: copy should be snapshotted in a fixture or test. [`invite-ceremony-copy.ts`]
+- Re-entrant `openCeremony` while dialog is already open reuses live QR session without reset — production-unreachable in current nav model. [`InviteCeremonyProvider.tsx:26-29`]

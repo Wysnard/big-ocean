@@ -31,6 +31,15 @@ export class UserAccountRepository extends Context.Tag("UserAccountRepository")<
 	UserAccountRepository,
 	{
 		/**
+		 * Read email + display name for transactional notifications (weekly letter, etc.).
+		 *
+		 * @returns null if the user row does not exist
+		 */
+		readonly getEmailAndNameForUser: (
+			userId: string,
+		) => Effect.Effect<{ readonly email: string; readonly name: string } | null, DatabaseError>;
+
+		/**
 		 * Read whether the authenticated user's first Me-page visit has been completed.
 		 *
 		 * @returns false for users who have not yet completed their first visit

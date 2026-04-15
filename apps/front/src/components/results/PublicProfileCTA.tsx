@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
+import { useInviteCeremony } from "@/components/invite/InviteCeremonyProvider";
 
 export type AuthState =
 	| "unauthenticated"
@@ -10,6 +11,8 @@ interface PublicProfileCTAProps {
 	displayName: string;
 	publicProfileId: string;
 	authState: AuthState;
+	/** Session still hydrating; avoid flashing the logged-out CTA before cookies resolve */
+	authPending?: boolean;
 	isOwnProfile?: boolean;
 }
 
@@ -26,8 +29,9 @@ const CTA_CONTENT: Record<AuthState, { heading: string; subtext: string; buttonL
 	},
 	"authenticated-assessed": {
 		heading: "", // dynamic — set below
-		subtext: "Scan a QR code together to unlock a deep comparison of your personality dynamics.",
-		buttonLabel: "Start Relationship Analysis",
+		subtext:
+			"When you're ready, open a short invitation—you can share a private link, a QR code, or your device's share sheet.",
+		buttonLabel: "Invite into your Circle",
 	},
 };
 
@@ -35,9 +39,36 @@ export function PublicProfileCTA({
 	displayName,
 	publicProfileId,
 	authState,
+	authPending = false,
 	isOwnProfile = false,
 }: PublicProfileCTAProps) {
-	// When viewing own profile as authenticated-assessed user, show the generic CTA
+	const { openCeremony } = useInviteCeremony();
+
+	if (authPending) {
+		return (
+			<section
+				data-testid="public-profile-cta-pending"
+				data-slot="public-profile-cta"
+				data-public-profile-id={publicProfileId}
+				className="py-16 md:py-24"
+				style={{
+					background:
+						"linear-gradient(135deg, oklch(0.67 0.13 181 / 0.08), oklch(0.55 0.24 293 / 0.06))",
+				}}
+				aria-busy="true"
+				aria-label="Loading sign-in state"
+			>
+				<div className="mx-auto max-w-[600px] px-6 text-center">
+					<div className="h-8 bg-muted/60 rounded-md mx-auto mb-3 max-w-[min(100%,20rem)] motion-safe:animate-pulse" />
+					<div className="h-4 bg-muted/50 rounded-md mx-auto mb-8 max-w-[28rem] motion-safe:animate-pulse" />
+					<div className="h-12 bg-muted/60 rounded-xl mx-auto max-w-[400px] motion-safe:animate-pulse" />
+					<p className="text-sm text-muted-foreground mt-8">-- big-ocean --</p>
+				</div>
+			</section>
+		);
+	}
+
+	// When viewing own profile as an authenticated-assessed user, show the generic CTA
 	const effectiveAuthState =
 		isOwnProfile && authState === "authenticated-assessed" ? "unauthenticated" : authState;
 
@@ -52,12 +83,15 @@ export function PublicProfileCTA({
 			? "/signup"
 			: effectiveAuthState === "authenticated-no-assessment"
 				? "/chat"
-				: `/relationship-analysis?with=${publicProfileId}`;
+				: "/signup";
+
+	const showInviteCeremony = effectiveAuthState === "authenticated-assessed";
 
 	return (
 		<section
 			data-testid="public-profile-cta"
 			data-slot="public-profile-cta"
+			data-public-profile-id={publicProfileId}
 			data-auth-state={authState}
 			className="py-16 md:py-24"
 			style={{
@@ -68,15 +102,29 @@ export function PublicProfileCTA({
 				<h2 className="font-display text-2xl text-foreground mb-3">{heading}</h2>
 				<p className="text-muted-foreground mb-8">{content.subtext}</p>
 
-				<Link to={href}>
+				{showInviteCeremony ? (
 					<Button
+						type="button"
 						data-slot="cta-button"
 						data-testid="public-profile-cta-button"
 						className="bg-primary text-primary-foreground text-lg py-4 px-8 rounded-xl font-semibold min-h-[44px] w-full max-w-[400px]"
+						onClick={() => {
+							openCeremony();
+						}}
 					>
 						{content.buttonLabel}
 					</Button>
-				</Link>
+				) : (
+					<Link to={href}>
+						<Button
+							data-slot="cta-button"
+							data-testid="public-profile-cta-button"
+							className="bg-primary text-primary-foreground text-lg py-4 px-8 rounded-xl font-semibold min-h-[44px] w-full max-w-[400px]"
+						>
+							{content.buttonLabel}
+						</Button>
+					</Link>
+				)}
 
 				<p className="text-sm text-muted-foreground mt-8">-- big-ocean --</p>
 			</div>

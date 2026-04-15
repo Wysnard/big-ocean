@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockUseRelationshipAnalysesList } = vi.hoisted(() => ({
@@ -20,7 +21,22 @@ vi.mock("@/hooks/useRelationshipAnalysesList", () => ({
 	useRelationshipAnalysesList: (...args: unknown[]) => mockUseRelationshipAnalysesList(...args),
 }));
 
+import { InviteCeremonyProvider } from "@/components/invite/InviteCeremonyProvider";
 import { YourCirclePreviewSection } from "../YourCirclePreviewSection";
+
+function renderWithInviteCeremony(ui: ReactElement) {
+	const qc = new QueryClient({
+		defaultOptions: {
+			queries: { retry: false },
+			mutations: { retry: false },
+		},
+	});
+	return render(
+		<QueryClientProvider client={qc}>
+			<InviteCeremonyProvider>{ui}</InviteCeremonyProvider>
+		</QueryClientProvider>,
+	);
+}
 
 describe("YourCirclePreviewSection", () => {
 	beforeEach(() => {
@@ -35,7 +51,7 @@ describe("YourCirclePreviewSection", () => {
 			refetch: vi.fn(),
 		});
 
-		render(<YourCirclePreviewSection />);
+		renderWithInviteCeremony(<YourCirclePreviewSection />);
 
 		expect(screen.queryByText(/connections/)).not.toBeInTheDocument();
 	});
@@ -48,7 +64,7 @@ describe("YourCirclePreviewSection", () => {
 			refetch: vi.fn(),
 		});
 
-		render(<YourCirclePreviewSection />);
+		renderWithInviteCeremony(<YourCirclePreviewSection />);
 
 		expect(screen.getByTestId("me-circle-preview")).toBeInTheDocument();
 		expect(
@@ -56,6 +72,8 @@ describe("YourCirclePreviewSection", () => {
 		).toBeInTheDocument();
 		expect(screen.queryByText(/connections/)).not.toBeInTheDocument();
 		expect(screen.getByTestId("me-circle-view-all-link")).toHaveAttribute("href", "/circle");
+		expect(screen.getByTestId("me-circle-invite")).toBeInTheDocument();
+		expect(screen.getByTestId("invite-ceremony-card")).toBeInTheDocument();
 	});
 
 	it("renders partner archetype names, relationship count, and the view-all link", () => {
@@ -115,7 +133,7 @@ describe("YourCirclePreviewSection", () => {
 			refetch: vi.fn(),
 		});
 
-		render(<YourCirclePreviewSection />);
+		renderWithInviteCeremony(<YourCirclePreviewSection />);
 
 		expect(screen.getByText("4 connections")).toBeInTheDocument();
 		expect(screen.getByText("The Beacon")).toBeInTheDocument();

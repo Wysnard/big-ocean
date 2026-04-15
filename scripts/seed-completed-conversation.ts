@@ -13,6 +13,8 @@
  * - Assessment results (facets, traits, domain coverage)
  * - Conversation evidence linked to exchanges
  * - Public profile with OCEAN codes
+ * - Second "peer" user (peer.invite.cta@bigocean.test) for manual testing: log in as the
+ *   primary user and open the peer's public profile to exercise Invite into your Circle (Epic 6.2).
  *
  * Output: Prints session ID that can be used to navigate to /results/{conversationSessionId}
  *
@@ -44,8 +46,45 @@ const {
 
 const TEST_USER_EMAIL = "vlay.consulting@gmail.com";
 const TEST_USER_PASSWORD = "testpassword123";
-const TEST_USER_ID = "00000000-0000-4000-a000-000000000001";
-const TEST_ACCOUNT_ID = "00000000-0000-4000-a000-000000000002";
+
+type SeedUserConfig = {
+	email: string;
+	password: string;
+	userId: string;
+	accountId: string;
+	name: string;
+	oceanCode5: string;
+	oceanCode4: string;
+	label: string;
+	/** When true, public profile is listable/viewable for invite CTA manual tests */
+	isPublicProfile: boolean;
+};
+
+/** Primary dev login — same as historical single-user seed */
+const PRIMARY_USER: SeedUserConfig = {
+	email: TEST_USER_EMAIL,
+	password: TEST_USER_PASSWORD,
+	userId: "00000000-0000-4000-a000-000000000001",
+	accountId: "00000000-0000-4000-a000-000000000002",
+	name: "Test User",
+	oceanCode5: "ODANT",
+	oceanCode4: "ODAN",
+	label: "primary",
+	isPublicProfile: false,
+};
+
+/** Second assessed user — use primary login + this user's public profile URL for invite CTA */
+const PEER_USER: SeedUserConfig = {
+	email: "vlay.consulting+peerjordan@gmail.com",
+	password: TEST_USER_PASSWORD,
+	userId: "00000000-0000-4000-a000-000000000010",
+	accountId: "00000000-0000-4000-a000-000000000011",
+	name: "Jordan Peer",
+	oceanCode5: "OCBAV",
+	oceanCode4: "OCBA",
+	label: "peer",
+	isPublicProfile: true,
+};
 
 const SEEDED_ASSESSMENT_TURN_COUNT = 15;
 
@@ -449,304 +488,329 @@ const buildDomainCoverage = () => {
 	return coverage;
 };
 
-const seedProgram = Effect.gen(function* () {
-	const db = yield* Database;
+const seedOneUser = (cfg: SeedUserConfig) =>
+	Effect.gen(function* () {
+		const db = yield* Database;
 
-	console.log("Starting seed script for completed conversation...\n");
+		console.log(`\n--- ${cfg.label}: ${cfg.email} ---\n`);
 
-	// 1. Create or get test user
-	console.log("Creating test user...");
-	const existingUsers = yield* db
-		.select()
-		.from(user)
-		.where(eq(user.email, TEST_USER_EMAIL))
-		.limit(1)
-		.pipe(Effect.mapError((error) => new Error(`Failed to query user: ${error}`)));
+		// 1. Create or get test user
+		console.log("Creating test user...");
+		const existingUsers = yield* db
+			.select()
+			.from(user)
+			.where(eq(user.email, cfg.email))
+			.limit(1)
+			.pipe(Effect.mapError((error) => new Error(`Failed to query user: ${error}`)));
 
-	let userId: string;
-	if (existingUsers.length > 0) {
-		const existingUser = existingUsers[0];
-		console.log(`  Test user already exists: ${existingUser.email}`);
-		userId = existingUser.id;
-	} else {
-		const [newUser] = yield* db
-			.insert(user)
+		let userId: string;
+		if (existingUsers.length > 0) {
+			const existingUser = existingUsers[0];
+			console.log(`  Test user already exists: ${existingUser.email}`);
+			userId = existingUser.id;
+		} else {
+			const [newUser] = yield* db
+				.insert(user)
+				.values({
+					id: cfg.userId,
+					name: cfg.name,
+					email: cfg.email,
+					emailVerified: true,
+				})
+				.returning()
+				.pipe(Effect.mapError((error) => new Error(`Failed to create user: ${error}`)));
+			userId = newUser.id;
+			console.log(`  Created test user: ${cfg.email}`);
+		}
+
+		// 1b. Create credential account (Better Auth password login)
+		const existingAccounts = yield* db
+			.select()
+			.from(account)
+			.where(eq(account.userId, userId))
+			.limit(1)
+			.pipe(Effect.mapError((error) => new Error(`Failed to query account: ${error}`)));
+
+		if (existingAccounts.length > 0) {
+			console.log("  Credential account already exists");
+		} else {
+			const hashedPassword = yield* Effect.promise(() => bcrypt.hash(cfg.password, 12));
+			yield* db
+				.insert(account)
+				.values({
+					id: cfg.accountId,
+					accountId: cfg.userId,
+					providerId: "credential",
+					userId,
+					password: hashedPassword,
+				})
+				.pipe(Effect.mapError((error) => new Error(`Failed to create account: ${error}`)));
+			console.log("  Created credential account with password");
+		}
+
+		// 1c. Ensure Polar customer exists for test user (needed for checkout plugin)
+		const config = yield* AppConfig;
+		const polarToken = Redacted.value(config.polarAccessToken);
+		if (polarToken && polarToken !== "not-configured") {
+			yield* Effect.promise(async () => {
+				const polarClient = new Polar({
+					accessToken: polarToken,
+					server: config.betterAuthUrl.includes("localhost") ? "sandbox" : "production",
+				});
+				try {
+					const { result: existing } = await polarClient.customers.list({ email: cfg.email });
+					if (existing.items.length > 0) {
+						const customer = existing.items[0];
+						if (customer.externalId !== userId) {
+							await polarClient.customers.update({
+								id: customer.id,
+								customerUpdate: { externalId: userId },
+							});
+							console.log(`  Updated Polar customer externalId: ${customer.id}`);
+						} else {
+							console.log(`  Polar customer already exists: ${customer.id}`);
+						}
+					} else {
+						const customer = await polarClient.customers.create({
+							email: cfg.email,
+							name: cfg.name,
+							externalId: userId,
+						});
+						console.log(`  Created Polar customer: ${customer.id}`);
+					}
+				} catch (err) {
+					console.warn(`  Warning: Failed to create Polar customer (checkout may not work): ${err}`);
+				}
+			});
+		} else {
+			console.log("  Skipping Polar customer creation (POLAR_ACCESS_TOKEN not configured)");
+		}
+
+		// Clean up existing assessment data for test user (allows re-running seed)
+		const existingSessions = yield* db
+			.select()
+			.from(conversation)
+			.where(eq(conversation.userId, userId))
+			.limit(1)
+			.pipe(Effect.mapError((error) => new Error(`Failed to query sessions: ${error}`)));
+
+		if (existingSessions.length > 0) {
+			const existingSessionId = existingSessions[0].id;
+			yield* db
+				.delete(conversation)
+				.where(eq(conversation.id, existingSessionId))
+				.pipe(Effect.mapError((error) => new Error(`Failed to clean up existing session: ${error}`)));
+			console.log(`  Cleaned up existing session: ${existingSessionId}`);
+		}
+
+		// 2. Create completed conversation session
+		console.log("\nCreating completed conversation session...");
+		const [sessionRecord] = yield* db
+			.insert(conversation)
 			.values({
-				id: TEST_USER_ID,
-				name: "Test User",
-				email: TEST_USER_EMAIL,
-				emailVerified: true,
+				userId,
+				status: "completed",
+				finalizationProgress: "completed",
+				messageCount: SEEDED_ASSESSMENT_TURN_COUNT,
 			})
 			.returning()
-			.pipe(Effect.mapError((error) => new Error(`Failed to create user: ${error}`)));
-		userId = newUser.id;
-		console.log(`  Created test user: ${TEST_USER_EMAIL}`);
-	}
+			.pipe(Effect.mapError((error) => new Error(`Failed to create conversation session: ${error}`)));
 
-	// 1b. Create credential account (Better Auth password login)
-	const existingAccounts = yield* db
-		.select()
-		.from(account)
-		.where(eq(account.userId, userId))
-		.limit(1)
-		.pipe(Effect.mapError((error) => new Error(`Failed to query account: ${error}`)));
+		console.log(`  Created session: ${sessionRecord.id}`);
 
-	if (existingAccounts.length > 0) {
-		console.log("  Credential account already exists");
-	} else {
-		const hashedPassword = yield* Effect.promise(() => bcrypt.hash(TEST_USER_PASSWORD, 12));
-		yield* db
-			.insert(account)
-			.values({
-				id: TEST_ACCOUNT_ID,
-				accountId: TEST_USER_ID,
-				providerId: "credential",
-				userId,
-				password: hashedPassword,
-			})
-			.pipe(Effect.mapError((error) => new Error(`Failed to create account: ${error}`)));
-		console.log("  Created credential account with password");
-	}
+		// 3. Create exchange rows (Director model pipeline state per turn)
+		// Turn 0 = greeting (no director output), Turns 1-15 = user-response turns
+		console.log("\nCreating exchange rows...");
+		const exchangeRecords: Array<{ id: string; turnNumber: number }> = [];
 
-	// 1c. Ensure Polar customer exists for test user (needed for checkout plugin)
-	const config = yield* AppConfig;
-	const polarToken = Redacted.value(config.polarAccessToken);
-	if (polarToken && polarToken !== "not-configured") {
-		yield* Effect.promise(async () => {
-			const polarClient = new Polar({
-				accessToken: polarToken,
-				server: config.betterAuthUrl.includes("localhost") ? "sandbox" : "production",
-			});
-			try {
-				const { result: existing } = await polarClient.customers.list({ email: TEST_USER_EMAIL });
-				if (existing.items.length > 0) {
-					const customer = existing.items[0];
-					if (customer.externalId !== userId) {
-						await polarClient.customers.update({
-							id: customer.id,
-							customerUpdate: { externalId: userId },
-						});
-						console.log(`  Updated Polar customer externalId: ${customer.id}`);
-					} else {
-						console.log(`  Polar customer already exists: ${customer.id}`);
-					}
-				} else {
-					const customer = await polarClient.customers.create({
-						email: TEST_USER_EMAIL,
-						name: "Test User",
-						externalId: userId,
-					});
-					console.log(`  Created Polar customer: ${customer.id}`);
-				}
-			} catch (err) {
-				console.warn(`  Warning: Failed to create Polar customer (checkout may not work): ${err}`);
-			}
-		});
-	} else {
-		console.log("  Skipping Polar customer creation (POLAR_ACCESS_TOKEN not configured)");
-	}
-
-	// Clean up existing assessment data for test user (allows re-running seed)
-	const existingSessions = yield* db
-		.select()
-		.from(conversation)
-		.where(eq(conversation.userId, userId))
-		.limit(1)
-		.pipe(Effect.mapError((error) => new Error(`Failed to query sessions: ${error}`)));
-
-	if (existingSessions.length > 0) {
-		const existingSessionId = existingSessions[0].id;
-		yield* db
-			.delete(conversation)
-			.where(eq(conversation.id, existingSessionId))
-			.pipe(Effect.mapError((error) => new Error(`Failed to clean up existing session: ${error}`)));
-		console.log(`  Cleaned up existing session: ${existingSessionId}`);
-	}
-
-	// 2. Create completed conversation session
-	console.log("\nCreating completed conversation session...");
-	const [sessionRecord] = yield* db
-		.insert(conversation)
-		.values({
-			userId,
-			status: "completed",
-			finalizationProgress: "completed",
-			messageCount: SEEDED_ASSESSMENT_TURN_COUNT,
-		})
-		.returning()
-		.pipe(Effect.mapError((error) => new Error(`Failed to create conversation session: ${error}`)));
-
-	console.log(`  Created session: ${sessionRecord.id}`);
-
-	// 3. Create exchange rows (Director model pipeline state per turn)
-	// Turn 0 = greeting (no director output), Turns 1-15 = user-response turns
-	console.log("\nCreating exchange rows...");
-	const exchangeRecords: Array<{ id: string; turnNumber: number }> = [];
-
-	// Turn 0: greeting exchange (no extraction, no director output)
-	const [openerExchange] = yield* db
-		.insert(exchange)
-		.values({
-			conversationId: sessionRecord.id,
-			turnNumber: 0,
-			extractionTier: null,
-			directorOutput: null,
-			coverageTargets: null,
-		})
-		.returning()
-		.pipe(Effect.mapError((error) => new Error(`Failed to create opener exchange: ${error}`)));
-	exchangeRecords.push({ id: openerExchange.id, turnNumber: 0 });
-	console.log("  Turn 0: greeting exchange (no director output)");
-
-	// Turns 1-15: user-response exchanges with director briefs and coverage targets
-	for (let turn = 1; turn <= SEEDED_ASSESSMENT_TURN_COUNT; turn++) {
-		const exchangeData = getDirectorExchangeData(turn);
-		const [exchangeRecord] = yield* db
+		// Turn 0: greeting exchange (no extraction, no director output)
+		const [openerExchange] = yield* db
 			.insert(exchange)
 			.values({
 				conversationId: sessionRecord.id,
-				turnNumber: turn,
-				extractionTier: 1, // Successful strict extraction
-				directorOutput: exchangeData.directorOutput,
-				coverageTargets: exchangeData.coverageTargets,
+				turnNumber: 0,
+				extractionTier: null,
+				directorOutput: null,
+				coverageTargets: null,
 			})
 			.returning()
-			.pipe(Effect.mapError((error) => new Error(`Failed to create exchange turn ${turn}: ${error}`)));
-		exchangeRecords.push({ id: exchangeRecord.id, turnNumber: turn });
-		console.log(`  Turn ${turn}: exchange with director brief and coverage targets`);
-	}
-	console.log(`  Created ${exchangeRecords.length} exchange rows`);
+			.pipe(Effect.mapError((error) => new Error(`Failed to create opener exchange: ${error}`)));
+		exchangeRecords.push({ id: openerExchange.id, turnNumber: 0 });
+		console.log("  Turn 0: greeting exchange (no director output)");
 
-	// 4. Insert conversation messages (linked to exchanges)
-	// Turn 0: greeting assistant message (index 0)
-	// Turn N (1-15): user message (index 2N-1) + assistant response (index 2N)
-	console.log("\nInserting conversation messages...");
-	const messageRecords = [];
-	for (const [index, msg] of CONVERSATION_MESSAGES.entries()) {
-		// Determine which exchange this message belongs to
-		// Index 0 (assistant greeting) → turn 0
-		// Index 1 (user) → turn 1, Index 2 (assistant) → turn 1
-		// Index 3 (user) → turn 2, Index 4 (assistant) → turn 2, etc.
-		const turn = index === 0 ? 0 : Math.ceil(index / 2);
-		const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
+		// Turns 1-15: user-response exchanges with director briefs and coverage targets
+		for (let turn = 1; turn <= SEEDED_ASSESSMENT_TURN_COUNT; turn++) {
+			const exchangeData = getDirectorExchangeData(turn);
+			const [exchangeRecord] = yield* db
+				.insert(exchange)
+				.values({
+					conversationId: sessionRecord.id,
+					turnNumber: turn,
+					extractionTier: 1, // Successful strict extraction
+					directorOutput: exchangeData.directorOutput,
+					coverageTargets: exchangeData.coverageTargets,
+				})
+				.returning()
+				.pipe(
+					Effect.mapError((error) => new Error(`Failed to create exchange turn ${turn}: ${error}`)),
+				);
+			exchangeRecords.push({ id: exchangeRecord.id, turnNumber: turn });
+			console.log(`  Turn ${turn}: exchange with director brief and coverage targets`);
+		}
+		console.log(`  Created ${exchangeRecords.length} exchange rows`);
 
-		const [msgRecord] = yield* db
-			.insert(message)
+		// 4. Insert conversation messages (linked to exchanges)
+		// Turn 0: greeting assistant message (index 0)
+		// Turn N (1-15): user message (index 2N-1) + assistant response (index 2N)
+		console.log("\nInserting conversation messages...");
+		const messageRecords = [];
+		for (const [index, msg] of CONVERSATION_MESSAGES.entries()) {
+			// Determine which exchange this message belongs to
+			// Index 0 (assistant greeting) → turn 0
+			// Index 1 (user) → turn 1, Index 2 (assistant) → turn 1
+			// Index 3 (user) → turn 2, Index 4 (assistant) → turn 2, etc.
+			const turn = index === 0 ? 0 : Math.ceil(index / 2);
+			const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
+
+			const [msgRecord] = yield* db
+				.insert(message)
+				.values({
+					conversationId: sessionRecord.id,
+					exchangeId: exchange?.id ?? null,
+					role: msg.role,
+					content: msg.content,
+				})
+				.returning()
+				.pipe(Effect.mapError((error) => new Error(`Failed to insert message: ${error}`)));
+			messageRecords.push(msgRecord);
+			console.log(`  ${index + 1}. [turn ${turn}] ${msg.role}: ${msg.content.substring(0, 50)}...`);
+		}
+
+		// 5. Insert assessment results
+		console.log("\nInserting assessment results...");
+		const facetsJson = buildFacetsJson();
+		const traitsJson = buildTraitsJson();
+		const domainCoverageJson = buildDomainCoverage();
+
+		const [resultRecord] = yield* db
+			.insert(assessmentResults)
 			.values({
 				conversationId: sessionRecord.id,
-				exchangeId: exchange?.id ?? null,
-				role: msg.role,
-				content: msg.content,
+				facets: facetsJson,
+				traits: traitsJson,
+				domainCoverage: domainCoverageJson,
+				portrait: "",
+				stage: "completed",
 			})
 			.returning()
-			.pipe(Effect.mapError((error) => new Error(`Failed to insert message: ${error}`)));
-		messageRecords.push(msgRecord);
-		console.log(`  ${index + 1}. [turn ${turn}] ${msg.role}: ${msg.content.substring(0, 50)}...`);
-	}
+			.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
+		console.log(`  Created assessment results: ${resultRecord.id}`);
 
-	// 5. Insert assessment results
-	console.log("\nInserting assessment results...");
-	const facetsJson = buildFacetsJson();
-	const traitsJson = buildTraitsJson();
-	const domainCoverageJson = buildDomainCoverage();
+		// 6. Insert conversation evidence (linked to messages and exchanges)
+		console.log("\nInserting conversation evidence...");
+		// User messages are at odd indices → turns 1-15.
+		// Distribute the 30 seeded facet signals evenly across the completed run.
+		const userMsgIndices = CONVERSATION_MESSAGES.map((m, i) => ({ role: m.role, index: i }))
+			.filter((m) => m.role === "user")
+			.map((m) => m.index);
 
-	const [resultRecord] = yield* db
-		.insert(assessmentResults)
-		.values({
-			conversationId: sessionRecord.id,
-			facets: facetsJson,
-			traits: traitsJson,
-			domainCoverage: domainCoverageJson,
-			portrait: "",
-			stage: "completed",
-		})
-		.returning()
-		.pipe(Effect.mapError((error) => new Error(`Failed to insert assessment results: ${error}`)));
-	console.log(`  Created assessment results: ${resultRecord.id}`);
+		let convEvidenceCount = 0;
+		for (const [facet, data] of Object.entries(FACET_SCORE_MAP)) {
+			// Distribute evidence across the seeded user turns (2 evidence per turn)
+			const turnIndex = convEvidenceCount % userMsgIndices.length;
+			const msgIndex = userMsgIndices[turnIndex];
+			const message = messageRecords[msgIndex];
+			const turn = Math.ceil(msgIndex / 2); // Convert message index to turn number
+			const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
 
-	// 6. Insert conversation evidence (linked to messages and exchanges)
-	console.log("\nInserting conversation evidence...");
-	// User messages are at odd indices → turns 1-15.
-	// Distribute the 30 seeded facet signals evenly across the completed run.
-	const userMsgIndices = CONVERSATION_MESSAGES.map((m, i) => ({ role: m.role, index: i }))
-		.filter((m) => m.role === "user")
-		.map((m) => m.index);
+			// Convert seed scores to v2 evidence format (Story 18-1)
+			const strength =
+				data.confidence >= 0.7 ? "strong" : data.confidence >= 0.4 ? "moderate" : "weak";
+			const confidence = data.confidence >= 0.7 ? "high" : data.confidence >= 0.4 ? "medium" : "low";
+			const polarity = data.score >= 10 ? "high" : "low";
+			yield* db
+				.insert(conversationEvidence)
+				.values({
+					conversationId: sessionRecord.id,
+					messageId: message.id,
+					exchangeId: exchange?.id ?? null,
+					bigfiveFacet: facet as FacetName,
+					strength,
+					confidence,
+					domain: data.domain,
+					polarity,
+					note: `Seed evidence for ${facet}`,
+				})
+				.pipe(
+					Effect.mapError((error) => new Error(`Failed to insert conversation evidence: ${error}`)),
+				);
+			convEvidenceCount++;
+		}
+		console.log(`  Inserted ${convEvidenceCount} conversation evidence records`);
 
-	let convEvidenceCount = 0;
-	for (const [facet, data] of Object.entries(FACET_SCORE_MAP)) {
-		// Distribute evidence across the seeded user turns (2 evidence per turn)
-		const turnIndex = convEvidenceCount % userMsgIndices.length;
-		const msgIndex = userMsgIndices[turnIndex];
-		const message = messageRecords[msgIndex];
-		const turn = Math.ceil(msgIndex / 2); // Convert message index to turn number
-		const exchange = exchangeRecords.find((e) => e.turnNumber === turn);
-
-		// Convert seed scores to v2 evidence format (Story 18-1)
-		const strength = data.confidence >= 0.7 ? "strong" : data.confidence >= 0.4 ? "moderate" : "weak";
-		const confidence = data.confidence >= 0.7 ? "high" : data.confidence >= 0.4 ? "medium" : "low";
-		const polarity = data.score >= 10 ? "high" : "low";
-		yield* db
-			.insert(conversationEvidence)
+		// 7. Create public profile with OCEAN codes
+		console.log("\nCreating public profile...");
+		const [profile] = yield* db
+			.insert(publicProfile)
 			.values({
 				conversationId: sessionRecord.id,
-				messageId: message.id,
-				exchangeId: exchange?.id ?? null,
-				bigfiveFacet: facet as FacetName,
-				strength,
-				confidence,
-				domain: data.domain,
-				polarity,
-				note: `Seed evidence for ${facet}`,
+				assessmentResultId: resultRecord.id,
+				userId,
+				oceanCode5: cfg.oceanCode5,
+				oceanCode4: cfg.oceanCode4,
+				isPublic: cfg.isPublicProfile,
 			})
-			.pipe(Effect.mapError((error) => new Error(`Failed to insert conversation evidence: ${error}`)));
-		convEvidenceCount++;
-	}
-	console.log(`  Inserted ${convEvidenceCount} conversation evidence records`);
+			.returning()
+			.pipe(Effect.mapError((error) => new Error(`Failed to create public profile: ${error}`)));
+		console.log(`  Created public profile: ${profile.id} (OCEAN: ${cfg.oceanCode5})`);
 
-	// 7. Create public profile with OCEAN codes
-	console.log("\nCreating public profile...");
-	const [profile] = yield* db
-		.insert(publicProfile)
-		.values({
-			conversationId: sessionRecord.id,
-			assessmentResultId: resultRecord.id,
-			userId,
-			oceanCode5: "ODANT",
-			oceanCode4: "ODAN",
-			isPublic: false,
-		})
-		.returning()
-		.pipe(Effect.mapError((error) => new Error(`Failed to create public profile: ${error}`)));
-	console.log(`  Created public profile: ${profile.id} (OCEAN: ODANT)`);
+		// 8. Print summary
+		const exchangeCount = exchangeRecords.length;
+		console.log("\nSeed completed successfully!\n");
+		console.log("=".repeat(60));
+		console.log("SESSION DETAILS");
+		console.log("=".repeat(60));
+		console.log(`Session ID: ${sessionRecord.id}`);
+		console.log(`User: ${cfg.email}`);
+		console.log(`Status: ${sessionRecord.status}`);
+		console.log(`User Turns: ${SEEDED_ASSESSMENT_TURN_COUNT}`);
+		console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
+		console.log(
+			`Exchanges: ${exchangeCount} (1 greeting + ${exchangeCount - 1} with director briefs)`,
+		);
+		console.log(`Conversation Evidence: ${convEvidenceCount}`);
+		console.log(`OCEAN Code: ${cfg.oceanCode5}`);
+		console.log(`Public Profile ID: ${profile.id}`);
+		console.log("=".repeat(60));
+		console.log("\nLogin Credentials:");
+		console.log(`   Email:    ${cfg.email}`);
+		console.log(`   Password: ${cfg.password}`);
+		console.log("\nQuick Test URLs:");
+		console.log(`   Profile Page: http://localhost:3000/profile`);
+		console.log(`   Results Page: http://localhost:3000/results/${sessionRecord.id}`);
+		console.log(`   Chat Page:    http://localhost:3000/chat?sessionId=${sessionRecord.id}`);
+		console.log(`\nPublic profile: http://localhost:3000/public-profile/${profile.id}\n`);
 
-	// 8. Print summary
-	const exchangeCount = exchangeRecords.length;
-	console.log("\nSeed completed successfully!\n");
-	console.log("=".repeat(60));
-	console.log("SESSION DETAILS");
-	console.log("=".repeat(60));
-	console.log(`Session ID: ${sessionRecord.id}`);
-	console.log(`User: ${TEST_USER_EMAIL}`);
-	console.log(`Status: ${sessionRecord.status}`);
-	console.log(`User Turns: ${SEEDED_ASSESSMENT_TURN_COUNT}`);
-	console.log(`Messages: ${CONVERSATION_MESSAGES.length}`);
-	console.log(
-		`Exchanges: ${exchangeCount} (1 greeting + ${exchangeCount - 1} with director briefs)`,
-	);
-	console.log(`Conversation Evidence: ${convEvidenceCount}`);
-	console.log(`OCEAN Code: ODANT`);
-	console.log(`Public Profile ID: ${profile.id}`);
-	console.log("=".repeat(60));
-	console.log("\nLogin Credentials:");
-	console.log(`   Email:    ${TEST_USER_EMAIL}`);
-	console.log(`   Password: ${TEST_USER_PASSWORD}`);
-	console.log("\nQuick Test URLs:");
-	console.log(`   Profile Page: http://localhost:3000/profile`);
-	console.log(`   Results Page: http://localhost:3000/results/${sessionRecord.id}`);
-	console.log(`   Chat Page:    http://localhost:3000/chat?sessionId=${sessionRecord.id}`);
-	console.log("\nTip: Log in as test@bigocean.dev to see the conversation on /profile\n");
+		return { sessionId: sessionRecord.id, publicProfileId: profile.id };
+	});
 
-	return sessionRecord.id;
+const seedProgram = Effect.gen(function* () {
+	console.log("Starting seed script for completed conversation...\n");
+	const primary = yield* seedOneUser(PRIMARY_USER);
+	const peer = yield* seedOneUser(PEER_USER);
+	console.log("\n");
+	console.log("=".repeat(60));
+	console.log("INVITE CTA (Epic 6.2) — peer public profile");
+	console.log("=".repeat(60));
+	console.log(`Log in as primary user:`);
+	console.log(`  ${PRIMARY_USER.email}`);
+	console.log(`  ${PRIMARY_USER.password}`);
+	console.log("Open peer profile (assessed viewer, not own profile):");
+	console.log(`  http://localhost:3000/public-profile/${peer.publicProfileId}`);
+	console.log(`Peer user (optional separate login): ${PEER_USER.email}`);
+	console.log("=".repeat(60));
+	console.log(`\nPrimary session id: ${primary.sessionId}`);
+	console.log(`Peer session id:    ${peer.sessionId}\n`);
 });
 
 // Run the Effect program
