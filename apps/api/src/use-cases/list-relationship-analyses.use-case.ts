@@ -9,7 +9,13 @@
 
 import {
 	AssessmentResultRepository,
+	extract4LetterCode,
+	type FacetName,
+	type FacetScoresMap,
+	generateOceanCode,
 	isLatestVersion,
+	LoggerRepository,
+	lookupArchetype,
 	RelationshipAnalysisRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -18,15 +24,23 @@ export interface RelationshipAnalysisListItem {
 	readonly analysisId: string;
 	readonly userAName: string;
 	readonly userBName: string;
+	readonly partnerName: string;
+	readonly partnerArchetypeName: string;
 	readonly isLatestVersion: boolean;
 	readonly hasContent: boolean;
 	readonly createdAt: Date;
 }
 
+const UNKNOWN_ARCHETYPE_NAME = "Unknown";
+
+/** Bounded concurrency for per-row DB + derivation work (avoid unbounded fan-out). */
+const ENRICHMENT_CONCURRENCY = 10;
+
 export const listRelationshipAnalyses = (userId: string) =>
 	Effect.gen(function* () {
 		const analysisRepo = yield* RelationshipAnalysisRepository;
 		const resultRepo = yield* AssessmentResultRepository;
+		const logger = yield* LoggerRepository;
 
 		const analyses = yield* analysisRepo.listByUserId(userId);
 
@@ -53,25 +67,77 @@ export const listRelationshipAnalyses = (userId: string) =>
 					}),
 				),
 			),
-			{ concurrency: "unbounded" },
+			{ concurrency: ENRICHMENT_CONCURRENCY },
 		);
 
 		// Enrich each analysis with version info
-		return analyses.map((analysis) => {
-			const latestA = latestResultMap.get(analysis.userAId) ?? null;
-			const latestB = latestResultMap.get(analysis.userBId) ?? null;
+		return yield* Effect.all(
+			analyses.map((analysis) =>
+				Effect.gen(function* () {
+					const latestA = latestResultMap.get(analysis.userAId) ?? null;
+					const latestB = latestResultMap.get(analysis.userBId) ?? null;
 
-			const versionCurrent =
-				isLatestVersion(analysis.userAResultId, latestA) &&
-				isLatestVersion(analysis.userBResultId, latestB);
+					const versionCurrent =
+						isLatestVersion(analysis.userAResultId, latestA) &&
+						isLatestVersion(analysis.userBResultId, latestB);
 
-			return {
-				analysisId: analysis.id,
-				userAName: analysis.userAName,
-				userBName: analysis.userBName,
-				isLatestVersion: versionCurrent,
-				hasContent: analysis.content !== null,
-				createdAt: analysis.createdAt,
-			} satisfies RelationshipAnalysisListItem;
-		});
+					const partnerName = analysis.userAId === userId ? analysis.userBName : analysis.userAName;
+					const partnerResultId =
+						analysis.userAId === userId ? analysis.userBResultId : analysis.userAResultId;
+
+					const partnerArchetypeName = yield* resultRepo.getById(partnerResultId).pipe(
+						Effect.flatMap((result) => {
+							const facets = result?.facets;
+							if (
+								!result ||
+								facets == null ||
+								typeof facets !== "object" ||
+								Object.keys(facets).length === 0
+							) {
+								return Effect.succeed(UNKNOWN_ARCHETYPE_NAME);
+							}
+
+							const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
+							for (const [facetName, data] of Object.entries(facets)) {
+								if (typeof data === "object" && data !== null && "score" in data && "confidence" in data) {
+									facetScoresMap[facetName as FacetName] = {
+										score: data.score,
+										confidence: data.confidence,
+									};
+								}
+							}
+
+							if (Object.keys(facetScoresMap).length === 0) {
+								return Effect.succeed(UNKNOWN_ARCHETYPE_NAME);
+							}
+
+							return Effect.try({
+								try: () => lookupArchetype(extract4LetterCode(generateOceanCode(facetScoresMap))).name,
+								catch: (error) => new Error(error instanceof Error ? error.message : String(error)),
+							}).pipe(Effect.catchAll(() => Effect.succeed(UNKNOWN_ARCHETYPE_NAME)));
+						}),
+						Effect.catchTag("AssessmentResultError", (error) => {
+							logger.warn("Failed to enrich relationship partner archetype", {
+								analysisId: analysis.id,
+								partnerResultId,
+								error: error.message,
+							});
+							return Effect.succeed(UNKNOWN_ARCHETYPE_NAME);
+						}),
+					);
+
+					return {
+						analysisId: analysis.id,
+						userAName: analysis.userAName,
+						userBName: analysis.userBName,
+						partnerName,
+						partnerArchetypeName,
+						isLatestVersion: versionCurrent,
+						hasContent: analysis.content !== null,
+						createdAt: analysis.createdAt,
+					} satisfies RelationshipAnalysisListItem;
+				}),
+			),
+			{ concurrency: ENRICHMENT_CONCURRENCY },
+		);
 	});

@@ -152,3 +152,8 @@
 - `FieldLabel asChild` with `<div>` child loses `<label>` semantics for the mood group — a11y improvement, not a regression
 - Mood buttons lack `role="radiogroup"` and arrow-key navigation pattern — a11y enhancement for keyboard-only users
 - `CheckInFormSkeleton` has `aria-busy` but no accessible name — minor a11y improvement, skeleton is temporary loading state
+
+## Deferred from: code review of story-3-6 (2026-04-15)
+
+- No `stage === "completed"` check on partner result before deriving archetype — FK set at analysis creation time always points to completed result; fail-open handles edge cases gracefully
+- Redundant `getById` calls for the same `partnerResultId` across multiple analyses — memoization / batching opportunity for users with many relationships; correctness unaffected

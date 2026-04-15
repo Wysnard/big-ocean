@@ -89,6 +89,28 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.effect(
 					return mapRow(row);
 				}),
 
+			getById: (id) =>
+				Effect.gen(function* () {
+					const rows = yield* db
+						.select()
+						.from(assessmentResults)
+						.where(eq(assessmentResults.id, id))
+						.limit(1)
+						.pipe(
+							Effect.mapError(
+								(error) =>
+									new AssessmentResultError({
+										message: `Failed to get assessment result by id: ${error instanceof Error ? error.message : String(error)}`,
+									}),
+							),
+						);
+
+					const row = rows[0];
+					if (!row) return null;
+
+					return mapRow(row);
+				}),
+
 			update: (id, input) =>
 				Effect.gen(function* () {
 					const rows = yield* db

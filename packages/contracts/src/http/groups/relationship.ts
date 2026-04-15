@@ -59,6 +59,10 @@ const RelationshipAnalysisListItemSchema = S.Struct({
 	userAName: S.String,
 	/** Display name of user B (canonical MAX user) */
 	userBName: S.String,
+	/** Display name of the other participant from the current user's perspective */
+	partnerName: S.String,
+	/** Partner archetype derived from the partner's locked assessment result */
+	partnerArchetypeName: S.String,
 	/**
 	 * Whether this analysis is based on both users' latest results.
 	 * false = "previous version" — newer assessment results exist for at least one user.

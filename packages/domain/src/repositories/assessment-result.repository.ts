@@ -52,6 +52,9 @@ export class AssessmentResultRepository extends Context.Tag("AssessmentResultRep
 		readonly getBySessionId: (
 			sessionId: string,
 		) => Effect.Effect<AssessmentResultRecord | null, AssessmentResultError>;
+		readonly getById: (
+			id: string,
+		) => Effect.Effect<AssessmentResultRecord | null, AssessmentResultError>;
 		readonly update: (
 			id: string,
 			input: AssessmentResultUpdateInput,

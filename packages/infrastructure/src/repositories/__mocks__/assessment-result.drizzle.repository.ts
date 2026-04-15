@@ -60,6 +60,15 @@ export const AssessmentResultDrizzleRepositoryLive = Layer.succeed(
 			return Effect.succeed(result);
 		},
 
+		getById: (id: string) => {
+			for (const record of storedResults.values()) {
+				if (record.id === id) {
+					return Effect.succeed(record);
+				}
+			}
+			return Effect.succeed(null);
+		},
+
 		update: (id: string, input: AssessmentResultUpdateInput) => {
 			for (const [key, record] of storedResults) {
 				if (record.id === id) {

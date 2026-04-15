@@ -6,6 +6,7 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
 import { SubscriptionPitchSection } from "@/components/me/SubscriptionPitchSection";
+import { YourCirclePreviewSection } from "@/components/me/YourCirclePreviewSection";
 import { YourPublicFaceSection } from "@/components/me/YourPublicFaceSection";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
@@ -142,29 +143,41 @@ function IdentityHeroSkeleton() {
 function MePageSkeleton() {
 	return (
 		<div className="space-y-10">
-			{ME_SECTION_SPECS.map((section) => (
-				<MePageSection
-					key={section.key}
-					title={section.title}
-					isConditional={section.isConditional}
-					data-slot={`me-section-${section.key}`}
-					data-testid={`me-section-${section.key}`}
-					hidden={section.hidden}
-					{...(section.hidden ? { "data-state": "hidden" } : {})}
-					aria-busy="true"
-				>
-					{section.key === "identity-hero" ? (
-						<IdentityHeroSkeleton />
-					) : (
-						<div className="animate-pulse space-y-3">
-							<div className="h-4 w-28 rounded-full bg-muted" />
-							<div className="h-5 w-3/4 rounded-full bg-muted" />
-							<div className="h-4 w-full rounded-full bg-muted" />
-							<div className="h-4 w-5/6 rounded-full bg-muted" />
-						</div>
-					)}
-				</MePageSection>
-			))}
+			{ME_SECTION_SPECS.map((section) =>
+				section.key === "account" ? (
+					<div
+						key={section.key}
+						data-slot="me-section-account"
+						data-testid="me-section-account"
+						aria-busy="true"
+						className="flex items-center justify-end border-t border-border/60 pt-4"
+					>
+						<div className="h-11 w-11 animate-pulse rounded-full bg-muted" />
+					</div>
+				) : (
+					<MePageSection
+						key={section.key}
+						title={section.title}
+						isConditional={section.isConditional}
+						data-slot={`me-section-${section.key}`}
+						data-testid={`me-section-${section.key}`}
+						hidden={section.hidden}
+						{...(section.hidden ? { "data-state": "hidden" } : {})}
+						aria-busy="true"
+					>
+						{section.key === "identity-hero" ? (
+							<IdentityHeroSkeleton />
+						) : (
+							<div className="animate-pulse space-y-3">
+								<div className="h-4 w-28 rounded-full bg-muted" />
+								<div className="h-5 w-3/4 rounded-full bg-muted" />
+								<div className="h-4 w-full rounded-full bg-muted" />
+								<div className="h-4 w-5/6 rounded-full bg-muted" />
+							</div>
+						)}
+					</MePageSection>
+				),
+			)}
 		</div>
 	);
 }
@@ -227,9 +240,7 @@ function MePageSections({ results }: { results: GetResultsResponse | undefined }
 			</MePageSection>
 
 			<MePageSection title="Your Circle" data-slot="me-section-circle" data-testid="me-section-circle">
-				<p className="text-base leading-7 text-muted-foreground">
-					Relationship space, invites, and your circle preview will gather here once Epic 6 begins.
-				</p>
+				<YourCirclePreviewSection />
 			</MePageSection>
 
 			<MePageSection
@@ -240,21 +251,20 @@ function MePageSections({ results }: { results: GetResultsResponse | undefined }
 				<SubscriptionPitchSection />
 			</MePageSection>
 
-			<MePageSection title="Account" data-slot="me-section-account" data-testid="me-section-account">
-				<div className="flex items-center justify-between gap-4">
-					<p className="text-base leading-7 text-muted-foreground">
-						Settings, account controls, and privacy preferences stay close at hand from the bottom of Me.
-					</p>
-					<Link
-						to="/settings"
-						data-testid="me-settings-link"
-						className="inline-flex min-h-11 items-center justify-center rounded-full border border-border px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-						aria-label="Open settings"
-					>
-						<Settings className="size-4" aria-hidden="true" />
-					</Link>
-				</div>
-			</MePageSection>
+			<footer
+				data-slot="me-section-account"
+				data-testid="me-section-account"
+				className="flex items-center justify-end border-t border-border/60 pt-4"
+			>
+				<Link
+					to="/settings"
+					data-testid="me-settings-link"
+					className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-border/70 bg-background text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+					aria-label="Open settings"
+				>
+					<Settings className="size-4" aria-hidden="true" />
+				</Link>
+			</footer>
 		</div>
 	);
 }

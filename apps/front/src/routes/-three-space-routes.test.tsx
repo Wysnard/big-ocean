@@ -72,6 +72,10 @@ vi.mock("@/components/me/SubscriptionPitchSection", () => ({
 	SubscriptionPitchSection: () => <div data-testid="mock-subscription-pitch-section" />,
 }));
 
+vi.mock("@/components/me/YourCirclePreviewSection", () => ({
+	YourCirclePreviewSection: () => <div data-testid="mock-your-circle-preview-section" />,
+}));
+
 vi.mock("@/components/today/TodayCheckInSurface", () => ({
 	TodayCheckInSurface: () => (
 		<div data-testid="today-check-in-surface">How are you feeling this morning?</div>
@@ -205,6 +209,7 @@ describe("Me route layout", () => {
 		expect(screen.getByTestId("me-section-growth")).toHaveAttribute("hidden");
 		expect(screen.getByTestId("me-section-public-face")).toBeTruthy();
 		expect(screen.getByTestId("me-section-circle")).toBeTruthy();
+		expect(screen.getByTestId("mock-your-circle-preview-section")).toBeTruthy();
 		expect(screen.getByTestId("me-section-subscription")).toBeTruthy();
 		expect(screen.getByTestId("me-section-account")).toBeTruthy();
 		expect(await screen.findByTestId("me-settings-link")).toHaveAttribute("href", "/settings");
