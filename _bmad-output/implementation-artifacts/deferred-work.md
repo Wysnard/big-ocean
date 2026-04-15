@@ -1,5 +1,11 @@
 # Deferred Work
 
+## Deferred from: code review of 3-5-subscription-pitch-section.md (2026-04-15)
+
+- Subscribed users still see the pitch and checkout CTA until Epic 8 adds subscription lifecycle events and a subscriber-facing summary
+- `extended-conversation` checkout slug is a stopgap; Epic 8 should align the slug and Polar product with the €9.99/mo subscription model (FR47)
+- Story markdown AC/tasks still describe the superseded capability-based approach; refresh the story file when convenient — not a runtime defect
+
 ## Deferred from: code review of 9-1-split-layout-architecture-and-sticky-auth-panel.md (2026-04-15)
 
 - Unused `SplitHomepageLayout` / `TimelinePlaceholder` / unwired `HomepageSignupForm` kept for tests and potential reuse; production homepage uses `DepthScrollProvider` + inline grid in `index.tsx`

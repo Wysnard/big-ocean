@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
+import { SubscriptionPitchSection } from "@/components/me/SubscriptionPitchSection";
 import { YourPublicFaceSection } from "@/components/me/YourPublicFaceSection";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
@@ -236,10 +237,7 @@ function MePageSections({ results }: { results: GetResultsResponse | undefined }
 				data-slot="me-section-subscription"
 				data-testid="me-section-subscription"
 			>
-				<p className="text-base leading-7 text-muted-foreground">
-					Membership, extensions, and renewal decisions will appear here when subscription flows are
-					added.
-				</p>
+				<SubscriptionPitchSection />
 			</MePageSection>
 
 			<MePageSection title="Account" data-slot="me-section-account" data-testid="me-section-account">
