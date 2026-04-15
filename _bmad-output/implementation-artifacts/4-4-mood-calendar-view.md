@@ -1,6 +1,6 @@
 # Story 4.4: Mood Calendar View
 
-Status: review
+Status: done
 
 <!-- Ultimate context engine analysis completed — comprehensive developer guide created -->
 
@@ -180,6 +180,8 @@ Composer (Cursor agent)
 
 ### Completion Notes List
 
+- **2026-04-15 (bmad-code-review):** Adversarial + AC audit on Story 4.4 scope; no patch/decision items persisted (clean review). Status set to `done`; sprint synced.
+- **2026-04-15 (dev-story rerun):** Reconciled `sprint-status.yaml`: `4-4-mood-calendar-view` was `ready-for-dev` while implementation artifact was already `review`; updated sprint entry to `review`. Ran `pnpm typecheck` and `pnpm test:run` — all passed.
 - Added month-level Today API contracts and use-cases: `getCalendarMonth` and `getHasCheckIns`, plus repository support for detecting whether a user has any check-ins.
 - Implemented `/today/calendar` as a focused route without `BottomNav`, with month navigation, a back link to `/today`, and inline `JournalEntry` detail for selected check-in days.
 - Added `useCalendarMonth` and `useHasCheckIns` hooks using the typed Effect `HttpApiClient`; no raw `fetch` or LLM calls were introduced.
@@ -214,7 +216,7 @@ Composer (Cursor agent)
 - `apps/front/src/routes/me/index.tsx`
 - `apps/front/src/routes/-three-space-routes.test.tsx`
 - `apps/front/src/routeTree.gen.ts`
-- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (sprint: `4-4-mood-calendar-view` → `done`, `epic-4` → `done`, 2026-04-15)
 - `_bmad-output/implementation-artifacts/4-4-mood-calendar-view.md`
 
 ### Change Log
@@ -222,7 +224,9 @@ Composer (Cursor agent)
 - 2026-04-15: Implemented the month-based mood calendar API and `/today/calendar` route, added conditional Me growth entry point, and covered the new flow with backend/frontend tests.
 - 2026-04-15: Post-review: moved `MoodCalendarView` memos before loading/error returns (`isReady` + empty `cells` when no month); confirmed BottomNav omission stays layout-based (no `HIDDEN_ROUTE_PREFIXES` change).
 - 2026-04-15: Post-review patches: `JournalEntry.srOnlyHeading`, `InvalidYearMonthError` + contract wiring, local-time `shiftYearMonth`, Me route growth test with `hasCheckIns: true`.
+- 2026-04-15: Sprint tracking aligned to story status (`4-4-mood-calendar-view`: `review`).
+- 2026-04-15: BMAD code review completed — no new findings; story marked `done`.
 
 ## Story completion status
 
-**review** — Mood calendar route, history gating, tests, and validations completed.
+**done** — Code review passed; mood calendar shipped per AC.
