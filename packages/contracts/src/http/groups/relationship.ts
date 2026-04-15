@@ -63,6 +63,8 @@ const RelationshipAnalysisListItemSchema = S.Struct({
 	partnerName: S.String,
 	/** Partner archetype derived from the partner's locked assessment result */
 	partnerArchetypeName: S.String,
+	/** Partner OCEAN code derived from the partner's locked assessment result */
+	partnerOceanCode: S.String,
 	/**
 	 * Whether this analysis is based on both users' latest results.
 	 * false = "previous version" — newer assessment results exist for at least one user.
@@ -70,6 +72,8 @@ const RelationshipAnalysisListItemSchema = S.Struct({
 	isLatestVersion: S.Boolean,
 	/** Whether the analysis content has been generated (true) or is still generating (false) */
 	hasContent: S.Boolean,
+	/** When the relationship analysis content was first generated (ISO 8601 string) */
+	contentCompletedAt: S.NullOr(S.String),
 	/** When this analysis was created (ISO 8601 string) */
 	createdAt: S.String,
 });

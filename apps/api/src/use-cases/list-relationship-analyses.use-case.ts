@@ -26,12 +26,15 @@ export interface RelationshipAnalysisListItem {
 	readonly userBName: string;
 	readonly partnerName: string;
 	readonly partnerArchetypeName: string;
+	readonly partnerOceanCode: string;
 	readonly isLatestVersion: boolean;
 	readonly hasContent: boolean;
+	readonly contentCompletedAt: Date | null;
 	readonly createdAt: Date;
 }
 
 const UNKNOWN_ARCHETYPE_NAME = "Unknown";
+const UNKNOWN_OCEAN_CODE = "?????";
 
 /** Bounded concurrency for per-row DB + derivation work (avoid unbounded fan-out). */
 const ENRICHMENT_CONCURRENCY = 10;
@@ -85,7 +88,7 @@ export const listRelationshipAnalyses = (userId: string) =>
 					const partnerResultId =
 						analysis.userAId === userId ? analysis.userBResultId : analysis.userAResultId;
 
-					const partnerArchetypeName = yield* resultRepo.getById(partnerResultId).pipe(
+					const partnerProfile = yield* resultRepo.getById(partnerResultId).pipe(
 						Effect.flatMap((result) => {
 							const facets = result?.facets;
 							if (
@@ -94,7 +97,10 @@ export const listRelationshipAnalyses = (userId: string) =>
 								typeof facets !== "object" ||
 								Object.keys(facets).length === 0
 							) {
-								return Effect.succeed(UNKNOWN_ARCHETYPE_NAME);
+								return Effect.succeed({
+									partnerArchetypeName: UNKNOWN_ARCHETYPE_NAME,
+									partnerOceanCode: UNKNOWN_OCEAN_CODE,
+								});
 							}
 
 							const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
@@ -108,13 +114,29 @@ export const listRelationshipAnalyses = (userId: string) =>
 							}
 
 							if (Object.keys(facetScoresMap).length === 0) {
-								return Effect.succeed(UNKNOWN_ARCHETYPE_NAME);
+								return Effect.succeed({
+									partnerArchetypeName: UNKNOWN_ARCHETYPE_NAME,
+									partnerOceanCode: UNKNOWN_OCEAN_CODE,
+								});
 							}
 
 							return Effect.try({
-								try: () => lookupArchetype(extract4LetterCode(generateOceanCode(facetScoresMap))).name,
+								try: () => {
+									const partnerOceanCode = generateOceanCode(facetScoresMap);
+									return {
+										partnerArchetypeName: lookupArchetype(extract4LetterCode(partnerOceanCode)).name,
+										partnerOceanCode,
+									};
+								},
 								catch: (error) => new Error(error instanceof Error ? error.message : String(error)),
-							}).pipe(Effect.catchAll(() => Effect.succeed(UNKNOWN_ARCHETYPE_NAME)));
+							}).pipe(
+								Effect.catchAll(() =>
+									Effect.succeed({
+										partnerArchetypeName: UNKNOWN_ARCHETYPE_NAME,
+										partnerOceanCode: UNKNOWN_OCEAN_CODE,
+									}),
+								),
+							);
 						}),
 						Effect.catchTag("AssessmentResultError", (error) => {
 							logger.warn("Failed to enrich relationship partner archetype", {
@@ -122,7 +144,10 @@ export const listRelationshipAnalyses = (userId: string) =>
 								partnerResultId,
 								error: error.message,
 							});
-							return Effect.succeed(UNKNOWN_ARCHETYPE_NAME);
+							return Effect.succeed({
+								partnerArchetypeName: UNKNOWN_ARCHETYPE_NAME,
+								partnerOceanCode: UNKNOWN_OCEAN_CODE,
+							});
 						}),
 					);
 
@@ -131,9 +156,11 @@ export const listRelationshipAnalyses = (userId: string) =>
 						userAName: analysis.userAName,
 						userBName: analysis.userBName,
 						partnerName,
-						partnerArchetypeName,
+						partnerArchetypeName: partnerProfile.partnerArchetypeName,
+						partnerOceanCode: partnerProfile.partnerOceanCode,
 						isLatestVersion: versionCurrent,
 						hasContent: analysis.content !== null,
+						contentCompletedAt: analysis.contentCompletedAt,
 						createdAt: analysis.createdAt,
 					} satisfies RelationshipAnalysisListItem;
 				}),

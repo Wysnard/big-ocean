@@ -511,6 +511,7 @@ export const relationshipAnalyses = pgTable("relationship_analyses", {
 		.notNull()
 		.references(() => assessmentResults.id, { onDelete: "cascade" }),
 	content: text("content"),
+	contentCompletedAt: timestamp("content_completed_at", { withTimezone: true }),
 	modelUsed: text("model_used"),
 	retryCount: integer("retry_count").notNull().default(0),
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

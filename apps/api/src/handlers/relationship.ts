@@ -50,6 +50,7 @@ export const RelationshipGroupLive = HttpApiBuilder.group(BigOceanApi, "relation
 					const analyses = yield* listRelationshipAnalyses(userId);
 					return analyses.map((a) => ({
 						...a,
+						contentCompletedAt: a.contentCompletedAt?.toISOString() ?? null,
 						createdAt: a.createdAt.toISOString(),
 					}));
 				}),

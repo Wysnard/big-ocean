@@ -33,6 +33,7 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 			userAResultId: row.userAResultId,
 			userBResultId: row.userBResultId,
 			content: row.content,
+			contentCompletedAt: row.contentCompletedAt,
 			modelUsed: row.modelUsed,
 			retryCount: row.retryCount,
 			createdAt: row.createdAt,
@@ -71,7 +72,11 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const rows = yield* db
 						.update(relationshipAnalyses)
-						.set({ content: input.content, modelUsed: input.modelUsed })
+						.set({
+							content: input.content,
+							contentCompletedAt: sql`coalesce(${relationshipAnalyses.contentCompletedAt}, now())`,
+							modelUsed: input.modelUsed,
+						})
 						.where(and(eq(relationshipAnalyses.id, input.id), isNull(relationshipAnalyses.content)))
 						.returning()
 						.pipe(

@@ -30,6 +30,7 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.succeed(
 					userAResultId: input.userAResultId,
 					userBResultId: input.userBResultId,
 					content: null,
+					contentCompletedAt: null,
 					modelUsed: null,
 					retryCount: 0,
 					createdAt: new Date(),
@@ -47,6 +48,7 @@ export const RelationshipAnalysisDrizzleRepositoryLive = Layer.succeed(
 				const updated: RelationshipAnalysis = {
 					...existing,
 					content: input.content,
+					contentCompletedAt: existing.contentCompletedAt ?? new Date(),
 					modelUsed: input.modelUsed,
 				};
 				store.set(input.id, updated);

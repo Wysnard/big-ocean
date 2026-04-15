@@ -96,6 +96,7 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 						modelUsed: "sonnet",
 						retryCount: 0,
 						createdAt: new Date("2026-03-20"),
+						contentCompletedAt: new Date("2026-03-21T12:00:00.000Z"),
 						userAName: "Alice",
 						userBName: "Bob",
 					},
@@ -118,6 +119,8 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 			expect(result[0].userBName).toBe("Bob");
 			expect(result[0].partnerName).toBe("Bob");
 			expect(result[0].partnerArchetypeName).toBe("The Beacon");
+			expect(result[0].partnerOceanCode).toBe("OCEAN");
+			expect(result[0].contentCompletedAt).toEqual(new Date("2026-03-21T12:00:00.000Z"));
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
@@ -135,6 +138,7 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 						modelUsed: "sonnet",
 						retryCount: 0,
 						createdAt: new Date("2026-03-10"),
+						contentCompletedAt: new Date("2026-03-11T08:00:00.000Z"),
 						userAName: "Alice",
 						userBName: "Bob",
 					},
@@ -168,6 +172,7 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 						modelUsed: "sonnet",
 						retryCount: 0,
 						createdAt: new Date("2026-03-20"),
+						contentCompletedAt: new Date("2026-03-20T09:30:00.000Z"),
 						userAName: "Alice",
 						userBName: "Bob",
 					},
@@ -181,6 +186,7 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 						modelUsed: null,
 						retryCount: 0,
 						createdAt: new Date("2026-03-19"),
+						contentCompletedAt: null,
 						userAName: "Alice",
 						userBName: "Charlie",
 					},
@@ -201,10 +207,14 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 			expect(result[0].hasContent).toBe(true);
 			expect(result[0].partnerName).toBe("Bob");
 			expect(result[0].partnerArchetypeName).toBe("The Beacon");
+			expect(result[0].partnerOceanCode).toBe("OCEAN");
+			expect(result[0].contentCompletedAt).toEqual(new Date("2026-03-20T09:30:00.000Z"));
 			expect(result[1].analysisId).toBe("analysis-2");
 			expect(result[1].hasContent).toBe(false);
 			expect(result[1].partnerName).toBe("Charlie");
 			expect(result[1].partnerArchetypeName).toBe("The Beacon");
+			expect(result[1].partnerOceanCode).toBe("OCEAN");
+			expect(result[1].contentCompletedAt).toBeNull();
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
@@ -222,6 +232,7 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 						modelUsed: "sonnet",
 						retryCount: 0,
 						createdAt: new Date("2026-03-20"),
+						contentCompletedAt: new Date("2026-03-20T12:00:00.000Z"),
 						userAName: "Alice",
 						userBName: "Bob",
 					},
@@ -254,6 +265,7 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 						modelUsed: "sonnet",
 						retryCount: 0,
 						createdAt: new Date("2026-03-20"),
+						contentCompletedAt: new Date("2026-03-20T12:00:00.000Z"),
 						userAName: "Alice",
 						userBName: "Bob",
 					},
@@ -275,6 +287,8 @@ describe("listRelationshipAnalyses Use Case (Story 35-4)", () => {
 			expect(result).toHaveLength(1);
 			expect(result[0].partnerName).toBe("Bob");
 			expect(result[0].partnerArchetypeName).toBe("Unknown");
+			expect(result[0].partnerOceanCode).toBe("?????");
+			expect(result[0].contentCompletedAt).toEqual(new Date("2026-03-20T12:00:00.000Z"));
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 });

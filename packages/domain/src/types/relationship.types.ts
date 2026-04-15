@@ -35,6 +35,7 @@ export interface RelationshipAnalysis {
 	readonly userAResultId: string;
 	readonly userBResultId: string;
 	readonly content: string | null;
+	readonly contentCompletedAt: Date | null;
 	readonly modelUsed: string | null;
 	readonly retryCount: number;
 	readonly createdAt: Date;
