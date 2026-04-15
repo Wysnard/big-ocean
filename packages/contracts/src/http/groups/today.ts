@@ -1,10 +1,16 @@
 import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
 import { Schema as S } from "effect";
-import { DatabaseError, Unauthorized } from "../../errors";
+import {
+	DatabaseError,
+	InvalidYearMonthError,
+	Unauthorized,
+	WeeklyLetterNotFound,
+} from "../../errors";
 import { AuthMiddleware } from "../../middleware/auth";
 
 const LocalDateString = S.String.pipe(S.pattern(/^\d{4}-\d{2}-\d{2}$/));
 const WeekIdString = S.String.pipe(S.pattern(/^\d{4}-W\d{2}$/));
+const YearMonthString = S.String.pipe(S.pattern(/^\d{4}-\d{2}$/));
 
 export const CheckInPayloadSchema = S.Struct({
 	localDate: LocalDateString,
@@ -35,6 +41,26 @@ export const WeekGridResponseSchema = S.Struct({
 	),
 });
 
+export const CalendarMonthResponseSchema = S.Struct({
+	yearMonth: YearMonthString,
+	days: S.Array(
+		S.Struct({
+			localDate: LocalDateString,
+			checkIn: S.NullishOr(CheckInResponseSchema),
+		}),
+	),
+});
+
+export const HasCheckInsResponseSchema = S.Struct({
+	hasCheckIns: S.Boolean,
+});
+
+export const WeeklyLetterResponseSchema = S.Struct({
+	weekId: S.String,
+	content: S.String,
+	generatedAt: S.String,
+});
+
 export const TodayGroup = HttpApiGroup.make("today")
 	.add(
 		HttpApiEndpoint.post("submitCheckIn", "/check-in")
@@ -51,9 +77,31 @@ export const TodayGroup = HttpApiGroup.make("today")
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(
+		HttpApiEndpoint.get("getWeeklyLetter", "/week/:weekId/letter")
+			.setPath(S.Struct({ weekId: WeekIdString }))
+			.addSuccess(WeeklyLetterResponseSchema)
+			.addError(WeeklyLetterNotFound, { status: 404 })
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
 		HttpApiEndpoint.get("getWeekGrid", "/week")
 			.setUrlParams(S.Struct({ weekId: WeekIdString }))
 			.addSuccess(WeekGridResponseSchema)
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.get("getCalendarMonth", "/calendar")
+			.setUrlParams(S.Struct({ month: YearMonthString }))
+			.addSuccess(CalendarMonthResponseSchema)
+			.addError(Unauthorized, { status: 401 })
+			.addError(InvalidYearMonthError, { status: 422 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.get("getHasCheckIns", "/has-check-ins")
+			.addSuccess(HasCheckInsResponseSchema)
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
@@ -64,3 +112,6 @@ export type CheckInPayload = typeof CheckInPayloadSchema.Type;
 export type CheckInResponse = typeof CheckInResponseSchema.Type;
 export type CheckInNotFoundResponse = typeof CheckInNotFoundResponseSchema.Type;
 export type WeekGridResponse = typeof WeekGridResponseSchema.Type;
+export type CalendarMonthResponse = typeof CalendarMonthResponseSchema.Type;
+export type HasCheckInsResponse = typeof HasCheckInsResponseSchema.Type;
+export type WeeklyLetterResponse = typeof WeeklyLetterResponseSchema.Type;

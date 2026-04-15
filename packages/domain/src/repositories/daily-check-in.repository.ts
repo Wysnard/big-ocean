@@ -40,6 +40,7 @@ export class DailyCheckInRepository extends Context.Tag("DailyCheckInRepository"
 			monthStartLocal: string,
 			monthEndLocal: string,
 		) => Effect.Effect<DailyCheckIn[], DatabaseError>;
+		readonly hasAnyForUser: (userId: string) => Effect.Effect<boolean, DatabaseError>;
 		/** Users with at least `minCount` check-ins in [weekStartLocal, weekEndLocal] inclusive. */
 		readonly listUserIdsWithAtLeastNCheckInsInRange: (
 			minCount: number,

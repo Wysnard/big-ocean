@@ -2,7 +2,14 @@ import { HttpApiBuilder } from "@effect/platform";
 import { BigOceanApi } from "@workspace/contracts";
 import { AuthenticatedUser } from "@workspace/domain";
 import { Effect } from "effect";
-import { getTodayCheckIn, getTodayWeekGrid, submitDailyCheckIn } from "../use-cases/index";
+import {
+	getCalendarMonth,
+	getTodayCheckIn,
+	getTodayWeekGrid,
+	getWeeklyLetterForUser,
+	hasDailyCheckIns,
+	submitDailyCheckIn,
+} from "../use-cases/index";
 
 const toCheckInResponse = (checkIn: {
 	id: string;
@@ -47,6 +54,12 @@ export const TodayGroupLive = HttpApiBuilder.group(BigOceanApi, "today", (handle
 					return toCheckInResponse(checkIn);
 				}),
 			)
+			.handle("getWeeklyLetter", ({ path }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* getWeeklyLetterForUser({ userId, weekId: path.weekId });
+				}),
+			)
 			.handle("getWeekGrid", ({ urlParams }) =>
 				Effect.gen(function* () {
 					const userId = yield* AuthenticatedUser;
@@ -59,6 +72,26 @@ export const TodayGroupLive = HttpApiBuilder.group(BigOceanApi, "today", (handle
 							checkIn: day.checkIn ? toCheckInResponse(day.checkIn) : null,
 						})),
 					};
+				}),
+			)
+			.handle("getCalendarMonth", ({ urlParams }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					const calendarMonth = yield* getCalendarMonth(userId, urlParams.month);
+
+					return {
+						yearMonth: calendarMonth.yearMonth,
+						days: calendarMonth.days.map((day) => ({
+							localDate: day.localDate,
+							checkIn: day.checkIn ? toCheckInResponse(day.checkIn) : null,
+						})),
+					};
+				}),
+			)
+			.handle("getHasCheckIns", () =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* hasDailyCheckIns(userId);
 				}),
 			);
 	}),

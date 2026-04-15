@@ -115,6 +115,17 @@ export const DailyCheckInDrizzleRepositoryLive = Layer.effect(
 						Effect.mapError((error) => toDatabaseError("list daily check-ins for month", error)),
 					),
 
+			hasAnyForUser: (userId: string) =>
+				db
+					.select({ id: dailyCheckIns.id })
+					.from(dailyCheckIns)
+					.where(eq(dailyCheckIns.userId, userId))
+					.limit(1)
+					.pipe(
+						Effect.map((rows) => rows.length > 0),
+						Effect.mapError((error) => toDatabaseError("check if user has any daily check-ins", error)),
+					),
+
 			listUserIdsWithAtLeastNCheckInsInRange: (minCount, weekStartLocal, weekEndLocal) =>
 				db
 					.select({ userId: dailyCheckIns.userId })

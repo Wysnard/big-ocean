@@ -23,11 +23,13 @@ import { Route as MeIndexRouteImport } from './routes/me/index'
 import { Route as LibraryIndexRouteImport } from './routes/library/index'
 import { Route as CircleIndexRouteImport } from './routes/circle/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as TodayCalendarRouteImport } from './routes/today/calendar'
 import { Route as ResultsConversationSessionIdRouteImport } from './routes/results/$conversationSessionId'
 import { Route as RelationshipAnalysisIdRouteImport } from './routes/relationship/$analysisId'
 import { Route as PublicProfilePublicProfileIdRouteImport } from './routes/public-profile.$publicProfileId'
 import { Route as DevEmailsRouteImport } from './routes/dev/emails'
 import { Route as DevComponentsRouteImport } from './routes/dev/components'
+import { Route as TodayWeekWeekIdRouteImport } from './routes/today/week.$weekId'
 import { Route as RelationshipQrTokenRouteImport } from './routes/relationship/qr/$token'
 import { Route as RelationshipAnalysisIdRitualRouteImport } from './routes/relationship/$analysisId_.ritual'
 import { Route as LibraryTraitSlugRouteImport } from './routes/library/trait.$slug'
@@ -106,6 +108,11 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
   path: '/chat/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TodayCalendarRoute = TodayCalendarRouteImport.update({
+  id: '/today/calendar',
+  path: '/today/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsConversationSessionIdRoute =
   ResultsConversationSessionIdRouteImport.update({
     id: '/$conversationSessionId',
@@ -131,6 +138,11 @@ const DevEmailsRoute = DevEmailsRouteImport.update({
 const DevComponentsRoute = DevComponentsRouteImport.update({
   id: '/dev/components',
   path: '/dev/components',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TodayWeekWeekIdRoute = TodayWeekWeekIdRouteImport.update({
+  id: '/today/week/$weekId',
+  path: '/today/week/$weekId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RelationshipQrTokenRoute = RelationshipQrTokenRouteImport.update({
@@ -185,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
+  '/today/calendar': typeof TodayCalendarRoute
   '/chat/': typeof ChatIndexRoute
   '/circle/': typeof CircleIndexRoute
   '/library/': typeof LibraryIndexRoute
@@ -197,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/library/trait/$slug': typeof LibraryTraitSlugRoute
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
+  '/today/week/$weekId': typeof TodayWeekWeekIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -213,6 +227,7 @@ export interface FileRoutesByTo {
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
+  '/today/calendar': typeof TodayCalendarRoute
   '/chat': typeof ChatIndexRoute
   '/circle': typeof CircleIndexRoute
   '/library': typeof LibraryIndexRoute
@@ -225,6 +240,7 @@ export interface FileRoutesByTo {
   '/library/trait/$slug': typeof LibraryTraitSlugRoute
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
+  '/today/week/$weekId': typeof TodayWeekWeekIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -242,6 +258,7 @@ export interface FileRoutesById {
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
   '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
+  '/today/calendar': typeof TodayCalendarRoute
   '/chat/': typeof ChatIndexRoute
   '/circle/': typeof CircleIndexRoute
   '/library/': typeof LibraryIndexRoute
@@ -254,6 +271,7 @@ export interface FileRoutesById {
   '/library/trait/$slug': typeof LibraryTraitSlugRoute
   '/relationship/$analysisId_/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
+  '/today/week/$weekId': typeof TodayWeekWeekIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -272,6 +290,7 @@ export interface FileRouteTypes {
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
     | '/results/$conversationSessionId'
+    | '/today/calendar'
     | '/chat/'
     | '/circle/'
     | '/library/'
@@ -284,6 +303,7 @@ export interface FileRouteTypes {
     | '/library/trait/$slug'
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
+    | '/today/week/$weekId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -300,6 +320,7 @@ export interface FileRouteTypes {
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
     | '/results/$conversationSessionId'
+    | '/today/calendar'
     | '/chat'
     | '/circle'
     | '/library'
@@ -312,6 +333,7 @@ export interface FileRouteTypes {
     | '/library/trait/$slug'
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
+    | '/today/week/$weekId'
   id:
     | '__root__'
     | '/'
@@ -328,6 +350,7 @@ export interface FileRouteTypes {
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
     | '/results/$conversationSessionId'
+    | '/today/calendar'
     | '/chat/'
     | '/circle/'
     | '/library/'
@@ -340,6 +363,7 @@ export interface FileRouteTypes {
     | '/library/trait/$slug'
     | '/relationship/$analysisId_/ritual'
     | '/relationship/qr/$token'
+    | '/today/week/$weekId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -356,6 +380,7 @@ export interface RootRouteChildren {
   DevEmailsRoute: typeof DevEmailsRoute
   PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute
   RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute
+  TodayCalendarRoute: typeof TodayCalendarRoute
   ChatIndexRoute: typeof ChatIndexRoute
   CircleIndexRoute: typeof CircleIndexRoute
   LibraryIndexRoute: typeof LibraryIndexRoute
@@ -368,6 +393,7 @@ export interface RootRouteChildren {
   LibraryTraitSlugRoute: typeof LibraryTraitSlugRoute
   RelationshipAnalysisIdRitualRoute: typeof RelationshipAnalysisIdRitualRoute
   RelationshipQrTokenRoute: typeof RelationshipQrTokenRoute
+  TodayWeekWeekIdRoute: typeof TodayWeekWeekIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -470,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/today/calendar': {
+      id: '/today/calendar'
+      path: '/today/calendar'
+      fullPath: '/today/calendar'
+      preLoaderRoute: typeof TodayCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results/$conversationSessionId': {
       id: '/results/$conversationSessionId'
       path: '/$conversationSessionId'
@@ -503,6 +536,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/components'
       fullPath: '/dev/components'
       preLoaderRoute: typeof DevComponentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/today/week/$weekId': {
+      id: '/today/week/$weekId'
+      path: '/today/week/$weekId'
+      fullPath: '/today/week/$weekId'
+      preLoaderRoute: typeof TodayWeekWeekIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/relationship/qr/$token': {
@@ -582,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevEmailsRoute: DevEmailsRoute,
   PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
   RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
+  TodayCalendarRoute: TodayCalendarRoute,
   ChatIndexRoute: ChatIndexRoute,
   CircleIndexRoute: CircleIndexRoute,
   LibraryIndexRoute: LibraryIndexRoute,
@@ -594,6 +635,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryTraitSlugRoute: LibraryTraitSlugRoute,
   RelationshipAnalysisIdRitualRoute: RelationshipAnalysisIdRitualRoute,
   RelationshipQrTokenRoute: RelationshipQrTokenRoute,
+  TodayWeekWeekIdRoute: TodayWeekWeekIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

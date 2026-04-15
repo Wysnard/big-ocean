@@ -22,12 +22,18 @@ function formatDisplayDate(isoLocalDate: string) {
 export interface JournalEntryProps {
 	checkIn: CheckInResponse;
 	className?: string;
+	/** Screen-reader-only article title. Defaults to today's-journal wording for the main Today flow. */
+	srOnlyHeading?: string;
 }
 
 /**
  * User-only check-in in journal layout (not chat). Free tier: no Nerin margin note.
  */
-export function JournalEntry({ checkIn, className }: JournalEntryProps) {
+export function JournalEntry({
+	checkIn,
+	className,
+	srOnlyHeading = "Today's check-in",
+}: JournalEntryProps) {
 	const headingId = useId();
 	const mood = getMoodMeta(checkIn.mood);
 	const displayDate = formatDisplayDate(checkIn.localDate);
@@ -40,7 +46,7 @@ export function JournalEntry({ checkIn, className }: JournalEntryProps) {
 			aria-labelledby={headingId}
 		>
 			<h2 id={headingId} className="sr-only">
-				Today&apos;s check-in
+				{srOnlyHeading}
 			</h2>
 			<div className="flex gap-4 sm:gap-5">
 				<div

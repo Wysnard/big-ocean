@@ -77,6 +77,9 @@ export const DailyCheckInDrizzleRepositoryLive = Layer.succeed(
 				),
 			),
 
+		hasAnyForUser: (userId: string) =>
+			Effect.sync(() => [...checkIns.values()].some((checkIn) => checkIn.userId === userId)),
+
 		listUserIdsWithAtLeastNCheckInsInRange: (minCount, weekStartLocal, weekEndLocal) =>
 			Effect.sync(() => {
 				const counts = new Map<string, number>();

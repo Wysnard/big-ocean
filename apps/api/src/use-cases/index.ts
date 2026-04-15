@@ -23,6 +23,7 @@ export {
 	type GenerateWeeklySummariesForWeekOutput,
 	generateWeeklySummariesForWeek,
 } from "./generate-weekly-summary.use-case";
+export { getCalendarMonth } from "./get-calendar-month.use-case";
 export {
 	type GetFacetEvidenceInput,
 	getFacetEvidence,
@@ -53,6 +54,11 @@ export {
 	type GetTranscriptOutput,
 	getTranscript,
 } from "./get-transcript.use-case";
+export {
+	type GetWeeklyLetterForUserOutput,
+	getWeeklyLetterForUser,
+} from "./get-weekly-letter-for-user.use-case";
+export { hasDailyCheckIns } from "./has-daily-check-ins.use-case";
 export {
 	type ListUserSessionsInput,
 	type ListUserSessionsOutput,

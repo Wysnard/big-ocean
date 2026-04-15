@@ -1,7 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { TodayCheckInSurface } from "@/components/today/TodayCheckInSurface";
-import { fetchFirstVisitState } from "@/hooks/use-account";
 import { getSession } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/today/")({
@@ -10,11 +9,6 @@ export const Route = createFileRoute("/today/")({
 		const { data: session } = await getSession();
 		if (!session?.user) {
 			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
-		}
-
-		const { firstVisitCompleted } = await fetchFirstVisitState();
-		if (!firstVisitCompleted) {
-			throw redirect({ to: "/me" });
 		}
 	},
 	component: TodayPage,

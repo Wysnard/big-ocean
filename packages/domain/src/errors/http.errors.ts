@@ -183,6 +183,18 @@ export class InvalidFacetNameError extends S.TaggedError<InvalidFacetNameError>(
 ) {}
 
 /**
+ * Invalid calendar year-month (422)
+ * Requested `YYYY-MM` is not a valid calendar month (e.g. month outside 01–12)
+ */
+export class InvalidYearMonthError extends S.TaggedError<InvalidYearMonthError>()(
+	"InvalidYearMonthError",
+	{
+		yearMonth: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
  * Free tier limit reached error (403)
  * User has sent the maximum number of messages allowed in the free tier
  */
@@ -398,6 +410,17 @@ export class RelationshipAnalysisNotFoundError extends S.TaggedError<Relationshi
 export class RelationshipAnalysisUnauthorizedError extends S.TaggedError<RelationshipAnalysisUnauthorizedError>()(
 	"RelationshipAnalysisUnauthorizedError",
 	{
+		message: S.String,
+	},
+) {}
+
+/**
+ * Weekly letter not found or not yet available (404)
+ */
+export class WeeklyLetterNotFound extends S.TaggedError<WeeklyLetterNotFound>()(
+	"WeeklyLetterNotFound",
+	{
+		weekId: S.String,
 		message: S.String,
 	},
 ) {}

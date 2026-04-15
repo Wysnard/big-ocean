@@ -6,18 +6,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	mockSession,
-	mockFetchFirstVisitState,
 	mockLoaderData,
 	mockListSessionsQuery,
 	mockUseGetResults,
 	mockIdentityHeroSection,
+	mockUseHasCheckIns,
 } = vi.hoisted(() => ({
 	mockSession: vi.fn(),
-	mockFetchFirstVisitState: vi.fn(),
 	mockLoaderData: vi.fn(),
 	mockListSessionsQuery: vi.fn(),
 	mockUseGetResults: vi.fn(),
 	mockIdentityHeroSection: vi.fn(),
+	mockUseHasCheckIns: vi.fn(() => ({
+		data: { hasCheckIns: false },
+		isLoading: false,
+		isError: false,
+	})),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -39,10 +43,6 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@/lib/auth-client", () => ({
 	getSession: () => mockSession(),
-}));
-
-vi.mock("@/hooks/use-account", () => ({
-	fetchFirstVisitState: () => mockFetchFirstVisitState(),
 }));
 
 vi.mock("@/hooks/use-conversation", () => ({
@@ -82,6 +82,10 @@ vi.mock("@/components/today/TodayCheckInSurface", () => ({
 	),
 }));
 
+vi.mock("@/hooks/use-has-check-ins", () => ({
+	useHasCheckIns: () => mockUseHasCheckIns(),
+}));
+
 import { Route as CircleRoute } from "./circle/index";
 import { Route as DashboardRoute } from "./dashboard";
 import { Route as MeRoute } from "./me/index";
@@ -112,7 +116,6 @@ describe("three-space route guards", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockSession.mockResolvedValue({ data: { user: { id: "user-1" } } });
-		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: true });
 		mockLoaderData.mockReturnValue({ sessionId: "session-completed" });
 		mockListSessionsQuery.mockResolvedValue({
 			sessions: [{ id: "session-completed", status: "completed" }],
@@ -140,10 +143,8 @@ describe("three-space route guards", () => {
 		await expect(TodayRoute.beforeLoad?.()).rejects.toMatchObject({ to: "/login" });
 	});
 
-	it("redirects first-time /today visits to /me", async () => {
-		mockFetchFirstVisitState.mockResolvedValue({ firstVisitCompleted: false });
-
-		await expect(TodayRoute.beforeLoad?.()).rejects.toMatchObject({ to: "/me" });
+	it("allows authenticated users into /today without a first-visit gate", async () => {
+		await expect(TodayRoute.beforeLoad?.()).resolves.toBeUndefined();
 	});
 
 	it("redirects unauthenticated users from /me and /circle to /login", async () => {
@@ -182,6 +183,11 @@ describe("three-space route guards", () => {
 describe("Me route layout", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockUseHasCheckIns.mockReturnValue({
+			data: { hasCheckIns: false },
+			isLoading: false,
+			isError: false,
+		});
 		mockLoaderData.mockReturnValue({ sessionId: "session-completed" });
 		mockUseGetResults.mockReturnValue({
 			data: {
@@ -199,14 +205,14 @@ describe("Me route layout", () => {
 		});
 	});
 
-	it("renders the seven me-page sections for a completed assessment", async () => {
+	it("renders me-page sections for a completed assessment (growth only when user has check-ins)", async () => {
 		const Component = MeRoute.component as ComponentType;
 
 		render(<Component />);
 
 		expect(await screen.findByTestId("me-section-identity-hero")).toBeTruthy();
 		expect(screen.getByTestId("me-section-portrait")).toBeTruthy();
-		expect(screen.getByTestId("me-section-growth")).toHaveAttribute("hidden");
+		expect(screen.queryByTestId("me-section-growth")).toBeNull();
 		expect(screen.getByTestId("me-section-public-face")).toBeTruthy();
 		expect(screen.getByTestId("me-section-circle")).toBeTruthy();
 		expect(screen.getByTestId("mock-your-circle-preview-section")).toBeTruthy();
@@ -225,6 +231,20 @@ describe("Me route layout", () => {
 			}),
 		);
 		expect(screen.getByTestId("bottom-nav-root")).toBeTruthy();
+	});
+
+	it("renders Your Growth with a calendar link when the user has check-in history", async () => {
+		mockUseHasCheckIns.mockReturnValue({
+			data: { hasCheckIns: true },
+			isLoading: false,
+			isError: false,
+		});
+		const Component = MeRoute.component as ComponentType;
+
+		render(<Component />);
+
+		expect(await screen.findByTestId("me-section-growth")).toBeTruthy();
+		expect(screen.getByTestId("me-growth-calendar-link")).toHaveAttribute("href", "/today/calendar");
 	});
 
 	it("shows loading skeletons when results are loading", async () => {
@@ -259,12 +279,11 @@ describe("Me route layout", () => {
 		});
 	});
 
-	it("does not consume first-visit state from the /me scaffold alone", () => {
+	it("does not consume any Today-route onboarding state from the /me scaffold alone", () => {
 		const Component = MeRoute.component as ComponentType;
 
 		render(<Component />);
-
-		expect(mockFetchFirstVisitState).not.toHaveBeenCalled();
+		expect(screen.getByTestId("me-section-identity-hero")).toBeTruthy();
 	});
 });
 

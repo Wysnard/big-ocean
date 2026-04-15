@@ -114,6 +114,7 @@ export {
 	InsufficientCreditsError,
 	InvalidCredentials,
 	InvalidFacetNameError,
+	InvalidYearMonthError,
 	InvitationAlreadyRespondedError,
 	InvitationNotFoundError,
 	MalformedEvidenceError,
@@ -138,6 +139,7 @@ export {
 	UnknownProductError,
 	UserAlreadyExists,
 	WebhookVerificationError,
+	WeeklyLetterNotFound,
 } from "./errors/http.errors";
 // Relationship analysis prompt (Story 14.4)
 export {

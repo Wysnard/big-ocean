@@ -19,6 +19,7 @@ describe("JournalEntry", () => {
 
 		expect(screen.getByTestId("journal-entry")).toBeTruthy();
 		expect(screen.getByRole("article")).toBeTruthy();
+		expect(screen.getByText("Today's check-in")).toBeTruthy();
 		expect(screen.getByText("Quiet morning.")).toBeTruthy();
 		expect(screen.getByText("Private entry")).toBeTruthy();
 	});

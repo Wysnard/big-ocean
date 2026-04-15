@@ -7,6 +7,7 @@ import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
 import { SubscriptionPitchSection } from "@/components/me/SubscriptionPitchSection";
 import { YourCirclePreviewSection } from "@/components/me/YourCirclePreviewSection";
+import { YourGrowthSection } from "@/components/me/YourGrowthSection";
 import { YourPublicFaceSection } from "@/components/me/YourPublicFaceSection";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
@@ -212,18 +213,7 @@ function MePageSections({ results }: { results: GetResultsResponse | undefined }
 				</p>
 			</MePageSection>
 
-			<MePageSection
-				title="Your Growth"
-				isConditional
-				data-slot="me-section-growth"
-				data-testid="me-section-growth"
-				data-state="hidden"
-				hidden
-			>
-				<p className="text-base leading-7 text-muted-foreground">
-					Growth history will unlock here once the daily journal and mood calendar ship in Epic 4.
-				</p>
-			</MePageSection>
+			<YourGrowthSection />
 
 			<MePageSection
 				title="Your Public Face"

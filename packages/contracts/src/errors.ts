@@ -22,6 +22,7 @@ export {
 	InsufficientCreditsError,
 	InvalidCredentials,
 	InvalidFacetNameError,
+	InvalidYearMonthError,
 	InvitationAlreadyRespondedError,
 	InvitationNotFoundError,
 	MalformedEvidenceError,
@@ -46,4 +47,5 @@ export {
 	UnknownProductError,
 	UserAlreadyExists,
 	WebhookVerificationError,
+	WeeklyLetterNotFound,
 } from "@workspace/domain/errors/http.errors";
