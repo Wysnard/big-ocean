@@ -8,6 +8,8 @@ import type { InsertPurchaseEvent, PurchaseEvent } from "@workspace/domain";
 import {
 	DuplicateCheckoutError,
 	deriveCapabilities,
+	getSubscriptionStatus,
+	isEntitledTo,
 	PurchaseEventRepository,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
@@ -52,6 +54,7 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.succeed(
 					userId: event.userId,
 					eventType: event.eventType,
 					polarCheckoutId: event.polarCheckoutId ?? null,
+					polarSubscriptionId: event.polarSubscriptionId ?? null,
 					polarProductId: event.polarProductId ?? null,
 					amountCents: event.amountCents ?? null,
 					currency: event.currency ?? null,
@@ -77,6 +80,22 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.succeed(
 					(a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
 				);
 				return deriveCapabilities(events);
+			}),
+
+		getSubscriptionStatus: (userId: string) =>
+			Effect.sync(() => {
+				const events = [...(eventStore.get(userId) ?? [])].sort(
+					(a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+				);
+				return getSubscriptionStatus(events);
+			}),
+
+		isEntitledTo: (userId: string, feature) =>
+			Effect.sync(() => {
+				const events = [...(eventStore.get(userId) ?? [])].sort(
+					(a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+				);
+				return isEntitledTo(events, feature);
 			}),
 
 		getByCheckoutId: (checkoutId: string) => Effect.sync(() => findByCheckoutId(checkoutId)),

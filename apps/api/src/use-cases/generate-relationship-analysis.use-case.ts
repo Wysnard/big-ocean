@@ -1,23 +1,22 @@
 /**
- * Generate Relationship Analysis Use Case (Story 14.4)
+ * Generate Relationship Analysis Use Case (Story 14.4, Epic 7 Story 7.2)
  *
  * Background daemon that generates a personality comparison analysis
  * for two users. Called by forkDaemon from accept-invitation use-case.
  *
- * Follows generate-full-portrait.use-case.ts pattern exactly.
+ * Loads **UserSummaries** per assessment result (ADR-55) — not raw conversation evidence.
  */
 
 import {
 	AssessmentResultRepository,
-	ConversationEvidenceRepository,
 	ConversationRepository,
 	type FacetName,
 	type FacetScoresMap,
 	LoggerRepository,
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
+	UserSummaryRepository,
 } from "@workspace/domain";
-import type { ConversationEvidenceRecord } from "@workspace/domain/repositories/conversation-evidence.repository";
 import { Effect, Schedule } from "effect";
 import { sendRelationshipAnalysisNotification } from "./send-relationship-analysis-notification.use-case";
 
@@ -32,14 +31,15 @@ export interface GenerateRelationshipAnalysisOutput {
 }
 
 /**
- * Load a user's assessment data: facet scores and evidence.
- * Returns null if the user has no completed assessment.
+ * Load a user's assessment data: facet scores + UserSummary for that result.
+ * Returns null if the user has no completed assessment, no result, or no UserSummary row.
  */
 const loadUserAssessmentData = (userId: string) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* ConversationRepository;
 		const resultsRepo = yield* AssessmentResultRepository;
-		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
+		const userSummaryRepo = yield* UserSummaryRepository;
+		const logger = yield* LoggerRepository;
 
 		const session = yield* sessionRepo.findSessionByUserId(userId);
 		if (!session) return null;
@@ -47,10 +47,14 @@ const loadUserAssessmentData = (userId: string) =>
 		const result = yield* resultsRepo.getBySessionId(session.id);
 		if (!result) return null;
 
-		// Load conversation evidence (authoritative source — Story 18-6)
-		const evidence: ConversationEvidenceRecord[] = yield* conversationEvidenceRepo.findBySession(
-			session.id,
-		);
+		const userSummary = yield* userSummaryRepo.getByAssessmentResultId(result.id);
+		if (!userSummary) {
+			logger.warn("UserSummary missing for assessment result — cannot generate relationship letter", {
+				userId,
+				assessmentResultId: result.id,
+			});
+			return null;
+		}
 
 		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
 		for (const [facetName, data] of Object.entries(result.facets)) {
@@ -62,7 +66,7 @@ const loadUserAssessmentData = (userId: string) =>
 			}
 		}
 
-		return { facetScoresMap, evidence };
+		return { facetScoresMap, userSummary };
 	});
 
 export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysisInput) =>
@@ -77,32 +81,31 @@ export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysis
 			inviteeUserId: input.inviteeUserId,
 		});
 
-		// 1. Load inviter's assessment data
 		const inviterData = yield* loadUserAssessmentData(input.inviterUserId);
 		if (!inviterData) {
-			logger.error("Inviter assessment data not found", { userId: input.inviterUserId });
+			logger.error("Inviter relationship inputs incomplete (session, result, or user summary)", {
+				userId: input.inviterUserId,
+			});
 			yield* analysisRepo.incrementRetryCount(input.analysisId);
 			return { success: false };
 		}
 
-		// 2. Load invitee's assessment data — may not exist yet (invitee still assessing)
 		const inviteeData = yield* loadUserAssessmentData(input.inviteeUserId);
 		if (!inviteeData) {
-			logger.info("Invitee assessment data not found yet, will retry", {
+			logger.info("Invitee relationship inputs not ready yet, will retry", {
 				userId: input.inviteeUserId,
 			});
 			yield* analysisRepo.incrementRetryCount(input.analysisId);
 			return { success: false };
 		}
 
-		// 3. Call LLM with retry (3 total attempts)
 		const result = yield* analysisGen
 			.generateAnalysis({
 				userAFacetScores: inviterData.facetScoresMap,
-				userAEvidence: inviterData.evidence,
+				userAUserSummary: inviterData.userSummary,
 				userAName: "Person A",
 				userBFacetScores: inviteeData.facetScoresMap,
-				userBEvidence: inviteeData.evidence,
+				userBUserSummary: inviteeData.userSummary,
 				userBName: "Person B",
 			})
 			.pipe(
@@ -122,7 +125,6 @@ export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysis
 				),
 			);
 
-		// 4. Update placeholder with generated content (idempotent)
 		let contentWasWritten = true;
 		yield* analysisRepo
 			.updateContent({
@@ -145,7 +147,6 @@ export const generateRelationshipAnalysis = (input: GenerateRelationshipAnalysis
 			contentLength: result.content.length,
 		});
 
-		// 5. Send relationship-letter ready notifications to both participants (fail-open)
 		if (contentWasWritten) {
 			yield* sendRelationshipAnalysisNotification({
 				analysisId: input.analysisId,

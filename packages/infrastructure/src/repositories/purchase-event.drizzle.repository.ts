@@ -10,7 +10,11 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
 import type { InsertPurchaseEvent } from "@workspace/domain/repositories/purchase-event.repository";
 import { PurchaseEventRepository } from "@workspace/domain/repositories/purchase-event.repository";
 import type { PurchaseEvent, PurchaseEventType } from "@workspace/domain/types/purchase.types";
-import { deriveCapabilities } from "@workspace/domain/utils/derive-capabilities";
+import {
+	deriveCapabilities,
+	isEntitledTo as entitlementFromEvents,
+	getSubscriptionStatus as subscriptionStatusFromEvents,
+} from "@workspace/domain/utils/derive-capabilities";
 import { Database } from "@workspace/infrastructure/context/database";
 import { asc, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
@@ -27,6 +31,7 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 			userId: row.userId,
 			eventType: row.eventType as PurchaseEventType,
 			polarCheckoutId: row.polarCheckoutId,
+			polarSubscriptionId: row.polarSubscriptionId,
 			polarProductId: row.polarProductId,
 			amountCents: row.amountCents,
 			currency: row.currency,
@@ -62,6 +67,7 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 							userId: event.userId,
 							eventType: event.eventType,
 							polarCheckoutId: event.polarCheckoutId ?? null,
+							polarSubscriptionId: event.polarSubscriptionId ?? null,
 							polarProductId: event.polarProductId ?? null,
 							amountCents: event.amountCents ?? null,
 							currency: event.currency ?? null,
@@ -99,6 +105,18 @@ export const PurchaseEventDrizzleRepositoryLive = Layer.effect(
 				Effect.gen(function* () {
 					const events = yield* getEventsByUserId(userId);
 					return deriveCapabilities(events);
+				}),
+
+			getSubscriptionStatus: (userId: string) =>
+				Effect.gen(function* () {
+					const events = yield* getEventsByUserId(userId);
+					return subscriptionStatusFromEvents(events);
+				}),
+
+			isEntitledTo: (userId: string, feature) =>
+				Effect.gen(function* () {
+					const events = yield* getEventsByUserId(userId);
+					return entitlementFromEvents(events, feature);
 				}),
 
 			getByCheckoutId: (checkoutId: string) =>

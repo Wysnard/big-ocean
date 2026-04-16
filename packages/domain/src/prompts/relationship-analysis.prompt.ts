@@ -1,32 +1,35 @@
 /**
- * Relationship Analysis Prompt (Story 14.4, updated Story 35-2)
+ * Relationship Analysis Prompt (Story 14.4, Story 35-2, Epic 7 Story 7.2)
  *
- * Sonnet prompt that takes both users' facet data and conversation evidence
- * to generate a personality comparison analysis in spine format.
+ * Sonnet prompt: both users' facet score maps (internal calibration) plus
+ * **UserSummaries** (ADR-55) — no raw per-message evidence or transcripts.
  *
- * Story 35-2 changes:
- * - Output format changed from markdown to spine-format JSON
- * - Added safety guardrails: no blame language, no vulnerability data, no transcripts (FR32, NFR13)
+ * Story 35-2: spine-format JSON output + safety guardrails (FR32, NFR13).
  */
 
 import { FACET_TO_TRAIT, TRAIT_NAMES } from "../constants/big-five";
-import type { ConversationEvidenceRecord } from "../repositories/conversation-evidence.repository";
+import type { UserSummaryRecord } from "../repositories/user-summary.repository";
 import type { FacetName, FacetScoresMap } from "../types/facet-evidence";
+
+/** Cap quote bank lines included in the prompt (UserSummary allows up to 50). */
+const MAX_QUOTES_IN_PROMPT = 24;
+/** Avoid single quotes blowing up context. */
+const MAX_QUOTE_CHARS = 240;
 
 const SYSTEM_PROMPT = `You are Nerin, a perceptive personality analyst who has observed two people through deep conversations. You're writing a relationship comparison that reveals how two personalities interact, complement, and challenge each other.
 
 Your analysis should:
 - Be warm, insightful, and specific to these two people
 - Highlight complementary strengths and dynamics — frame differences as what emerges between two people, not as individual weaknesses
-- Use concrete behavioral patterns from the evidence when available
-- Never expose raw scores, percentages, or trait/facet labels
+- Use concrete behavioral patterns from each person's UserSummary narrative, themes, and curated quote excerpts when available
+- Never expose raw scores, percentages, or trait/facet labels in your JSON output to readers
 - Focus on relational dynamics, not abstract traits
 - Be written as a flowing narrative, not a list of comparisons
 
 SAFETY GUARDRAILS (MANDATORY):
 - Never use blame language or characterize either person negatively
-- Never expose individual vulnerability data — do not reveal raw scores, specific evidence quotes, or behavioral patterns that one person shared in confidence during their private conversation
-- Never include raw conversation transcript content from either person's assessment
+- Never invent or paraphrase full private conversation transcripts — only use the structured inputs provided (facet score maps for internal calibration, UserSummary narrative, themes, and the curated quote bank excerpt list)
+- Never include raw assessment transcript content beyond what appears in the curated quote excerpts supplied below
 - Frame friction points as understanding ("This is what happens when these patterns meet"), never as warnings or blame
 - Focus on what emerges between these two people together, not on individual weaknesses or deficits
 
@@ -57,11 +60,7 @@ Section guidelines:
 
 Keep the total analysis between 800-1200 words across all sections. Write in second person, addressing both people ("You and [name]" or "One of you... the other...").`;
 
-function formatUserProfile(
-	label: string,
-	facetScoresMap: FacetScoresMap,
-	evidence: ReadonlyArray<ConversationEvidenceRecord>,
-): string {
+function formatFacetTraitBlock(facetScoresMap: FacetScoresMap): string {
 	const traitSummaries: string[] = [];
 
 	for (const trait of TRAIT_NAMES) {
@@ -74,28 +73,57 @@ function formatUserProfile(
 		}
 	}
 
-	const evidenceLines = evidence
-		.slice(0, 20) // Cap evidence to avoid prompt bloat
-		.map(
-			(e) =>
-				`- [${e.bigfiveFacet}] "${e.note}" (deviation: ${e.deviation}, strength: ${e.strength}, confidence: ${e.confidence})`,
-		)
+	return traitSummaries.join("\n\n");
+}
+
+function formatUserSummaryBlock(userSummary: UserSummaryRecord): string {
+	const themesLines =
+		userSummary.themes.length > 0
+			? userSummary.themes.map((t) => `- **${t.theme}**: ${t.description}`).join("\n")
+			: "(no themes)";
+
+	const quoteLines = userSummary.quoteBank
+		.slice(0, MAX_QUOTES_IN_PROMPT)
+		.map((q) => {
+			const excerpt =
+				q.quote.length > MAX_QUOTE_CHARS ? `${q.quote.slice(0, MAX_QUOTE_CHARS)}…` : q.quote;
+			const tag = q.themeTag ? ` [tag: ${q.themeTag}]` : "";
+			return `- ${JSON.stringify(excerpt)}${tag}`;
+		})
 		.join("\n");
 
-	return `=== ${label} ===
-FACET SCORES:
-${traitSummaries.join("\n\n")}
+	return `USER SUMMARY (compressed personality state — use for relational insight; not a full transcript):
+NARRATIVE:
+${userSummary.summaryText}
 
-KEY EVIDENCE:
-${evidenceLines || "(no evidence available)"}`;
+THEMES:
+${themesLines}
+
+CURATED QUOTE EXCERPTS (short verbatim lines; bounded list):
+${quoteLines || "(none)"}`;
+}
+
+function formatParticipantProfile(
+	label: string,
+	facetScoresMap: FacetScoresMap,
+	userSummary: UserSummaryRecord,
+): string {
+	const facetBlock = formatFacetTraitBlock(facetScoresMap);
+	const summaryBlock = formatUserSummaryBlock(userSummary);
+
+	return `=== ${label} ===
+FACET SCORES (internal calibration — do not mention numerically in the final JSON output):
+${facetBlock}
+
+${summaryBlock}`;
 }
 
 export interface RelationshipAnalysisPromptInput {
 	readonly userAFacetScores: FacetScoresMap;
-	readonly userAEvidence: ReadonlyArray<ConversationEvidenceRecord>;
+	readonly userAUserSummary: UserSummaryRecord;
 	readonly userAName: string;
 	readonly userBFacetScores: FacetScoresMap;
-	readonly userBEvidence: ReadonlyArray<ConversationEvidenceRecord>;
+	readonly userBUserSummary: UserSummaryRecord;
 	readonly userBName: string;
 }
 
@@ -103,15 +131,15 @@ export function buildRelationshipAnalysisPrompt(input: RelationshipAnalysisPromp
 	systemPrompt: string;
 	userPrompt: string;
 } {
-	const userAProfile = formatUserProfile(
+	const userAProfile = formatParticipantProfile(
 		input.userAName || "Person A",
 		input.userAFacetScores,
-		input.userAEvidence,
+		input.userAUserSummary,
 	);
-	const userBProfile = formatUserProfile(
+	const userBProfile = formatParticipantProfile(
 		input.userBName || "Person B",
 		input.userBFacetScores,
-		input.userBEvidence,
+		input.userBUserSummary,
 	);
 
 	const userPrompt = `Generate a relationship personality comparison analysis for these two people.
@@ -120,7 +148,7 @@ ${userAProfile}
 
 ${userBProfile}
 
-Write a relationship analysis that reveals the dynamic between these two people. Be specific, perceptive, and honest. Reference their evidence when relevant. Output ONLY valid JSON in the spine format described in your instructions.`;
+Write a relationship analysis that reveals the dynamic between these two people. Be specific, perceptive, and honest. Draw on their UserSummary narratives, themes, and curated quotes when relevant. Output ONLY valid JSON in the spine format described in your instructions.`;
 
 	return {
 		systemPrompt: SYSTEM_PROMPT,

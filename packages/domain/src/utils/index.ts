@@ -15,7 +15,12 @@ export {
 	DEFAULT_TRAIT_SCORE,
 	type TraitConfidence,
 } from "./confidence";
-export { deriveCapabilities, hasPortraitForResult } from "./derive-capabilities";
+export {
+	deriveCapabilities,
+	getSubscriptionStatus,
+	hasPortraitForResult,
+	isEntitledTo,
+} from "./derive-capabilities";
 export { deriveTraitSummary } from "./derive-trait-summary";
 export { toFacetDisplayName } from "./display-name";
 export { getFacetLevel } from "./facet-level";

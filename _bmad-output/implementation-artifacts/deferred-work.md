@@ -205,3 +205,11 @@
 - `presetName` propagation from `PublicProfileCTA` to dialog name input not integration-tested end-to-end — dialog's `presetName` pre-fill is covered directly in `InviteCeremonyDialog.test.tsx`. [`PublicProfileCTA.test.tsx`]
 - UX §10.7 LOCKED block not in repo — exact wording compliance unverifiable from code alone. Process note: copy should be snapshotted in a fixture or test. [`invite-ceremony-copy.ts`]
 - Re-entrant `openCeremony` while dialog is already open reuses live QR session without reset — production-unreachable in current nav model. [`InviteCeremonyProvider.tsx:26-29`]
+
+## Deferred from: code review of 7-2-relationship-letter-generation-with-usersummary (2026-04-16)
+
+- Retry loop has no termination strategy — `incrementRetryCount` with no cap, backoff, or terminal failure state. Pre-existing across all generators. [`generate-relationship-analysis.use-case.ts:90-94`]
+- Asymmetric log levels for inviter vs invitee missing data — inviter = `error`, invitee = `info`. May trigger false alerts on transient delays. Pre-existing from Story 14.4. [`generate-relationship-analysis.use-case.ts:86-97`]
+- Participant names hardcoded as "Person A"/"Person B" — display names not resolved from entity. Pre-existing since Story 14.4. [`generate-relationship-analysis.use-case.ts:106-109`]
+- `Effect.catchAll` broader than `catchTag`-only guidance in CLAUDE.md — logs + re-fails without remapping. Pre-existing. [`generate-relationship-analysis.use-case.ts:116-125`]
+- Empty/malformed UserSummary fields not validated before prompt construction — `summaryText`, `quoteBank` entries may degrade silently. Pre-existing pattern across generators. [`relationship-analysis.prompt.ts:84-100`]

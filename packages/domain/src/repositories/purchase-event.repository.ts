@@ -7,12 +7,18 @@
 
 import { Context, Effect } from "effect";
 import { DatabaseError, DuplicateCheckoutError } from "../errors/http.errors";
-import type { PurchaseEvent, PurchaseEventType, UserCapabilities } from "../types/purchase.types";
-
+import type {
+	EntitlementFeature,
+	PurchaseEvent,
+	PurchaseEventType,
+	SubscriptionStatus,
+	UserCapabilities,
+} from "../types/purchase.types";
 export interface InsertPurchaseEvent {
 	readonly userId: string;
 	readonly eventType: PurchaseEventType;
 	readonly polarCheckoutId?: string | null;
+	readonly polarSubscriptionId?: string | null;
 	readonly polarProductId?: string | null;
 	readonly amountCents?: number | null;
 	readonly currency?: string | null;
@@ -34,6 +40,17 @@ export class PurchaseEventRepository extends Context.Tag("PurchaseEventRepositor
 		readonly getCapabilities: (
 			userId: string,
 		) => Effect.Effect<UserCapabilities, DatabaseError, never>;
+
+		/** Subscription phase from subscription_* events (Story 8.1). */
+		readonly getSubscriptionStatus: (
+			userId: string,
+		) => Effect.Effect<SubscriptionStatus, DatabaseError, never>;
+
+		/** Entitlement check — delegates to pure `isEntitledTo` on loaded events (Story 8.1). */
+		readonly isEntitledTo: (
+			userId: string,
+			feature: EntitlementFeature,
+		) => Effect.Effect<boolean, DatabaseError, never>;
 
 		/**
 		 * Get purchase event by Polar checkout ID.

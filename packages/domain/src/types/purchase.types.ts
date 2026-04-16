@@ -18,6 +18,10 @@ export const PURCHASE_EVENT_TYPES = [
 	"portrait_refunded",
 	"credit_refunded",
 	"extended_conversation_refunded",
+	"subscription_started",
+	"subscription_renewed",
+	"subscription_cancelled",
+	"subscription_expired",
 ] as const;
 
 export type PurchaseEventType = (typeof PURCHASE_EVENT_TYPES)[number];
@@ -29,6 +33,7 @@ export interface PurchaseEvent {
 	readonly userId: string | null;
 	readonly eventType: PurchaseEventType;
 	readonly polarCheckoutId: string | null;
+	readonly polarSubscriptionId: string | null;
 	readonly polarProductId: string | null;
 	readonly amountCents: number | null;
 	readonly currency: string | null;
@@ -42,6 +47,14 @@ export interface UserCapabilities {
 	readonly hasFullPortrait: boolean;
 	readonly hasExtendedConversation: boolean;
 }
+
+/** Subscription lifecycle derived from subscription_* purchase events (Story 8.1). */
+export const SUBSCRIPTION_STATUSES = ["active", "cancelled_active", "expired", "none"] as const;
+export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
+
+/** Features checked by `isEntitledTo` (Story 8.1). */
+export const ENTITLEMENT_FEATURES = ["conversation_extension"] as const;
+export type EntitlementFeature = (typeof ENTITLEMENT_FEATURES)[number];
 
 // ─── Metadata Schema (safe jsonb parsing) ────────────────────────────────
 

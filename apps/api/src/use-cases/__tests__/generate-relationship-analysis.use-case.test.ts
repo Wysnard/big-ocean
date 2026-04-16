@@ -1,12 +1,12 @@
 /**
- * Generate Relationship Analysis Use Case Tests (Story 18-6, updated Story 35-2, 35-5)
+ * Generate Relationship Analysis Use Case Tests (Story 18-6, Story 35-2, 35-5, Epic 7.2)
  *
  * Tests:
  * - Successful generation updates placeholder
- * - Retry when inviter data not found
- * - Retry when invitee data not found
+ * - Retry when inviter session/result/UserSummary missing
+ * - Retry when invitee inputs not ready
  * - Idempotent update (already has content)
- * - Uses ConversationEvidenceRepository (not FinalizationEvidenceRepository)
+ * - UserSummaryRepository.getByAssessmentResultId (not raw evidence)
  * - Email notification sent after successful generation (Story 35-5)
  * - Email notification NOT sent on idempotent skip (Story 35-5)
  */
@@ -16,7 +16,6 @@ import {
 	AnalysisNotFoundError,
 	AppConfig,
 	AssessmentResultRepository,
-	ConversationEvidenceRepository,
 	ConversationRepository,
 	LoggerRepository,
 	PushNotificationQueueRepository,
@@ -24,8 +23,10 @@ import {
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
 	ResendEmailRepository,
+	UserSummaryRepository,
 	WebPushRepository,
 } from "@workspace/domain";
+import type { UserSummaryRecord } from "@workspace/domain/repositories/user-summary.repository";
 import { Effect, Layer, Redacted } from "effect";
 import { vi } from "vitest";
 import { generateRelationshipAnalysis } from "../generate-relationship-analysis.use-case";
@@ -134,10 +135,10 @@ const mockResultsRepo = {
 	delete: vi.fn(),
 };
 
-const mockConversationEvidenceRepo = {
-	save: vi.fn(),
-	findBySession: vi.fn(),
-	countByMessage: vi.fn(),
+const mockUserSummaryRepo = {
+	upsertForAssessmentResult: vi.fn(),
+	getByAssessmentResultId: vi.fn(),
+	getLatestForUser: vi.fn(),
 };
 
 const mockLogger = {
@@ -153,7 +154,7 @@ const createTestLayer = () =>
 		Layer.succeed(RelationshipAnalysisGeneratorRepository, mockAnalysisGen),
 		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
-		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
+		Layer.succeed(UserSummaryRepository, mockUserSummaryRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.succeed(ResendEmailRepository, mockEmailRepo),
 		Layer.succeed(PushSubscriptionRepository, mockPushSubscriptionRepo),
@@ -165,6 +166,21 @@ const createTestLayer = () =>
 const INVITER_ID = "inviter-user-1";
 const INVITEE_ID = "invitee-user-2";
 const ANALYSIS_ID = "analysis-123";
+
+function mockUserSummaryForResult(resultId: string): UserSummaryRecord {
+	const isInviter = resultId.includes("inviter-user-1");
+	return {
+		id: `us-${resultId}`,
+		userId: isInviter ? INVITER_ID : INVITEE_ID,
+		assessmentResultId: resultId,
+		themes: [{ theme: "Core", description: isInviter ? "Inviter theme" : "Invitee theme" }],
+		quoteBank: [{ quote: isInviter ? "Inviter quote" : "Invitee quote" }],
+		summaryText: isInviter ? "Inviter summary text" : "Invitee summary text",
+		version: 1,
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	};
+}
 
 const mockSession = (userId: string) => ({
 	id: `session-${userId}`,
@@ -188,21 +204,6 @@ const mockResult = (sessionId: string) => ({
 	updatedAt: new Date(),
 });
 
-const mockConversationEvidence = [
-	{
-		id: "ev_1",
-		sessionId: "session-inviter-user-1",
-		messageId: "msg_1",
-		bigfiveFacet: "imagination",
-		deviation: 2,
-		strength: "strong",
-		confidence: "high",
-		domain: "work",
-		note: "Shows vivid creative thinking",
-		createdAt: new Date(),
-	},
-];
-
 describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -214,8 +215,8 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 		mockResultsRepo.getBySessionId.mockImplementation((sessionId: string) =>
 			Effect.succeed(mockResult(sessionId)),
 		);
-		mockConversationEvidenceRepo.findBySession.mockReturnValue(
-			Effect.succeed(mockConversationEvidence),
+		mockUserSummaryRepo.getByAssessmentResultId.mockImplementation((resultId: string) =>
+			Effect.succeed(mockUserSummaryForResult(resultId)),
 		);
 		mockAnalysisGen.generateAnalysis.mockReturnValue(
 			Effect.succeed({
@@ -273,6 +274,12 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 				expect.objectContaining({
 					userAName: "Person A",
 					userBName: "Person B",
+					userAUserSummary: expect.objectContaining({
+						summaryText: "Inviter summary text",
+					}),
+					userBUserSummary: expect.objectContaining({
+						summaryText: "Invitee summary text",
+					}),
 				}),
 			);
 
@@ -369,7 +376,7 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should load conversation evidence by session for both users", () =>
+	it.effect("should load UserSummary by assessment result id for both users (Story 7.2)", () =>
 		Effect.gen(function* () {
 			yield* generateRelationshipAnalysis({
 				analysisId: ANALYSIS_ID,
@@ -377,15 +384,38 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 				inviteeUserId: INVITEE_ID,
 			});
 
-			// Both users' sessions queried
 			expect(mockSessionRepo.findSessionByUserId).toHaveBeenCalledWith(INVITER_ID);
 			expect(mockSessionRepo.findSessionByUserId).toHaveBeenCalledWith(INVITEE_ID);
 
-			// Results loaded for both sessions
 			expect(mockResultsRepo.getBySessionId).toHaveBeenCalledTimes(2);
 
-			// Conversation evidence loaded by session for both users
-			expect(mockConversationEvidenceRepo.findBySession).toHaveBeenCalledTimes(2);
+			expect(mockUserSummaryRepo.getByAssessmentResultId).toHaveBeenCalledTimes(2);
+			expect(mockUserSummaryRepo.getByAssessmentResultId).toHaveBeenCalledWith(
+				"result-session-inviter-user-1",
+			);
+			expect(mockUserSummaryRepo.getByAssessmentResultId).toHaveBeenCalledWith(
+				"result-session-invitee-user-2",
+			);
+		}).pipe(Effect.provide(createTestLayer())),
+	);
+
+	it.effect("should increment retry when inviter UserSummary is missing (Story 7.2)", () =>
+		Effect.gen(function* () {
+			mockUserSummaryRepo.getByAssessmentResultId.mockImplementation((resultId: string) => {
+				if (resultId === "result-session-inviter-user-1") {
+					return Effect.succeed(null);
+				}
+				return Effect.succeed(mockUserSummaryForResult(resultId));
+			});
+
+			const result = yield* generateRelationshipAnalysis({
+				analysisId: ANALYSIS_ID,
+				inviterUserId: INVITER_ID,
+				inviteeUserId: INVITEE_ID,
+			});
+
+			expect(result.success).toBe(false);
+			expect(mockAnalysisRepo.incrementRetryCount).toHaveBeenCalledWith(ANALYSIS_ID);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 });

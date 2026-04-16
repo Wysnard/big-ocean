@@ -53,6 +53,7 @@ export const defaultTestConfig: AppConfigService = {
 	polarProductRelationshipSingle: "polar_product_single",
 	polarProductRelationship5Pack: "polar_product_5pack",
 	polarProductExtendedConversation: "polar_product_extended",
+	polarProductSubscription: "polar_product_subscription",
 	globalDailyAssessmentLimit: 100,
 	minEvidenceWeight: 0.36,
 	// Email Infrastructure (Story 31-7)

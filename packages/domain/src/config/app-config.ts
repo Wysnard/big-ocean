@@ -113,6 +113,9 @@ export interface AppConfigService {
 	/** Polar product ID for extended conversation */
 	readonly polarProductExtendedConversation: string;
 
+	/** Polar product ID for €9.99/mo subscription (conversation extension) — Story 8.1 */
+	readonly polarProductSubscription: string;
+
 	/** Global daily assessment limit (circuit breaker) — Story 15.3 */
 	readonly globalDailyAssessmentLimit: number;
 

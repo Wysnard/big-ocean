@@ -1,5 +1,5 @@
 # generated: 2026-04-16T01:18:25+02:00
-# last_updated: 2026-04-16T01:18:25+02:00
+# last_updated: 2026-04-16T22:05:00+02:00
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -44,7 +44,7 @@
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
 generated: 2026-04-16T01:18:25+02:00
-last_updated: 2026-04-16T01:18:25+02:00
+last_updated: 2026-04-16T22:05:00+02:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
@@ -107,13 +107,13 @@ development_status:
   # Epic 7: Relationship Letter — Living Relational Space
   epic-7: in-progress
   7-1-usersummary-data-model-and-generator: done
-  7-2-relationship-letter-generation-with-usersummary: backlog
+  7-2-relationship-letter-generation-with-usersummary: done
   7-3-relationship-letter-page-living-relational-space: backlog
   epic-7-retrospective: optional
 
   # Epic 8: Subscription & Conversation Extension
-  epic-8: backlog
-  8-1-subscription-event-types-and-entitlement-derivation: backlog
+  epic-8: in-progress
+  8-1-subscription-event-types-and-entitlement-derivation: done
   8-2-subscription-checkout-flow: backlog
   8-3-conversation-extension-activation: backlog
   epic-8-retrospective: optional

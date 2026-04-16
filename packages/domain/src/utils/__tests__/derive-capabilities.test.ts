@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { PurchaseEvent } from "../../types/purchase.types";
 import { parseMetadata } from "../../types/purchase.types";
-import { deriveCapabilities, hasPortraitForResult } from "../derive-capabilities";
+import {
+	deriveCapabilities,
+	getSubscriptionStatus,
+	hasPortraitForResult,
+	isEntitledTo,
+} from "../derive-capabilities";
 
 const makeEvent = (
 	overrides: Partial<PurchaseEvent> & Pick<PurchaseEvent, "eventType">,
@@ -9,10 +14,12 @@ const makeEvent = (
 	id: crypto.randomUUID(),
 	userId: "user-1",
 	polarCheckoutId: null,
+	polarSubscriptionId: null,
 	polarProductId: null,
 	amountCents: null,
 	currency: null,
 	metadata: null,
+	assessmentResultId: null,
 	createdAt: new Date(),
 	...overrides,
 });
@@ -144,6 +151,222 @@ describe("hasPortraitForResult", () => {
 			"result-1",
 		);
 		expect(result).toBe(false);
+	});
+});
+
+describe("getSubscriptionStatus", () => {
+	it("returns none when there are no subscription events", () => {
+		expect(getSubscriptionStatus([makeEvent({ eventType: "free_credit_granted" })])).toBe("none");
+	});
+
+	it("returns active after subscription_started", () => {
+		expect(
+			getSubscriptionStatus([
+				makeEvent({ eventType: "subscription_started", polarSubscriptionId: "sub-1" }),
+			]),
+		).toBe("active");
+	});
+
+	it("returns cancelled_active after started then cancelled", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-01-02T00:00:00Z");
+		expect(
+			getSubscriptionStatus([
+				makeEvent({
+					eventType: "subscription_started",
+					polarSubscriptionId: "sub-1",
+					createdAt: t0,
+				}),
+				makeEvent({
+					eventType: "subscription_cancelled",
+					polarSubscriptionId: "sub-1",
+					createdAt: t1,
+				}),
+			]),
+		).toBe("cancelled_active");
+	});
+
+	it("returns expired after subscription_expired", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-01-02T00:00:00Z");
+		const t2 = new Date("2026-01-03T00:00:00Z");
+		expect(
+			getSubscriptionStatus([
+				makeEvent({
+					eventType: "subscription_started",
+					polarSubscriptionId: "sub-1",
+					createdAt: t0,
+				}),
+				makeEvent({
+					eventType: "subscription_cancelled",
+					polarSubscriptionId: "sub-1",
+					createdAt: t1,
+				}),
+				makeEvent({
+					eventType: "subscription_expired",
+					polarSubscriptionId: "sub-1",
+					createdAt: t2,
+				}),
+			]),
+		).toBe("expired");
+	});
+
+	it("sorts out-of-order rows by createdAt", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-01-02T00:00:00Z");
+		expect(
+			getSubscriptionStatus([
+				makeEvent({
+					eventType: "subscription_cancelled",
+					polarSubscriptionId: "sub-1",
+					createdAt: t1,
+				}),
+				makeEvent({
+					eventType: "subscription_started",
+					polarSubscriptionId: "sub-1",
+					createdAt: t0,
+				}),
+			]),
+		).toBe("cancelled_active");
+	});
+
+	it("returns active after renewal following started", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-02-01T00:00:00Z");
+		expect(
+			getSubscriptionStatus([
+				makeEvent({
+					eventType: "subscription_started",
+					polarSubscriptionId: "sub-1",
+					createdAt: t0,
+				}),
+				makeEvent({
+					eventType: "subscription_renewed",
+					polarSubscriptionId: "sub-1",
+					createdAt: t1,
+				}),
+			]),
+		).toBe("active");
+	});
+
+	it("handles the full started-renewed-cancelled-expired lifecycle", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-02-01T00:00:00Z");
+		const t2 = new Date("2026-02-10T00:00:00Z");
+		const t3 = new Date("2026-03-01T00:00:00Z");
+		expect(
+			getSubscriptionStatus([
+				makeEvent({
+					eventType: "subscription_started",
+					polarSubscriptionId: "sub-1",
+					createdAt: t0,
+				}),
+				makeEvent({
+					eventType: "subscription_renewed",
+					polarSubscriptionId: "sub-1",
+					createdAt: t1,
+				}),
+				makeEvent({
+					eventType: "subscription_cancelled",
+					polarSubscriptionId: "sub-1",
+					createdAt: t2,
+				}),
+				makeEvent({
+					eventType: "subscription_expired",
+					polarSubscriptionId: "sub-1",
+					createdAt: t3,
+				}),
+			]),
+		).toBe("expired");
+	});
+
+	it("ignores expired events for an older subscription after a newer subscription starts", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-02-01T00:00:00Z");
+		const t2 = new Date("2026-02-02T00:00:00Z");
+		expect(
+			getSubscriptionStatus([
+				makeEvent({
+					eventType: "subscription_started",
+					polarSubscriptionId: "sub-old",
+					createdAt: t0,
+				}),
+				makeEvent({
+					eventType: "subscription_started",
+					polarSubscriptionId: "sub-new",
+					createdAt: t1,
+				}),
+				makeEvent({
+					eventType: "subscription_expired",
+					polarSubscriptionId: "sub-old",
+					createdAt: t2,
+				}),
+			]),
+		).toBe("active");
+	});
+});
+
+describe("isEntitledTo", () => {
+	it("grants conversation_extension for active subscription", () => {
+		expect(
+			isEntitledTo(
+				[makeEvent({ eventType: "subscription_started", polarSubscriptionId: "sub-1" })],
+				"conversation_extension",
+			),
+		).toBe(true);
+	});
+
+	it("grants conversation_extension for cancelled_active", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-01-02T00:00:00Z");
+		expect(
+			isEntitledTo(
+				[
+					makeEvent({
+						eventType: "subscription_started",
+						polarSubscriptionId: "sub-1",
+						createdAt: t0,
+					}),
+					makeEvent({
+						eventType: "subscription_cancelled",
+						polarSubscriptionId: "sub-1",
+						createdAt: t1,
+					}),
+				],
+				"conversation_extension",
+			),
+		).toBe(true);
+	});
+
+	it("denies conversation_extension when expired without legacy unlock", () => {
+		const t0 = new Date("2026-01-01T00:00:00Z");
+		const t1 = new Date("2026-01-02T00:00:00Z");
+		expect(
+			isEntitledTo(
+				[
+					makeEvent({
+						eventType: "subscription_started",
+						polarSubscriptionId: "sub-1",
+						createdAt: t0,
+					}),
+					makeEvent({
+						eventType: "subscription_expired",
+						polarSubscriptionId: "sub-1",
+						createdAt: t1,
+					}),
+				],
+				"conversation_extension",
+			),
+		).toBe(false);
+	});
+
+	it("allows legacy extended_conversation_unlocked", () => {
+		expect(
+			isEntitledTo(
+				[makeEvent({ eventType: "extended_conversation_unlocked" })],
+				"conversation_extension",
+			),
+		).toBe(true);
 	});
 });
 

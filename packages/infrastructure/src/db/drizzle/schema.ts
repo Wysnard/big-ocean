@@ -27,6 +27,7 @@ import { PURCHASE_EVENT_TYPES } from "@workspace/domain/types/purchase.types";
 import { defineRelations, sql } from "drizzle-orm";
 import {
 	boolean,
+	check,
 	date,
 	index,
 	integer,
@@ -374,6 +375,7 @@ export const purchaseEvents = pgTable(
 		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
 		eventType: purchaseEventTypeEnum("event_type").notNull(),
 		polarCheckoutId: text("polar_checkout_id"),
+		polarSubscriptionId: text("polar_subscription_id"),
 		polarProductId: text("polar_product_id"),
 		amountCents: integer("amount_cents"),
 		currency: text("currency"),
@@ -384,11 +386,36 @@ export const purchaseEvents = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
+		check(
+			"purchase_events_subscription_id_required_check",
+			sql`(${table.eventType} NOT IN ('subscription_started', 'subscription_renewed', 'subscription_cancelled', 'subscription_expired')) OR ${table.polarSubscriptionId} IS NOT NULL`,
+		),
 		index("purchase_events_user_id_idx").on(table.userId),
 		index("purchase_events_assessment_result_id_idx").on(table.assessmentResultId),
+		index("purchase_events_polar_subscription_id_idx").on(table.polarSubscriptionId),
 		uniqueIndex("purchase_events_polar_checkout_id_unique")
 			.on(table.polarCheckoutId)
 			.where(sql`polar_checkout_id IS NOT NULL`),
+		uniqueIndex("purchase_events_sub_started_unique")
+			.on(table.polarSubscriptionId)
+			.where(
+				sql`${table.eventType} = 'subscription_started' AND ${table.polarSubscriptionId} IS NOT NULL`,
+			),
+		uniqueIndex("purchase_events_sub_cancelled_unique")
+			.on(table.polarSubscriptionId)
+			.where(
+				sql`${table.eventType} = 'subscription_cancelled' AND ${table.polarSubscriptionId} IS NOT NULL`,
+			),
+		uniqueIndex("purchase_events_sub_expired_unique")
+			.on(table.polarSubscriptionId)
+			.where(
+				sql`${table.eventType} = 'subscription_expired' AND ${table.polarSubscriptionId} IS NOT NULL`,
+			),
+		uniqueIndex("purchase_events_sub_renewed_period_unique")
+			.on(table.polarSubscriptionId, sql`(${table.metadata}->>'renewalPeriodEnd')`)
+			.where(
+				sql`${table.eventType} = 'subscription_renewed' AND ${table.polarSubscriptionId} IS NOT NULL AND (${table.metadata}->>'renewalPeriodEnd') IS NOT NULL`,
+			),
 	],
 );
 

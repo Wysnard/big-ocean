@@ -18,4 +18,5 @@ export const validEnv = {
 	POLAR_PRODUCT_RELATIONSHIP_SINGLE: "polar_product_single",
 	POLAR_PRODUCT_RELATIONSHIP_5PACK: "polar_product_5pack",
 	POLAR_PRODUCT_EXTENDED_CONVERSATION: "polar_product_extended",
+	POLAR_PRODUCT_SUBSCRIPTION: "polar_product_subscription",
 };

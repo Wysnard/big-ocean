@@ -177,19 +177,21 @@ CREATE TABLE "waitlist_emails" (
 -- Purchase Events Table (Story 13.1)
 -- ============================================================================
 
-CREATE TYPE "public"."purchase_event_type" AS ENUM('free_credit_granted', 'portrait_unlocked', 'credit_purchased', 'credit_consumed', 'extended_conversation_unlocked', 'portrait_refunded', 'credit_refunded', 'extended_conversation_refunded');
+CREATE TYPE "public"."purchase_event_type" AS ENUM('free_credit_granted', 'portrait_unlocked', 'credit_purchased', 'credit_consumed', 'extended_conversation_unlocked', 'portrait_refunded', 'credit_refunded', 'extended_conversation_refunded', 'subscription_started', 'subscription_renewed', 'subscription_cancelled', 'subscription_expired');
 
 CREATE TABLE "purchase_events" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" text,
 	"event_type" "purchase_event_type" NOT NULL,
 	"polar_checkout_id" text,
+	"polar_subscription_id" text,
 	"polar_product_id" text,
 	"amount_cents" integer,
 	"currency" text,
 	"metadata" jsonb,
 	"assessment_result_id" uuid,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "purchase_events_subscription_id_required_check" CHECK (("event_type" NOT IN ('subscription_started', 'subscription_renewed', 'subscription_cancelled', 'subscription_expired')) OR "polar_subscription_id" IS NOT NULL)
 );
 
 -- ============================================================================
@@ -269,7 +271,12 @@ CREATE INDEX "public_profile_user_id_idx" ON "public_profile" ("user_id");
 -- Purchase events indexes (Story 13.1)
 CREATE INDEX "purchase_events_user_id_idx" ON "purchase_events" ("user_id");
 CREATE INDEX "purchase_events_assessment_result_id_idx" ON "purchase_events" ("assessment_result_id");
+CREATE INDEX "purchase_events_polar_subscription_id_idx" ON "purchase_events" ("polar_subscription_id");
 CREATE UNIQUE INDEX "purchase_events_polar_checkout_id_unique" ON "purchase_events" ("polar_checkout_id") WHERE polar_checkout_id IS NOT NULL;
+CREATE UNIQUE INDEX "purchase_events_sub_started_unique" ON "purchase_events" ("polar_subscription_id") WHERE "event_type" = 'subscription_started' AND "polar_subscription_id" IS NOT NULL;
+CREATE UNIQUE INDEX "purchase_events_sub_cancelled_unique" ON "purchase_events" ("polar_subscription_id") WHERE "event_type" = 'subscription_cancelled' AND "polar_subscription_id" IS NOT NULL;
+CREATE UNIQUE INDEX "purchase_events_sub_expired_unique" ON "purchase_events" ("polar_subscription_id") WHERE "event_type" = 'subscription_expired' AND "polar_subscription_id" IS NOT NULL;
+CREATE UNIQUE INDEX "purchase_events_sub_renewed_period_unique" ON "purchase_events" ("polar_subscription_id",("metadata"->>'renewalPeriodEnd')) WHERE "event_type" = 'subscription_renewed' AND "polar_subscription_id" IS NOT NULL AND ("metadata"->>'renewalPeriodEnd') IS NOT NULL;
 
 -- Portraits indexes (Story 13.3)
 CREATE INDEX "portraits_assessment_result_id_idx" ON "portraits" ("assessment_result_id");

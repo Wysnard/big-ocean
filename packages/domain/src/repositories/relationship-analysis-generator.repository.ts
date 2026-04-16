@@ -7,14 +7,14 @@
 
 import { Context, Data, Effect } from "effect";
 import type { FacetScoresMap } from "../types/facet-evidence";
-import type { ConversationEvidenceRecord } from "./conversation-evidence.repository";
+import type { UserSummaryRecord } from "./user-summary.repository";
 
 export interface RelationshipAnalysisGenerationInput {
 	readonly userAFacetScores: FacetScoresMap;
-	readonly userAEvidence: ReadonlyArray<ConversationEvidenceRecord>;
+	readonly userAUserSummary: UserSummaryRecord;
 	readonly userAName: string;
 	readonly userBFacetScores: FacetScoresMap;
-	readonly userBEvidence: ReadonlyArray<ConversationEvidenceRecord>;
+	readonly userBUserSummary: UserSummaryRecord;
 	readonly userBName: string;
 }
 

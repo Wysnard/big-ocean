@@ -15,13 +15,14 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { checkout, polar, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
+import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
 import type { AppConfigService, PortraitJob, PurchaseEventType } from "@workspace/domain";
 import { AppConfig, PortraitJobQueue } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { haveIBeenPwned } from "better-auth/plugins";
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Queue, Redacted } from "effect";
 import pg from "pg";
@@ -29,6 +30,10 @@ import { Resend } from "resend";
 import * as authSchema from "../db/drizzle/schema";
 import { renderEmailVerificationEmail } from "../email-templates/email-verification";
 import { renderPasswordResetEmail } from "../email-templates/password-reset";
+import {
+	getLifecycleEventFromSubscriptionUpdate,
+	shouldRecordSubscriptionRenewal,
+} from "./polar-subscription-events";
 
 /**
  * Better Auth instance type — inferred from betterAuth() return.
@@ -171,6 +176,206 @@ export const BetterAuthLive = Layer.effect(
 					: "production",
 		});
 
+		const isTrackedSubscriptionProduct = (productId: string): boolean =>
+			productId === config.polarProductSubscription;
+
+		const userIdFromSubscription = (sub: Subscription): string | undefined => {
+			const externalId = sub.customer?.externalId;
+			return typeof externalId === "string" && externalId.length > 0 ? externalId : undefined;
+		};
+
+		const toMetadataRecord = (value: unknown): Record<string, unknown> => {
+			if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+				return value as Record<string, unknown>;
+			}
+			return {};
+		};
+
+		const insertSubscriptionPurchaseEvent = async (params: {
+			readonly userId: string;
+			readonly eventType:
+				| "subscription_started"
+				| "subscription_renewed"
+				| "subscription_cancelled"
+				| "subscription_expired";
+			readonly polarSubscriptionId: string;
+			readonly polarProductId: string;
+			readonly amountCents?: number | null;
+			readonly currency?: string | null;
+			readonly metadata: unknown;
+		}): Promise<void> => {
+			try {
+				await plainDb
+					.insert(authSchema.purchaseEvents)
+					.values({
+						id: crypto.randomUUID(),
+						userId: params.userId,
+						eventType: params.eventType,
+						polarCheckoutId: null,
+						polarSubscriptionId: params.polarSubscriptionId,
+						polarProductId: params.polarProductId,
+						amountCents: params.amountCents ?? null,
+						currency: params.currency ?? null,
+						metadata: params.metadata,
+						assessmentResultId: null,
+					})
+					.onConflictDoNothing();
+				logger.info("Polar webhook: subscription lifecycle event recorded", {
+					userId: params.userId,
+					eventType: params.eventType,
+					polarSubscriptionId: params.polarSubscriptionId,
+				});
+			} catch (error) {
+				const msg = error instanceof Error ? error.message : String(error);
+				logger.error(`Polar webhook: failed to record subscription event: ${msg}`);
+			}
+		};
+
+		const recordSubscriptionStarted = async (sub: Subscription): Promise<void> => {
+			if (!isTrackedSubscriptionProduct(sub.productId)) return;
+			const userId = userIdFromSubscription(sub);
+			if (!userId) {
+				logger.warn("Polar webhook: subscription missing customer.externalId", {
+					subscriptionId: sub.id,
+				});
+				return;
+			}
+			const periodEnd = sub.currentPeriodEnd?.toISOString() ?? null;
+			await insertSubscriptionPurchaseEvent({
+				userId,
+				eventType: "subscription_started",
+				polarSubscriptionId: sub.id,
+				polarProductId: sub.productId,
+				amountCents: sub.amount,
+				currency: sub.currency,
+				metadata: { periodEnd },
+			});
+		};
+
+		const recordSubscriptionCancelled = async (sub: Subscription): Promise<void> => {
+			if (!isTrackedSubscriptionProduct(sub.productId)) return;
+			const userId = userIdFromSubscription(sub);
+			if (!userId) {
+				logger.warn("Polar webhook: subscription.canceled missing externalId", {
+					subscriptionId: sub.id,
+				});
+				return;
+			}
+			await insertSubscriptionPurchaseEvent({
+				userId,
+				eventType: "subscription_cancelled",
+				polarSubscriptionId: sub.id,
+				polarProductId: sub.productId,
+				amountCents: sub.amount,
+				currency: sub.currency,
+				metadata: {
+					cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+					canceledAt: sub.canceledAt?.toISOString() ?? null,
+				},
+			});
+		};
+
+		const recordSubscriptionExpired = async (sub: Subscription): Promise<void> => {
+			if (!isTrackedSubscriptionProduct(sub.productId)) return;
+			const userId = userIdFromSubscription(sub);
+			if (!userId) {
+				logger.warn("Polar webhook: subscription.revoked missing externalId", {
+					subscriptionId: sub.id,
+				});
+				return;
+			}
+			await insertSubscriptionPurchaseEvent({
+				userId,
+				eventType: "subscription_expired",
+				polarSubscriptionId: sub.id,
+				polarProductId: sub.productId,
+				amountCents: sub.amount,
+				currency: sub.currency,
+				metadata: {
+					endedAt: sub.endedAt?.toISOString() ?? null,
+					status: sub.status,
+				},
+			});
+		};
+
+		const recordSubscriptionRenewedIfNeeded = async (sub: Subscription): Promise<void> => {
+			if (!isTrackedSubscriptionProduct(sub.productId)) return;
+			const userId = userIdFromSubscription(sub);
+			if (!userId) {
+				logger.warn("Polar webhook: subscription.updated missing customer.externalId", {
+					subscriptionId: sub.id,
+				});
+				return;
+			}
+			const newPeriodEnd = sub.currentPeriodEnd?.toISOString();
+			if (!newPeriodEnd) return;
+
+			const startedRows = await plainDb
+				.select()
+				.from(authSchema.purchaseEvents)
+				.where(
+					and(
+						eq(authSchema.purchaseEvents.polarSubscriptionId, sub.id),
+						eq(authSchema.purchaseEvents.eventType, "subscription_started"),
+					),
+				)
+				.limit(1);
+
+			if (startedRows.length === 0) {
+				await recordSubscriptionStarted(sub);
+				return;
+			}
+
+			const started = startedRows[0];
+			if (!started) {
+				await recordSubscriptionStarted(sub);
+				return;
+			}
+			const startedMeta = toMetadataRecord(started.metadata);
+			const startedPeriodEnd =
+				typeof startedMeta.periodEnd === "string" ? startedMeta.periodEnd : null;
+
+			if (startedPeriodEnd === newPeriodEnd) return;
+
+			const lastRenewedRows = await plainDb
+				.select()
+				.from(authSchema.purchaseEvents)
+				.where(
+					and(
+						eq(authSchema.purchaseEvents.polarSubscriptionId, sub.id),
+						eq(authSchema.purchaseEvents.eventType, "subscription_renewed"),
+					),
+				)
+				.orderBy(desc(authSchema.purchaseEvents.createdAt))
+				.limit(1);
+
+			const lastRenewed = lastRenewedRows[0];
+			const latestRenewalPeriodEnd = (() => {
+				const lrMeta = toMetadataRecord(lastRenewed?.metadata);
+				return typeof lrMeta.renewalPeriodEnd === "string" ? lrMeta.renewalPeriodEnd : null;
+			})();
+
+			if (
+				!shouldRecordSubscriptionRenewal({
+					startedPeriodEnd,
+					latestRenewalPeriodEnd,
+					currentPeriodEnd: newPeriodEnd,
+				})
+			) {
+				return;
+			}
+
+			await insertSubscriptionPurchaseEvent({
+				userId,
+				eventType: "subscription_renewed",
+				polarSubscriptionId: sub.id,
+				polarProductId: sub.productId,
+				amountCents: sub.amount,
+				currency: sub.currency,
+				metadata: { renewalPeriodEnd: newPeriodEnd },
+			});
+		};
+
 		// Create Better Auth with plain node-postgres drizzle instance
 		const auth = betterAuth({
 			database: drizzleAdapter(plainDb, {
@@ -196,12 +401,41 @@ export const BetterAuthLive = Layer.effect(
 									productId: config.polarProductExtendedConversation,
 									slug: "extended-conversation",
 								},
+								{ productId: config.polarProductSubscription, slug: "subscription" },
 							],
 
 							authenticatedUsersOnly: true,
 						}),
 						webhooks({
 							secret: Redacted.value(config.polarWebhookSecret),
+							onSubscriptionCreated: async (payload) => {
+								await recordSubscriptionStarted(payload.data);
+							},
+							onSubscriptionActive: async (payload) => {
+								await recordSubscriptionStarted(payload.data);
+							},
+							onSubscriptionCanceled: async (payload) => {
+								await recordSubscriptionCancelled(payload.data);
+							},
+							onSubscriptionRevoked: async (payload) => {
+								await recordSubscriptionExpired(payload.data);
+							},
+							onSubscriptionUpdated: async (payload) => {
+								const sub = payload.data;
+								const lifecycleEvent = getLifecycleEventFromSubscriptionUpdate(sub);
+								if (lifecycleEvent === "subscription_expired") {
+									await recordSubscriptionExpired(sub);
+									return;
+								}
+								if (lifecycleEvent === "subscription_cancelled") {
+									await recordSubscriptionCancelled(sub);
+									return;
+								}
+								if (lifecycleEvent === "subscription_started") {
+									await recordSubscriptionStarted(sub);
+								}
+								await recordSubscriptionRenewedIfNeeded(sub);
+							},
 							onOrderPaid: async (payload) => {
 								const order = payload.data;
 								const userId = order.customer?.externalId;
@@ -214,6 +448,13 @@ export const BetterAuthLive = Layer.effect(
 
 								// Map Polar product ID to internal event type
 								const productId = order.productId ?? "";
+								if (productId === config.polarProductSubscription) {
+									logger.info(
+										"Polar webhook: order.paid for subscription product — lifecycle handled by subscription webhooks",
+										{ orderId: order.id, productId },
+									);
+									return;
+								}
 								const eventType = mapPolarProductToEventType(productId, config);
 								if (!eventType) {
 									logger.warn("Polar webhook: unknown product", { productId });

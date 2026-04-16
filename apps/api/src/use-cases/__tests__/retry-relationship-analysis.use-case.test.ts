@@ -11,11 +11,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	AssessmentResultRepository,
-	ConversationEvidenceRepository,
 	ConversationRepository,
 	LoggerRepository,
 	RelationshipAnalysisGeneratorRepository,
 	RelationshipAnalysisRepository,
+	UserSummaryRepository,
 } from "@workspace/domain";
 import { Effect, Exit, Layer } from "effect";
 import { vi } from "vitest";
@@ -54,10 +54,10 @@ const mockResultsRepo = {
 	getLatestByUserId: vi.fn(),
 };
 
-const mockConversationEvidenceRepo = {
-	save: vi.fn(),
-	findBySession: vi.fn(),
-	countByMessage: vi.fn(),
+const mockUserSummaryRepo = {
+	upsertForAssessmentResult: vi.fn(),
+	getByAssessmentResultId: vi.fn(),
+	getLatestForUser: vi.fn(),
 };
 
 const mockLogger = {
@@ -73,7 +73,7 @@ const createTestLayer = () =>
 		Layer.succeed(RelationshipAnalysisGeneratorRepository, mockAnalysisGen),
 		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
-		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
+		Layer.succeed(UserSummaryRepository, mockUserSummaryRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 	);
 

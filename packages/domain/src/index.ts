@@ -486,15 +486,19 @@ export {
 	PORTRAIT_TYPES,
 } from "./types/portrait-rating.types";
 export type {
+	EntitlementFeature,
 	PolarWebhookEvent,
 	PurchaseEvent,
 	PurchaseEventType,
+	SubscriptionStatus,
 	UserCapabilities,
 } from "./types/purchase.types";
 // Purchase event types (Story 13.1)
 export {
+	ENTITLEMENT_FEATURES,
 	PURCHASE_EVENT_TYPES,
 	parseMetadata,
+	SUBSCRIPTION_STATUSES,
 } from "./types/purchase.types";
 // Relationship types (Story 34-1 — QR Token Infrastructure)
 export type {
@@ -551,11 +555,13 @@ export {
 	generateOceanCode,
 	getFacetColor,
 	getFacetLevel,
+	getSubscriptionStatus,
 	getTraitColor,
 	getTraitGradient,
 	getTribeGroup,
 	hasPortraitForResult,
 	type IsoWeekBounds,
+	isEntitledTo,
 	lookupArchetype,
 	resolveIsoWeekBounds,
 	type TraitConfidence,

@@ -5,7 +5,13 @@
  * No mutable counters — all state derived from events.
  */
 
-import type { PurchaseEvent, UserCapabilities } from "../types/purchase.types";
+import type {
+	EntitlementFeature,
+	PurchaseEvent,
+	PurchaseEventType,
+	SubscriptionStatus,
+	UserCapabilities,
+} from "../types/purchase.types";
 import { parseMetadata } from "../types/purchase.types";
 
 /**
@@ -57,6 +63,11 @@ export const deriveCapabilities = (events: PurchaseEvent[]): UserCapabilities =>
 			case "extended_conversation_refunded":
 				hasExtendedRefund = true;
 				break;
+			case "subscription_started":
+			case "subscription_renewed":
+			case "subscription_cancelled":
+			case "subscription_expired":
+				break;
 		}
 	}
 
@@ -85,4 +96,110 @@ export const hasPortraitForResult = (
 		(e) => e.eventType === "portrait_refunded" && e.assessmentResultId === assessmentResultId,
 	);
 	return hasUnlock && !hasRefund;
+};
+
+/**
+ * Sort purchase events by `createdAt` ascending (append-only log order).
+ * Callers should pass pre-sorted lists from the repository; this defends against mistakes.
+ */
+const sortEventsChronologically = (events: PurchaseEvent[]): PurchaseEvent[] =>
+	[...events].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+const SUBSCRIPTION_LIFECYCLE_EVENT_TYPES = new Set<PurchaseEventType>([
+	"subscription_started",
+	"subscription_renewed",
+	"subscription_cancelled",
+	"subscription_expired",
+]);
+
+const isSubscriptionLifecycleEvent = (eventType: PurchaseEventType): boolean =>
+	SUBSCRIPTION_LIFECYCLE_EVENT_TYPES.has(eventType);
+
+/**
+ * Pick the subscription lifecycle we should honor for current entitlements.
+ *
+ * We intentionally do NOT reduce across every historical `polarSubscriptionId`, because a user can
+ * resubscribe and old terminal events for a previous subscription must not override a newer one.
+ *
+ * Selection rule:
+ * - Prefer the most recent non-terminal lifecycle anchor (`started`, `renewed`, `cancelled`).
+ * - If none exist, fall back to the most recent subscription lifecycle event.
+ */
+const getCurrentSubscriptionId = (events: PurchaseEvent[]): string | null => {
+	const sorted = sortEventsChronologically(events);
+	const lifecycleEvents = sorted.filter(
+		(event) => isSubscriptionLifecycleEvent(event.eventType) && event.polarSubscriptionId !== null,
+	);
+
+	for (let index = lifecycleEvents.length - 1; index >= 0; index -= 1) {
+		const event = lifecycleEvents[index];
+		if (
+			event?.eventType === "subscription_started" ||
+			event?.eventType === "subscription_renewed" ||
+			event?.eventType === "subscription_cancelled"
+		) {
+			return event.polarSubscriptionId;
+		}
+	}
+
+	return lifecycleEvents.at(-1)?.polarSubscriptionId ?? null;
+};
+
+/**
+ * Derive subscription access phase from subscription_* purchase events only.
+ *
+ * Rules (apply in chronological `createdAt` order for the currently selected `polarSubscriptionId`):
+ * - `subscription_started` → `active` (new paid subscription lifecycle anchor).
+ * - `subscription_renewed` → `active`.
+ * - `subscription_cancelled` → `cancelled_active` when coming from `active` or `cancelled_active`
+ *   (user scheduled cancel; access continues until period end — Polar `subscription.canceled`).
+ * - `subscription_expired` → `expired` (access ended — mapped from Polar `subscription.revoked` or
+ *   equivalent end-of-access signals in the webhook layer).
+ */
+export const getSubscriptionStatus = (events: PurchaseEvent[]): SubscriptionStatus => {
+	const sorted = sortEventsChronologically(events);
+	const currentSubscriptionId = getCurrentSubscriptionId(sorted);
+	if (currentSubscriptionId === null) return "none";
+
+	const relevantEvents = sorted.filter(
+		(event) =>
+			isSubscriptionLifecycleEvent(event.eventType) &&
+			event.polarSubscriptionId === currentSubscriptionId,
+	);
+	let status: SubscriptionStatus = "none";
+	for (const e of relevantEvents) {
+		switch (e.eventType) {
+			case "subscription_started":
+				status = "active";
+				break;
+			case "subscription_renewed":
+				status = "active";
+				break;
+			case "subscription_cancelled":
+				if (status === "active" || status === "cancelled_active") status = "cancelled_active";
+				break;
+			case "subscription_expired":
+				status = "expired";
+				break;
+			default:
+				break;
+		}
+	}
+	return status;
+};
+
+/**
+ * Feature entitlements from purchase events (Story 8.1).
+ *
+ * `conversation_extension`: true when subscription phase is `active` or `cancelled_active`,
+ * **or** legacy `extended_conversation_unlocked` (minus refund) still grants access until Story 8.3
+ * migrates callers fully off one-time unlocks.
+ */
+export const isEntitledTo = (events: PurchaseEvent[], feature: EntitlementFeature): boolean => {
+	if (feature === "conversation_extension") {
+		const phase = getSubscriptionStatus(events);
+		if (phase === "active" || phase === "cancelled_active") return true;
+		return deriveCapabilities(events).hasExtendedConversation;
+	}
+	return false;
 };
