@@ -94,6 +94,9 @@ COPY --from=deploy /app/drizzle ./drizzle
 # Set NODE_ENV to production
 ENV NODE_ENV=production
 
+# Default to Railway's port so image verification and local runs match EXPOSE when PORT is unset
+ENV PORT=8080
+
 # Expose Railway's default port (but app reads from PORT env var)
 EXPOSE 8080
 
@@ -105,5 +108,7 @@ RUN apk add --no-cache wget
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:${PORT:-8080}/health || exit 1
 
-# Run migrations then start the API server
-CMD ["sh", "-c", "tsx src/migrate.ts && tsx src/index.ts"]
+# Migrations run via Railway `preDeployCommand` (apps/api/railway.json), not here — running
+# migrate in CMD delays /health until DB work finishes and can fail image verification when the
+# build-time check cannot reach the private database in time.
+CMD ["tsx", "src/index.ts"]
