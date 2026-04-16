@@ -122,6 +122,19 @@ describe("AppConfigLive", () => {
 			const nodeEnv = await Effect.runPromise(program);
 			expect(nodeEnv).toBe("development");
 		});
+
+		it("should default POLAR_PRODUCT_SUBSCRIPTION to not-configured when not provided", async () => {
+			const { POLAR_PRODUCT_SUBSCRIPTION: _omitted, ...envWithoutSubscription } = validEnv;
+			const provider = createProvider(envWithoutSubscription);
+
+			const program = Effect.gen(function* () {
+				const config = yield* AppConfig;
+				return config.polarProductSubscription;
+			}).pipe(Effect.provide(AppConfigLive), Effect.withConfigProvider(provider));
+
+			const productId = await Effect.runPromise(program);
+			expect(productId).toBe("not-configured");
+		});
 	});
 
 	describe("Type Safety", () => {

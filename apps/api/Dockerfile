@@ -78,7 +78,7 @@ WORKDIR /app
 # Use pnpm deploy to create isolated production deployment of api package
 # This copies api and all workspace dependencies into /app/prod with proper linking
 # Using --legacy flag for compatibility with pnpm v10 workspace handling
-RUN pnpm --filter=api --prod deploy --legacy prod
+RUN pnpm --filter=api --prod --ignore-scripts deploy --legacy prod
 
 # Production runtime stage
 FROM node:20-alpine AS production

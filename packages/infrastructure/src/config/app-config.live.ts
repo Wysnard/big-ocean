@@ -94,7 +94,9 @@ const configSchema = Config.all({
 	polarProductRelationshipSingle: Config.string("POLAR_PRODUCT_RELATIONSHIP_SINGLE"),
 	polarProductRelationship5Pack: Config.string("POLAR_PRODUCT_RELATIONSHIP_5PACK"),
 	polarProductExtendedConversation: Config.string("POLAR_PRODUCT_EXTENDED_CONVERSATION"),
-	polarProductSubscription: Config.string("POLAR_PRODUCT_SUBSCRIPTION"),
+	polarProductSubscription: Config.string("POLAR_PRODUCT_SUBSCRIPTION").pipe(
+		Config.withDefault("not-configured"),
+	),
 
 	// Global daily assessment limit (Story 15.3)
 	globalDailyAssessmentLimit: Config.number("GLOBAL_DAILY_ASSESSMENT_LIMIT").pipe(

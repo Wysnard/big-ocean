@@ -87,6 +87,10 @@ COPY apps/front/ ./apps/front/
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
+# TanStack Start/Nitro production builds can exceed Node's default heap in
+# constrained Docker builders.
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
 # Build the frontend
 RUN pnpm --filter=front run build
 

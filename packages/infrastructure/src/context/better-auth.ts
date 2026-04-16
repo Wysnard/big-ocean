@@ -176,7 +176,11 @@ export const BetterAuthLive = Layer.effect(
 					: "production",
 		});
 
+		const isConfiguredPolarProduct = (productId: string): boolean =>
+			productId.length > 0 && productId !== "not-configured";
+
 		const isTrackedSubscriptionProduct = (productId: string): boolean =>
+			isConfiguredPolarProduct(config.polarProductSubscription) &&
 			productId === config.polarProductSubscription;
 
 		const userIdFromSubscription = (sub: Subscription): string | undefined => {
@@ -402,7 +406,7 @@ export const BetterAuthLive = Layer.effect(
 									slug: "extended-conversation",
 								},
 								{ productId: config.polarProductSubscription, slug: "subscription" },
-							],
+							].filter(({ productId }) => isConfiguredPolarProduct(productId)),
 
 							authenticatedUsersOnly: true,
 						}),
