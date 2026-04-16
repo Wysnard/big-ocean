@@ -1,6 +1,6 @@
 # Story 8.2: Subscription Checkout Flow
 
-Status: review
+Status: done
 
 <!-- Ultimate context engine analysis completed - comprehensive developer guide created -->
 
@@ -177,3 +177,4 @@ Composer (Cursor agent)
 
 - **2026-04-16:** Story context generated (create-story workflow).
 - **2026-04-16:** Story 8.2 implemented — subscription checkout UX, subscription-state API, portal plugin, tests; status **review**.
+- **2026-04-16:** Merged to main; tracking set to **done**.
