@@ -8,6 +8,8 @@ import type {
 	TraitResult,
 } from "@workspace/domain";
 import { TRAIT_TO_FACETS } from "@workspace/domain";
+import { ArchetypeSummaryTile } from "@workspace/ui/components/archetype-summary-tile";
+import { ArtifactSurfaceCard } from "@workspace/ui/components/artifact-surface-card";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -498,6 +500,27 @@ function PrimitivesSection() {
 						<Switch disabled />
 						<span className="text-sm text-muted-foreground">Disabled</span>
 					</div>
+				</div>
+			</SubSection>
+
+			<SubSection title="Artifact surface & archetype tile">
+				<div className="grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
+					<ArtifactSurfaceCard className="border-primary/30 bg-primary/5 p-6">
+						<p className="text-sm text-muted-foreground">
+							<code className="font-mono text-xs">ArtifactSurfaceCard</code> — shared rounded frame;
+							override border, shadow, and fill for marketing previews.
+						</p>
+					</ArtifactSurfaceCard>
+					<ArtifactSurfaceCard
+						as="article"
+						className="border-slate-200/90 bg-white/95 p-5 dark:border-slate-600 dark:bg-slate-900/95"
+					>
+						<ArchetypeSummaryTile
+							name="Sample archetype"
+							oceanCode5={"OCEAR" as OceanCode5}
+							description="Reusable compact row for carousels and shallow results previews."
+						/>
+					</ArtifactSurfaceCard>
 				</div>
 			</SubSection>
 

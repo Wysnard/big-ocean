@@ -21,6 +21,7 @@ import {
 	FORMULA_DEFAULTS,
 	LIFE_DOMAINS,
 	LoggerRepository,
+	PortraitJobQueue,
 	TRAIT_NAMES,
 	UserSummaryGenerationError,
 	UserSummaryGeneratorRepository,
@@ -41,7 +42,7 @@ import {
 	UserSummaryDrizzleRepositoryLive,
 } from "@workspace/infrastructure/repositories/user-summary.drizzle.repository";
 import { UserSummaryGeneratorMockRepositoryLive } from "@workspace/infrastructure/repositories/user-summary-generator.mock.repository";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option, Queue } from "effect";
 import { generateResults } from "../generate-results.use-case";
 
 const mockSessionRepo = {
@@ -58,6 +59,7 @@ const mockSessionRepo = {
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
+	countCompletedExtensionSessionsExcluding: vi.fn(() => Effect.succeed(1)),
 };
 
 const mockLoggerRepo = {
@@ -86,6 +88,7 @@ const createTestLayer = () =>
 		ConversationEvidenceDrizzleRepositoryLive,
 		UserSummaryDrizzleRepositoryLive,
 		UserSummaryGeneratorMockRepositoryLive,
+		Layer.effect(PortraitJobQueue, Queue.unbounded()),
 	);
 
 const createTestLayerWithFailingUserSummaryGenerator = () =>
@@ -106,6 +109,7 @@ const createTestLayerWithFailingUserSummaryGenerator = () =>
 					),
 			}),
 		),
+		Layer.effect(PortraitJobQueue, Queue.unbounded()),
 	);
 
 /** Helper: create conversation evidence records for seeding */
@@ -145,6 +149,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		mockSessionRepo.updateSession.mockReturnValue(Effect.succeed(mockFinalizingSession));
 		mockSessionRepo.acquireSessionLock.mockReturnValue(Effect.void);
 		mockSessionRepo.releaseSessionLock.mockReturnValue(Effect.void);
+		mockSessionRepo.countCompletedExtensionSessionsExcluding.mockReturnValue(Effect.succeed(1));
 		mockLoggerRepo.info.mockImplementation(() => {});
 		mockLoggerRepo.warn.mockImplementation(() => {});
 	});
@@ -319,6 +324,75 @@ describe("generateResults Use Case (Story 18-4)", () => {
 
 					// Lock released
 					expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
+				}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect("Story 8.3: queues bundled portrait job on first extension session completion", () =>
+			Effect.gen(function* () {
+				mockSessionRepo.getSession.mockReturnValue(
+					Effect.succeed({
+						...mockFinalizingSession,
+						parentConversationId: "parent-session-1",
+					}),
+				);
+				mockSessionRepo.countCompletedExtensionSessionsExcluding.mockReturnValue(Effect.succeed(0));
+
+				const evidence = makeConversationEvidence("session_123", [
+					{
+						facet: "imagination",
+						deviation: 2,
+						strength: "strong",
+						confidence: "high",
+						domain: "work",
+						note: "extension evidence",
+					},
+				]);
+				seedConversationEvidence(evidence);
+
+				yield* generateResults({
+					sessionId: "session_123",
+					authenticatedUserId: "user_456",
+				});
+
+				const queue = yield* PortraitJobQueue;
+				const job = yield* Queue.take(queue);
+				expect(job.sessionId).toBe("session_123");
+				expect(job.userId).toBe("user_456");
+			}).pipe(Effect.provide(createTestLayer())),
+		);
+
+		it.effect(
+			"Story 8.3: does not queue bundled portrait on subsequent extension session completion",
+			() =>
+				Effect.gen(function* () {
+					mockSessionRepo.getSession.mockReturnValue(
+						Effect.succeed({
+							...mockFinalizingSession,
+							parentConversationId: "parent-session-1",
+						}),
+					);
+					mockSessionRepo.countCompletedExtensionSessionsExcluding.mockReturnValue(Effect.succeed(1));
+
+					const evidence = makeConversationEvidence("session_123", [
+						{
+							facet: "imagination",
+							deviation: 2,
+							strength: "strong",
+							confidence: "high",
+							domain: "work",
+							note: "second extension evidence",
+						},
+					]);
+					seedConversationEvidence(evidence);
+
+					yield* generateResults({
+						sessionId: "session_123",
+						authenticatedUserId: "user_456",
+					});
+
+					const queue = yield* PortraitJobQueue;
+					const polled = yield* Queue.poll(queue);
+					expect(Option.isNone(polled)).toBe(true);
 				}).pipe(Effect.provide(createTestLayer())),
 		);
 

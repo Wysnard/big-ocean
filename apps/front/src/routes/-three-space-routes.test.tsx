@@ -13,6 +13,7 @@ const {
 	mockIdentityHeroSection,
 	mockUseHasCheckIns,
 	mockUseSubscriptionState,
+	mockUseActivateExtension,
 } = vi.hoisted(() => ({
 	mockSession: vi.fn(),
 	mockLoaderData: vi.fn(),
@@ -36,6 +37,12 @@ const {
 		error: null,
 		refetch: vi.fn(),
 	})),
+	mockUseActivateExtension: vi.fn(() => ({
+		mutate: vi.fn(),
+		mutateAsync: vi.fn(),
+		isPending: false,
+		isError: false,
+	})),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -48,6 +55,7 @@ vi.mock("@tanstack/react-router", () => ({
 		Object.assign(error, options);
 		return error;
 	},
+	useNavigate: () => vi.fn(),
 	Link: ({ children, to, ...props }: Record<string, unknown> & { children?: ReactNode }) => (
 		<a href={to as string} {...props}>
 			{children}
@@ -71,6 +79,10 @@ vi.mock("@/hooks/use-subscription-state", () => ({
 	useSubscriptionState: () => mockUseSubscriptionState(),
 	pollUntilConversationExtensionEntitled: vi.fn(),
 	subscriptionStateQueryKey: ["purchase", "subscription-state"],
+}));
+
+vi.mock("@/hooks/use-activate-extension", () => ({
+	useActivateExtension: () => mockUseActivateExtension(),
 }));
 
 vi.mock("@/components/BottomNav", () => ({
@@ -215,6 +227,12 @@ describe("Me route layout", () => {
 			error: null,
 			refetch: vi.fn(),
 		});
+		mockUseActivateExtension.mockReturnValue({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: false,
+			isError: false,
+		});
 		mockUseHasCheckIns.mockReturnValue({
 			data: { hasCheckIns: false },
 			isLoading: false,
@@ -336,7 +354,34 @@ describe("Me route layout", () => {
 		render(<Component />);
 
 		expect(await screen.findByTestId("subscription-value-summary")).toBeTruthy();
+		expect(screen.getByTestId("subscription-extend-conversation-cta")).toBeTruthy();
 		expect(screen.queryByTestId("mock-subscription-pitch-section")).toBeNull();
+	});
+
+	it("disables subscription extend CTA while activateExtension is pending", async () => {
+		mockUseSubscriptionState.mockReturnValue({
+			data: {
+				subscriptionStatus: "active",
+				isEntitledToConversationExtension: true,
+				subscribedSince: "2025-01-15T00:00:00.000Z",
+			},
+			isPending: false,
+			isError: false,
+			isFetching: false,
+			error: null,
+			refetch: vi.fn(),
+		});
+		mockUseActivateExtension.mockReturnValue({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: true,
+			isError: false,
+		});
+		const Component = MeRoute.component as ComponentType;
+
+		render(<Component />);
+
+		expect(await screen.findByTestId("subscription-extend-conversation-cta")).toBeDisabled();
 	});
 
 	it("shows subscription loading copy while the subscription query is pending", async () => {

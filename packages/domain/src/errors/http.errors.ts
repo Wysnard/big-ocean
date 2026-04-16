@@ -46,6 +46,18 @@ export class FeatureUnavailable extends S.TaggedError<FeatureUnavailable>()("Fea
 }) {}
 
 /**
+ * Subscription required (403)
+ * User lacks an active subscription (or equivalent entitlement) for the requested feature.
+ */
+export class SubscriptionRequired extends S.TaggedError<SubscriptionRequired>()(
+	"SubscriptionRequired",
+	{
+		feature: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
  * Database error (500)
  * Generic error for database operations that don't expose internal details
  */

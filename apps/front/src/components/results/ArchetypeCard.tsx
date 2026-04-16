@@ -1,4 +1,5 @@
 import type { OceanCode4, OceanCode5 } from "@workspace/domain";
+import { ArchetypeSummaryTile } from "@workspace/ui/components/archetype-summary-tile";
 import { OceanHieroglyphCode } from "@workspace/ui/components/ocean-hieroglyph-code";
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -39,24 +40,22 @@ export function ArchetypeCard({
 				className,
 			)}
 		>
-			{/* Color accent bar */}
 			<div
 				className={cn("absolute inset-x-0 top-0 h-1.5", isCurated ? "opacity-100" : "opacity-60")}
 				style={{ backgroundColor: color }}
 				data-testid="archetype-accent"
 			/>
 
-			{/* Header: name + codes + signature */}
-			<div className="mt-2 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-				<div className="flex-1">
-					<h2
-						className="text-2xl font-bold tracking-tight text-foreground md:text-3xl"
-						data-testid="archetype-name"
-					>
-						{archetypeName}
-					</h2>
-
-					{/* OCEAN codes */}
+			<ArchetypeSummaryTile
+				headerLayout="split"
+				nameAs="h2"
+				name={archetypeName}
+				oceanCode5={oceanCode5}
+				description={description}
+				nameTestId="archetype-name"
+				descriptionTestId="archetype-description"
+				descriptionClassName="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base"
+				codeRow={
 					<div className="mt-2 flex items-center gap-3">
 						<span
 							className="rounded-md bg-muted px-2.5 py-1 font-mono text-sm font-semibold text-foreground"
@@ -68,34 +67,25 @@ export function ArchetypeCard({
 							{oceanCode5}
 						</span>
 					</div>
-
-					{/* Hieroglyph Code */}
+				}
+				afterCodeRow={
 					<div className="mt-3">
 						<OceanHieroglyphCode code={oceanCode5} size={24} />
 					</div>
-				</div>
-
-				{/* Confidence indicator */}
-				<div
-					className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2"
-					data-testid="confidence-indicator"
-				>
-					<div className="h-8 w-8 rounded-full border-2 border-border flex items-center justify-center">
-						<span className="text-xs font-bold text-foreground">{clampedConfidence}</span>
+				}
+				trailing={
+					<div
+						className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2"
+						data-testid="confidence-indicator"
+					>
+						<div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-border">
+							<span className="text-xs font-bold text-foreground">{clampedConfidence}</span>
+						</div>
+						<span className="text-xs text-muted-foreground">% confidence</span>
 					</div>
-					<span className="text-xs text-muted-foreground">% confidence</span>
-				</div>
-			</div>
+				}
+			/>
 
-			{/* Description */}
-			<p
-				className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base"
-				data-testid="archetype-description"
-			>
-				{description}
-			</p>
-
-			{/* Curated badge */}
 			{isCurated && (
 				<span
 					className="mt-4 inline-block rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"

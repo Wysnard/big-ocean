@@ -37,6 +37,8 @@ interface ProfileViewProps {
 	messageCount?: number;
 	/** Detail zone content (rendered below the correct trait row when a trait is selected) */
 	detailZone?: ReactNode;
+	/** Story 8.3: optional strip directly under the hero (e.g. conversation extension CTA) */
+	conversationExtensionStrip?: ReactNode;
 	children?: ReactNode;
 }
 
@@ -57,6 +59,7 @@ export function ProfileView({
 	selectedTrait,
 	messageCount,
 	detailZone,
+	conversationExtensionStrip,
 	children,
 }: ProfileViewProps) {
 	const archetypeSectionLabel = displayName ? `${displayName}\u2019s archetype` : "Your archetype";
@@ -92,6 +95,8 @@ export function ProfileView({
 				displayName={displayName}
 				sectionLabel={archetypeSectionLabel}
 			/>
+
+			{conversationExtensionStrip}
 
 			{/* Single CSS Grid container */}
 			<div className="mx-auto max-w-[1120px] px-5 py-10">

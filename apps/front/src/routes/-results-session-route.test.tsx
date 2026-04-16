@@ -14,6 +14,8 @@ const {
 	mockCompleteFirstVisit,
 	mockScheduleFirstDailyPrompt,
 	mockSyncPushSubscription,
+	mockUseSubscriptionQuery,
+	mockUseActivateExtension,
 } = vi.hoisted(() => ({
 	mockUseParams: vi.fn(() => ({ conversationSessionId: "session-123" })),
 	mockUseSearch: vi.fn(() => ({ scrollToFacet: undefined })),
@@ -25,6 +27,22 @@ const {
 	mockCompleteFirstVisit: vi.fn(),
 	mockScheduleFirstDailyPrompt: vi.fn(),
 	mockSyncPushSubscription: vi.fn(),
+	mockUseSubscriptionQuery: vi.fn(() => ({
+		data: {
+			subscriptionStatus: "none" as const,
+			isEntitledToConversationExtension: false,
+			subscribedSince: null,
+		},
+		isPending: false,
+		isError: false,
+		refetch: vi.fn(),
+	})),
+	mockUseActivateExtension: vi.fn(() => ({
+		mutate: vi.fn(),
+		mutateAsync: vi.fn(),
+		isPending: false,
+		isError: false,
+	})),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -74,6 +92,10 @@ vi.mock("@/hooks/use-conversation", () => ({
 		typeof error === "object" && error !== null && "status" in error,
 }));
 
+vi.mock("@/hooks/use-activate-extension", () => ({
+	useActivateExtension: () => mockUseActivateExtension(),
+}));
+
 vi.mock("@/hooks/use-evidence", () => ({
 	useFacetEvidence: () => ({ data: [], isLoading: false }),
 }));
@@ -91,8 +113,10 @@ vi.mock("@/hooks/use-push-subscription-sync", () => ({
 }));
 
 vi.mock("@tanstack/react-query", () => ({
-	useQueryClient: () => ({ invalidateQueries: vi.fn() }),
-	useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+	useQueryClient: () => ({ invalidateQueries: vi.fn(), fetchQuery: vi.fn() }),
+	useMutation: () => ({ mutate: vi.fn(), isPending: false, mutateAsync: vi.fn() }),
+	queryOptions: <T extends Record<string, unknown>>(o: T) => o,
+	useQuery: (...args: unknown[]) => mockUseSubscriptionQuery(...args),
 }));
 
 vi.mock("@/components/ResultsAuthGate", () => ({
@@ -104,8 +128,17 @@ vi.mock("@/components/results/useTraitEvidence", () => ({
 }));
 
 vi.mock("@/components/results/ProfileView", () => ({
-	ProfileView: ({ children }: { children?: React.ReactNode }) => (
-		<div data-testid="results-content">{children}</div>
+	ProfileView: ({
+		children,
+		conversationExtensionStrip,
+	}: {
+		children?: React.ReactNode;
+		conversationExtensionStrip?: React.ReactNode;
+	}) => (
+		<div data-testid="results-content">
+			{conversationExtensionStrip}
+			{children}
+		</div>
 	),
 }));
 
@@ -177,6 +210,22 @@ describe("results/$conversationSessionId route behavior", () => {
 			data: null,
 			isLoading: false,
 			error: null,
+		});
+		mockUseSubscriptionQuery.mockReturnValue({
+			data: {
+				subscriptionStatus: "none" as const,
+				isEntitledToConversationExtension: false,
+				subscribedSince: null,
+			},
+			isPending: false,
+			isError: false,
+			refetch: vi.fn(),
+		});
+		mockUseActivateExtension.mockReturnValue({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: false,
+			isError: false,
 		});
 	});
 
@@ -367,6 +416,82 @@ describe("results/$conversationSessionId route behavior", () => {
 
 		expect(screen.queryByText("Continue Assessment")).toBeNull();
 	});
+
+	it("shows results extension CTA when entitled and results are the latest version", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockUseSubscriptionQuery.mockReturnValue({
+			data: {
+				subscriptionStatus: "active" as const,
+				isEntitledToConversationExtension: true,
+				subscribedSince: "2025-01-01T00:00:00.000Z",
+			},
+			isPending: false,
+			isError: false,
+			refetch: vi.fn(),
+		});
+		mockUseGetResults.mockReturnValue({
+			data: { ...resultsData, isLatestVersion: true },
+			isLoading: false,
+			error: null,
+		});
+
+		render(<Component />);
+
+		expect(screen.getByTestId("results-extend-conversation-strip")).toBeTruthy();
+		expect(screen.getByTestId("results-extend-conversation-cta")).toBeTruthy();
+	});
+
+	it("does not show results extension CTA when results are not the latest version", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockUseSubscriptionQuery.mockReturnValue({
+			data: {
+				subscriptionStatus: "active" as const,
+				isEntitledToConversationExtension: true,
+				subscribedSince: "2025-01-01T00:00:00.000Z",
+			},
+			isPending: false,
+			isError: false,
+			refetch: vi.fn(),
+		});
+		mockUseGetResults.mockReturnValue({
+			data: { ...resultsData, isLatestVersion: false },
+			isLoading: false,
+			error: null,
+		});
+
+		render(<Component />);
+
+		expect(screen.queryByTestId("results-extend-conversation-cta")).toBeNull();
+	});
+
+	it("disables results extension CTA while activateExtension is pending", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockUseSubscriptionQuery.mockReturnValue({
+			data: {
+				subscriptionStatus: "active" as const,
+				isEntitledToConversationExtension: true,
+				subscribedSince: "2025-01-01T00:00:00.000Z",
+			},
+			isPending: false,
+			isError: false,
+			refetch: vi.fn(),
+		});
+		mockUseActivateExtension.mockReturnValue({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: true,
+			isError: false,
+		});
+		mockUseGetResults.mockReturnValue({
+			data: { ...resultsData, isLatestVersion: true },
+			isLoading: false,
+			error: null,
+		});
+
+		render(<Component />);
+
+		expect(screen.getByTestId("results-extend-conversation-cta")).toBeDisabled();
+	});
 });
 
 const resultsData = {
@@ -395,6 +520,22 @@ describe("Story 2.2: Portrait generating state and fade-in transition", () => {
 		window.localStorage.clear();
 		mockUseGetResults.mockReturnValue({ data: null, isLoading: false, error: null });
 		mockUsePortraitStatus.mockReturnValue({ data: null, isError: false, refetch: vi.fn() });
+		mockUseSubscriptionQuery.mockReturnValue({
+			data: {
+				subscriptionStatus: "none" as const,
+				isEntitledToConversationExtension: false,
+				subscribedSince: null,
+			},
+			isPending: false,
+			isError: false,
+			refetch: vi.fn(),
+		});
+		mockUseActivateExtension.mockReturnValue({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: false,
+			isError: false,
+		});
 	});
 
 	it("shows generating state when portrait is generating", () => {

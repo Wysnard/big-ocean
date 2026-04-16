@@ -207,6 +207,26 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 		) => Effect.Effect<{ sessionId: string }, DatabaseError, never>;
 
 		/**
+		 * Atomically create an extension session plus exchange 0 and all greeting assistant messages (Story 8.3).
+		 */
+		readonly createExtensionSessionWithInitialTurn: (
+			userId: string,
+			parentConversationId: string,
+			greetingContents: readonly string[],
+		) => Effect.Effect<
+			{
+				sessionId: string;
+				messages: ReadonlyArray<{
+					role: "assistant";
+					content: string;
+					createdAt: Date;
+				}>;
+			},
+			DatabaseError,
+			never
+		>;
+
+		/**
 		 * Find the most recent completed session that has no child extension session (Story 36-1)
 		 *
 		 * @param userId - Authenticated user ID
@@ -235,6 +255,15 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 		readonly findExtensionSession: (
 			parentConversationId: string,
 		) => Effect.Effect<ConversationEntity | null, DatabaseError, never>;
+
+		/**
+		 * Count completed extension sessions for a user, excluding one session id (Story 8.3).
+		 * Used to detect first extension completion for bundled portrait (FR23).
+		 */
+		readonly countCompletedExtensionSessionsExcluding: (
+			userId: string,
+			excludeSessionId: string,
+		) => Effect.Effect<number, DatabaseError, never>;
 
 		/**
 		 * Find sessions eligible for Nerin check-in email (Story 38-1)

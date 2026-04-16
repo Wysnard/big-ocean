@@ -20,10 +20,11 @@ import {
 	computeDomainCoverage,
 	computeTraitResults,
 	LoggerRepository,
+	PortraitJobQueue,
 	SessionNotFinalizing,
 	SessionNotFound,
 } from "@workspace/domain";
-import { Effect } from "effect";
+import { Effect, Queue } from "effect";
 import { generateUserSummary } from "./generate-user-summary.use-case";
 
 export interface GenerateResultsInput {
@@ -96,6 +97,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 		}
 
 		// Lock acquired — run the pipeline with guaranteed lock release
+		let extensionUserSerializeKey: string | null = null;
 		return yield* Effect.gen(function* () {
 			const pipelineStart = Date.now();
 
@@ -215,6 +217,20 @@ export const generateResults = (input: GenerateResultsInput) =>
 			// STAGE: COMPLETION
 			// ═══════════════════════════════════════════════════════
 
+			if (session.userId != null && session.parentConversationId != null) {
+				const k = `extension-finalize:${session.userId}`;
+				yield* sessionRepo.acquireSessionLock(k);
+				extensionUserSerializeKey = k;
+			}
+
+			const shouldQueueBundledPortrait =
+				session.userId != null &&
+				session.parentConversationId != null &&
+				(yield* sessionRepo.countCompletedExtensionSessionsExcluding(
+					session.userId,
+					input.sessionId,
+				)) === 0;
+
 			// Set stage=completed on assessment_results
 			yield* assessmentResultRepo.updateStage(input.sessionId, "completed");
 
@@ -224,10 +240,31 @@ export const generateResults = (input: GenerateResultsInput) =>
 				finalizationProgress: "completed",
 			});
 
+			if (shouldQueueBundledPortrait) {
+				const portraitQueue = yield* PortraitJobQueue;
+				yield* Queue.offer(portraitQueue, {
+					sessionId: input.sessionId,
+					userId: session.userId as string,
+				});
+				logger.info("Generate results: queued bundled portrait for first extension completion", {
+					sessionId: input.sessionId,
+					userId: session.userId,
+				});
+			}
+
 			logger.info("Generate results: finalization complete", {
 				sessionId: input.sessionId,
 			});
 
 			return { status: "completed" as GenerateResultsStatus };
-		}).pipe(Effect.ensuring(sessionRepo.releaseSessionLock(input.sessionId).pipe(Effect.orDie)));
+		}).pipe(
+			Effect.ensuring(
+				Effect.gen(function* () {
+					if (extensionUserSerializeKey != null) {
+						yield* sessionRepo.releaseSessionLock(extensionUserSerializeKey).pipe(Effect.orDie);
+					}
+					yield* sessionRepo.releaseSessionLock(input.sessionId).pipe(Effect.orDie);
+				}),
+			),
+		);
 	});

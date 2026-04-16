@@ -2,6 +2,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
 import { useTheme } from "@workspace/ui/hooks/use-theme";
+import {
+	letterMarkdownBodyClass,
+	letterWeeklyPromoBodyClass,
+} from "@workspace/ui/lib/letter-reading-typography";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
@@ -66,7 +70,7 @@ export function WeeklyLetterReadingView({ content }: WeeklyLetterReadingViewProp
 					</Button>
 				</div>
 
-				<div className="text-base leading-[1.7] text-foreground/80">
+				<div className={letterMarkdownBodyClass}>
 					<Markdown components={readingMarkdownComponents}>{content}</Markdown>
 				</div>
 
@@ -108,7 +112,7 @@ export function WeeklyLetterReadingView({ content }: WeeklyLetterReadingViewProp
 						data-testid="weekly-letter-subscriber"
 						aria-label="Subscription"
 					>
-						<p className="text-base leading-relaxed text-foreground/90">
+						<p className={letterWeeklyPromoBodyClass}>
 							You already have the fuller weekly layer — I&apos;ll keep building on what we&apos;ve seen
 							together.
 						</p>
@@ -127,10 +131,7 @@ export function WeeklyLetterReadingView({ content }: WeeklyLetterReadingViewProp
 						data-testid="weekly-letter-conversion"
 						aria-label="Subscription"
 					>
-						<p
-							className="text-base leading-relaxed text-foreground/90"
-							data-testid="weekly-letter-cta-lead"
-						>
+						<p className={letterWeeklyPromoBodyClass} data-testid="weekly-letter-cta-lead">
 							I have more I want to say about what comes next…
 						</p>
 						<p className="text-sm leading-6 text-muted-foreground">

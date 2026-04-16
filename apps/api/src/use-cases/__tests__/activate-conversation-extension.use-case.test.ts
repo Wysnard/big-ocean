@@ -1,26 +1,23 @@
 /**
- * Activate Conversation Extension Use Case Tests (Story 36-1)
- *
- * Verifies extension session creation, parent linking, idempotency,
- * and error handling when no eligible session exists.
+ * Activate Conversation Extension Use Case Tests (Story 36-1, Story 8.3)
  */
 
 import { vi } from "vitest";
 
 vi.mock("@workspace/infrastructure/repositories/conversation.drizzle.repository");
-vi.mock("@workspace/infrastructure/repositories/message.drizzle.repository");
+vi.mock("@workspace/infrastructure/repositories/purchase-event.drizzle.repository");
 vi.mock("@workspace/domain/config/app-config");
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
 	ConversationRepository,
-	ExchangeRepository,
 	LoggerRepository,
-	MessageRepository,
+	PurchaseEventRepository,
 } from "@workspace/domain";
 import { _resetMockState as _resetSessionMockState } from "@workspace/infrastructure/repositories/__mocks__/conversation.drizzle.repository";
+import { _resetMockState as resetPurchaseMock } from "@workspace/infrastructure/repositories/__mocks__/purchase-event.drizzle.repository";
 import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/conversation.drizzle.repository";
-import { MessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/message.drizzle.repository";
+import { PurchaseEventDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/purchase-event.drizzle.repository";
 import { Effect, Layer } from "effect";
 import { activateConversationExtension } from "../activate-conversation-extension.use-case";
 
@@ -31,82 +28,69 @@ const mockLogger = {
 	debug: vi.fn(),
 };
 
-const mockExchangeRepo = {
-	create: vi.fn(() =>
-		Effect.succeed({
-			id: "exchange_123",
-			sessionId: "session_123",
-			turnNumber: 0,
-		}),
-	),
-	getBySessionId: vi.fn(),
-	getBySessionIdAndTurn: vi.fn(),
-	update: vi.fn(),
-	getLastExchange: vi.fn(),
-};
-
-const TestLayer = Layer.mergeAll(
+const BaseTestLayer = Layer.mergeAll(
 	ConversationDrizzleRepositoryLive,
-	MessageDrizzleRepositoryLive,
-	Layer.succeed(ExchangeRepository, mockExchangeRepo),
 	Layer.succeed(LoggerRepository, mockLogger),
 );
 
 describe("activateConversationExtension Use Case", () => {
 	beforeEach(() => {
 		_resetSessionMockState();
+		resetPurchaseMock();
 		vi.clearAllMocks();
 	});
 
-	it.effect("fails with FeatureUnavailable even when a completed parent conversation exists", () =>
+	it.effect("fails with SubscriptionRequired when user has no subscription entitlement", () =>
 		Effect.gen(function* () {
-			// Seed a completed session for the user
 			const sessionRepo = yield* ConversationRepository;
 			const created = yield* sessionRepo.createSession("user_123");
 			yield* sessionRepo.updateSession(created.sessionId, { status: "completed" });
 
 			const error = yield* activateConversationExtension({ userId: "user_123" }).pipe(Effect.flip);
-			const sessions = yield* sessionRepo.getSessionsByUserId("user_123");
-			const messageRepo = yield* MessageRepository;
-			const messages = yield* messageRepo.getMessages(created.sessionId);
 
-			expect(error._tag).toBe("FeatureUnavailable");
-			expect(sessions).toHaveLength(1);
-			expect(messages).toHaveLength(0);
-			expect(mockExchangeRepo.create).not.toHaveBeenCalled();
-		}).pipe(Effect.provide(TestLayer)),
+			expect(error._tag).toBe("SubscriptionRequired");
+		}).pipe(Effect.provide(Layer.mergeAll(BaseTestLayer, PurchaseEventDrizzleRepositoryLive))),
 	);
 
 	it.effect(
-		"fails with FeatureUnavailable when called without any eligible parent conversation",
+		"creates extension session and greetings when entitled and a completed parent exists",
 		() =>
 			Effect.gen(function* () {
-				const error = yield* activateConversationExtension({ userId: "user_no_session" }).pipe(
-					Effect.flip,
-				);
+				const purchaseRepo = yield* PurchaseEventRepository;
+				yield* purchaseRepo.insertEvent({
+					userId: "user_sub",
+					eventType: "subscription_started",
+					polarSubscriptionId: "polar-sub-1",
+					polarCheckoutId: null,
+				});
 
-				expect(error._tag).toBe("FeatureUnavailable");
-				expect(mockExchangeRepo.create).not.toHaveBeenCalled();
-			}).pipe(Effect.provide(TestLayer)),
-	);
-
-	it.effect(
-		"does not create greeting messages or child conversations while the feature is gated",
-		() =>
-			Effect.gen(function* () {
 				const sessionRepo = yield* ConversationRepository;
-				const messageRepo = yield* MessageRepository;
-				const parent = yield* sessionRepo.createSession("user_blocked");
-				yield* sessionRepo.updateSession(parent.sessionId, { status: "completed" });
+				const created = yield* sessionRepo.createSession("user_sub");
+				yield* sessionRepo.updateSession(created.sessionId, { status: "completed" });
 
-				yield* activateConversationExtension({ userId: "user_blocked" }).pipe(Effect.flip);
+				const result = yield* activateConversationExtension({ userId: "user_sub" });
 
-				const sessions = yield* sessionRepo.getSessionsByUserId("user_blocked");
-				const parentMessages = yield* messageRepo.getMessages(parent.sessionId);
+				expect(result.sessionId).toBeDefined();
+				expect(result.parentConversationId).toBe(created.sessionId);
+				expect(result.messages.length).toBeGreaterThan(0);
+			}).pipe(Effect.provide(Layer.mergeAll(BaseTestLayer, PurchaseEventDrizzleRepositoryLive))),
+	);
 
-				expect(sessions).toHaveLength(1);
-				expect(parentMessages).toHaveLength(0);
-				expect(mockExchangeRepo.create).not.toHaveBeenCalled();
-			}).pipe(Effect.provide(TestLayer)),
+	it.effect("fails with SessionNotFound when entitled but no eligible parent conversation", () =>
+		Effect.gen(function* () {
+			const purchaseRepo = yield* PurchaseEventRepository;
+			yield* purchaseRepo.insertEvent({
+				userId: "user_no_parent",
+				eventType: "subscription_started",
+				polarSubscriptionId: "polar-sub-2",
+				polarCheckoutId: null,
+			});
+
+			const error = yield* activateConversationExtension({ userId: "user_no_parent" }).pipe(
+				Effect.flip,
+			);
+
+			expect(error._tag).toBe("SessionNotFound");
+		}).pipe(Effect.provide(Layer.mergeAll(BaseTestLayer, PurchaseEventDrizzleRepositoryLive))),
 	);
 });

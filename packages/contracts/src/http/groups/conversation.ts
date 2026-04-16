@@ -21,7 +21,6 @@ import {
 	ConversationEvidenceError,
 	CostLimitExceeded,
 	DatabaseError,
-	FeatureUnavailable,
 	GlobalAssessmentLimitReached,
 	MessageRateLimitError,
 	RateLimitExceeded,
@@ -29,6 +28,7 @@ import {
 	SessionNotCompleted,
 	SessionNotFinalizing,
 	SessionNotFound,
+	SubscriptionRequired,
 	Unauthorized,
 } from "../../errors";
 import { OptionalAuthMiddleware } from "../../middleware/auth";
@@ -301,8 +301,9 @@ export const ConversationGroup = HttpApiGroup.make("conversation")
 	.add(
 		HttpApiEndpoint.post("activateExtension", "/activate-extension")
 			.addSuccess(ActivateExtensionResponseSchema)
-			.addError(FeatureUnavailable, { status: 409 })
+			.addError(SubscriptionRequired, { status: 403 })
 			.addError(SessionNotFound, { status: 404 })
+			.addError(ConcurrentMessageError, { status: 409 })
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)

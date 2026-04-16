@@ -3,6 +3,7 @@
  * Vitest auto-resolves when tests call:
  *   vi.mock('@workspace/infrastructure/repositories/conversation.drizzle.repository')
  */
+import { DatabaseError } from "@workspace/contracts/errors";
 import { ConversationRepository } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
@@ -245,6 +246,7 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 					id: sessionId,
 					userId,
 					parentConversationId,
+					conversationType: "extension" as const,
 					sessionToken: null,
 					createdAt: new Date(),
 					updatedAt: new Date(),
@@ -255,6 +257,41 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 				sessions.set(sessionId, session);
 				return { sessionId };
 			}),
+
+		createExtensionSessionWithInitialTurn: (
+			userId: string,
+			parentConversationId: string,
+			greetingContents: readonly string[],
+		) =>
+			greetingContents.length === 0
+				? Effect.fail(
+						new DatabaseError({
+							message: "greetingContents must be non-empty",
+						}),
+					)
+				: Effect.sync(() => {
+						const sessionId = `session_${crypto.randomUUID().slice(0, 8)}`;
+						const now = new Date();
+						const session = {
+							id: sessionId,
+							userId,
+							parentConversationId,
+							conversationType: "extension" as const,
+							sessionToken: null,
+							createdAt: now,
+							updatedAt: now,
+							status: "active" as const,
+							finalizationProgress: null,
+							messageCount: 0,
+						};
+						sessions.set(sessionId, session);
+						const messages = greetingContents.map((content) => ({
+							role: "assistant" as const,
+							content,
+							createdAt: now,
+						}));
+						return { sessionId, messages };
+					}),
 
 		findCompletedSessionWithoutChild: (userId: string) =>
 			Effect.sync(() => {
@@ -324,6 +361,23 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 					}
 				}
 				return null;
+			}),
+
+		countCompletedExtensionSessionsExcluding: (userId: string, excludeSessionId: string) =>
+			Effect.sync(() => {
+				let n = 0;
+				for (const session of sessions.values()) {
+					if (
+						session.userId === userId &&
+						session.status === "completed" &&
+						session.parentConversationId != null &&
+						session.id !== excludeSessionId &&
+						(session as { conversationType?: string }).conversationType === "extension"
+					) {
+						n += 1;
+					}
+				}
+				return n;
 			}),
 
 		findCheckInEligibleSessions: (_thresholdDays: number) =>

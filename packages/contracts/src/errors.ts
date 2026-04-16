@@ -44,6 +44,7 @@ export {
 	SessionNotCompleted,
 	SessionNotFinalizing,
 	SessionNotFound,
+	SubscriptionRequired,
 	Unauthorized,
 	UnknownProductError,
 	UserAlreadyExists,

@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { render, screen } from "@testing-library/react";
 import { OceanCode4Schema, OceanCode5Schema } from "@workspace/domain";
 import { describe, expect, it } from "vitest";

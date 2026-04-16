@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { letterMarkdownBodyClass } from "@workspace/ui/lib/letter-reading-typography";
+import { cn } from "@workspace/ui/lib/utils";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
 import {
@@ -57,7 +59,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 								</h2>
 							)}
 							{section.body && (
-								<div className="text-base leading-[1.7] text-foreground/80">
+								<div className={letterMarkdownBodyClass}>
 									<Markdown components={readingMarkdownComponents}>{section.body}</Markdown>
 								</div>
 							)}
@@ -69,9 +71,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 						<h1 id="portrait-reading-title" className="sr-only">
 							Portrait reading view
 						</h1>
-						<div className="text-base leading-[1.7] text-foreground/80 whitespace-pre-line">
-							{content}
-						</div>
+						<div className={cn(letterMarkdownBodyClass, "whitespace-pre-line")}>{content}</div>
 					</>
 				)}
 

@@ -1,5 +1,9 @@
 # Deferred Work
 
+## Deferred from: code review of 8-3-conversation-extension-activation.md (2026-04-16)
+
+- **Portrait reading view omits extension CTA** — `view=portrait` with available portrait returns `PortraitReadingView` only; extension strip is injected on `ProfileView` after `ArchetypeHeroSection`. Matches spec placement on profile results; product may later want a secondary entry to extend from immersive portrait. [`apps/front/src/routes/results/$conversationSessionId.tsx`]
+
 ## Deferred from: code review of 5-3-weekly-letter-inline-card-and-notifications (2026-04-15)
 
 - **Unbounded push concurrency** — `sendWeeklyLetterReadyNotification` uses `concurrency: "unbounded"` for `Effect.forEach` over push subscriptions. Mirrors existing `send-relationship-analysis-notification` pattern. Low risk in practice (few subs per user) but a spike risk at scale.

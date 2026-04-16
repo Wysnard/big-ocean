@@ -2,6 +2,7 @@
  * Section A — letter register reading surface (Story 7.3)
  */
 
+import { letterRelationshipBodyWrapClass } from "@workspace/ui/lib/letter-reading-typography";
 import { Heart } from "lucide-react";
 import { memo, useMemo } from "react";
 import Markdown from "react-markdown";
@@ -48,7 +49,7 @@ export const RelationshipLetterBody = memo(function RelationshipLetterBody({
 				)}
 			</header>
 
-			<div className="text-base leading-[1.7] text-foreground/90">
+			<div className={letterRelationshipBodyWrapClass}>
 				{sections.length > 0 ? (
 					sections.map((section, i) => (
 						<div key={`${section.header}-${i}`} className={i > 0 ? "mt-8" : ""}>

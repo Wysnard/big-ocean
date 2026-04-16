@@ -21,9 +21,15 @@ import { ConversationRepository } from "@workspace/domain/repositories/conversat
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import { RedisRepository } from "@workspace/domain/repositories/redis.repository";
 import { Database } from "@workspace/infrastructure/context/database";
-import { and, count, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, lt, ne, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import { conversation, message, publicProfile, user } from "../db/drizzle/schema";
+import {
+	exchange as assessmentExchange,
+	conversation,
+	message,
+	publicProfile,
+	user,
+} from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database, logger, and Redis through DI
@@ -744,6 +750,7 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 						.values({
 							userId,
 							parentConversationId,
+							conversationType: "extension",
 							status: "active",
 							messageCount: 0,
 							createdAt: new Date(),
@@ -778,6 +785,166 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 						userId,
 					});
 					return { sessionId: session.id };
+				}),
+
+			createExtensionSessionWithInitialTurn: (
+				userId: string,
+				parentConversationId: string,
+				greetingContents: readonly string[],
+			) =>
+				Effect.gen(function* () {
+					if (greetingContents.length === 0) {
+						return yield* Effect.fail(
+							new DatabaseError({ message: "greetingContents must be non-empty" }),
+						);
+					}
+
+					return yield* db
+						.transaction((tx) =>
+							Effect.gen(function* () {
+								const now = new Date();
+
+								const [sessionRow] = yield* tx
+									.insert(conversation)
+									.values({
+										userId,
+										parentConversationId,
+										conversationType: "extension",
+										status: "active",
+										messageCount: 0,
+										createdAt: now,
+										updatedAt: now,
+									})
+									.returning()
+									.pipe(
+										Effect.mapError((error) => {
+											try {
+												logger.error("Database operation failed", {
+													operation: "createExtensionSessionWithInitialTurn.insertSession",
+													userId,
+													parentConversationId,
+													error: error instanceof Error ? error.message : String(error),
+												});
+											} catch (logError) {
+												console.error("Logger failed:", logError);
+											}
+											return new DatabaseError({ message: "Failed to create extension session" });
+										}),
+									);
+
+								if (!sessionRow) {
+									return yield* Effect.fail(
+										new DatabaseError({ message: "Failed to create extension session" }),
+									);
+								}
+
+								const sessionId = sessionRow.id;
+
+								const [exchangeRow] = yield* tx
+									.insert(assessmentExchange)
+									.values({
+										conversationId: sessionId,
+										turnNumber: 0,
+										createdAt: now,
+									})
+									.returning()
+									.pipe(
+										Effect.mapError((error) => {
+											try {
+												logger.error("Database operation failed", {
+													operation: "createExtensionSessionWithInitialTurn.insertExchange",
+													sessionId,
+													error: error instanceof Error ? error.message : String(error),
+												});
+											} catch (logError) {
+												console.error("Logger failed:", logError);
+											}
+											return new DatabaseError({ message: "Failed to create opening exchange" });
+										}),
+									);
+
+								if (!exchangeRow) {
+									return yield* Effect.fail(
+										new DatabaseError({ message: "Failed to create opening exchange" }),
+									);
+								}
+
+								const savedMessages: Array<{
+									role: "assistant";
+									content: string;
+									createdAt: Date;
+								}> = [];
+
+								for (const [i, content] of greetingContents.entries()) {
+									const isOpeningQuestion = i === greetingContents.length - 1;
+									const [msgRow] = yield* tx
+										.insert(message)
+										.values({
+											conversationId: sessionId,
+											role: "assistant",
+											content,
+											exchangeId: isOpeningQuestion ? exchangeRow.id : null,
+											createdAt: now,
+										})
+										.returning()
+										.pipe(
+											Effect.mapError((error) => {
+												try {
+													logger.error("Database operation failed", {
+														operation: "createExtensionSessionWithInitialTurn.insertMessage",
+														sessionId,
+														error: error instanceof Error ? error.message : String(error),
+													});
+												} catch (logError) {
+													console.error("Logger failed:", logError);
+												}
+												return new DatabaseError({ message: "Failed to save greeting message" });
+											}),
+										);
+
+									if (!msgRow) {
+										return yield* Effect.fail(
+											new DatabaseError({ message: "Failed to save greeting message" }),
+										);
+									}
+
+									savedMessages.push({
+										role: "assistant",
+										content: msgRow.content,
+										createdAt: msgRow.createdAt,
+									});
+								}
+
+								logger.info("Extension session created (atomic)", {
+									sessionId,
+									parentConversationId,
+									userId,
+									greetingCount: savedMessages.length,
+								});
+
+								return { sessionId, messages: savedMessages };
+							}),
+						)
+						.pipe(
+							Effect.mapError((error) => {
+								if (error instanceof DatabaseError) {
+									return error;
+								}
+								try {
+									logger.error("Database operation failed", {
+										operation: "createExtensionSessionWithInitialTurn.transaction",
+										userId,
+										parentConversationId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({
+									message: "Failed to create extension session with greetings",
+								});
+							}),
+						);
 				}),
 
 			findCompletedSessionWithoutChild: (userId: string) =>
@@ -902,6 +1069,42 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 							return new DatabaseError({ message: "Failed to parse extension session" });
 						}),
 					);
+				}),
+
+			countCompletedExtensionSessionsExcluding: (userId: string, excludeSessionId: string) =>
+				Effect.gen(function* () {
+					const results = yield* db
+						.select({ n: count() })
+						.from(conversation)
+						.where(
+							and(
+								eq(conversation.userId, userId),
+								eq(conversation.status, "completed"),
+								eq(conversation.conversationType, "extension"),
+								isNotNull(conversation.parentConversationId),
+								ne(conversation.id, excludeSessionId),
+							),
+						)
+						.pipe(
+							Effect.mapError((error) => {
+								try {
+									logger.error("Database operation failed", {
+										operation: "countCompletedExtensionSessionsExcluding",
+										userId,
+										excludeSessionId,
+										error: error instanceof Error ? error.message : String(error),
+									});
+								} catch (logError) {
+									console.error("Logger failed:", logError);
+								}
+								return new DatabaseError({
+									message: "Failed to count completed extension sessions",
+								});
+							}),
+						);
+
+					const row = results[0];
+					return Number(row?.n ?? 0);
 				}),
 
 			findCheckInEligibleSessions: (thresholdDays: number) =>

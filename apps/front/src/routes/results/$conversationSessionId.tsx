@@ -5,6 +5,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Effect, Schema as S } from "effect";
 import { BookOpen, Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { FinalizationWaitScreen } from "@/components/finalization-wait-screen";
 import { ReturnSeedSection } from "@/components/me/ReturnSeedSection";
 import { NotFound } from "@/components/NotFound";
@@ -25,6 +26,7 @@ import {
 	fetchFirstVisitState,
 	scheduleFirstDailyPrompt,
 } from "@/hooks/use-account";
+import { useActivateExtension } from "@/hooks/use-activate-extension";
 import { useAuth } from "@/hooks/use-auth";
 import {
 	getResultsQueryOptions,
@@ -35,6 +37,7 @@ import { useFacetEvidence } from "@/hooks/use-evidence";
 import { useToggleVisibility } from "@/hooks/use-profile";
 import { syncPushSubscription } from "@/hooks/use-push-subscription-sync";
 import { useShareFlow } from "@/hooks/use-share-flow";
+import { useSubscriptionState } from "@/hooks/use-subscription-state";
 import { usePortraitStatus } from "@/hooks/usePortraitStatus";
 import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
@@ -107,6 +110,8 @@ function ResultsSessionPage() {
 	const { isAuthenticated, isPending: isAuthPending } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
 	const { data: results, isLoading, error } = useGetResults(conversationSessionId, canLoadResults);
+	const subscriptionQueryForExtend = useSubscriptionState(canLoadResults);
+	const activateExtensionMutation = useActivateExtension();
 	const toggleVisibility = useToggleVisibility();
 	const [firstVisitCompleted, setFirstVisitCompleted] = useState<boolean | null>(null);
 	const [keepReturnSeedVisible, setKeepReturnSeedVisible] = useState(false);
@@ -430,6 +435,62 @@ function ResultsSessionPage() {
 		: null;
 	const showReturnSeed = keepReturnSeedVisible || firstVisitCompleted === false;
 
+	const showResultsExtensionCta =
+		results.isLatestVersion &&
+		!subscriptionQueryForExtend.isPending &&
+		subscriptionQueryForExtend.data?.isEntitledToConversationExtension === true;
+
+	const handleResultsExtendConversation = () => {
+		activateExtensionMutation.mutate(undefined, {
+			onSuccess: (data) => {
+				void navigate({
+					to: "/chat",
+					search: { sessionId: data.sessionId },
+				});
+			},
+			onError: (err: unknown) => {
+				if (isConversationApiError(err) && err.status === 404) {
+					toast.error("No completed assessment is ready to extend yet.");
+					return;
+				}
+				if (isConversationApiError(err) && err.status === 403) {
+					toast.error("A subscription is required to extend your conversation.");
+					return;
+				}
+				toast.error(err instanceof Error ? err.message : "Could not start your extension");
+			},
+		});
+	};
+
+	const conversationExtensionStrip = showResultsExtensionCta ? (
+		<div
+			className="mx-auto max-w-[1120px] border-b border-border/40 bg-depth-surface px-5 pb-6 pt-2"
+			data-testid="results-extend-conversation-strip"
+		>
+			<h2 className="mb-1 text-lg font-medium text-foreground">Go deeper with Nerin</h2>
+			<p className="mb-4 max-w-prose text-sm text-muted-foreground">
+				Pick up where you left off — 15 more exchanges, one continuing thread.
+			</p>
+			<Button
+				type="button"
+				variant="default"
+				className="rounded-full"
+				data-testid="results-extend-conversation-cta"
+				disabled={activateExtensionMutation.isPending}
+				onClick={handleResultsExtendConversation}
+			>
+				{activateExtensionMutation.isPending ? (
+					<>
+						<Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" aria-hidden />
+						Starting…
+					</>
+				) : (
+					"Continue conversation"
+				)}
+			</Button>
+		</div>
+	) : undefined;
+
 	if (view === "portrait") {
 		// Story 2.4: Failed state with retry button
 		if (portraitStatus === "failed") {
@@ -524,6 +585,7 @@ function ResultsSessionPage() {
 				onRetryPortrait={() => retryPortrait.mutate()}
 				selectedTrait={selectedTrait}
 				messageCount={results.messageCount}
+				conversationExtensionStrip={conversationExtensionStrip}
 				detailZone={
 					selectedTraitData && (
 						<>
