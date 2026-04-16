@@ -105,7 +105,7 @@ describe("LoginForm", () => {
 	it("navigates to redirectTo after successful login", async () => {
 		mockSignInEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
-		renderLoginForm({ redirectTo: "/results/session-123" });
+		renderLoginForm({ redirectTo: "/me/session-123" });
 
 		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
 		fireEvent.change(screen.getByLabelText("Password"), {
@@ -114,11 +114,11 @@ describe("LoginForm", () => {
 		fireEvent.submit(screen.getByRole("button", { name: "Sign In" }));
 
 		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({ to: "/results/session-123" });
+			expect(mockNavigate).toHaveBeenCalledWith({ to: "/me/session-123" });
 		});
 	});
 
-	it("navigates to /results/:sessionId when anonymousSessionId is provided", async () => {
+	it("navigates to /me/:sessionId when anonymousSessionId is provided", async () => {
 		mockSignInEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
 		renderLoginForm({ anonymousSessionId: "session-456" });
@@ -131,7 +131,7 @@ describe("LoginForm", () => {
 
 		await waitFor(() => {
 			expect(mockNavigate).toHaveBeenCalledWith({
-				to: "/results/$conversationSessionId",
+				to: "/me/$conversationSessionId",
 				params: { conversationSessionId: "session-456" },
 			});
 		});

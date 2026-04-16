@@ -58,7 +58,7 @@ describe("TherapistChat", () => {
 
 			expect(textarea).toBeTruthy();
 			expect(fadeWrapper).toBeTruthy();
-			expect(portraitLink).toHaveAttribute("href", "/results/session-123?view=portrait");
+			expect(portraitLink).toHaveAttribute("href", "/me/session-123?view=portrait");
 			expect(screen.queryByText("View Results")).toBeNull();
 			expect(screen.getAllByTestId("post-assessment-transition-button")).toHaveLength(1);
 		});

@@ -7,7 +7,7 @@ test.describe("other-user access denial", () => {
 		testSessionId,
 	}) => {
 		await test.step("navigate to other user's results page", async () => {
-			await page.goto(`/results/${testSessionId}`);
+			await page.goto(`/me/${testSessionId}`);
 		});
 
 		await test.step("verify not-found message is displayed", async () => {

@@ -12,8 +12,8 @@ describe("auth-session-linking", () => {
 		);
 	});
 
-	it("reads session id from /results/:sessionId pathname", () => {
-		expect(getActiveAssessmentSessionId("/results/session-path-123", {})).toBe("session-path-123");
+	it("reads session id from /me/:sessionId pathname", () => {
+		expect(getActiveAssessmentSessionId("/me/session-path-123", {})).toBe("session-path-123");
 	});
 
 	it("builds auth page href with session and redirect", () => {
@@ -34,13 +34,13 @@ describe("auth-session-linking", () => {
 		).toBe("/chat?sessionId=session-123");
 	});
 
-	it("builds /results path param for post-auth redirect", () => {
+	it("builds /me path param for post-auth redirect when redirectTo is /me", () => {
 		expect(
 			buildPostAuthRedirect({
-				redirectTo: "/results",
+				redirectTo: "/me",
 				sessionId: "session-123",
 			}),
-		).toBe("/results/session-123");
+		).toBe("/me/session-123");
 	});
 
 	it("keeps explicit session query in redirect unchanged", () => {

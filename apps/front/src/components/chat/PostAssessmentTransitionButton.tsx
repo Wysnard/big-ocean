@@ -15,7 +15,7 @@ export function PostAssessmentTransitionButton({ sessionId }: PostAssessmentTran
 			<Link
 				data-slot="post-assessment-transition-button"
 				data-testid="post-assessment-transition-button"
-				to="/results/$conversationSessionId"
+				to="/me/$conversationSessionId"
 				params={{ conversationSessionId: sessionId }}
 				search={{ view: "portrait" }}
 			>

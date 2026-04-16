@@ -51,7 +51,7 @@ const SessionResultsSearchParams = S.Struct({
 	view: S.optional(S.String),
 });
 
-export const Route = createFileRoute("/results/$conversationSessionId")({
+export const Route = createFileRoute("/me/$conversationSessionId")({
 	ssr: false,
 	validateSearch: (search) => S.decodeUnknownSync(SessionResultsSearchParams)(search),
 	beforeLoad: async () => {
@@ -334,7 +334,7 @@ function ResultsSessionPage() {
 	const handleAuthSuccess = () => {
 		clearPendingResultsGateSession(conversationSessionId);
 		void navigate({
-			to: "/results/$conversationSessionId",
+			to: "/me/$conversationSessionId",
 			params: { conversationSessionId: conversationSessionId },
 			replace: true,
 		});
@@ -361,7 +361,7 @@ function ResultsSessionPage() {
 	const handleBackToProfile = useCallback(
 		() =>
 			navigate({
-				to: "/results/$conversationSessionId",
+				to: "/me/$conversationSessionId",
 				params: { conversationSessionId },
 				search: {},
 			}),
@@ -639,7 +639,7 @@ function ResultsSessionPage() {
 							<div className="col-span-full flex flex-wrap justify-center gap-3 py-4">
 								<Button data-testid="results-read-portrait" asChild variant="outline" className="min-h-11">
 									<Link
-										to="/results/$conversationSessionId"
+										to="/me/$conversationSessionId"
 										params={{ conversationSessionId }}
 										search={{ view: "portrait" }}
 									>

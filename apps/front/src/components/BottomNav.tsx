@@ -16,10 +16,26 @@ const THREE_SPACE_TABS: ThreeSpaceTab[] = [
 	{ id: "circle", label: "Circle", to: "/circle", icon: Users },
 ];
 
-const HIDDEN_ROUTE_PREFIXES = ["/chat", "/results", "/settings", "/today/week/"] as const;
+const HIDDEN_ROUTE_PREFIXES = ["/chat", "/settings", "/today/week/"] as const;
 
-function getActiveTabId(pathname: string): ThreeSpaceTab["id"] | null {
+function shouldHideBottomNav(pathname: string, search: Record<string, unknown>): boolean {
 	if (HIDDEN_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+		return true;
+	}
+	// Focused portrait reading: canonical `/me/$sessionId?view=portrait` (BottomNav hidden)
+	if (pathname.startsWith("/me/") && pathname !== "/me" && pathname !== "/me/") {
+		if (search.view === "portrait") {
+			return true;
+		}
+	}
+	return false;
+}
+
+function getActiveTabId(
+	pathname: string,
+	search: Record<string, unknown>,
+): ThreeSpaceTab["id"] | null {
+	if (shouldHideBottomNav(pathname, search)) {
 		return null;
 	}
 
@@ -70,10 +86,13 @@ function NavTab({
 }
 
 export function BottomNav() {
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
+	const { pathname, search } = useRouterState({
+		select: (state) => ({
+			pathname: state.location.pathname,
+			search: state.location.search as Record<string, unknown>,
+		}),
 	});
-	const activeTabId = getActiveTabId(pathname);
+	const activeTabId = getActiveTabId(pathname, search);
 
 	if (!activeTabId) {
 		return null;

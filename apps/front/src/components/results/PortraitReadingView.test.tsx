@@ -74,12 +74,12 @@ describe("PortraitReadingView", () => {
 		);
 	});
 
-	it("links to the full results page", () => {
+	it("links to the session-scoped Me surface", () => {
 		render(<PortraitReadingView content={SAMPLE_PORTRAIT} sessionId="test-session-id" />);
 
 		expect(screen.getByTestId("view-full-profile-btn")).toHaveAttribute(
 			"href",
-			"/results/test-session-id",
+			"/me/test-session-id",
 		);
 	});
 

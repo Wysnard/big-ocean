@@ -6,7 +6,7 @@ test.describe("unauthenticated access denial", () => {
 		testSessionId,
 	}) => {
 		await test.step("navigate to results page while unauthenticated", async () => {
-			await page.goto(`/results/${testSessionId}`);
+			await page.goto(`/me/${testSessionId}`);
 		});
 
 		await test.step("verify auth gate is displayed", async () => {

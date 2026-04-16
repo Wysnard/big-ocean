@@ -121,7 +121,7 @@ test.describe
 			const storageState = await apiContext.storageState();
 			await page.context().addCookies(storageState.cookies);
 
-			await page.goto(`/results/${inviteeSessionId}`);
+			await page.goto(`/me/${inviteeSessionId}`);
 
 			const card = page.getByTestId("relationship-card");
 			await expect(card).toBeVisible({ timeout: 15_000 });
@@ -133,7 +133,7 @@ test.describe
 			await page.context().clearCookies();
 			await page.context().addCookies(storageState.cookies);
 
-			await page.goto(`/results/${inviterSessionId}`);
+			await page.goto(`/me/${inviterSessionId}`);
 
 			const card = page.getByTestId("relationship-card");
 			await expect(card).toBeVisible({ timeout: 15_000 });

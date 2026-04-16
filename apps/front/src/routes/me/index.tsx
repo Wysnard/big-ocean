@@ -15,6 +15,10 @@ import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
 import { useSubscriptionState } from "@/hooks/use-subscription-state";
 import { getSession } from "@/lib/auth-client";
+import {
+	clearPendingResultsGateSession,
+	readPendingResultsGateSession,
+} from "@/lib/results-auth-gate-storage";
 
 type MeSectionSpec = {
 	key: string;
@@ -50,6 +54,20 @@ function getLatestIncompleteSessionId(
 export const Route = createFileRoute("/me/")({
 	ssr: false,
 	beforeLoad: async ({ context }) => {
+		// Replaces former `/results` index: 24h pending session pointer in localStorage
+		if (typeof window !== "undefined") {
+			const pending = readPendingResultsGateSession();
+			if (pending?.expired) {
+				clearPendingResultsGateSession();
+			} else if (pending && !pending.expired) {
+				throw redirect({
+					to: "/me/$conversationSessionId",
+					params: { conversationSessionId: pending.sessionId },
+					replace: true,
+				});
+			}
+		}
+
 		const { data: session } = await getSession();
 		if (!session?.user) {
 			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });

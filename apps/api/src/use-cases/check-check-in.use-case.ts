@@ -77,7 +77,7 @@ export const checkCheckIn = Effect.gen(function* () {
 		);
 		const territoryDescription = deriveCheckInTheme(exchanges, assessmentResult);
 
-		const resultsUrl = `${config.frontendUrl}/results`;
+		const resultsUrl = `${config.frontendUrl}/me`;
 
 		const html = renderCheckInEmail({
 			userName: session.userName,

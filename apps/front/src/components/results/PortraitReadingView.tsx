@@ -78,7 +78,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 				{/* End-of-letter transition (FR95) */}
 				<div className="mt-16 pt-8 border-t border-border/20 text-center">
 					<Link
-						to="/results/$conversationSessionId"
+						to="/me/$conversationSessionId"
 						params={{ conversationSessionId: sessionId }}
 						search={{}}
 						data-testid="view-full-profile-btn"

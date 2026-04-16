@@ -1,7 +1,16 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-lastEdited: '2026-04-12'
+lastEdited: '2026-04-16'
+lastStep: 14
 editHistory:
+  - date: '2026-04-16'
+    type: 'revision'
+    source: 'Stakeholder decision — consolidate Results into Me (canonical /me)'
+    summary: 'Added §18.17 Canonical Me URL & Results Route Deprecation plus standalone addendum ux-design-addendum-me-canonical-urls.md (short URL map, redirects, checklist). /me canonical, /me/$sessionId session depth, ?view=portrait, 308 from /results/*, auth+resume unchanged on Me shell. §18 intro and §18.15 navigation updated.'
+  - date: '2026-04-16'
+    type: 'revision'
+    source: 'Editorial pass — canonical URLs in narrative (with PRD 2026-04-16)'
+    summary: 'Replaced `/results/$sessionId` with `/me/$conversationSessionId` across §1–§17 journeys, tables, diagrams, email/deep-link bullets, and accessibility rows; product copy "results page" → Me page / identity surface where meant as UI surface; §12.2 Me navigation + auth gate row; historical progressive-unlock paragraph marked PWYW-retired; §18.17 redirect rows use `$conversationSessionId`; spec drift note marked done. `components/results/*` paths unchanged (implementation).'
   - date: '2026-04-12'
     type: 'revision'
     source: 'PRD need-positioning pivot + Snapchat/Instagram split-layout reference + UX spec §16 adversarial review'
@@ -37,9 +46,9 @@ inputDocuments:
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-04-11 (latest revision — see `editHistory` frontmatter for full timeline)
+**Date:** 2026-04-16 (latest revision — see `editHistory` frontmatter for full timeline)
 
-**Status:** Revision in progress. All 14 workflow steps are marked completed in `stepsCompleted`; the 2026-04-11 revision is an in-place update to the completed spec, not a re-run of the workflow.
+**Status:** Revision in progress. All 14 workflow steps are marked completed in `stepsCompleted`; substantive revisions (2026-04-11 architecture pivot, **2026-04-16 Results → Me URL canonicalization §18.17**) are in-place updates, not a full re-run of the workflow.
 
 **Known gap:** §8 Visual Design Foundation, §9 Design Direction, §12 UX Patterns, §13 Responsive/Accessibility, §14 Re-Engagement Emails, and §17 Public Profile still contain lingering PWYW, credit, and dashboard references from the pre-2026-04-11 era. These are not architecturally load-bearing — the three-space architecture and retired monetization model are reflected in the core spec sections (§1-2, §7, §10, §11, §15, §16, §18, §19, §20). A cleanup pass is recommended but not blocking.
 
@@ -106,7 +115,7 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 3. **Three-space navigation cognitive model** — Today / Me / Circle is a departure from standard "dashboard + profile" IA. Users must instantly grasp that Today is ephemeral (come back tomorrow), Me is persistent identity, and Circle is the few people you care about. The bottom nav must carry this model without a tutorial. Assessment completion redirects once to `/me` for the reveal; after that, users can navigate freely across the three spaces, with `/today` acting as the primary daily return surface rather than a forced default. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. `/settings` is a thin admin route accessed via gear icon on Me, not a fourth tab.
 
-4. **The post-assessment transition is the emotional peak** — The transition from conversation close to first portrait read is the single most valuable moment in the product. It must use focused reading, not a cluttered results page. Flow: closing exchange → "Show me what you found →" button (user-voiced) → navigate to `PortraitReadingView` in a "generating" state with OceanSpinner and the line *"Nerin is writing your letter..."* → letter fades in full-screen, distraction-free, max-width 720px → warm "There's more to see →" link at the bottom → full results/Me page with identity hero, inline portrait, return seed, and notification permission request in Nerin's voice. The emotional weight of the first read must not be diluted by navigation or chrome.
+4. **The post-assessment transition is the emotional peak** — The transition from conversation close to first portrait read is the single most valuable moment in the product. It must use focused reading, not a cluttered Me page (full chrome). Flow: closing exchange → "Show me what you found →" button (user-voiced) → navigate to `PortraitReadingView` in a "generating" state with OceanSpinner and the line *"Nerin is writing your letter..."* → letter fades in full-screen, distraction-free, max-width 720px → warm "There's more to see →" link at the bottom → full Me page with identity hero, inline portrait, return seed, and notification permission request in Nerin's voice. The emotional weight of the first read must not be diluted by navigation or chrome.
 
 5. **Phase 5 → Phase 6 bridge (daily return loop)** — Without a daily reason to come back, the 90% churn cliff kills the subscription flywheel before Week 3. The **silent journal fork** is the bridge: free users deposit a mood + optional note daily into a calendar with no LLM response, with a quiet anticipation line — *"Nerin will write you a letter about your week on Sunday."* — and the Sunday weekly letter arrives as the reward. Silence in the free tier is a feature, not a cost optimization. Paid daily dialogue (LLM recognition + mini-dialogue) is post-MVP.
 
@@ -140,9 +149,9 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 6. **Nerin output grammar — three visual formats** — Users learn to read each format in its own emotional register. **Journal format** (margin notes, shared-page feel) = daily check-in recognition on Today [post-MVP for paid users; free users see the quiet anticipation line]. **Letter format** (focused reading, max-width 720px, warm body font) = portrait, weekly summary, annual relationship letter. **Chat format** = subscriber mini-dialogue on Today (post-MVP). Each format has its own UI conventions, typography, and pacing.
 
-7. **Post-assessment focused reading transition** — The first read of the portrait happens in a distraction-free focused reading view (`PortraitReadingView` at `/results/$sessionId?view=portrait`), not on a cluttered results page. Entry: "Show me what you found →" button after Nerin's closing exchange (user-voiced). Generating state: OceanSpinner + "Nerin is writing your letter...". Ready state: letter fades in full-screen. End-of-letter transition: warm "There's more to see →" link → full results/Me page. This is the single most emotionally-weighted flow in the product and deserves a full-tier focused reading container.
+7. **Post-assessment focused reading transition** — The first read of the portrait happens in a distraction-free focused reading view (`PortraitReadingView` at `/me/$conversationSessionId?view=portrait`), not on a cluttered Me page (full chrome). Entry: "Show me what you found →" button after Nerin's closing exchange (user-voiced). Generating state: OceanSpinner + "Nerin is writing your letter...". Ready state: letter fades in full-screen. End-of-letter transition: warm "There's more to see →" link → full Me page. This is the single most emotionally-weighted flow in the product and deserves a full-tier focused reading container.
 
-8. **Return seed on first Me page visit** — At the bottom of the full results/Me page on the first visit, Nerin plants the return seed: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a notification permission request in Nerin's voice: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* — NOT a system-voice "Enable notifications" prompt. If granted, schedule a first daily prompt for the next day. If denied, the relationship still works — no lock-in. This is the Phase 5 → Phase 6 bridge.
+8. **Return seed on first Me page visit** — At the bottom of the full Me page on the first visit, Nerin plants the return seed: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a notification permission request in Nerin's voice: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* — NOT a system-voice "Enable notifications" prompt. If granted, schedule a first daily prompt for the next day. If denied, the relationship still works — no lock-in. This is the Phase 5 → Phase 6 bridge.
 
 9. **Immersive conversational interface** — Explore a departure from standard chat-bubble UI toward a full-screen, ambient experience where the conversation feels like entering a space, not opening a messaging app. The ocean/geometric visualization lives around and behind the text, creating an intimate environment distinct from any chatbot interaction. No timestamps, no avatar bubbles — each exchange is its own moment. (Design direction to evaluate, not a commitment.)
 
@@ -180,7 +189,7 @@ The core experience of big-ocean unfolds in two phases: an **onboarding tunnel**
 
 The 15-turn conversation with Nerin transforms from "I'm here to get my personality results" into "I'm genuinely engaged in this conversation about myself." Nerin's observations — surfacing patterns, contradictions, and tensions in what the user has said — build credibility ("this AI is actually listening"), create the feeling of being understood ("how did she notice that?"), and build anticipation for the portrait ("if she's catching this much now, the full results must be incredible"). The conversation is not a waiting room for results — it's the first act of a multi-act experience.
 
-Onboarding closes with a focused reading transition: Nerin's distinct closing → "Show me what you found →" button → `PortraitReadingView` in generating state → letter fades in full-screen → "There's more to see →" → full results/Me page → return seed + notification permission request in Nerin's voice.
+Onboarding closes with a focused reading transition: Nerin's distinct closing → "Show me what you found →" button → `PortraitReadingView` in generating state → letter fades in full-screen → "There's more to see →" → full Me page → return seed + notification permission request in Nerin's voice.
 
 **Phase 2 — Three-space companion world (Day 1+):**
 
@@ -235,7 +244,7 @@ The authenticated product is organized around **three spaces**, not a dashboard.
 **Assessment tunnel (`/chat`)** — The 15-turn conversation. Sits outside the three-space world as an onboarding tunnel. Not a tab. Run once (or extended once per subscription cycle via Director model re-initialization).
 
 **Focused reading views** — Dedicated distraction-free routes for Nerin's letter-format outputs:
-- `/results/$sessionId?view=portrait` — First portrait read (`PortraitReadingView`)
+- `/me/$conversationSessionId?view=portrait` — First portrait read (`PortraitReadingView`)
 - `/today/week/$weekId` — Weekly letter from Nerin
 - Relationship letter Section A entered via "Read Together Again" ritual screen
 
@@ -306,11 +315,11 @@ The authenticated product is organized around **three spaces**, not a dashboard.
 
 1. **The first Nerin observation (Act 1 → Act 2 transition, turns 5-8)** — The moment Nerin surfaces a pattern or tension the user didn't expect. This is the credibility inflection point. If it lands, the user thinks "okay, this is real" and commits to the full conversation. If it feels generic or off-base, trust erodes and depth of subsequent answers drops. **This is the single most important UX moment in the entire assessment.**
 
-2. **The portrait reveal inside focused reading** — The transition from conversation end to first portrait read, delivered inside `PortraitReadingView` (not on a cluttered results page). Closing exchange → "Show me what you found →" button → navigate to `/results/$sessionId?view=portrait` → OceanSpinner with Nerin-voiced line *"Nerin is writing your letter..."* → letter fades in full-screen, max-width 720px, warm background. The visual personality portrait, the archetype name, the opening narrative must deliver on the promise the conversation built. This is the emotional peak. The focused reading container exists specifically to protect this moment from dilution.
+2. **The portrait reveal inside focused reading** — The transition from conversation end to first portrait read, delivered inside `PortraitReadingView` (not on a cluttered Me page (full chrome)). Closing exchange → "Show me what you found →" button → navigate to `/me/$conversationSessionId?view=portrait` → OceanSpinner with Nerin-voiced line *"Nerin is writing your letter..."* → letter fades in full-screen, max-width 720px, warm background. The visual personality portrait, the archetype name, the opening narrative must deliver on the promise the conversation built. This is the emotional peak. The focused reading container exists specifically to protect this moment from dilution.
 
 3. **The "that's so me" confirmation during the first read** — Somewhere in the portrait letter, the user reads something that feels uncannily accurate — ideally tied to a specific thing they said during the conversation. This is the moment that converts a user into a sharer. Evidence-linked narrative ("Your high openness showed up when you described...") is the mechanism.
 
-4. **The return seed on first Me page visit** — After end-of-letter transition ("There's more to see →") and the full results/Me page scroll, at the bottom: Nerin's message *"Tomorrow, I'll ask how you're doing. Come check in with me."* + notification permission request in Nerin's voice *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* — NOT a system-voice "Enable notifications" prompt. **This is the Phase 5 → Phase 6 bridge.** If this moment fails, the daily loop never starts and the subscription flywheel dies in Week 1.
+4. **The return seed on first Me page visit** — After end-of-letter transition ("There's more to see →") and the full Me page scroll, at the bottom: Nerin's message *"Tomorrow, I'll ask how you're doing. Come check in with me."* + notification permission request in Nerin's voice *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* — NOT a system-voice "Enable notifications" prompt. **This is the Phase 5 → Phase 6 bridge.** If this moment fails, the daily loop never starts and the subscription flywheel dies in Week 1.
 
 5. **First share action** — The moment a user decides to share their archetype card. The share flow must be instant and the card must look incredible in the destination context (iMessage preview, Instagram story, WhatsApp thumbnail). If profile is private, prompt visibility toggle at this moment.
 
@@ -384,7 +393,7 @@ user opens up more → deeper material → ...
 
 If this loop activates by turn 8, everything downstream works — Depth, Validation, Pride, Self-Expression, Virality. If it doesn't activate, nothing compensates. The first Nerin observation (turns 5-8) is the ignition point. This is why it's the single most important UX moment: it's not just a retention moment, it's the start of the emotional engine that powers the entire experience.
 
-**Conversation depth directly determines portrait quality.** This is a hidden dependency — the results page seems like a separate design problem from the conversation UI. But deeper conversation → richer evidence → more specific portrait → stronger Validation → more Pride → more sharing. UX investment in driving deeper conversation has a direct multiplier effect on everything downstream. A beautifully designed results page with shallow evidence will feel generic. A plain results page with deep, specific evidence will feel powerful.
+**Conversation depth directly determines portrait quality.** This is a hidden dependency — the Me identity surface seems like a separate design problem from the conversation UI. But deeper conversation → richer evidence → more specific portrait → stronger Validation → more Pride → more sharing. UX investment in driving deeper conversation has a direct multiplier effect on everything downstream. A beautifully designed Me page with shallow evidence will feel generic. A plain Me page with deep, specific evidence will feel powerful.
 
 ### Emotional Journey Mapping
 
@@ -543,7 +552,7 @@ When something goes wrong — Nerin misreads the user, touches a sensitive topic
 | Glanceable identity | 4-letter code + illustration + one-liner = instant recognition | OCEAN code + visual portrait + archetype name must communicate in under 3 seconds |
 | Tribe/belonging | "Other ENFJs include..." creates group identity | Archetype communities, "others like you" discovery (future community feed) |
 | Share-first design | Share buttons and comparison tools on every page | Personality card always available, share flow is one tap, comparison teaser on public profile |
-| Structured type profiles | Strengths, weaknesses, relationships, career — organized depth | Results page with progressive disclosure: portrait → traits → evidence → relationships |
+| Structured type profiles | Strengths, weaknesses, relationships, career — organized depth | Me identity surface with progressive disclosure: portrait → traits → evidence → relationships |
 
 **From Journey → big-ocean:**
 
@@ -675,7 +684,7 @@ shadcn/ui is the right foundation for big-ocean because:
 
 **Extend shadcn components for:**
 - Chat bubbles and conversation UI (already started with conversation tokens and `nerin-prose` styles)
-- Results page components (trait displays, facet cascades, score visualizations)
+- Me page components (trait displays, facet cascades, score visualizations)
 - Share/QR flows (personality card, relationship QR drawer)
 - Any UI that builds on standard patterns (dialogs, cards, forms, navigation)
 
@@ -796,9 +805,9 @@ The assessment follows a four-beat rhythm. All four must land for the assessment
 
 **Beat 3 — The Convergence (turns 11-15):** Themes deepen and connect. The user begins forming their own hypothesis about what their portrait will say. Anticipation peaks. Nerin's final closing message (FR12) signals *"I have something to share with you."*
 
-**Beat 4 — The Portrait Read (focused reading, free):** The portrait is free. The user taps "Show me what you found →" → navigates to `PortraitReadingView` at `/results/$sessionId?view=portrait` → sees the generating state (OceanSpinner + *"Nerin is writing your letter..."*) → letter fades in full-screen, distraction-free, max-width 720px, warm background, letter format. The user reads the letter uninterrupted. This is the emotional peak.
+**Beat 4 — The Portrait Read (focused reading, free):** The portrait is free. The user taps "Show me what you found →" → navigates to `PortraitReadingView` at `/me/$conversationSessionId?view=portrait` → sees the generating state (OceanSpinner + *"Nerin is writing your letter..."*) → letter fades in full-screen, distraction-free, max-width 720px, warm background, letter format. The user reads the letter uninterrupted. This is the emotional peak.
 
-**Beat 5 — The Bridge (return seed + daily world):** At the end of the letter, a warm link: *"There's more to see →"* navigates to the full results/Me page. At the bottom of that page, Nerin plants the return seed — *"Tomorrow, I'll ask how you're doing. Come check in with me."* + notification permission request in Nerin's voice. Tomorrow, the user lands on `/today` for their first silent journal check-in. **The assessment is not the destination; the three-space companion world is.**
+**Beat 5 — The Bridge (return seed + daily world):** At the end of the letter, a warm link: *"There's more to see →"* navigates to the full Me page. At the bottom of that page, Nerin plants the return seed — *"Tomorrow, I'll ask how you're doing. Come check in with me."* + notification permission request in Nerin's voice. Tomorrow, the user lands on `/today` for their first silent journal check-in. **The assessment is not the destination; the three-space companion world is.**
 
 ### 7.6 Portrait as the Emotional Peak
 
@@ -912,7 +921,7 @@ The relationship letter is the primary growth mechanism. It is free because ever
 - Nerin's distinct closing per FR12
 - Input field fades
 - Single button below closing message: **[Show me what you found →]** — user-voiced, warm, keeps the conversation feel alive for one more beat
-- Tap button → navigate to `/results/$sessionId?view=portrait` (focused reading, NOT to full results page first)
+- Tap button → navigate to `/me/$conversationSessionId?view=portrait` (focused reading, NOT to the full Me page first)
 
 **4. PortraitReadingView generating state (new work required):**
 - OceanSpinner centered
@@ -924,9 +933,9 @@ The relationship letter is the primary growth mechanism. It is free because ever
 - Spinner resolves and the letter fades in
 - Full-screen, distraction-free, max-width 720px, warm background, letter format
 - User reads uninterrupted — this is the emotional peak
-- At the end of the letter: warm link *"There's more to see →"* → `/results/$sessionId` (full results/Me page with inline portrait, radar, scores, etc.)
+- At the end of the letter: warm link *"There's more to see →"* → `/me/$conversationSessionId` (full Me page with inline portrait, radar, scores, etc.)
 
-**6. Full results/Me page + return seed:**
+**6. Full Me page + return seed:**
 - Identity hero (archetype, OCEAN code, radar chart)
 - Portrait section renders inline via `PersonalPortrait` for re-read-in-context
 - Public Face section with private default
@@ -981,13 +990,13 @@ Turn 15: Nerin's distinct closing signals "I have something to share"
     ↓
 Closing exchange: "Show me what you found →" button (user-voiced)
     ↓
-Navigate to /results/$sessionId?view=portrait (focused reading, NOT results page first)
+Navigate to /me/$conversationSessionId?view=portrait (focused reading, NOT Me page first)
     ↓
 PortraitReadingView generating state: OceanSpinner + "Nerin is writing your letter..."
     ↓
 Letter fades in: Nerin's voice, specific references, unreproducible, half-open door — FREE
     ↓
-End-of-letter: "There's more to see →" → full results/Me page
+End-of-letter: "There's more to see →" → full Me page
     ↓
 Full Me page scroll: identity hero, re-read portrait inline, public face control, invite ceremony
     ↓
@@ -1140,7 +1149,7 @@ Additional width tokens (`--width-content`, `--width-wide`) can be added when co
 **Layout principles:**
 - Mobile-first responsive — most users on phones even on web
 - Spacious, not dense — the product is a personal experience, not a dashboard
-- Generous vertical rhythm — conversation and results pages need breathing room for emotional pacing
+- Generous vertical rhythm — conversation and Me surfaces need breathing room for emotional pacing
 - Touch-optimized — minimum 44px tap targets, thumb-friendly input areas
 
 ### 8.5 Radius System
@@ -1233,7 +1242,7 @@ Multiple overlapping layers require a managed stacking order. Define upfront to 
 
 The portrait section maintains the unified artistic direction — same colors, same fonts, same surfaces. The tonal shift is achieved through **typography and spacing only**, creating a "room getting quieter" effect:
 
-- **Reading width:** `--width-prose` (65ch) — narrower than results page, optimal for long-form reading
+- **Reading width:** `--width-prose` (65ch) — narrower than the Me trait grid layout, optimal for long-form reading
 - **Line-height:** `--leading-prose` (1.75) — more generous than body text, allows the words to breathe
 - **Vertical padding:** `--space-16` or `--space-24` above and below — creates breathing room that separates the portrait from surrounding data
 - **Ambient visualization:** Ocean layer softens (reduced animation intensity, not stopped) — the environment gets quieter
@@ -1243,7 +1252,7 @@ The portrait's "letter" quality comes from Nerin's writing style, not from visua
 
 **Sealed portrait state (deferred payers):** Clean, minimal locked visual — blurred preview or simple card with archetype name and CTA. No skeuomorphic metaphors. Uses existing card tokens with a locked state variant.
 
-**Progressive unlock results page:** Visual differentiation between locked/unlocked layers via opacity or blur. Relationship QR drawer accessible from results page. Non-payers see relationship at €5; portrait buyers have 1 free credit.
+**Progressive unlock (historical — PWYW retired):** Visual differentiation between locked/unlocked layers via opacity or blur was explored when portrait paywall existed. **Current product:** portrait is free; relationship letter is free. Any QR drawer for relationships lives on **Me** / Circle surfaces, not a paywalled “results” gate.
 
 ### 8.11 Personality Card Visual Spec
 
@@ -1305,7 +1314,7 @@ Eight surface mockups were generated as an interactive HTML showcase (`_bmad-out
 | Surface | What it explores |
 |---------|-----------------|
 | **Ambient Visualization** | Geometric ocean with trait-shaped creatures drifting alongside bubbles, responding to conversational energy across 5 states |
-| **Results Page** | Grid layout matching existing codebase (ArchetypeHeroSection → OceanCodeStrand → Radar + Confidence → 3+2 TraitCards with facet grids) |
+| **Me identity surface** | Grid layout matching existing codebase (ArchetypeHeroSection → OceanCodeStrand → Radar + Confidence → 3+2 TraitCards with facet grids) |
 | **Portrait** | Spine format with AI-generated emoji headers, 65ch width, 1.75 line-height — Nerin's voice creates the "letter" quality, not visual decoration |
 | **Portrait Curtain** | Founder origin story as love letter + blurred preview + Polar embedded checkout modal (PWYW, no custom amount picker in our UI) |
 | **Transition Moment** | 5-phase "breath" sequence from conversation to results (Nerin's last word → chat fades → shapes consolidate → archetype rises → grid populates) |
@@ -1506,9 +1515,9 @@ flowchart TD
     [Show me what you found →]
     User-voiced, warm, keeps conversation feel alive"]
 
-    %% Navigate to focused reading (NOT to results page)
+    %% Navigate to focused reading (NOT to full Me page first)
     U2 --> V["Navigate directly to
-    /results/$sessionId?view=portrait
+    /me/$conversationSessionId?view=portrait
     (focused reading view)"]
 
     %% PortraitReadingView generating state (new work — FR93-FR95)
@@ -1534,10 +1543,10 @@ flowchart TD
     %% End-of-letter transition
     V5 --> V6["At bottom of PortraitReadingView:
     warm link 'There's more to see →'
-    Navigate to /results/$sessionId (full Me page)"]
+    Navigate to /me/$conversationSessionId (full Me page)"]
 
     %% Full Me page first visit
-    V6 --> W["Full results/Me page loads:
+    V6 --> W["Full Me page loads:
     - Identity hero (archetype, OCEAN code, radar)
     - Portrait renders inline via PersonalPortrait
     - Your Public Face (private by default)
@@ -1601,10 +1610,10 @@ flowchart TD
 | Depth Meter | `/chat` sidebar | Visual milestones at 25% / 50% / 75% — turn-based | Progress reassurance, sunk-cost motivation |
 | Feel-seen Moments | In-conversation | Only attempted when evidence confidence is high | Mid-conversation value delivery — swing only when confident |
 | Exchange 15 | `/chat` | Nerin's distinct closing (FR12) + [Show me what you found →] button | User-voiced transition, conversational continuity |
-| PortraitReadingView generating | `/results/$sessionId?view=portrait` | OceanSpinner + "Nerin is writing your letter..." | Emotional framing, not a loading screen |
-| PortraitReadingView ready | `/results/$sessionId?view=portrait` | Letter fades in, full-screen max-width 720px, warm background | THE emotional peak — free, distraction-free |
+| PortraitReadingView generating | `/me/$conversationSessionId?view=portrait` | OceanSpinner + "Nerin is writing your letter..." | Emotional framing, not a loading screen |
+| PortraitReadingView ready | `/me/$conversationSessionId?view=portrait` | Letter fades in, full-screen max-width 720px, warm background | THE emotional peak — free, distraction-free |
 | End-of-letter link | PortraitReadingView bottom | "There's more to see →" warm link | Soft transition to full Me page |
-| Full Me page | `/results/$sessionId` | Identity hero, inline portrait, public face control, subscription pitch, empty Circle + invite, share affordances | Explore-don't-dump, progressive disclosure |
+| Full Me page | `/me/$conversationSessionId` | Identity hero, inline portrait, public face control, subscription pitch, empty Circle + invite, share affordances | Explore-don't-dump, progressive disclosure |
 | Return Seed | Me page bottom | Nerin's message + Nerin-voiced notification permission request | Phase 5→6 bridge — the single most important retention moment |
 | Day 1 silent check-in | `/today` | First journal deposit | Journey 2 begins |
 
@@ -1614,7 +1623,7 @@ flowchart TD
 2. **Auth path is mandatory** — The anonymous conversation path has been removed. All users sign up and verify email before turn 1. Homepage conversion is now load-bearing.
 3. **Director model adaptation** — Nerin matches user energy/telling continuously. Goes deeper when user signals readiness. Stays light and curious when user is guarded. Feel-seen moments only attempted at high evidence confidence — a missed observation is worse than none.
 4. **Mid-conversation drop-off** — Session auto-saves. Last conversation topic stored as simple string. Re-engagement email templates in the topic (per FR76). Logged-in prompt appears on return. One email only — respect silence.
-5. **Closing exchange → focused reading** — The button is user-voiced ("Show me what you found") and navigates directly to `/results/$sessionId?view=portrait` (NOT to the full results page first). The focused reading container exists to protect the emotional weight of the first read.
+5. **Closing exchange → focused reading** — The button is user-voiced ("Show me what you found") and navigates directly to `/me/$conversationSessionId?view=portrait` (NOT to the full Me page first). The focused reading container exists to protect the emotional weight of the first read.
 6. **Portrait read is FREE** — No PWYW, no modal, no paywall. The portrait is the "feel seen" moment that powers everything downstream. Gating it destroys trust before the daily return loop even begins.
 7. **Return seed permission outcome** — Permission granted → schedule Day 1 notification. Permission denied → no lock-in, daily loop still works via organic return. Either way, Day 1 the user lands on `/today` by default.
 8. **Sharing vs invite** — Sharing the archetype card (broad viral) and the invite ceremony (deep dyadic) are two different paths; both are revealed on scroll below the identity hero, neither blocks the other.
@@ -1639,7 +1648,7 @@ flowchart TD
 1. **Homepage is load-bearing** — Anonymous path removed means cold visitors must commit to signup + email verification before experiencing Nerin. Homepage Nerin preview (FR63) and portrait excerpt (FR62) do the sales work that the anonymous conversation used to do.
 2. **Email captured upfront** — Enables FR76 drop-off re-engagement for every started user. No anonymous-to-authenticated session linking needed.
 3. **User-voiced closing button** — "Show me what you found" keeps the conversational register alive for one more beat before transitioning to focused reading. Feels like asking Nerin, not clicking a UI element.
-4. **Focused reading as the first portrait destination** — Not the full results page. Protects the emotional weight of the first read. One extra navigation step is a tiny price for a distraction-free letter experience.
+4. **Focused reading as the first portrait destination** — Not the full Me page. Protects the emotional weight of the first read. One extra navigation step is a tiny price for a distraction-free letter experience.
 5. **Generating state in Nerin's voice** — "Nerin is writing your letter..." frames the wait as intimate, not as buffering.
 6. **Portrait is free** — No PWYW. The portrait is the acquisition engine, not the revenue engine. Revenue lives in the Sunday weekly letter at Week 3+ (Journey 8).
 7. **End-of-letter link is warm** — "There's more to see →" rather than "Continue" or "Next". Carries the letter's emotional register into the full Me page.
@@ -3340,7 +3349,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 **Satori constraint:** All 15 shapes must render identically in React DOM and Satori (server-side OG image generation). No CSS transforms for shape construction — use SVG `path` or `polygon` only. No `clip-path`, no gradients inside shapes. Solid fills only. Test each shape in Satori during development.
 
-**Usage:** Results page hero, public profile, archetype card, relationship analysis, share card, OG image generation.
+**Usage:** Me page hero, public profile, archetype card, relationship analysis, share card, OG image generation.
 
 **Accessibility:** `aria-label="Personality signature: [spell out code letters]"`. Each shape: `role="img"` with trait name tooltip.
 
@@ -3357,7 +3366,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 **States:** Default (5 letters in `--font-data`, subtle trait-color underlines) · Tooltip open (letter highlighted, tooltip: letter meaning + trait name + level description)
 
-**Usage:** Results page, public profile, relationship comparison.
+**Usage:** Me page, public profile, relationship comparison.
 
 **Accessibility:** Each letter is a `<button>` with `aria-describedby` linking to tooltip. Keyboard navigable (Tab between letters, Enter/Space to open).
 
@@ -3375,7 +3384,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 **States:** Default (sections rendered with vertical rhythm, 65ch width, 1.75 line-height) · Generating (skeleton sections pulsing) · Failed (inline retry button — the error IS the content location)
 
-**Usage:** Results page portrait section, relationship analysis page, PWYW modal (Vincent's portrait).
+**Usage:** Me page portrait section, relationship analysis page, PWYW modal (Vincent's portrait).
 
 **Accessibility:** Semantic HTML (`<article>`, `<section>`, `<h3>` for titles). Screen readers announce section titles.
 
@@ -3390,7 +3399,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 **Behavior:** Single user = solid polygon (existing). Two users = solid + dashed polygon with custom tooltip showing both scores per trait with shape icons.
 
-**Usage:** Results page (single), relationship analysis (dual).
+**Usage:** Me page (single), relationship analysis (dual).
 
 **Accessibility:** `role="img"` with `aria-label`. Data table fallback for screen readers when comparison mode active.
 
@@ -3469,7 +3478,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 **End-of-letter transition:**
 - At the bottom of the rendered portrait letter, a warm link: *"There's more to see →"*
-- Navigates to `/results/$sessionId` (full Me page), NOT back to the chat
+- Navigates to `/me/$conversationSessionId` (full Me page), NOT back to the chat
 - This link is part of the `PortraitReadingView` composition, not a separate component
 
 **Existing state — "ready":**
@@ -3479,7 +3488,7 @@ Error boundaries are placed at the **route composition level**, not per-componen
 
 **Hide BottomNav:** This route hides `BottomNav` entirely. The reading experience is the whole viewport.
 
-**Usage:** `/results/$sessionId?view=portrait` (post-assessment first read per Journey 1). Also reused as the visual language reference for `WeeklyLetterReadingView` and `RelationshipLetterSectionA`.
+**Usage:** `/me/$conversationSessionId?view=portrait` (post-assessment first read per Journey 1). Also reused as the visual language reference for `WeeklyLetterReadingView` and `RelationshipLetterSectionA`.
 
 **Accessibility:** `role="main"` on the letter container. Screen readers announce "Nerin is writing your letter" during generating state via `aria-live="polite"`.
 
@@ -3602,7 +3611,7 @@ The following components are new additions required for the three-space architec
 - No badge counts, no unread indicators — Intimacy Principle forbids counts
 - Height: ~56-64px (mobile-native bottom nav height)
 - Persistent on `/today`, `/me`, `/circle`, and their subroutes (e.g., `/today/calendar`)
-- **Hidden** on `/chat`, `/results/$sessionId?view=portrait`, `/today/week/$weekId`, relationship letter Section A first-visit ritual screen, `/public-profile/$id`, `/settings`, and unauthenticated routes
+- **Hidden** on `/chat`, `/me/$conversationSessionId?view=portrait`, `/today/week/$weekId`, relationship letter Section A first-visit ritual screen, `/public-profile/$id`, `/settings`, and unauthenticated routes
 - Safe-area-inset-bottom padding for notched devices
 
 **States:**
@@ -4093,7 +4102,7 @@ The following components are new additions required for the three-space architec
 
 #### ReturnSeedSection (first Me page visit only)
 
-**Purpose:** The return seed section at the bottom of the full results/Me page on the FIRST post-assessment visit only. Contains Nerin's message + notification permission request in Nerin's voice.
+**Purpose:** The return seed section at the bottom of the full Me page on the FIRST post-assessment visit only. Contains Nerin's message + notification permission request in Nerin's voice.
 
 **Props:**
 - `userName?: string`
@@ -4106,7 +4115,7 @@ The following components are new additions required for the three-space architec
 - On "Yes" → triggers browser permission API → if granted, schedules first daily notification for the next day at default time (MVP: 7pm; post-MVP: personality-typed)
 - On "Not right now" → daily loop still works via organic return, no lock-in
 
-**Visibility:** Renders on the first Me/results reveal after the post-assessment transition in Journey 1. Subsequent visits do not show this section. If a first-visit marker is stored server-side, it is for this UI visibility only, not for blocking Today-space navigation.
+**Visibility:** Renders on the first Me reveal after the post-assessment transition in Journey 1. Subsequent visits do not show this section. If a first-visit marker is stored server-side, it is for this UI visibility only, not for blocking Today-space navigation.
 
 **Tone rule:** This component is where the Nerin-voice vs system-voice distinction matters most. Every string must be Nerin-voiced. NO "Enable notifications", NO "Allow notifications for the best experience", NO generic permission copy.
 
@@ -4165,8 +4174,8 @@ Page layouts that compose library components with data-fetching concerns. Live i
 |-------------|-------|----------|
 | **HomePage** | `/` | HeroSection, ConversationFlow, ChatBubble, ComparisonCard, ResultPreviewEmbed, TraitStackEmbed, Nerin preview (FR63), portrait excerpt (FR62) — load-bearing because anonymous path is removed |
 | **ChatPage** | `/chat` | ChatConversation, DepthMeter + DepthMeterMilestones, NerinMessage, ChatInputBarShell, EvidenceCard. Authenticated from turn 1. `BottomNav` hidden. |
-| **PortraitReadingView route** | `/results/$sessionId?view=portrait` | `PortraitReadingView` (extended with generating state) + end-of-letter link. First portrait read destination. `BottomNav` hidden. |
-| **ResultsPage / Me (first visit)** | `/results/$sessionId` | Identity hero (ArchetypeHeroSection + GeometricSignature + OceanCodeStrand + PersonalityRadarChart) + inline PersonalPortrait + Your Public Face section + invite ceremony card + subscription pitch + **ReturnSeedSection** (first visit only). `BottomNav` visible. |
+| **PortraitReadingView route** | `/me/$conversationSessionId?view=portrait` | `PortraitReadingView` (extended with generating state) + end-of-letter link. First portrait read destination. `BottomNav` hidden. |
+| **Session-scoped Me (first visit)** | `/me/$conversationSessionId` | Identity hero (ArchetypeHeroSection + GeometricSignature + OceanCodeStrand + PersonalityRadarChart) + inline PersonalPortrait + Your Public Face section + invite ceremony card + subscription pitch + **ReturnSeedSection** (first visit only). `BottomNav` visible. |
 | **TodayPage** | `/today` | BottomNav + CheckInForm (pre-check-in) or JournalEntry + MoodDotsWeek + QuietAnticipationLine + LibraryArticleCard (rate-limited) + WeeklyLetterCard (Sundays). Default authenticated landing. |
 | **MoodCalendarView** | `/today/calendar` | Focused route shell + MoodCalendarView component. Separate view for looking back; outside BottomNav. |
 | **WeeklyLetterReadingView route** | `/today/week/$weekId` | `WeeklyLetterReadingView` with tier-aware rendering. `BottomNav` hidden. Focused reading. |
@@ -4177,7 +4186,7 @@ Page layouts that compose library components with data-fetching concerns. Live i
 | **PublicProfilePage** | `/public-profile/$id` | Framing line + archetype name/description + GeometricSignature + OceanCodeStrand + ConversationCTA + trait bars + InviteIntoCircleCTA (logged-in visitors). SSR. `BottomNav` hidden. |
 | **SettingsPage** | `/settings` | Account admin: email, password, notification preferences, notification permission revoke, data export, delete account. `BottomNav` visible. Accessed via gear icon on Me. |
 
-**Hidden BottomNav routes:** `/chat`, `/results/$sessionId?view=portrait`, `/today/week/$weekId`, `/circle/$personId?ritual=true`, `/public-profile/$id`, unauthenticated routes.
+**Hidden BottomNav routes:** `/chat`, `/me/$conversationSessionId?view=portrait`, `/today/week/$weekId`, `/circle/$personId?ritual=true`, `/public-profile/$id`, unauthenticated routes.
 
 **Authenticated landing behavior:** Assessment completion / focused-reading flow redirects to `/me` for the reveal. After that, authenticated users can navigate freely; `/today` is the primary daily return surface. Any server-side first-visit marker is for `ReturnSeedSection` visibility only.
 
@@ -4270,10 +4279,10 @@ Page layouts that compose library components with data-fetching concerns. Live i
 
 | Scope | Fallback | Rest of page |
 |-------|----------|-------------|
-| Portrait section | "Something went wrong loading your portrait" + retry | Results page works |
+| Portrait section | "Something went wrong loading your portrait" + retry | Me page works |
 | Radar chart | "Chart unavailable" placeholder | Trait data visible in cards |
 | Relationship analysis | "Something went wrong" + retry | Navigation works |
-| QR drawer | Drawer closes, Sonner toast | Results page works |
+| QR drawer | Drawer closes, Sonner toast | Me page works |
 
 **Long operation thresholds:**
 
@@ -4292,7 +4301,7 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 |---------|----------|
 | Banner | Top-of-page banner: "You're offline — messages will send when you reconnect" |
 | Chat | Messages queue locally, send on reconnect |
-| Results page | SSR content stays visible (already loaded). Dynamic features (QR, purchase) show disabled state |
+| Me page | SSR content stays visible (already loaded). Dynamic features (QR, purchase) show disabled state |
 | Payment | Polar handles its own offline behavior |
 
 ### 12.2 Navigation Patterns
@@ -4303,7 +4312,7 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 |---------|--------|--------|---------|
 | Pre-auth (homepage, public profile) | Minimal header: Logo + Sign In | Same | Same |
 | Conversation (`/chat`) | **Navigation-free.** Only: logo (home), depth meter | No hamburger | Same — minimal chrome |
-| Results (`/results`) | Header: Logo + "Dashboard" link + User nav (avatar dropdown) | Mobile nav (hamburger → sheet) | Full header |
+| Me (`/me`, `/me/$conversationSessionId`) | Logo + User nav; **BottomNav** three-space (Today / Me / Circle). No `/dashboard`. | Mobile nav (hamburger → sheet) + BottomNav | Full header + BottomNav |
 | Dashboard (`/dashboard`) | Header: Logo + "Dashboard" link (active) + User nav | Mobile nav (hamburger → sheet) | Full header |
 
 **Authenticated header layout:** `Logo — [Dashboard] — spacer — UserNav (avatar dropdown)`. The "Dashboard" link appears in the header for all authenticated pages (except `/chat` which is navigation-free). On mobile, it appears in the hamburger sheet menu.
@@ -4315,7 +4324,7 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 | `/` | Home page (public) | Home page | Home page |
 | `/dashboard` | → sign up | Empty state: "Start your conversation" CTA | Full dashboard with all sections |
 | `/chat` | → sign up | Start/resume conversation | Resume conversation (extension post-MVP via subscription) |
-| `/results` | → sign up | → `/chat` | Results page |
+| `/me`, `/me/$conversationSessionId` | → sign up | → `/chat` if no completed assessment | Session-scoped Me / latest Me |
 | `/profile/:id` | Public profile visible (or private msg) | Public profile visible | Profile + relationship CTA |
 | `/relationship/:id` | → sign up | → `/chat` | Analysis (if participant) |
 | QR URL | Login/sign up → return to accept screen | "Complete assessment first" | Accept screen |
@@ -4341,14 +4350,14 @@ Applies to portrait generation, relationship analysis generation, and any AI-dri
 | `/profile/:id` | Public profile. Private → message + redirect. Deleted → message |
 | QR URL (temp token) | Auth gate → accept screen. Expired → "Link expired" |
 | `/relationship/:id` | Auth gate → analysis (participant only). Otherwise 404 |
-| `/results` | Auth gate → own results. No `:id` — always your own |
+| `/me/$conversationSessionId` (legacy `/results/...` redirects) | Auth gate → own session’s Me surface |
 
 **Back button:**
 
 | Context | Behavior |
 |---------|---------|
 | During conversation | Back exits. Session auto-saved. No confirmation modal |
-| Results page | Back → chat (or home if complete) |
+| Me page | Back → chat (or home if complete) |
 | PWYW modal open | Back closes modal, stays on results |
 | QR accept screen | Back exits app (external entry). Accept screen is self-contained — everything needed is on one screen |
 | Relationship analysis | Back → `/dashboard` (relationship list section) |
@@ -4579,7 +4588,7 @@ Portrait is generated only after payment — breath is a designed emotional paus
 | Breath sequence | The transition itself communicates "this matters" |
 | Portrait unlock button | Waiting feels intentional, not broken |
 | Ritual screen | Reading together is an invitation, not a feature |
-| Tooltips in Nerin's language | Results page speaks like Nerin, not like a textbook |
+| Tooltips in Nerin's language | Me page speaks like Nerin, not like a textbook |
 
 ## 13. Responsive Design & Accessibility
 
@@ -4639,7 +4648,7 @@ Portrait is generated only after payment — breath is a designed emotional paus
 |---------|-----------|-----------|
 | Conversation | 640px (`--width-conversation`) | Optimal chat reading width |
 | Portrait | 65ch (`--width-prose`) | Optimal long-form reading |
-| Results page | 1280px | Data-rich, needs horizontal space |
+| Me page | 1280px | Data-rich, needs horizontal space |
 | Public profile | 1024px | Conversion-focused, not data exploration |
 | Modals | 600px | Comfortable modal reading width |
 
@@ -4682,7 +4691,7 @@ Portrait is generated only after payment — breath is a designed emotional paus
 | Enter-to-send | Keep as-is — universal chat convention. Send button is always visible as accessible alternative |
 | Message history | Chat messages use `role="log"` on the container for screen reader navigation |
 
-**Results page accessibility:**
+**Me page accessibility:**
 
 | Element | Approach |
 |---------|----------|
@@ -4781,7 +4790,7 @@ Carries emotional weight, not just action description.
 | Color independence | Never color alone. Pair with text labels, icons, patterns, or position |
 | Heading hierarchy | One `<h1>` per page. Sequential nesting. No skipped levels |
 | Link vs button | Links navigate (TanStack `Link`). Buttons perform actions (`<button>`). Never `<a>` for actions |
-| Results page landmarks | Each section: `<section aria-label="...">`. Screen reader users jump between sections via hotkeys |
+| Me page landmarks | Each section: `<section aria-label="...">`. Screen reader users jump between sections via hotkeys |
 
 ## 14. Re-Engagement Email Specification
 
@@ -4800,7 +4809,7 @@ Carries emotional weight, not just action description.
 - **Nerin's voice, not marketing copy.** Emails from Nerin should read like a continuation of the conversation, not a product notification.
 - **No LLM calls for email content.** All emails are templated. Dynamic content is limited to: user's first name, last conversation topic (stored as a simple string), archetype name, and relationship partner name.
 - **Minimal design.** Text-forward, no hero images, no heavy branding. Consistent with the product's intimate tone. One CTA button per email.
-- **Deep link to exact state.** Every email links directly to where the user left off — `/chat?sessionId=...` for drop-off, `/results` for portrait, `/relationship/:id` for analysis ready.
+- **Deep link to exact state.** Every email links directly to where the user left off — `/chat?sessionId=...` for drop-off, **`/me/$conversationSessionId?view=portrait`** or **`/me/$conversationSessionId`** for post-assessment portrait/identity (canonical; legacy `/results/*` redirects), `/circle/$personId` for relationship letter ready.
 
 ### 14.3 Email Content Templates
 
@@ -4814,13 +4823,13 @@ Carries emotional weight, not just action description.
 - Subject: "Nerin's portrait is waiting for you"
 - Body: "Hey {firstName}, Nerin wrote something for you after your conversation. It's personal, and it's ready whenever you are."
 - CTA: "Read your portrait"
-- Link: `/results`
+- Link: `/me` or session-scoped `/me/$conversationSessionId` (legacy `/results` redirects)
 
 **Nerin check-in (~2 weeks):**
 - Subject: "I've been thinking about something you said"
 - Body: "Hey {firstName}, I've been thinking about {tensionFromPortrait}. There's more to explore there if you're curious."
 - CTA: "Continue with Nerin"
-- Link: `/results` (portrait, relationship CTA, and sharing options visible on results page)
+- Link: `/me` or session-scoped `/me/$conversationSessionId` (legacy `/results` redirects) — portrait, relationship CTA, and sharing options visible on **Me** surface
 - Note: `{tensionFromPortrait}` is extracted from the portrait's half-open door theme and stored as a simple string at portrait generation time — not an LLM call at email send time.
 
 **Relationship analysis ready:**
@@ -5782,8 +5791,8 @@ flowchart TD
 |-----------|--------|------------------------|
 | `ConversationFlow` | Replaced by `HomepageTimeline`. Thread-line metaphor retired | Yes — may be reused in `/chat` or other pages |
 | `MessageGroup` | IntersectionObserver wrapper replaced by `motion` `whileInView` | Yes |
-| `ComparisonCard` | Test-frame removed (FR59) | Yes — potential reuse on results page |
-| `TraitStackEmbed` | Machinery removed from homepage — belongs on results/Me page | Yes — move to results page |
+| `ComparisonCard` | Test-frame removed (FR59) | Yes — potential reuse on Me page |
+| `TraitStackEmbed` | Machinery removed from homepage — belongs on Me page | Yes — move to Me page |
 | `HoroscopeVsPortraitComparison` | Test-frame comparison retired. Portrait excerpt shown standalone | Yes — portrait text content reused in `PortraitExcerptBlock` |
 | `ComparisonTeaserPreview` | Radar chart comparison removed from homepage | Yes |
 | `ResultPreviewEmbed` | No embedded previews with CTAs — timeline artifacts stand alone | Yes |
@@ -6180,7 +6189,7 @@ Public profiles are SEO-critical — server-rendered with unique URLs, structure
 
 ### 17.16 Implementation Notes
 
-- **Component reuse from results page:** ArchetypeHeroSection, PersonalityRadarChart, TraitBand, GeometricSignature are shared between results page and public profile. Only layout context and data source differ.
+- **Component reuse from Me page:** ArchetypeHeroSection, PersonalityRadarChart, TraitBand, GeometricSignature are shared between Me page and public profile. Only layout context and data source differ.
 - **SSR-first:** Entire page server-rendered. No client-side data fetching for read-only content. Interactive elements (tooltips) hydrate on client.
 - **Fire-and-forget analytics:** View count and audit logging never block the page render.
 - **Satori compatibility:** GeometricSignature and OCEAN shapes must render in both DOM and Satori (OG image generation). SVG path only, no CSS transforms.
@@ -6201,13 +6210,15 @@ Public profiles are SEO-critical — server-rendered with unique URLs, structure
 
 ## 18. Results / Me Page Specification
 
-This section consolidates all `/results/$sessionId` full-page specifications. The **first portrait read** happens in the focused `PortraitReadingView` at `/results/$sessionId?view=portrait` — that flow is documented in §10.1 Journey 1. This section covers the **full results / Me page** that the user lands on after the focused reading's "There's more to see →" link (first visit) or when they navigate to Me directly (subsequent visits).
+This section consolidates full-page specifications for the **identity sanctuary** (analytical Me surface: hero, portrait, traits, evidence, share, circle preview, subscription). The **first portrait read** happens in the focused `PortraitReadingView` — that flow is documented in §10.1 Journey 1.
 
-**Important terminology:** In the three-space architecture, this page IS the Me page (§15.2). The `/results/$sessionId` route and the `/me` route converge — they render the same page composition. `$sessionId` is a URL param for backward compatibility; the first-visit vs subsequent-visit divergence is limited to `ReturnSeedSection` visibility, not to route access.
+**URL canonicalization (2026-04-16):** **`/me` is the canonical home** for the logged-in identity. Session-scoped analytical depth lives at **`/me/$conversationSessionId`** (same composition as the former standalone **`/results/$conversationSessionId`** route). Focused reading uses **`/me/$conversationSessionId?view=portrait`**. Legacy **`/results`** and **`/results/$conversationSessionId`** URLs remain supported via **permanent redirects** (see §18.17). Journey and table copy below uses canonical paths; §18.17 defines redirect behavior.
+
+**Important terminology:** In the three-space architecture, this surface IS the Me page (§15.2). The first-visit vs subsequent-visit divergence is limited to `ReturnSeedSection` visibility, not to route access.
 
 ### 18.1 Results / Me Page Purpose
 
-The full results / Me page is the **personal identity sanctuary** — the surface users return to when they want to re-read their portrait in context, manage their public face, see their Circle preview, or control their subscription. It is NOT where the first portrait read happens — that's the focused `PortraitReadingView` (§11.4 PortraitReadingView extended + §10.1 Journey 1).
+The full Me page (session-scoped identity surface) is the **personal identity sanctuary** — the surface users return to when they want to re-read their portrait in context, manage their public face, see their Circle preview, or control their subscription. It is NOT where the first portrait read happens — that's the focused `PortraitReadingView` (§11.4 PortraitReadingView extended + §10.1 Journey 1).
 
 **Design principle:** The page is designed for both the emotional first-visit moment (Nerin just wrote you a letter; here's the return seed bridging you into Day 1) AND the low-frequency returning visit (scroll through identity hero, re-read portrait inline, check Circle, manage subscription). Both experiences share the same layout — only the `ReturnSeedSection` is conditional on a first-visit marker.
 
@@ -6321,7 +6332,7 @@ The portrait section is rendered inline via `PersonalPortrait`. It has the follo
 
 **No "not purchased" state.** Portrait is free. No `PortraitUnlockButton`. No PWYW gate.
 
-**Portrait reading mode (separate route):** `/results/$sessionId?view=portrait` is the **focused reading view**, not a modal on this page. It's a full-viewport route that hides `BottomNav` and renders the letter full-screen. Tapping the portrait on the Me page opens this route for a distraction-free re-read.
+**Portrait reading mode (separate route):** `/me/$conversationSessionId?view=portrait` is the **focused reading view**, not a modal on this page. It's a full-viewport route that hides `BottomNav` and renders the letter full-screen. Tapping the portrait on the Me page opens this route for a distraction-free re-read.
 
 **Portrait status polling** (`usePortraitStatus` hook): Polls `GET /api/portrait/:sessionId/status` every 2s while generating. Stops on "ready", "failed", or "none".
 
@@ -6330,11 +6341,11 @@ The portrait section is rendered inline via `PersonalPortrait`. It has the follo
 The old §18.6 PWYW Modal Flow is retired. The post-assessment flow is documented in §10.1 Journey 1. Summary of the transition path that lands a user on this page:
 
 1. **Closing exchange** at `/chat`: Nerin's distinct closing (FR12) + user-voiced button *"Show me what you found →"* appears below the closing message. Input field fades.
-2. **Navigate to focused reading:** Button tap → direct navigation to `/results/$sessionId?view=portrait` (NOT to this full results page first).
+2. **Navigate to focused reading:** Button tap → direct navigation to `/me/$conversationSessionId?view=portrait` (NOT to this full Me page first).
 3. **PortraitReadingView generating state:** `OceanSpinner` + Nerin-voiced line *"Nerin is writing your letter..."*. No other content visible.
 4. **Letter fades in:** Full-screen, max-width 720px, warm background, letter typography. User reads uninterrupted. **Emotional peak.**
 5. **End-of-letter link:** At the bottom of PortraitReadingView, warm link *"There's more to see →"*.
-6. **Navigate to full Me page:** `/results/$sessionId` — this page. Identity hero + inline portrait (re-read in context) + Your Public Face + Your Circle preview (empty + invite ceremony card) + subscription pitch + Account.
+6. **Navigate to full Me page:** `/me/$conversationSessionId` — this page. Identity hero + inline portrait (re-read in context) + Your Public Face + Your Circle preview (empty + invite ceremony card) + subscription pitch + Account.
 7. **First-visit: ReturnSeedSection at bottom.** Nerin's message + notification permission in Nerin's voice.
 8. **Day 1+:** User returns. Default landing is `/today`, not here.
 
@@ -6342,7 +6353,7 @@ The old §18.6 PWYW Modal Flow is retired. The post-assessment flow is documente
 
 ### 18.7 Trait Card Interaction Flow
 
-Trait cards are the primary interactive element on the results page. The interaction cascade is:
+Trait cards are the primary interactive element on the session-scoped Me page. The interaction cascade is:
 
 ```
 TraitCard (click) → DetailZone expands below the clicked row
@@ -6386,7 +6397,7 @@ TraitCard (click) → DetailZone expands below the clicked row
 | Behavior on deep link | Show a minimal teaser with blurred archetype + "Sign in to see your full results" CTA |
 | 24-hour localStorage window | **Retired** — anonymous path is gone, no localStorage session resumption needed |
 | Auth modes | "signin" only (no "teaser with preview" mode — that was for the anonymous flow) |
-| Implementation | Simplified: check auth → if unauthenticated, show "Sign in to continue" with redirect back to `/results/$sessionId` on success |
+| Implementation | Simplified: check auth → if unauthenticated, show "Sign in to continue" with redirect back to `/me/$conversationSessionId` on success |
 
 ### 18.10 Screen States
 
@@ -6398,7 +6409,7 @@ TraitCard (click) → DetailZone expands below the clicked row
 | Results loaded, portrait failed | Fully visible | Inline error + retry | Retry re-generates |
 | First post-assessment reveal | Fully visible | `PersonalPortrait` inline | ReturnSeedSection at bottom |
 | Subsequent visit | Fully visible | `PersonalPortrait` inline | ReturnSeedSection hidden |
-| Portrait reading mode | Not applicable — user navigates to `/results/$sessionId?view=portrait` which is a different route | — | `BottomNav` hidden |
+| Portrait reading mode | Not applicable — user navigates to `/me/$conversationSessionId?view=portrait` which is a different route | — | `BottomNav` hidden |
 | Free user | Fully visible | `PersonalPortrait` | SubscriptionPitchSection in subscription slot |
 | Subscriber | Fully visible | `PersonalPortrait` | SubscriptionValueSummary + conversation extension CTA |
 | Unauthenticated deep link | `ResultsAuthGate` | Not shown | "Sign in to see your full results" |
@@ -6456,18 +6467,18 @@ TraitCard (click) → DetailZone expands below the clicked row
 | Confidence rings | `aria-valuenow`, `aria-valuemin`, `aria-valuemax` |
 | Color contrast | All trait colors meet WCAG AA on both light and dark backgrounds |
 | Reduced motion | All animations gated by `prefers-reduced-motion`. Radar draw, bar fills, card entrances all respect preference |
-| Tooltips in Nerin's language | Results page speaks like Nerin, not like a textbook |
+| Tooltips in Nerin's language | Me page speaks like Nerin, not like a textbook |
 
 ### 18.15 Navigation
 
 | Element | Details |
 |---------|---------|
-| Route | `/results/$sessionId` (and alias `/me` which composes the same page — see §15.2) |
-| Auth | Required — unauthenticated deep links show simplified `ResultsAuthGate` |
+| Route (canonical) | **`/me`** — latest assessment; **`/me/$conversationSessionId`** — session-scoped full Me surface (§18.17). Legacy `/results/*` redirects here. |
+| Auth | Required — unauthenticated deep links show simplified `ResultsAuthGate` (or `MeAuthGate` once renamed) |
 | Header | Standard authenticated header + `BottomNav` at the bottom (three-space tabs) |
 | Back navigation | `BottomNav` replaces "back" button. User navigates laterally to Today, Me, Circle. |
-| Portrait focused reading | `/results/$sessionId?view=portrait` — separate route with `PortraitReadingView`, hides `BottomNav`, full-screen letter format |
-| Post-assessment redirect | After focused reading end-of-letter link ("There's more to see →"), lands here and shows ReturnSeedSection |
+| Portrait focused reading | **`/me/$conversationSessionId?view=portrait`** — `PortraitReadingView`, hides `BottomNav`, full-screen letter format |
+| Post-assessment redirect | After focused reading end-of-letter link ("There's more to see →"), lands on **`/me/$conversationSessionId`** and shows ReturnSeedSection |
 | Subsequent visits | `/today` is the primary daily landing surface, not a forced route gate. User can still reach Me via `BottomNav` Me tab. ReturnSeedSection hidden. |
 | Section 5 links | Your Circle preview links to `/circle` for the full Circle page |
 | Section 7 link | Account gear → `/settings` |
@@ -6487,11 +6498,54 @@ This specification consolidates content from:
 - §9.4 — Chart and data visualization direction
 - **§10.1 — Journey 1 First-Timer Flow** (post-assessment transition, closing button, focused reading, end-of-letter link, return seed)
 - **§10.4 — Journey 4 Returning User Flow** (three-space return, default landing on /today)
-- **§15.2 — Me Page Specification** (the Me page IS this results page; both routes converge)
+- **§15.2 — Me Page Specification** (same identity sanctuary as §18; canonical URLs in §18.17)
 - §11.4 — Component specs (`PortraitReadingView` extended with generating state, `ReturnSeedSection`, `SubscriptionPitchSection`, `SubscriptionValueSummary`, inline `PersonalPortrait`)
 - §11.4a — New three-space components (`BottomNav`, `InviteCeremonyCard`, `CirclePersonCard` preview)
 - §12.1-12.7 — Feedback patterns, navigation, modals, empty states, button hierarchy, transitions
 - §13.1-13.4 — Responsive strategy, breakpoints, accessibility, testing
+
+### 18.17 Canonical Me URL & Results Route Deprecation (2026-04-16)
+
+**Standalone addendum (short reference for PRs and tickets):** [ux-design-addendum-me-canonical-urls.md](ux-design-addendum-me-canonical-urls.md)
+
+**Problem statement:** Two top-level routes (`/me` and `/results/...`) split the mental model (“home for me” vs “assessment output”) and duplicate navigation targets. **Product decision:** expose **one** primary destination for post-assessment identity — the **Me** space — while preserving session-scoped depth and bookmarkable portrait reading.
+
+#### Target information architecture
+
+| User intent | Canonical URL | Notes |
+|-------------|---------------|--------|
+| Latest identity snapshot (default Me) | `/me` | Resolves to the user’s latest completed assessment (or redirects per existing rules when none). |
+| Full analytical view for **one** conversation | `/me/$conversationSessionId` | Same composition as today’s full Me surface: `ProfileView` stack, trait drill-down, evidence, share, extend conversation, etc. |
+| Focused first read / distraction-free re-read | `/me/$conversationSessionId?view=portrait` | `PortraitReadingView`, `BottomNav` hidden — query param unchanged in meaning. |
+| Legacy entry | `/results`, `/results/$conversationSessionId` | **Permanent redirect (308)** to the rows above; preserve query string (e.g. `?view=portrait`). |
+
+#### Redirect & deep-link rules
+
+1. **`/results` → `/me`** — Resume/unlock copy and auth behavior move to the Me shell or a thin redirect route; users must never land on a dead “results” brand.
+2. **`/results/$conversationSessionId` → `/me/$conversationSessionId`** — Same resource, new path. Update all in-app `Link` targets and programmatic `navigate()` calls to emit canonical URLs first; redirects catch bookmarks and emails.
+3. **Email, notifications, and marketing** — Replace `/results` with `/me` in templates over time; old links remain valid via redirect.
+
+#### Auth, resume, and first-visit
+
+- **`ResultsAuthGate`** (or successor **`MeAuthGate`**) applies to **session-scoped** Me URLs when the viewer must prove ownership. Unauthenticated users see the same teaser + sign-in CTA; post-login **return URL** must be the canonical **`/me/$conversationSessionId`** path.
+- **24h / local resume** logic currently associated with `/results` **moves with** the Me shell — behavior is unchanged; only the URL changes.
+
+#### Multi-assessment clarity
+
+- **`/me`** without a session id = **latest** assessment. Users who complete a **new** assessment should see that assessment by default on `/me`.
+- If the product later exposes **explicit history**, add a visible **“Other assessments”** control on Me that links to **`/me/$olderSessionId`** — no separate “results” product area.
+
+#### Implementation checklist (frontend)
+
+- [ ] Add `/me/$conversationSessionId` route (or equivalent) hosting the current `ProfileView` / Me composition; refactor shared layout with `/me` index as needed.
+- [ ] Point “There’s more to see →”, chat completion, and `PortraitReadingView` exits to **`/me/$conversationSessionId`**.
+- [ ] Implement redirects from `/results/*` to `/me/*`; test with `?view=portrait`.
+- [ ] Update `BottomNav` Me tab and any “Results” copy to **Me** language site-wide.
+- [ ] Adjust E2E and unit tests that assert `/results` paths.
+
+#### Spec drift note
+
+**2026-04-16 editorial pass:** Journey narratives, tables, and deep-link examples in §1–§17 were updated to canonical **`/me/$conversationSessionId`** paths. **§18.17** remains the contract for redirects and legacy **`/results/*`** support. File paths under `components/results/` are implementation detail until a folder rename; behavior is unchanged.
 
 ---
 

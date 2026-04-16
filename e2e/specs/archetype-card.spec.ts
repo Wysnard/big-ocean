@@ -72,7 +72,7 @@ test("archetype share card and OG image route @smoke", async ({ page, request, a
 	});
 
 	await test.step("navigate to results page", async () => {
-		await page.goto(`/results/${sessionId}`);
+		await page.goto(`/me/${sessionId}`);
 		await page.locator("[data-slot='archetype-share-card']").waitFor({
 			state: "visible",
 			timeout: 15_000,

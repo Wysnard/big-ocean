@@ -109,7 +109,7 @@ test.describe("Invitation System", () => {
 		});
 
 		await test.step("results page shows relationship card in qr-active state", async () => {
-			await page.goto(`/results/${sessionId}`);
+			await page.goto(`/me/${sessionId}`);
 
 			const card = page.getByTestId("relationship-card");
 			await expect(card).toBeVisible({ timeout: 15_000 });

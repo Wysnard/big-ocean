@@ -1,7 +1,9 @@
 ---
 stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit"]
-lastEdited: '2026-04-11'
+lastEdited: '2026-04-16'
 editHistory:
+  - date: '2026-04-16'
+    changes: 'Alignment with UX §18.17 / ux-design-addendum-me-canonical-urls.md: FR93–FR95 use `/me/$conversationSessionId` (+ `?view=portrait`) as canonical routes; legacy `/results/*` may redirect only. FR16 wording → Me identity surface. FR24 removes user-facing dashboard metrics; events stored for internal analytics/ops only (Intimacy Principle). FR84 founder story moved from homepage to `/about` (matches UX-DR39 / homepage split-layout spec). NFR3/NFR20 rename results page → Me/post-assessment surfaces. FR101 clarified to reference focused reading URL before full Me. Second pass: journeys, Web App Requirements, Innovation #10, FR12/FR50, section heading — replace stray "results page(s)" product language with Me + canonical paths; cold-funnel metaphor `home → chat → results → done` → `home → chat → Me → done`; founder pre-mortem points to `/about`; Marc journey "gets his results" → assessment output wording.'
   - date: '2026-04-11'
     changes: 'Design thinking 2026-04-09 integration. Source: _bmad-output/design-thinking-2026-04-09.md. MAJOR RESTRUCTURE. (1) Executive Summary: added three-space architecture (Today/Me/Circle), Intimacy Principle as brand DNA, updated JTBD table so Jobs 4 and 5 are served in MVP via free weekly letter and silent daily journal, updated business model to reflect MVP subscription = conversation extension + bundled first-extension portrait regeneration. (2) Success Criteria: added Day 7 return >40%, Day 30 retention >25%, Sunday weekly letter open rate >60%, daily silent check-in rate >30%, "companion not test" qualitative metric. Updated cost targets to reflect silent-free / LLM-weekly model ($0.02-0.08 free, $0.35-0.75 subscriber). (3) Product Scope: completely rewrote MVP feature list (three-space nav, silent journal, free weekly letter, relationship letter with data grid, Circle + invite ceremony, post-assessment transition, subscription flow). Rewrote Free vs Paid table. Updated Phase 1b and Phase 2a to reflect where paid features actually land. (4) Innovation section: added Intimacy Principle (#9), Three-Space Navigation (#10), Nerin Output Grammar (#11) subsections. (5) User Journeys: rewrote Journey 1 ending with post-assessment focused reading transition (Show me what you found → portrait reading view → Me page → return seed). Rewrote Journey 7 as silent daily journal / Phase 5→6 bridge. Deleted old Journey 8 (Portrait Evolution, Phase 1b) and replaced with new Journey 8 (Subscription Conversion at Week 3 — Léa extends the conversation). Updated Journey Requirements Summary. (6) FRs: relabeled FR10/23/25/49 from post-MVP to MVP subscription. Rewrote FR19 (dashboard → three-space nav). Tightened FR21 (portrait is free, no conversion gate). Rewrote FR23 (first extension → automatic portrait regen bundled, no purchase). Added FR23a (subsequent extensions post-MVP). Rewrote FR25 (Director model re-init + bundled first portrait). Rewrote FR28-FR37 as relationship letter (living space, real-time data grid, annual regeneration model, Section D post-MVP, QR ongoing consent). Added FR29a, FR32a (post-MVP Section D), FR35a (post-MVP annual regeneration). Unbundled FR47 (MVP = extension + first portrait regen only; post-MVP cross-references). Replaced FR67-FR72 with silent journal fork (FR67 check-in form, FR68 silent deposit, FR68a anticipation line, FR69/FR69a post-MVP LLM recognition and mini-dialogue, FR70 mood calendar, FR71 three-level note visibility, FR72 privacy). Tightened FR73 (storage only in MVP), deferred FR74 (gallery) and FR75 (confidence milestones) to post-MVP. Added FR86-FR92 (weekly summary generation, content structure, push notification, focused route, conversion CTA, edge cases). Added FR93-FR96 (post-assessment transition: closing button, portrait reading generating state, end-of-letter link, return seed + notification permission). Added FR97-FR100 (Circle, Intimacy Principle enforcement, invite ceremony reward-first copy, invite placement). Added FR101-FR103 (three-space navigation routing, bottom nav + /settings, public profile separation). (7) NFRs: rewrote NFR7 removing Sonnet/Haiku model name leakage. Rewrote NFR7a with new unit economics (no longer requires template-based responses, cost optimization via silent daily design). Tightened NFR7b circuit breaker threshold.'
   - date: '2026-04-09'
@@ -303,7 +305,7 @@ The full journey (conversation → portrait → three-space product world → da
 
 **Critical gaps:**
 1. Nerin character quality (~40% → launch-ready) — dive master persona, encouragement system, "feel seen" accent, distinct memorable voice
-2. Three-space navigation + daily/weekly loop — new surface area replacing the old linear "home → chat → results → done" dead end
+2. Three-space navigation + daily/weekly loop — new surface area replacing the old linear "home → chat → Me (portrait + identity) → done" dead end
 3. Weekly letter generation pipeline — the retention engine AND the only subscription conversion moment in MVP
 4. Post-assessment focused-reading transition — protects the portrait's emotional weight
 5. Homepage conversion — cold visitors must commit to signup before experiencing Nerin
@@ -399,15 +401,15 @@ Around exchange 9, she hits a natural lull — novelty has worn off. (Note: the 
 
 **Resolution — The Post-Assessment Transition:** Exchange 15 ends with Nerin's distinct closing — one last observation, warm and specific, and then the input field fades. A single button appears below: **"Show me what you found →"** in Léa's voice, like she's speaking to Nerin. She taps it.
 
-She lands on a focused reading view. Centered OceanSpinner, and one line in Nerin's voice: *"Nerin is writing your letter..."* No competing content. Nothing to click. Just waiting. Then the spinner resolves and the letter fades in — full screen, warm background, letter format, max-width 720px. She reads it uninterrupted. The emotional peak of the product. At the end of the letter, a small warm link: *"There's more to see →"*
+She lands on the **focused portrait reading** route **`/me/$conversationSessionId?view=portrait`** (canonical URL shape; legacy `/results/...` may redirect). Centered OceanSpinner, and one line in Nerin's voice: *"Nerin is writing your letter..."* No competing content. Nothing to click. Just waiting. Then the spinner resolves and the letter fades in — full screen, warm background, letter format, max-width 720px. She reads it uninterrupted. The emotional peak of the product. At the end of the letter, a small warm link: *"There's more to see →"*
 
-She taps and arrives at her Me page — her identity hero (archetype "The Beacon", OCEAN code, radar chart, confidence), the portrait inline for re-reading, her public face (default private), the subscription pitch (in this MVP: "Continue your conversation with Nerin — +15 exchanges + a new portrait"), and at the bottom, Nerin's voice one more time: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a Nerin-voiced notification permission request: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* Léa grants it. A first daily prompt is scheduled for tomorrow at a profile-appropriate time.
+She taps and arrives at the **session-scoped Me surface** **`/me/$conversationSessionId`** — her identity hero (archetype "The Beacon", OCEAN code, radar chart, confidence), the portrait inline for re-reading, her public face (default private), the subscription pitch (in this MVP: "Continue your conversation with Nerin — +15 exchanges + a new portrait"), and at the bottom, Nerin's voice one more time: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a Nerin-voiced notification permission request: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* Léa grants it. A first daily prompt is scheduled for tomorrow at a profile-appropriate time.
 
 Léa screenshots her archetype card and sends it to three friends: "You have to try this."
 
 **Recovery beat — what if the portrait doesn't land?** If Léa reads the portrait and thinks "that's not me," the credibility chain breaks. Behavioral signals (no share, no return visit) capture this. The conversation extension subscription becomes the recovery path — more exchanges produce better evidence, which produces a richer, more accurate letter from Nerin (bundled automatically on first extension). Since the initial portrait is free, there's no buyer's remorse — just a motivation gap to bridge.
 
-**Capabilities revealed:** Sign-up flow, 15-exchange conversation with Nerin, Director model (territory coverage, feel-seen moments), depth meter + progress milestones (25%/50%/75%), Nerin teasing portrait during conversation, closing exchange with "Show me what you found →" button (FR93), focused reading view with generating state (FR94), end-of-letter transition to full Me page (FR95), return seed with Nerin-voiced notification permission request (FR96), three-space product world with a one-time post-assessment redirect to `/me` before free navigation across Today/Me/Circle (FR101), archetype card sharing, public profile as landing page.
+**Capabilities revealed:** Sign-up flow, 15-exchange conversation with Nerin, Director model (territory coverage, feel-seen moments), depth meter + progress milestones (25%/50%/75%), Nerin teasing portrait during conversation, closing exchange with "Show me what you found →" button (FR93), focused reading view with generating state (FR94) at `/me/$conversationSessionId?view=portrait`, end-of-letter transition to session-scoped Me at `/me/$conversationSessionId` (FR95), return seed with Nerin-voiced notification permission request (FR96), three-space product world with free navigation across Today/Me/Circle after the post-assessment sequence (FR101), archetype card sharing, public profile as landing page.
 
 ### Journey 2: The Invited User — Marc
 
@@ -419,7 +421,7 @@ Léa screenshots her archetype card and sends it to three friends: "You have to 
 
 **Climax:** Exchange 12. Nerin connects something Marc said about his father's expectations to how he handles feedback at work. Marc didn't expect to go there. The observation is specific enough that he feels *seen*, not analyzed. Nerin teases what he's been noticing — there's a letter waiting at the end. Marc finishes the conversation with a sense that this thing actually understood something real.
 
-**Resolution — The Relationship Analysis:** Marc gets his results — a different archetype than Léa, but they share letters in their OCEAN codes, which makes the similarities visible at a glance. Nerin's letter arrives — Marc reads his portrait, a personal letter that names things about him he's never articulated. No payment required — the portrait is free.
+**Resolution — The Relationship Analysis:** Marc gets his **assessment output** — a different archetype than Léa, but they share letters in their OCEAN codes, which makes the similarities visible at a glance. Nerin's letter arrives — Marc reads his portrait, a personal letter that names things about him he's never articulated. No payment required — the portrait is free.
 
 Now both assessments are complete — the relationship analysis generates. When they open it, a ritual screen greets them: a suggestion to find a quiet moment, sit down together, and discuss what they discover. The ritual has a single Start button — no skip option. They choose to read it side by side. First, the data grid — a visual comparison of their traits and facets, showing where they align and where they diverge. Then, the narrative — a celebratory text that names the dynamic they've been navigating for years but never articulated. It's not clinical, it's warm: "You two have a deal — he builds the structure, you bring the disruption. Neither of you signed up for it, but it works." They talk about it over dinner. Marc tells his friend Thomas: "It's not what you think — it's actually good."
 
@@ -485,7 +487,7 @@ Now both assessments are complete — the relationship analysis generates. When 
 
 **Who she is:** Same Léa, 6 days after completing her assessment. The afterglow is fading. She's reread her portrait twice. She screenshot-shared it to three friends on Day 0. She accepted the notification permission Nerin asked for on Me page at the end of the post-assessment flow. Now it's Monday morning at 9:12am, and she's about to find out if Big Ocean is a one-time thing or something more.
 
-**The trigger:** A notification arrives: *"How are you feeling this morning?"* — quiet, no badge count, no urgency. Léa opens the app. She lands on the Today page — not the Me page, not results. Today is the default now.
+**The trigger:** A notification arrives: *"How are you feeling this morning?"* — quiet, no badge count, no urgency. Léa opens the app. She lands on the Today page — her daily home, not the Me tab. Today is the default now.
 
 **The check-in:** Nerin's prompt sits at the top: *"How are you feeling this morning?"* Below it, five mood options. Seven week-dots — today empty, the other six empty too (first week). She taps "Uneasy" and types a short note: *"Can't focus, everything feels urgent but nothing actually is."* She taps Save.
 
@@ -615,7 +617,7 @@ The ritual screen (read together, discuss) and framing guardrails (dynamics not 
 "Big Ocean is built for a few people, not a crowd." Every feature is audited against this rule: does it show "how many"? → probably wrong. Does it reward broad visibility over focused connection? → wrong. Does it use follower/fan/network language? → wrong. Does it celebrate depth and duration of fewer relationships? → right. Does it treat the user as a sovereign member of a small circle, not a node in a growth graph? → right. Implementation: no hard cap on Circle size (rules create resentment; culture through design), no count metrics anywhere user-facing (no "X connections", no profile view counters, no sign-up attribution shown to the user), no follower/friend language (use "people you care about"), no search, no recommendations, no directory of users, no sorting options on Circle (organic order only), each person rendered as a full-width card with individual weight (not a grid of avatars), empty state teaches the value system ("Big Ocean is made for the few people you care about"). This is a structural differentiator: every other consumer social product optimizes for reach. Big Ocean is the first built for intimacy.
 
 **10. Three-Space Navigation — Assessment Is Onboarding, Companion Is Product**
-The authenticated product is organized around three spaces, not a dashboard: **Today** (ephemeral daily — silent journal, mood calendar, weekly letter inline card on Sundays), **Me** (persistent identity — portrait, archetype, radar, public face, subscription, Circle preview), and **Circle** (the few people you care about — relationship letters, invite ceremony). `/dashboard` is removed. Assessment completion redirects the user to `/me` for the portrait reveal, and after that the user can navigate freely across Today/Me/Circle without a persistent first-visit route gate. `/today` remains the primary daily landing surface, but not a forced default after the first reveal. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. The architectural bet: linear "home → chat → results → done" is a dead end that creates post-assessment churn; a hub-and-spoke model with distinct return reasons creates a habit loop. This is what turns a one-time personality test into a daily companion.
+The authenticated product is organized around three spaces, not a dashboard: **Today** (ephemeral daily — silent journal, mood calendar, weekly letter inline card on Sundays), **Me** (persistent identity — portrait, archetype, radar, public face, subscription, Circle preview), and **Circle** (the few people you care about — relationship letters, invite ceremony). `/dashboard` is removed. The post-assessment sequence is **focused portrait reading** at **`/me/$conversationSessionId?view=portrait`**, then the **session-scoped Me surface** at **`/me/$conversationSessionId`** (FR93–FR95); legacy **`/results/*`** URLs may exist only as redirects. After that, the user navigates freely across Today/Me/Circle without a persistent first-visit route gate. `/today` remains the primary daily landing surface, but not a forced default after the first reveal. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. The architectural bet: linear "home → chat → Me → done" is a dead end that creates post-assessment churn; a hub-and-spoke model with distinct return reasons creates a habit loop. This is what turns a one-time personality test into a daily companion.
 
 **11. Nerin Output Grammar — Three Visual Formats**
 Nerin's voice uses three distinct visual registers, each tied to an emotional context so users learn to read them differently:
@@ -694,7 +696,7 @@ See [Risk Mitigation Strategy](#risk-mitigation-strategy) in Project Scoping for
 
 **4. Data flywheel as long-term moat.** ConversAnalyzer improves → portraits improve → more users → more data → ConversAnalyzer improves. This flywheel is the company's long-term defensibility. Every conversation makes the next one better.
 
-**5. Protect the founder story.** The founder's vulnerability — his own portrait, his reasons for building this — is the soul of the product. Surface it on the homepage and about page. Keep it even as the company grows.
+**5. Protect the founder story.** The founder's vulnerability — his own portrait, his reasons for building this — is the soul of the product. Surface the **full** founder story on **`/about`** (FR84); the homepage may link to it without duplicating the block (conversion-focused homepage). Keep it even as the company grows.
 
 ## Web App Specific Requirements
 
@@ -702,7 +704,7 @@ The following specifications ensure the experience described above works reliabl
 
 ### Project-Type Overview
 
-big-ocean is a hybrid SSR web application built with TanStack Start (React 19) with server-rendered pages and client-side navigation. The primary user experience is a conversational interface (chat with Nerin) and results pages. SEO is critical for public profiles which serve as the top-of-funnel acquisition channel.
+big-ocean is a hybrid SSR web application built with TanStack Start (React 19) with server-rendered pages and client-side navigation. The primary user experience is a conversational interface (chat with Nerin) and the **Me** identity surface (post-assessment portrait reading + session-scoped identity at **`/me/$conversationSessionId`**, **`?view=portrait`** for focused reading). SEO is critical for public profiles which serve as the top-of-funnel acquisition channel.
 
 ### Browser Support
 
@@ -712,7 +714,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 
 ### Responsive Design
 
-- **Mobile-first for conversation and results pages** — users arriving from shared archetype cards on social/messaging apps will be on mobile
+- **Mobile-first for conversation and Me / post-assessment surfaces** — users arriving from shared archetype cards on social/messaging apps will be on mobile
 - **Public profile must render well on mobile** — it's the first impression for potential users
 - **Desktop optimized for extended sessions** — relationship analysis reading and deeper exploration benefit from larger screens
 - **Depth meter placement** — left edge on desktop, adapts for mobile viewport
@@ -721,7 +723,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 
 - **Public profile page:** <1s LCP (Largest Contentful Paint) — this is the acquisition landing page, speed matters for bounce rate
 - **Chat page:** <2s initial load, then instant client-side interactions. Nerin response time <2s P95 (server-side, already defined in technical success criteria)
-- **Results page:** <1.5s LCP — users arrive here with anticipation after completing 15 exchanges, delay kills the emotional moment
+- **Me / post-assessment identity surface** (`/me/$conversationSessionId` after focused reading, FR95): <1.5s LCP — users arrive here with anticipation after completing 15 exchanges; delay kills the emotional moment
 - **Portrait generation:** Async — user is informed it's generating, no blocking wait. Notification when ready
 
 ### Homepage Performance & Optimization
@@ -738,7 +740,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **OG image generation:** Dynamic archetype card image per user for social previews
 - **Knowledge library pages:** SSR with structured data. Four tiers: archetype definitions (81 pages), trait/facet explainers (35), Big Five science articles (10-20), relationship/career guides (50-100). Each page targets specific search intent and includes a CTA to the free assessment. Schema.org structured data for scientific content
 - **Landing/marketing pages:** SSR for SEO. Standard meta tags, structured data
-- **Conversation and results pages:** Not indexed (behind auth). `noindex` meta tag
+- **Authenticated app surfaces** (conversation, Me, Today, Circle, focused reading): Not indexed. `noindex` meta tag
 - **Sitemap:** Public profiles + knowledge library pages (for users who opt into public visibility on profiles)
 
 ### Accessibility
@@ -970,14 +972,14 @@ First B2B play — closest to existing product, warm leads available:
 - **FR9:** Nerin never uses diagnostic language or characterizes third parties the user mentions. *Acceptance: across 10 test conversations, Nerin uses zero DSM terms or clinical labels, and never labels a person the user describes (e.g., never says "your mother sounds controlling" — only observes the user's experience of the relationship)*
 - **FR10:** *(Subscription — MVP)* Subscribers can extend their conversation (+15 exchanges) to continue with Nerin. Extension is the sole paid perk in MVP (alongside bundled first-extension portrait regeneration per FR23). *Acceptance: subscribed user can trigger one conversation extension per assessment result; extension creates a new conversation session initialized with the prior session's final state (FR25)*
 - **FR11:** Users can resume an abandoned conversation from where they left off
-- **FR12:** The conversation ends with a distinct closing exchange from Nerin before transitioning to results
+- **FR12:** The conversation ends with a distinct closing exchange from Nerin before transitioning to the post-assessment flow (portrait reading + Me — FR93–FR95)
 - **FR13:** Nerin transitions between territories using a connecting observation or question that references the prior topic when the Director model changes territory (distinct from general steering)
 
-### Personality Assessment & Results
+### Personality Assessment & Identity (Me)
 
 - **FR14:** The system extracts facet evidence and energy signals from each user response via the extraction pipeline
 - **FR15:** The system computes 30 facet scores, 5 trait scores, OCEAN code, and archetype from conversation evidence (recomputed at read time)
-- **FR16:** Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the results page
+- **FR16:** Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the **Me** identity surface (session-scoped route `/me/$conversationSessionId` for a given assessment; see FR101–FR103)
 - **FR17:** The system assigns one of 81 hand-curated archetypes based on the user's OCEAN code
 - **FR18:** The system presents all archetypes with positive, strength-based framing
 - **FR19:** Authenticated users navigate the product through a three-space bottom navigation model — **Today** (ephemeral daily companion), **Me** (persistent identity page with portrait, archetype, scores, public face control, subscription pitch, Circle preview), and **Circle** (people they care about with relationship letters and invite ceremony). There is no `/dashboard` route. A thin `/settings` route contains account admin (email, password, data export, delete) accessed via a gear icon on the Me page
@@ -990,7 +992,7 @@ First B2B play — closest to existing product, warm leads available:
 - **FR22a:** One portrait is generated per assessment result — free, no purchase required
 - **FR23:** *(Subscription — MVP)* The first conversation extension per subscriber automatically generates a new portrait at no additional cost beyond the €9.99/mo subscription. The new portrait incorporates observations derived from the extended evidence not present in the original. The prior portrait remains attached to the prior assessment result as "previous version" on the Me page. *Acceptance: a subscribed user who completes their first conversation extension sees a new portrait generated automatically without any additional purchase step; the original portrait remains visible as "previous version"*
 - **FR23a:** *(Post-MVP — subscription)* Subscribers can regenerate their portrait on conversation extensions beyond the first. Mechanism (bundled, separate purchase, or quota-based) deferred to Phase 2a
-- **FR24:** The system records share events (archetype card copy, profile link copy) and return-visit timestamps per portrait. Dashboard displays: share rate (shares / portrait views), 48-hour return rate (users who revisit within 48h / total portrait recipients)
+- **FR24:** The system records share events (archetype card copy, profile link copy) and return-visit timestamps per portrait for **internal analytics and operations** (growth, product quality, support). These metrics are **not** shown to end users in a user-facing dashboard — consistent with the Intimacy Principle and retired `/dashboard` (FR19, FR102). Operator-facing reporting may aggregate share and return-visit rates outside the product UI
 - **FR25:** *(Subscription — MVP)* Conversation extension creates a new assessment session. The Director model initializes from the prior session's final state and evidence. On completion, new assessment results are generated. For the first extension per subscriber, a new portrait is generated automatically per FR23. For subsequent extensions, see FR23a. The prior portrait and any relationship letters based on the prior results become "previous version"
 - **FR26:** Portrait generation is asynchronous — users are notified when ready
 - **FR27:** The system retries portrait generation up to 3 times with exponential backoff (5s, 15s, 45s). If all retries fail, the user is notified within 5 minutes with an option to retry manually
@@ -1033,7 +1035,7 @@ First B2B play — closest to existing product, warm leads available:
 
 ### User Account & Privacy
 
-- **FR50:** Users can create an account with email and password. Account creation triggers a verification email. Unverified accounts are treated as unauthenticated — no access to dashboard, assessment, results, or any authenticated feature. Public profiles and the home page remain accessible without authentication
+- **FR50:** Users can create an account with email and password. Account creation triggers a verification email. Unverified accounts are treated as unauthenticated — no access to dashboard, assessment, **Me** / identity surfaces, or any authenticated feature. Public profiles and the home page remain accessible without authentication
 - **FR50a:** Verification email contains a unique link that expires after 1 week. Clicking the link activates the account and grants platform access
 - **FR50b:** Users can request a new verification email from the verify-email page if the original expired or was not received
 - **FR51:** Users can control the visibility of their public profile (binary: fully public or fully private — no intermediate state)
@@ -1051,7 +1053,7 @@ First B2B play — closest to existing product, warm leads available:
 - **FR64:** The homepage contains three content blocks addressing visitor concerns, each with a specific reassurance: (1) process anxiety → "It's a conversation, not a quiz" with Nerin preview as proof, (2) time commitment → "30 minutes that surprise you" with user testimonial or engagement stat, (3) self-exposure → "Everything Nerin writes comes from a place of understanding" with portrait tone example. *Acceptance: each block is identifiable as a content section, not buried in prose*
 - **FR65:** The homepage surfaces that the assessment and portrait are completely free — framed as confidence in the product, not as a footnote. Users should encounter this transparency before reaching the CTA, removing the last friction point
 - **FR66:** The homepage supports four entry motivations without branching: (1) zero-context searcher — value proposition lands without prior knowledge, (2) social media curious — archetype card/OCEAN code visible, (3) invited friend — clear path to start own assessment, (4) self-understanding seeker — depth and scientific credibility communicated. *Acceptance: usability test with 1 user per persona type; each can find the CTA within 60 seconds*
-- **FR84:** The homepage includes a founder story block: the founder's own portrait excerpt, why he built this, and what the experience meant to him. Positioned as an authenticity signal — vulnerability that builds trust. *Acceptance: block contains a real portrait excerpt (≥3 sentences) and a first-person statement from the founder*
+- **FR84:** The **`/about` page** includes a founder story block: the founder's own portrait excerpt, why he built this, and what the experience meant to him. Positioned as an authenticity signal — vulnerability that builds trust. The homepage conversion surface uses the split-layout timeline without this block (see UX specification UX-DR39 — founder story deliberately moved off homepage to preserve conversion focus). *Acceptance: `/about` contains a real portrait excerpt (≥3 sentences) and a first-person statement from the founder; homepage remains free of a duplicate founder block unless product explicitly reopens that tradeoff*
 - **FR85:** The homepage surfaces the ongoing value beyond the portrait: personality-informed daily check-ins, coaching, growth tracking — positioning the product as a personal development and self-care companion, not a one-time personality test. This section plants the seed without selling the subscription directly. *Acceptance: section describes ≥2 post-portrait features with concrete examples of ongoing value. Does not mention pricing or subscription*
 
 ### Knowledge Library (SEO)
@@ -1106,7 +1108,7 @@ First B2B play — closest to existing product, warm leads available:
 
 ### Three-Space Navigation
 
-- **FR101:** Assessment completion redirects the user to `/me` for the portrait reveal (the emotional peak). After that, authenticated users can navigate freely across Today / Me / Circle; `/today` is the primary daily landing surface, not a persistent route gate.
+- **FR101:** After the closing exchange (FR12), the user enters the post-assessment transition (FR93–FR96): first the **focused portrait reading** at `/me/$conversationSessionId?view=portrait`, then the **full Me identity surface** at `/me/$conversationSessionId` (see FR95). That sequence is the emotional peak. Thereafter, authenticated users can navigate freely across Today / Me / Circle; `/today` is the primary daily landing surface, not a persistent route gate. Legacy `/results/*` URLs may remain as redirects only (UX addendum — canonical `/me` paths)
 - **FR102:** The three-space bottom navigation (Today / Me / Circle) is the primary navigation model for authenticated users. `/dashboard` is removed. A thin `/settings` route contains account admin (email, password, data export, delete) accessed via a gear icon on the Me page. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel — users land in `/chat` from the pre-conversation onboarding after signup + verification
 - **FR103:** The public profile remains a separate unauthenticated SSR route (`/public-profile/$id`) distinct from the authenticated Me page (`/me`). Me page contains a "Your Public Face" section as the control center for the public profile route
 
@@ -1119,9 +1121,9 @@ First B2B play — closest to existing product, warm leads available:
 
 ### Post-Assessment Transition
 
-- **FR93:** At the end of the 15-exchange assessment, Nerin's distinct closing exchange (FR12) ends and the input field fades. A single button appears beneath the closing message: **"Show me what you found →"** — user-voiced (user speaking to Nerin), warm, keeps the conversation feel alive for one more beat. Tapping the button navigates the user to `/results/$sessionId?view=portrait` directly
+- **FR93:** At the end of the 15-exchange assessment, Nerin's distinct closing exchange (FR12) ends and the input field fades. A single button appears beneath the closing message: **"Show me what you found →"** — user-voiced (user speaking to Nerin), warm, keeps the conversation feel alive for one more beat. Tapping the button navigates the user directly to **`/me/$conversationSessionId?view=portrait`** (canonical focused reading route; `$conversationSessionId` is the completed assessment session id)
 - **FR94:** The portrait reading view handles a **generating state**: a centered OceanSpinner with a single Nerin-voiced line ("Nerin is writing your letter...") and no other content visible. When the portrait is ready, the spinner resolves and the letter fades in — full-screen, distraction-free, max-width 720px, warm background, letter format
-- **FR95:** At the bottom of the portrait reading view, a warm link ("There's more to see →") navigates the user to `/results/$sessionId` (the full Me page with inline portrait, identity hero, radar, scores, Public Face section, and subscription pitch)
+- **FR95:** At the bottom of the portrait reading view, a warm link ("There's more to see →") navigates the user to **`/me/$conversationSessionId`** (the full Me identity surface for that assessment: inline portrait, identity hero, radar, scores, Public Face section, and subscription pitch)
 - **FR96:** The first Me page visit displays a return seed at the bottom of the page in Nerin's voice: *"Tomorrow, I'll ask how you're doing. Come check in with me."* Paired with a Nerin-voiced notification permission request: *"I'd like to check in with you tomorrow. Mind if I send a quiet note?"* (NOT a system-voice "Enable notifications" prompt). Permission granted → schedule the first daily prompt for the next day at a profile-appropriate time (high-C morning, high-O afternoon) with one default time the user can customize later. Permission denied → relationship still works, the user opens the app themselves, no lock-in
 
 ## Non-Functional Requirements
@@ -1130,7 +1132,7 @@ First B2B play — closest to existing product, warm leads available:
 
 - **NFR1:** Nerin response time <2s P95 (server-side LLM call + pipeline processing)
 - **NFR2:** Public profile page LCP <1s (acquisition landing page — bounce rate sensitive)
-- **NFR3:** Results page LCP <1.5s (emotional moment after completing 15 exchanges)
+- **NFR3:** Me / post-assessment identity surface LCP <1.5s (emotional moment after completing 15 exchanges — the session-scoped Me page at `/me/$conversationSessionId` after focused reading per FR95)
 - **NFR4:** Chat page initial load <2s, subsequent interactions <200ms (client-side)
 - **NFR5:** Portrait generation completes within 60s (async — user notified, not waiting. Benchmark and adjust)
 - **NFR6:** Per-assessment LLM cost stays within ~€0.30 budget (cost-efficient LLM for conversation + extraction)
@@ -1160,7 +1162,7 @@ First B2B play — closest to existing product, warm leads available:
 
 ### Accessibility
 
-- **NFR20:** WCAG 2.1 AA compliance required for: public profile, conversation UI, results page, subscription modal. Best-effort AA for remaining pages
+- **NFR20:** WCAG 2.1 AA compliance required for: public profile, conversation UI, Me page and session-scoped identity views (including post-assessment trait and evidence UI), subscription modal. Best-effort AA for remaining pages
 - **NFR21:** Chat interface keyboard-navigable with proper ARIA labels
 - **NFR22:** Score visualizations (facet bars, trait bands) have text alternatives
 - **NFR23:** Ocean theme color palette meets AA contrast ratios

@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ResultsRouteImport } from './routes/results'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -24,9 +23,10 @@ import { Route as LibraryIndexRouteImport } from './routes/library/index'
 import { Route as CircleIndexRouteImport } from './routes/circle/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as TodayCalendarRouteImport } from './routes/today/calendar'
-import { Route as ResultsConversationSessionIdRouteImport } from './routes/results/$conversationSessionId'
 import { Route as RelationshipAnalysisIdRouteImport } from './routes/relationship/$analysisId'
 import { Route as PublicProfilePublicProfileIdRouteImport } from './routes/public-profile.$publicProfileId'
+import { Route as MeConversationSessionIdRouteImport } from './routes/me/$conversationSessionId'
+import { Route as DevLibraryArticleLayoutRouteImport } from './routes/dev/library-article-layout'
 import { Route as DevEmailsRouteImport } from './routes/dev/emails'
 import { Route as DevComponentsRouteImport } from './routes/dev/components'
 import { Route as TodayWeekWeekIdRouteImport } from './routes/today/week.$weekId'
@@ -51,11 +51,6 @@ const SignupRoute = SignupRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResultsRoute = ResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -113,12 +108,6 @@ const TodayCalendarRoute = TodayCalendarRouteImport.update({
   path: '/today/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResultsConversationSessionIdRoute =
-  ResultsConversationSessionIdRouteImport.update({
-    id: '/$conversationSessionId',
-    path: '/$conversationSessionId',
-    getParentRoute: () => ResultsRoute,
-  } as any)
 const RelationshipAnalysisIdRoute = RelationshipAnalysisIdRouteImport.update({
   id: '/relationship/$analysisId',
   path: '/relationship/$analysisId',
@@ -130,6 +119,16 @@ const PublicProfilePublicProfileIdRoute =
     path: '/public-profile/$publicProfileId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const MeConversationSessionIdRoute = MeConversationSessionIdRouteImport.update({
+  id: '/me/$conversationSessionId',
+  path: '/me/$conversationSessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLibraryArticleLayoutRoute = DevLibraryArticleLayoutRouteImport.update({
+  id: '/dev/library-article-layout',
+  path: '/dev/library-article-layout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevEmailsRoute = DevEmailsRouteImport.update({
   id: '/dev/emails',
   path: '/dev/emails',
@@ -188,15 +187,15 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/results': typeof ResultsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
+  '/dev/library-article-layout': typeof DevLibraryArticleLayoutRoute
+  '/me/$conversationSessionId': typeof MeConversationSessionIdRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/today/calendar': typeof TodayCalendarRoute
   '/chat/': typeof ChatIndexRoute
   '/circle/': typeof CircleIndexRoute
@@ -218,15 +217,15 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/results': typeof ResultsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
+  '/dev/library-article-layout': typeof DevLibraryArticleLayoutRoute
+  '/me/$conversationSessionId': typeof MeConversationSessionIdRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/today/calendar': typeof TodayCalendarRoute
   '/chat': typeof ChatIndexRoute
   '/circle': typeof CircleIndexRoute
@@ -249,15 +248,15 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/results': typeof ResultsRouteWithChildren
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
+  '/dev/library-article-layout': typeof DevLibraryArticleLayoutRoute
+  '/me/$conversationSessionId': typeof MeConversationSessionIdRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
-  '/results/$conversationSessionId': typeof ResultsConversationSessionIdRoute
   '/today/calendar': typeof TodayCalendarRoute
   '/chat/': typeof ChatIndexRoute
   '/circle/': typeof CircleIndexRoute
@@ -281,15 +280,15 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
-    | '/results'
     | '/settings'
     | '/signup'
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
+    | '/dev/library-article-layout'
+    | '/me/$conversationSessionId'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
-    | '/results/$conversationSessionId'
     | '/today/calendar'
     | '/chat/'
     | '/circle/'
@@ -311,15 +310,15 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
-    | '/results'
     | '/settings'
     | '/signup'
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
+    | '/dev/library-article-layout'
+    | '/me/$conversationSessionId'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
-    | '/results/$conversationSessionId'
     | '/today/calendar'
     | '/chat'
     | '/circle'
@@ -341,15 +340,15 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/reset-password'
-    | '/results'
     | '/settings'
     | '/signup'
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
+    | '/dev/library-article-layout'
+    | '/me/$conversationSessionId'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
-    | '/results/$conversationSessionId'
     | '/today/calendar'
     | '/chat/'
     | '/circle/'
@@ -372,12 +371,13 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ResultsRoute: typeof ResultsRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   DevComponentsRoute: typeof DevComponentsRoute
   DevEmailsRoute: typeof DevEmailsRoute
+  DevLibraryArticleLayoutRoute: typeof DevLibraryArticleLayoutRoute
+  MeConversationSessionIdRoute: typeof MeConversationSessionIdRoute
   PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute
   RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute
   TodayCalendarRoute: typeof TodayCalendarRoute
@@ -417,13 +417,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/results': {
-      id: '/results'
-      path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof ResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -503,13 +496,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TodayCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/results/$conversationSessionId': {
-      id: '/results/$conversationSessionId'
-      path: '/$conversationSessionId'
-      fullPath: '/results/$conversationSessionId'
-      preLoaderRoute: typeof ResultsConversationSessionIdRouteImport
-      parentRoute: typeof ResultsRoute
-    }
     '/relationship/$analysisId': {
       id: '/relationship/$analysisId'
       path: '/relationship/$analysisId'
@@ -522,6 +508,20 @@ declare module '@tanstack/react-router' {
       path: '/public-profile/$publicProfileId'
       fullPath: '/public-profile/$publicProfileId'
       preLoaderRoute: typeof PublicProfilePublicProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/$conversationSessionId': {
+      id: '/me/$conversationSessionId'
+      path: '/me/$conversationSessionId'
+      fullPath: '/me/$conversationSessionId'
+      preLoaderRoute: typeof MeConversationSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library-article-layout': {
+      id: '/dev/library-article-layout'
+      path: '/dev/library-article-layout'
+      fullPath: '/dev/library-article-layout'
+      preLoaderRoute: typeof DevLibraryArticleLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/emails': {
@@ -597,29 +597,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ResultsRouteChildren {
-  ResultsConversationSessionIdRoute: typeof ResultsConversationSessionIdRoute
-}
-
-const ResultsRouteChildren: ResultsRouteChildren = {
-  ResultsConversationSessionIdRoute: ResultsConversationSessionIdRoute,
-}
-
-const ResultsRouteWithChildren =
-  ResultsRoute._addFileChildren(ResultsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ResultsRoute: ResultsRouteWithChildren,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   DevComponentsRoute: DevComponentsRoute,
   DevEmailsRoute: DevEmailsRoute,
+  DevLibraryArticleLayoutRoute: DevLibraryArticleLayoutRoute,
+  MeConversationSessionIdRoute: MeConversationSessionIdRoute,
   PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
   RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
   TodayCalendarRoute: TodayCalendarRoute,

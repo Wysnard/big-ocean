@@ -191,11 +191,11 @@ vi.mock("@/components/results/PortraitGeneratingState", () => ({
 }));
 
 // Static import — all heavy deps are mocked above (vi.mock is hoisted)
-import { Route } from "./results/$conversationSessionId";
+import { Route } from "./me/$conversationSessionId";
 
 const Component = Route.component as React.ComponentType;
 
-describe("results/$conversationSessionId route behavior", () => {
+describe("me/$conversationSessionId route behavior (session-scoped identity + portrait)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		window.localStorage.clear();

@@ -81,7 +81,7 @@ test.describe("Conversation Lifecycle", () => {
 			const viewResults = page.getByRole("link", { name: "Show me what you found →" });
 			await viewResults.waitFor({ state: "visible", timeout: 15_000 });
 			await viewResults.click();
-			await page.waitForURL(/\/results\//, { timeout: 15_000 });
+			await page.waitForURL(/\/me\//, { timeout: 15_000 });
 		});
 
 		await test.step("results page renders with OCEAN code and archetype", async () => {

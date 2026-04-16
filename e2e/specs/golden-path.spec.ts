@@ -75,7 +75,7 @@ test("golden path: landing → signup → chat → results → share → public 
 		const viewResultsLink = page.getByRole("link", { name: "Show me what you found →" });
 		await viewResultsLink.waitFor({ state: "visible", timeout: 15_000 });
 		await viewResultsLink.click();
-		await page.waitForURL(/\/results\//, { timeout: 15_000 });
+		await page.waitForURL(/\/me\//, { timeout: 15_000 });
 	});
 
 	await test.step("assert archetype card is visible", async () => {
@@ -128,7 +128,7 @@ test("golden path: landing → signup → chat → results → share → public 
 
 		// Navigate back to profile view for share/privacy steps
 		await page.getByTestId("view-full-profile-btn").click();
-		await page.waitForURL(new RegExp(`/results/${sessionId}$`), { timeout: 10_000 });
+		await page.waitForURL(new RegExp(`/me/${sessionId}$`), { timeout: 10_000 });
 		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",
 			timeout: 15_000,
@@ -186,7 +186,7 @@ test("golden path: landing → signup → chat → results → share → public 
 		}
 
 		// Navigate back to results for the profile step
-		await page.goto(`/results/${sessionId}`);
+		await page.goto(`/me/${sessionId}`);
 		await page.getByTestId("archetype-hero-section").waitFor({
 			state: "visible",
 			timeout: 15_000,

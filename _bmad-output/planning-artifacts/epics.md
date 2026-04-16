@@ -37,7 +37,7 @@ FR12: The conversation ends with a distinct closing exchange from Nerin before t
 FR13: Nerin transitions between territories using connecting observations when Director changes territory
 FR14: The system extracts facet evidence and energy signals from each user response via the extraction pipeline
 FR15: The system computes 30 facet scores, 5 trait scores, OCEAN code, and archetype from conversation evidence (recomputed at read time)
-FR16: Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the results page
+FR16: Users can view their OCEAN code, archetype name, tribe feeling, and trait/facet scores on the Me identity surface (session-scoped `/me/$conversationSessionId`)
 FR17: The system assigns one of 81 hand-curated archetypes based on the user's OCEAN code
 FR18: The system presents all archetypes with positive, strength-based framing
 FR19: Authenticated users navigate the product through a three-space bottom navigation model — Today / Me / Circle. No /dashboard route. /settings via gear icon on Me
@@ -46,7 +46,7 @@ FR21: Users receive their portrait for free immediately after completing the ass
 FR22: Users can view their portrait immediately after generation
 FR22a: One portrait is generated per assessment result — free, no purchase required
 FR23: (Subscription — MVP) First conversation extension per subscriber automatically generates a new portrait at no additional cost
-FR24: The system records share events and return-visit timestamps per portrait
+FR24: The system records share events and return-visit timestamps per portrait for internal analytics/ops — not user-facing dashboard metrics (PRD 2026-04-16)
 FR25: (Subscription — MVP) Conversation extension creates a new assessment session. Director model initializes from prior session's final state and evidence
 FR26: Portrait generation is asynchronous — users are notified when ready
 FR27: The system retries portrait generation up to 3 times with exponential backoff (5s, 15s, 45s)
@@ -105,7 +105,7 @@ FR80: Trait and facet explainer pages
 FR81: Big Five science articles
 FR82: Relationship and career guide pages
 FR83: Knowledge library pages in sitemap with Schema.org structured data
-FR84: Homepage founder story block with real portrait excerpt + first-person statement
+FR84: `/about` founder story block with real portrait excerpt + first-person statement (not on homepage — UX-DR39)
 FR85: Homepage "beyond the portrait" self-care teaser
 FR86: Weekly summary generated every Sunday 6pm local for users with ≥3 check-ins
 FR87: Weekly summary is LLM-generated letter from Nerin in letter format. Free version must feel complete
@@ -113,15 +113,15 @@ FR89: Push notification at weekly summary generation time. Email fallback. Inlin
 FR90: Weekly summary at dedicated focused reading route /today/week/$weekId
 FR91: Free weekly summary ends with soft conversion CTA in Nerin's voice
 FR92: Edge cases: 0-2 check-ins → no summary; mid-week subscribe → full version; cancelled → subscriber version until billing end
-FR93: Post-assessment closing: input fades, "Show me what you found →" button appears
+FR93: Post-assessment closing: input fades, "Show me what you found →" → navigate to `/me/$conversationSessionId?view=portrait`
 FR94: Portrait reading view with generating state (OceanSpinner + Nerin-voiced line)
-FR95: End of portrait reading: warm link "There's more to see →" navigates to full Me page
+FR95: End of portrait reading: warm link "There's more to see →" → `/me/$conversationSessionId` (full Me surface for that session)
 FR96: First Me page visit: return seed in Nerin's voice + notification permission request
 FR97: Circle page: full-width person cards with archetype, OCEAN code, duration, "last shared" signal, "View your dynamic" link
 FR98: Circle enforces Intimacy Principle: no counts, no follower language, no sorting, no search
 FR99: Invite ceremony dialog with reward-first copy
 FR100: Invite placement: Me page, Circle page, public profile CTA, weekly letter relational beat
-FR101: Assessment completion redirects to /me for the reveal; afterward users can navigate freely across Today / Me / Circle, with /today as the primary daily return surface
+FR101: Post-assessment: focused reading `/me/$conversationSessionId?view=portrait` then full Me `/me/$conversationSessionId` (FR93–FR95); afterward users navigate freely; /today is primary daily return surface
 FR102: Three-space bottom nav (Today / Me / Circle). /dashboard removed. /chat outside three-space
 FR103: Public profile separate from authenticated Me page
 
@@ -129,7 +129,7 @@ FR103: Public profile separate from authenticated Me page
 
 NFR1: Nerin response time <2s P95
 NFR2: Public profile page LCP <1s
-NFR3: Results page LCP <1.5s
+NFR3: Me / post-assessment identity surface LCP <1.5s
 NFR4: Chat page initial load <2s, subsequent interactions <200ms
 NFR5: Portrait generation completes within 60s (async)
 NFR6: Per-assessment LLM cost ~€0.30
@@ -150,7 +150,7 @@ NFR16: Portrait generation completes successfully >99%
 NFR17: Portrait generation retries automatically on failure
 NFR18: Cost guard never terminates active session
 NFR19: Conversation sessions resumable after browser close or connection loss
-NFR20: WCAG 2.1 AA compliance for public profile, conversation UI, results page, subscription modal
+NFR20: WCAG 2.1 AA compliance for public profile, conversation UI, Me page and session-scoped identity views (including post-assessment trait and evidence UI), subscription modal
 NFR21: Chat interface keyboard-navigable with proper ARIA labels
 NFR22: Score visualizations have text alternatives
 NFR23: Ocean theme color palette meets AA contrast ratios
@@ -436,7 +436,7 @@ So that I can move between the three spaces of the product.
 **Then** a persistent BottomNav renders at the bottom with three tabs: Today, Me, Circle
 **And** the active tab is highlighted based on the current route
 **And** tapping a tab navigates to the corresponding route using TanStack Router `<Link>`
-**And** BottomNav is hidden on /chat, /results/$id?view=portrait, /today/week/$weekId, and /settings
+**And** BottomNav is hidden on /chat, `/me/$conversationSessionId?view=portrait`, /today/week/$weekId, and /settings
 **And** on desktop (≥1024px), BottomNav is replaced with a top nav variant with the same three tabs
 **And** mobile BottomNav has safe-area-inset-bottom padding for iOS
 **And** route shells exist for /today (placeholder), /me (placeholder), /circle (placeholder)
@@ -527,7 +527,7 @@ So that the transition from conversation to portrait feels intentional and emoti
 **Then** the chat input field fades out (CSS opacity transition, ~300ms)
 **And** a single button appears below the closing message: "Show me what you found →"
 **And** the button uses warm, Nerin-consistent styling (not a generic system button)
-**And** tapping the button navigates to `/results/$conversationSessionId?view=portrait`
+**And** tapping the button navigates to `/me/$conversationSessionId?view=portrait`
 **And** no other CTAs or navigation options are visible after the closing exchange
 **And** the existing "View Results" button in TherapistChat.tsx is replaced by this new button
 
@@ -539,7 +539,7 @@ So that the wait feels like part of the experience, not a loading screen.
 
 **Acceptance Criteria:**
 
-**Given** the user navigates to `/results/$sessionId?view=portrait` and the portrait is still generating
+**Given** the user navigates to `/me/$conversationSessionId?view=portrait` and the portrait is still generating
 **When** the PortraitReadingView renders in generating state
 **Then** a centered OceanSpinner is displayed (already exists as component)
 **And** a single Nerin-voiced line is shown: "Nerin is writing your letter..."
@@ -559,7 +559,7 @@ So that the transition to my full identity page feels like a continuation, not a
 **Given** the user is reading their portrait in the PortraitReadingView
 **When** they scroll to the bottom of the letter
 **Then** the existing "See your full personality profile" link text is replaced with "There's more to see →"
-**And** the link navigates to `/results/$conversationSessionId` (full results page — will become /me in future)
+**And** the link navigates to `/me/$conversationSessionId` (full session-scoped Me surface; legacy `/results/...` redirects here)
 **And** the link styling is warm and consistent with the letter format (not a standard button)
 
 ### Story 2.4: Portrait Retry with Exponential Backoff
@@ -595,7 +595,7 @@ So that I'm motivated to return and start the daily check-in habit.
 **And** accepting triggers the browser's notification permission request
 **And** if permission granted, a first daily prompt is scheduled for the next day
 **And** if declined, no lock-in — the section gracefully dismisses
-**And** the ReturnSeedSection only shows on the first post-assessment reveal (not on subsequent visits to /results)
+**And** the ReturnSeedSection only shows on the first post-assessment reveal (not on subsequent visits to that session’s Me surface)
 **And** any first-visit marker tracked server-side is for ReturnSeedSection visibility only, not for gating Today-space routes
 
 ---

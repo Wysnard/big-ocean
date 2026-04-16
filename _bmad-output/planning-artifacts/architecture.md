@@ -626,7 +626,7 @@ This covers the "server crashed mid-generation" or "worker fiber missed the enqu
 
 **Decision:** Authentication required before the conversation starts. The `/chat` route redirects unauthenticated users to `/login?redirectTo=/chat`. Landing page (`/`) and public profiles (`/public-profile/:id`) remain fully unauthenticated.
 
-**Flow:** Landing page (unauth) → `/chat` → auth gate (redirect to login/signup) → verify email (ADR-24) → return to `/chat` → start assessment (authenticated) → **15 exchanges** (FR1) → closing message + "Show me what you found →" button (FR93) → `/results/$sessionId?view=portrait` focused reading (ADR-46) → `/me` for the post-assessment reveal → free navigation across Today / Me / Circle (ADR-43), with `/today` as the primary daily return surface.
+**Flow:** Landing page (unauth) → `/chat` → auth gate (redirect to login/signup) → verify email (ADR-24) → return to `/chat` → start assessment (authenticated) → **15 exchanges** (FR1) → closing message + "Show me what you found →" button (FR93) → **`/me/$conversationSessionId?view=portrait`** focused reading (ADR-46) → **`/me/$conversationSessionId`** session-scoped Me surface (FR95) → free navigation across Today / Me / Circle (ADR-43), with `/today` as the primary daily return surface. Legacy **`/results/*`** URLs redirect to the same resources (preserve query string).
 
 **Why:** Auth-gating before the first turn collects email upfront, enabling automated recapture for interrupted sessions (drop-off re-engagement emails). This converts the save-and-resume problem from "lost anonymous user" to "delayed user with a nudge." The UX spec explicitly chose higher upfront friction for better retention.
 
@@ -654,8 +654,8 @@ This covers the "server crashed mid-generation" or "worker fiber missed the enqu
 | `/today` | → sign up | → `/chat` | Today page (daily check-in, mood calendar, weekly letter inline card) |
 | `/me` | → sign up | → `/chat` | Me page (portrait, identity hero, radar, Public Face, subscription pitch, Circle preview) |
 | `/circle` | → sign up | → `/chat` | Circle page (people you care about, relationship letters, invite ceremony) |
-| `/results/$sessionId?view=portrait` | → sign up | → `/chat` | Portrait focused-reading view (ADR-46) |
-| `/results/$sessionId` | → sign up | → `/chat` | Full Me-page-style results surface |
+| `/me/$sessionId?view=portrait` | → sign up | → `/chat` | Portrait focused-reading view (ADR-46); legacy `/results/...` redirects here |
+| `/me/$sessionId` | → sign up | → `/chat` | Session-scoped Me / identity surface (same composition as former `/results/$sessionId`); legacy `/results/...` redirects here |
 | `/today/week/$weekId` | → sign up | → `/chat` | Weekly letter focused-reading view (ADR-45, ADR-46) |
 | `/settings` | → sign up | → `/chat` | Account admin: email, password, data export, delete |
 | `/relationship/:id` | → sign up | → `/chat` | Relationship letter (if participant) |
@@ -839,7 +839,7 @@ assessment_exchange (
 **Cross-Component Dependencies:**
 ```text
 User message → Evidence extraction → Coverage analyzer → Nerin Director → Nerin Actor → save exchange (live runtime)
-Assessment complete (15 exchanges) → compute results (derive-at-read) → Queue.offer(PortraitJobQueue) → worker generates portrait (free, FR21) → client polls focused reading view (/results/$sessionId?view=portrait, ADR-46) → "ready"
+Assessment complete (15 exchanges) → compute results (derive-at-read) → Queue.offer(PortraitJobQueue) → worker generates portrait (free, FR21) → client polls focused reading view (/me/$sessionId?view=portrait, ADR-46) → "ready"
 User signs up → email verification → Polar customer created (externalId = userId) → accepts pending QR invitations (no credit grant)
 Polar subscription checkout → Better Auth subscription webhook → insert subscription_started event (ADR-47)
 Subscriber activates conversation extension → isEntitledTo(userId, "conversation_extension") check → new assessment_session (parent_session_id FK) → 15 new exchanges → new assessment_results → UserSummary refresh (ADR-55) → [first extension only] Queue.offer(PortraitJobQueue, replaces_portrait_id=prior) → bundled portrait regen (FR23) → prior portrait/letters become "previous version"
@@ -1087,6 +1087,7 @@ big-ocean/                                    # Monorepo root
 │       ├── public/                           # Static assets (favicon, logos, manifest)
 │       ├── server/routes/api/                # Server-side API routes
 │       │   └── og/public-profile/[publicProfileId].get.ts  # OG card generation
+│       ├── server/routes/results.get.ts + results/[...path].get.ts  # 308 /results → /me (legacy URLs)
 │       └── src/
 │           ├── router.tsx                    # TanStack Router config
 │           ├── routeTree.gen.ts              # Auto-generated route tree
@@ -1098,13 +1099,12 @@ big-ocean/                                    # Monorepo root
 │           │   │   ├── index.tsx             # /today — daily check-in, mood calendar, weekly letter inline card
 │           │   │   └── week.$weekId.tsx      # /today/week/$weekId — weekly letter focused reading (ADR-45)
 │           │   ├── me/
-│           │   │   └── index.tsx             # /me — persistent identity (portrait, archetype, radar, Public Face, subscription pitch, Circle preview)
+│           │   │   ├── index.tsx             # /me — latest completed session + pending gate resume (localStorage)
+│           │   │   └── $conversationSessionId.tsx  # /me/:id — session-scoped Me + ?view=portrait (ADR-46)
 │           │   ├── circle/
 │           │   │   └── index.tsx             # /circle — people you care about (Intimacy Principle-compliant)
 │           │   ├── settings/
 │           │   │   └── index.tsx             # /settings — account admin (email, password, export, delete, consent revoke)
-│           │   ├── results.tsx               # Results layout
-│           │   ├── results/$assessmentSessionId.tsx  # Full results surface + ?view=portrait focused-reading variant (ADR-46)
 │           │   ├── public-profile.$publicProfileId.tsx  # Public profiles (unauth SSR, FR103)
 │           │   ├── relationship/$analysisId.tsx  # Relationship letter (letter format, ADR-48)
 │           │   ├── relationship/qr/$token.tsx # QR accept/refuse screen (free accept, FR33)
@@ -1361,8 +1361,8 @@ big-ocean/                                    # Monorepo root
 |----------------|-------|----------------|-----------------|
 | Landing | `/` | HeroSection, ConversationFlow, HowItWorks, ArchetypeGalleryPreview, home/* | None (ArchetypeGallery fetches archetype data) |
 | Chat (onboarding tunnel) | `/chat` | TherapistChat, ChatInputBarShell, DepthMeter, EvidenceCard, PostAssessmentTransitionButton ("Show me what you found →") | assessment.*, evidence.* |
-| Portrait reading (ADR-46) | `/results/$id?view=portrait` | PortraitReadingView (generating state → letter fade-in, max-width 720px, warm bg), "There's more to see →" link | portrait.status, profile.results |
-| Results (full surface) | `/results/$id` | ProfileView, TraitCard, ArchetypeCard, PersonalPortrait, ConfidenceRingCard, DetailZone, ReturnSeedCard (first-visit only, FR96) | profile.results, portrait.*, evidence.* |
+| Portrait reading (ADR-46) | `/me/$id?view=portrait` | PortraitReadingView (generating state → letter fade-in, max-width 720px, warm bg), "There's more to see →" link | portrait.status, profile.results |
+| Session-scoped Me (full surface) | `/me/$id` | ProfileView, TraitCard, ArchetypeCard, PersonalPortrait, ConfidenceRingCard, DetailZone, ReturnSeedCard (first-visit only, FR96) | profile.results, portrait.*, evidence.* |
 | Today (ADR-43, ADR-44, ADR-45) | `/today` | TodayPage, DailyCheckInForm (mood + note + visibility), MoodCalendar7DayGrid, WeeklyLetterAnticipationCard, WeeklyLetterReadyInlineCard, NerinDailyPrompt | daily.checkIn, daily.calendar, weekly.summary |
 | Weekly letter reading | `/today/week/$weekId` | WeeklyLetterReadingView (shares shell with PortraitReadingView), conversion CTA (Nerin-voiced) | weekly.summary |
 | Me (ADR-43) | `/me` | MePage, IdentityHero, ArchetypeCard, RadarChart, PersonalPortrait, PortraitVersionList (FR73), YourPublicFaceSection, SubscriptionPitchCard, CirclePreview, MoodCalendarFullView, GearIconLink → /settings | profile.results, portrait.status, subscription.status, circle.preview, daily.calendar |
@@ -1397,7 +1397,7 @@ _`/dashboard` and the `Dashboard*Card` component family are removed (ADR-23 supe
 | Epic | Backend Use-Cases | Frontend Routes/Components | Packages |
 |------|------------------|---------------------------|----------|
 | **1-4: Assessment Engine** | `start-assessment`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, useTherapistChat | domain/utils/formula.ts, domain/utils/coverage-analyzer.ts, domain/constants/nerin-director-prompt.ts, domain/constants/nerin-actor-prompt.ts |
-| **9-11: Results & Finalization** | `generate-results`, `get-results`, `get-finalization-status`, `get-facet-evidence`, `get-message-evidence`, `get-transcript` | `/results/$id` → ProfileView, TraitCard, ArchetypeCard, EvidencePanel, DetailZone | domain/utils/ocean-code-generator.ts, scoring, archetype-lookup |
+| **9-11: Results & Finalization** | `generate-results`, `get-results`, `get-finalization-status`, `get-facet-evidence`, `get-message-evidence`, `get-transcript` | `/me/$id` → ProfileView, TraitCard, ArchetypeCard, EvidencePanel, DetailZone | domain/utils/ocean-code-generator.ts, scoring, archetype-lookup |
 | **11-12: Portraits** | `generate-full-portrait`, `get-portrait-status`, `rate-portrait` | PersonalPortrait, PortraitReadingView, PortraitUnlockButton, PortraitWaitScreen | infrastructure/portrait-generator.claude.repository.ts |
 | **13: Monetization** | `process-purchase`, `get-credits` | polar-checkout.ts, RelationshipCreditsSection | infrastructure/payment-gateway.polar.repository.ts, better-auth.ts (Polar plugin) |
 | **14: Relationships** | `generate-qr-token`, `get-qr-token-status`, `accept-qr-invitation`, `refuse-qr-invitation`, `list-relationship-analyses`, `get-relationship-analysis`, `generate-relationship-analysis` | `/relationship/qr/$token`, `/relationship/$id`, RelationshipCard | domain/prompts/relationship-analysis.prompt.ts |
@@ -1452,7 +1452,7 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
    Assessment completion (15 exchanges) → generate-results use-case creates assessment_results row →
    Queue.offer(PortraitJobQueue) → worker fiber takes job →
    Sonnet 4.6 generation (retry x2) → INSERT portrait row (content on success, failedAt on failure) →
-   User navigates to /results/$sessionId?view=portrait (FR93 button) →
+   User navigates to /me/$sessionId?view=portrait (FR93 button) →
    Client polls GET /portrait/status (read-only) → fade-in letter format on ready
    ```
 
@@ -1913,7 +1913,7 @@ New CSS rules in `packages/ui/src/styles/globals.css`:
 **What changes:**
 - `/profile` route deleted — all user-facing state (identity, in-progress assessment, relationships, credits) lives on `/dashboard`
 - `AssessmentCard` and `EmptyProfile` components deleted — their in-progress state absorbed into `DashboardInProgressCard`
-- `DashboardPortraitCard` removed — portrait access moved to the results page (`/results/$sessionId`)
+- `DashboardPortraitCard` removed — portrait access moved to the session-scoped Me surface (`/me/$sessionId`)
 - `DashboardIdentityCard` gains a public profile link (external-link icon → `/public-profile/$publicProfileId`)
 - Navigation links updated: no "Profile" link in header, mobile nav, or user dropdown
 - `use-profile.ts` hook removed — dashboard fetches its own data
@@ -2949,8 +2949,8 @@ _Added 2026-04-11. Source: PRD revision 2026-04-11 (design-thinking 2026-04-09 a
 | `/circle` | People you care about — relationship letters, invite ceremony. Intimacy Principle enforced | On-demand |
 | `/settings` | Account admin — email, password, data export, delete, ongoing-consent revocation. Accessed via gear icon on `/me` | On-demand |
 | `/chat` | Onboarding tunnel — pre-assessment, 15-exchange conversation, resume, extension entry. NOT part of the three-space bottom nav | On-demand (post-signup + verification redirect) |
-| `/results/$sessionId?view=portrait` | Focused portrait reading (ADR-46) | Redirect from `/chat` post-assessment (FR93) |
-| `/results/$sessionId` | Full results surface (used as an alternative Me-page view) | Landed from focused-reading "There's more to see →" link (FR95) |
+| `/me/$sessionId?view=portrait` | Focused portrait reading (ADR-46) | From `/chat` post-assessment (FR93); legacy `/results/...?view=portrait` redirects here |
+| `/me/$sessionId` | Session-scoped Me / full identity surface | From focused-reading "There's more to see →" (FR95), direct link, or `/me` index routing; legacy `/results/...` redirects here |
 | `/today/week/$weekId` | Weekly letter focused reading (ADR-45, ADR-46) | From push notification / inline card tap |
 
 **Landing logic (TanStack Router `beforeLoad`):**
@@ -3094,14 +3094,14 @@ CREATE INDEX weekly_summaries_user_week_idx ON weekly_summaries (user_id, week_s
 
 **Source:** PRD FR93, FR94, FR95, FR96, FR21 (free portrait).
 
-**Decision:** On assessment completion, `/chat` ends with Nerin's closing exchange and a single `"Show me what you found →"` button that navigates to `/results/$sessionId?view=portrait`. The portrait reading view handles a generating state with a centered OceanSpinner, then fades in the letter when ready. The full results surface (`/results/$sessionId` without query param) is reached via a "There's more to see →" link at the bottom. First Me page visit displays a return seed and notification permission moment in Nerin's voice.
+**Decision:** On assessment completion, `/chat` ends with Nerin's closing exchange and a single `"Show me what you found →"` button that navigates to **`/me/$sessionId?view=portrait`** (canonical; legacy `/results/...` redirects). The portrait reading view handles a generating state with a centered OceanSpinner, then fades in the letter when ready. The session-scoped Me surface (**`/me/$sessionId`** without `view=portrait`) is reached via a "There's more to see →" link at the bottom. First visit to that surface displays a return seed and notification permission moment in Nerin's voice.
 
 **Route variants:**
 
 | Route | View | When |
 |-------|------|------|
-| `/results/$sessionId?view=portrait` | `PortraitReadingView` — generating state or letter-format fade-in, max-width 720px, warm background, distraction-free | Post-assessment transition (FR93), portrait re-read from Me page |
-| `/results/$sessionId` | Full `ProfileView` — inline portrait, identity hero, radar, facet scores, Public Face section, subscription pitch | Reached from focused reading "There's more to see →" (FR95), or direct link |
+| `/me/$sessionId?view=portrait` | `PortraitReadingView` — generating state or letter-format fade-in, max-width 720px, warm background, distraction-free | Post-assessment transition (FR93), portrait re-read from session-scoped Me |
+| `/me/$sessionId` | Full `ProfileView` — inline portrait, identity hero, radar, facet scores, Public Face section, subscription pitch | Reached from focused reading "There's more to see →" (FR95), or direct link |
 
 **Generating state contract:**
 
@@ -3125,8 +3125,8 @@ type PortraitReadingState =
 4. On deny: the relationship still works, the user opens the app themselves, no lock-in.
 
 **Implementation location:**
-- `apps/front/src/routes/results/$assessmentSessionId.tsx` — handles both `?view=portrait` and the full view
-- `apps/front/src/components/portrait/PortraitReadingView.tsx`
+- `apps/front/src/routes/me/$conversationSessionId.tsx` — canonical route; handles both `?view=portrait` and the full session-scoped surface (removed client `/results/*` routes; Nitro redirects legacy `/results` URLs to `/me`)
+- `apps/front/src/components/results/PortraitReadingView.tsx`
 - `apps/front/src/components/weekly/WeeklyLetterReadingView.tsx` (shares shell)
 - `apps/front/src/components/me/ReturnSeedCard.tsx`
 - `apps/front/src/components/chat/PostAssessmentTransitionButton.tsx`
@@ -3277,7 +3277,7 @@ All pages include `BreadcrumbList` and an `Offer` (free assessment CTA).
 
 **CTA injection:** Every page renders an `AssessmentCTA` component above the footer. Component copy is tier-sensitive (archetype: "Discover your archetype in 30 minutes"; science: "See the Big Five in action — free assessment") but the underlying component is shared.
 
-**No authentication on library pages.** Pages are indexable, shareable, and function as top-of-funnel acquisition. `noindex` is NOT set on library routes (contrast with `/chat`, `/results`, `/me` which are `noindex`, per FR SEO rules).
+**No authentication on library pages.** Pages are indexable, shareable, and function as top-of-funnel acquisition. `noindex` is NOT set on library routes (contrast with `/chat`, `/me`, and legacy `/results` (redirect) which are `noindex`, per FR SEO rules).
 
 **Tier-1 first 10 pages pre-launch (acquisition strategy):** Before general launch, the 10 highest-traffic archetype slugs are published and indexed. The remaining 71 archetype pages, trait/facet explainers, and guides ship progressively. This is a content cadence decision, not an architectural one — the route tree supports all pages from day 1.
 

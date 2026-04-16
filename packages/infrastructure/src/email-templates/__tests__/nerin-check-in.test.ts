@@ -9,12 +9,12 @@ describe("renderCheckInEmail", () => {
 		const html = renderCheckInEmail({
 			userName: "Alice",
 			territoryDescription: "what you make or imagine when nobody's watching",
-			resultsUrl: "https://bigocean.dev/results",
+			resultsUrl: "https://bigocean.dev/me",
 		});
 
 		expect(html).toContain("Hey Alice,");
 		expect(html).toContain("what you make or imagine when nobody&#39;s watching");
-		expect(html).toContain("https://bigocean.dev/results");
+		expect(html).toContain("https://bigocean.dev/me");
 		expect(html).toContain("Continue with Nerin");
 		expect(html).toContain("<!DOCTYPE html>");
 	});
@@ -23,7 +23,7 @@ describe("renderCheckInEmail", () => {
 		const html = renderCheckInEmail({
 			userName: "Bob",
 			territoryDescription: "how you read your own internal weather",
-			resultsUrl: "https://bigocean.dev/results",
+			resultsUrl: "https://bigocean.dev/me",
 		});
 
 		expect(html).toContain("I've been thinking about our conversation");
@@ -35,7 +35,7 @@ describe("renderCheckInEmail", () => {
 		const html = renderCheckInEmail({
 			userName: "",
 			territoryDescription: "what gets under your skin & how you handle it",
-			resultsUrl: "https://bigocean.dev/results",
+			resultsUrl: "https://bigocean.dev/me",
 		});
 
 		expect(html).toContain("Hey there,");
@@ -58,7 +58,7 @@ describe("renderCheckInEmail", () => {
 		const html = renderCheckInEmail({
 			userName: "Charlie",
 			territoryDescription: "how you move through rooms and what that takes from you",
-			resultsUrl: "https://bigocean.dev/results",
+			resultsUrl: "https://bigocean.dev/me",
 		});
 
 		expect(html).toContain("one-time check-in");
@@ -68,7 +68,7 @@ describe("renderCheckInEmail", () => {
 		const html = renderCheckInEmail({
 			userName: "Dana",
 			territoryDescription: "what drives you and whether you trust it",
-			resultsUrl: "https://bigocean.dev/results",
+			resultsUrl: "https://bigocean.dev/me",
 		});
 
 		expect(html).toContain("<title>I've been thinking about something you said</title>");

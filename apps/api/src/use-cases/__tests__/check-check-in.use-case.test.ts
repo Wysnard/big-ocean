@@ -146,7 +146,7 @@ describe("checkCheckIn use-case", () => {
 			expect(result.emailsSent).toBe(1);
 			expect(sentEmails).toHaveLength(1);
 			expect(sentEmails[0]?.html).toContain("how imagination shows up in your close relationships");
-			expect(sentEmails[0]?.html).toContain("/results");
+			expect(sentEmails[0]?.html).toContain("/me");
 
 			const secondRun = yield* checkCheckIn;
 			expect(secondRun.emailsSent).toBe(0);

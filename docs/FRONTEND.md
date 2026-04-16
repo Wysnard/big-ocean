@@ -441,7 +441,7 @@ export function useQrDrawer() {
 #### Rules
 
 - **Always use TanStack Query** for async state — never manual `useState` + `useEffect` for fetching
-- **Always use Effect HttpApiClient** — never raw `fetch` (see CLAUDE.md)
+- **Always use Effect HttpApiClient** — never raw `fetch` (see AGENT.md)
 - **Extract API functions** into `lib/` for testability
 - **Use `refetchInterval`** for polling — never `setInterval`
 - **Use `enabled`** to conditionally run queries — never guard with `if` inside `queryFn`
@@ -539,7 +539,7 @@ packages/ui/
 **Related Documentation:**
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Backend architecture and Effect-ts patterns
-- [CLAUDE.md](../CLAUDE.md) - Repository overview and setup
+- [AGENT.md](../AGENT.md) - Repository overview and setup
 - [packages/ui/README.md](../packages/ui/README.md) - Component library documentation
 
 **External Resources:**

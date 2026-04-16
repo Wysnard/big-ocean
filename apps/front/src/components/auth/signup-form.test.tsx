@@ -134,7 +134,7 @@ describe("SignupForm", () => {
 	it("navigates to verify-email after successful signup with redirectTo", async () => {
 		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
-		renderSignupForm({ redirectTo: "/results/session-123" });
+		renderSignupForm({ redirectTo: "/me/session-123" });
 
 		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test" } });
 		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
