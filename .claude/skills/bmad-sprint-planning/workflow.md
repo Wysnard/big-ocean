@@ -261,3 +261,14 @@ optional ↔ done
 3. **Parallel Work Supported**: Multiple stories can be `in-progress` if team capacity allows
 4. **Review Before Done**: Stories should pass through `review` before `done`
 5. **Learning Transfer**: Developer typically creates next story after previous one is `done` to incorporate learnings
+
+### Refresh modes
+
+Use the mode that matches how much the planning artifacts or tracking file changed.
+
+| Mode | When to use | What it does |
+|------|-------------|----------------|
+| **Light refresh** | `sprint-status.yaml` already lists every epic/story; you only need current timestamps and file-based bumps | Set `generated` / `last_updated` to now. For each **story** row (not epics/retros), if `{story_location_absolute}/{key}.md` exists **with that exact stem**, raise status to at least `ready-for-dev`. Preserve any more advanced status. Never infer status from a different filename (e.g. another `N-M-*.md` that is not the canonical key). |
+| **Full rebuild** | New or renamed stories/epics in `*epic*.md`, or you need to reconcile inventory with planning docs | Re-parse all `{epics_location}/*epic*.md`, build keys (kebab-case titles; use project prefix conventions when multiple epic docs share numeric sections). Rebuild `development_status`, then apply preservation + file detection as in step 3–4. |
+
+If both a whole `epics.md` and sharded `epics/index.md` exist, prefer the whole document per Document Discovery.
