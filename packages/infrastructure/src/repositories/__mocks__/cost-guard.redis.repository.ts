@@ -16,12 +16,14 @@ const GLOBAL_DAILY_ASSESSMENT_LIMIT = 100;
 const costs = new Map<string, number>();
 const assessments = new Map<string, number>();
 let globalAssessmentCount = 0;
+let freeTierLlmPaused = false;
 
 /** Clear in-memory state between tests. Call in `beforeEach` or `afterEach`. */
 export const _resetMockState = () => {
 	costs.clear();
 	assessments.clear();
 	globalAssessmentCount = 0;
+	freeTierLlmPaused = false;
 };
 
 export const CostGuardRedisRepositoryLive = Layer.succeed(
@@ -116,5 +118,12 @@ export const CostGuardRedisRepositoryLive = Layer.succeed(
 			}),
 
 		checkSessionBudget: (_sessionId: string, _limitCents: number) => Effect.void,
+
+		getFreeTierLlmPaused: () => Effect.sync(() => freeTierLlmPaused),
+
+		setFreeTierLlmPaused: (paused: boolean) =>
+			Effect.sync(() => {
+				freeTierLlmPaused = paused;
+			}),
 	}),
 );

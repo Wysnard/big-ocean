@@ -8,9 +8,12 @@ import {
 	AppConfig,
 	AssessmentResultRepository,
 	ConversationRepository,
+	CostGuardRepository,
 	DailyCheckInRepository,
 	type FacetName,
 	LoggerRepository,
+	type PurchaseEvent,
+	PurchaseEventRepository,
 	PushNotificationQueueRepository,
 	PushSubscriptionRepository,
 	ResendEmailRepository,
@@ -38,6 +41,16 @@ const mockWeeklyRepo = {
 	getByWeekId: vi.fn(),
 	getByUserId: vi.fn(),
 	getLatestForUser: vi.fn(),
+	listGeneratedCostsSince: vi.fn(),
+};
+
+const mockPurchaseRepo = {
+	getEventsByUserId: vi.fn(),
+};
+
+const mockCostGuard = {
+	getFreeTierLlmPaused: vi.fn(),
+	setFreeTierLlmPaused: vi.fn(),
 };
 
 const mockSessionRepo = {
@@ -122,6 +135,10 @@ const mockConfig = {
 	subscriptionNudgeThresholdDays: 21,
 	recaptureThresholdDays: 3,
 	sessionCostLimitCents: 2000,
+	weeklyLetterExpectedCostCents: 4,
+	costCeilingActiveUsersEstimate: 500,
+	costCircuitBreakerMultiplier: 3,
+	costGuardRetryAfterSeconds: 900,
 	pushVapidPublicKey: undefined,
 	pushVapidPrivateKey: undefined,
 	pushVapidSubject: undefined,
@@ -186,6 +203,7 @@ const savedRow = {
 	generatedAt: new Date(),
 	failedAt: null,
 	retryCount: 0,
+	llmCostCents: null,
 	createdAt: new Date(),
 };
 
@@ -203,6 +221,8 @@ const createTestLayer = () =>
 		Layer.succeed(PushSubscriptionRepository, mockPushSubscription),
 		Layer.succeed(PushNotificationQueueRepository, mockPushQueue),
 		Layer.succeed(WebPushRepository, mockWebPush),
+		Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
+		Layer.succeed(CostGuardRepository, mockCostGuard),
 	);
 
 const WEEK_ID = "2026-W15";
@@ -218,8 +238,11 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 		mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(null));
 		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
 		mockGenerator.generateLetter.mockReturnValue(
-			Effect.succeed({ content: "# Hello week", modelUsed: "claude-sonnet-test" }),
+			Effect.succeed({ content: "# Hello week", modelUsed: "claude-sonnet-test", llmCostCents: 3 }),
 		);
+		mockPurchaseRepo.getEventsByUserId.mockReturnValue(Effect.succeed([]));
+		mockCostGuard.getFreeTierLlmPaused.mockReturnValue(Effect.succeed(false));
+		mockWeeklyRepo.listGeneratedCostsSince.mockReturnValue(Effect.succeed([]));
 		mockUserAccount.getEmailAndNameForUser.mockReturnValue(
 			Effect.succeed({ email: "weekly@example.com", name: "Weekly User" }),
 		);
@@ -318,6 +341,7 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 					outcome: "generated",
 					userId,
 					content: "# Hello week",
+					llmCostCents: 3,
 				}),
 			);
 			expect(mockResendEmail.sendEmail).toHaveBeenCalledWith(
@@ -371,5 +395,79 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 				}),
 			);
 		}).pipe(Effect.provide(Layer.mergeAll(createTestLayer(), TestContext.TestContext))),
+	);
+
+	it.effect("skips free-tier user when free-tier LLM is paused", () =>
+		Effect.gen(function* () {
+			const userId = "user-1";
+			mockDailyRepo.listUserIdsWithAtLeastNCheckInsInRange.mockReturnValue(Effect.succeed([userId]));
+			mockSessionRepo.findSessionByUserId.mockReturnValue(
+				Effect.succeed({
+					id: "session-1",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "completed" as const,
+					messageCount: 10,
+					oceanCode5: "OCBAV",
+					archetypeName: "The Tapestry",
+				}),
+			);
+			mockResultsRepo.getBySessionId.mockReturnValue(
+				Effect.succeed(mockAssessmentResult("session-1")),
+			);
+			mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed(threeCheckIns(userId)));
+			mockCostGuard.getFreeTierLlmPaused.mockReturnValue(Effect.succeed(true));
+
+			const out = yield* generateWeeklySummariesForWeek({ weekId: WEEK_ID }).pipe(
+				Effect.provide(createTestLayer()),
+			);
+
+			expect(out).toEqual({ processed: 0, skipped: 1, failed: 0 });
+			expect(mockGenerator.generateLetter).not.toHaveBeenCalled();
+		}),
+	);
+
+	it.effect("still generates for subscriber when free-tier LLM is paused", () =>
+		Effect.gen(function* () {
+			const userId = "user-1";
+			const subscriptionStarted: PurchaseEvent = {
+				id: "purchase-1",
+				userId,
+				eventType: "subscription_started",
+				polarCheckoutId: null,
+				polarSubscriptionId: "sub-1",
+				polarProductId: null,
+				amountCents: null,
+				currency: null,
+				metadata: null,
+				assessmentResultId: null,
+				createdAt: new Date(),
+			};
+			mockDailyRepo.listUserIdsWithAtLeastNCheckInsInRange.mockReturnValue(Effect.succeed([userId]));
+			mockSessionRepo.findSessionByUserId.mockReturnValue(
+				Effect.succeed({
+					id: "session-1",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					status: "completed" as const,
+					messageCount: 10,
+					oceanCode5: "OCBAV",
+					archetypeName: "The Tapestry",
+				}),
+			);
+			mockResultsRepo.getBySessionId.mockReturnValue(
+				Effect.succeed(mockAssessmentResult("session-1")),
+			);
+			mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed(threeCheckIns(userId)));
+			mockPurchaseRepo.getEventsByUserId.mockReturnValue(Effect.succeed([subscriptionStarted]));
+			mockCostGuard.getFreeTierLlmPaused.mockReturnValue(Effect.succeed(true));
+
+			const out = yield* generateWeeklySummariesForWeek({ weekId: WEEK_ID }).pipe(
+				Effect.provide(createTestLayer()),
+			);
+
+			expect(out.processed).toBe(1);
+			expect(mockGenerator.generateLetter).toHaveBeenCalled();
+		}),
 	);
 });

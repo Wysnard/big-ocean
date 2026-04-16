@@ -62,6 +62,12 @@ export interface RedisRepositoryMethods {
 	 */
 	readonly get: (key: string) => Effect.Effect<string | null, RedisOperationError>;
 
+	/** Set string value (Story 11-1 — circuit breaker flag). */
+	readonly set: (key: string, value: string) => Effect.Effect<void, RedisOperationError>;
+
+	/** Delete key. */
+	readonly del: (key: string) => Effect.Effect<void, RedisOperationError>;
+
 	/**
 	 * Set expiration time on a key
 	 * @param key - Redis key

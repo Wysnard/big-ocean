@@ -91,6 +91,24 @@ export const RedisIoRedisRepositoryLive = Layer.effect(
 						),
 				}),
 
+			set: (key: string, value: string) =>
+				Effect.tryPromise({
+					try: () => redis.set(key, value).then(() => undefined),
+					catch: (error) =>
+						new RedisOperationError(
+							`SET failed for key ${key}: ${error instanceof Error ? error.message : String(error)}`,
+						),
+				}),
+
+			del: (key: string) =>
+				Effect.tryPromise({
+					try: () => redis.del(key).then(() => undefined),
+					catch: (error) =>
+						new RedisOperationError(
+							`DEL failed for key ${key}: ${error instanceof Error ? error.message : String(error)}`,
+						),
+				}),
+
 			expire: (key: string, seconds: number) =>
 				Effect.tryPromise({
 					try: () => redis.expire(key, seconds),
@@ -164,6 +182,17 @@ export const createTestRedisRepository = () => {
 			}),
 
 		get: (key: string) => Effect.sync(() => store.get(key) || null),
+
+		set: (key: string, value: string) =>
+			Effect.sync(() => {
+				store.set(key, value);
+			}),
+
+		del: (key: string) =>
+			Effect.sync(() => {
+				store.delete(key);
+				ttls.delete(key);
+			}),
 
 		expire: (key: string, seconds: number) =>
 			Effect.sync(() => {

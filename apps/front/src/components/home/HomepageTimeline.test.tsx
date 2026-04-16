@@ -1,7 +1,31 @@
 // @vitest-environment jsdom
 
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import type { ReactNode } from "react";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("motion/react", async () => {
+	const actual = await vi.importActual<typeof import("motion/react")>("motion/react");
+
+	return {
+		...actual,
+		useReducedMotion: () => false,
+		motion: {
+			...actual.motion,
+			div: ({
+				children,
+				initial: _initial,
+				whileInView: _whileInView,
+				viewport: _viewport,
+				transition: _transition,
+				...props
+			}: {
+				children: ReactNode;
+				[key: string]: unknown;
+			}) => <div {...props}>{children}</div>,
+		},
+	};
+});
 
 import { HomepageTimeline } from "./HomepageTimeline";
 

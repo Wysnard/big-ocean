@@ -7,7 +7,7 @@ import {
 	type WeeklySummarySaveInput,
 } from "@workspace/domain";
 import { Database } from "@workspace/infrastructure/context/database";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { weeklySummaries } from "../db/drizzle/schema";
 
@@ -21,6 +21,7 @@ const mapRow = (row: typeof weeklySummaries.$inferSelect): WeeklySummary => ({
 	generatedAt: row.generatedAt ?? null,
 	failedAt: row.failedAt ?? null,
 	retryCount: row.retryCount,
+	llmCostCents: row.llmCostCents ?? null,
 	createdAt: row.createdAt,
 });
 
@@ -54,6 +55,7 @@ export const WeeklySummaryDrizzleRepositoryLive = Layer.effect(
 								generatedAt: input.generatedAt,
 								failedAt: null,
 								retryCount: 0,
+								llmCostCents: input.llmCostCents ?? null,
 							})
 							.onConflictDoUpdate({
 								target: [weeklySummaries.userId, weeklySummaries.weekStartDate],
@@ -63,6 +65,7 @@ export const WeeklySummaryDrizzleRepositoryLive = Layer.effect(
 									generatedAt: input.generatedAt,
 									failedAt: null,
 									retryCount: 0,
+									llmCostCents: input.llmCostCents ?? null,
 								},
 							})
 							.returning()
@@ -161,6 +164,26 @@ export const WeeklySummaryDrizzleRepositoryLive = Layer.effect(
 					.pipe(
 						Effect.map((rows) => (rows[0] ? mapRow(rows[0]) : null)),
 						Effect.mapError((e) => toDatabaseError("get latest weekly summary", e)),
+					),
+
+			listGeneratedCostsSince: (since) =>
+				db
+					.select({
+						userId: weeklySummaries.userId,
+						llmCostCents: weeklySummaries.llmCostCents,
+					})
+					.from(weeklySummaries)
+					.where(and(gte(weeklySummaries.generatedAt, since), isNotNull(weeklySummaries.llmCostCents)))
+					.pipe(
+						Effect.map((rows) =>
+							rows
+								.filter((r) => r.llmCostCents != null)
+								.map((r) => ({
+									userId: r.userId,
+									llmCostCents: r.llmCostCents as number,
+								})),
+						),
+						Effect.mapError((e) => toDatabaseError("list weekly summary costs since", e)),
 					),
 		});
 	}),

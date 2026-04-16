@@ -241,6 +241,7 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 								limit: limitCents,
 								resumeAfter: DateTime.unsafeFromDate(getNextDayMidnightUTC()),
 								message: "Daily cost limit exceeded",
+								reason: "daily_budget",
 							}),
 						);
 					}
@@ -341,9 +342,28 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 								limit: limitCents,
 								resumeAfter: DateTime.unsafeFromDate(getNextDayMidnightUTC()),
 								message: "Session cost limit exceeded",
+								reason: "session_budget",
 							}),
 						);
 					}
+				}),
+
+			getFreeTierLlmPaused: () =>
+				Effect.gen(function* () {
+					const key = "free_tier_llm_paused";
+					const value = yield* redis.get(key);
+					return value === "1";
+				}),
+
+			setFreeTierLlmPaused: (paused: boolean) =>
+				Effect.gen(function* () {
+					const key = "free_tier_llm_paused";
+					if (paused) {
+						yield* redis.set(key, "1");
+					} else {
+						yield* redis.del(key);
+					}
+					logger.info("Free-tier LLM pause flag updated", { paused });
 				}),
 
 			checkAndRecordGlobalAssessmentStart: () =>
@@ -395,6 +415,7 @@ export const CostGuardRedisRepositoryLive = Layer.effect(
 export const createTestCostGuardRepository = () => {
 	const costs = new Map<string, number>();
 	const assessments = new Map<string, number>();
+	let freeTierLlmPaused = false;
 
 	return CostGuardRepository.of({
 		incrementDailyCost: (userId: string, costCents: number) =>
@@ -477,6 +498,13 @@ export const createTestCostGuardRepository = () => {
 			}),
 
 		checkSessionBudget: (_sessionId: string, _limitCents: number) => Effect.void,
+
+		getFreeTierLlmPaused: () => Effect.sync(() => freeTierLlmPaused),
+
+		setFreeTierLlmPaused: (paused: boolean) =>
+			Effect.sync(() => {
+				freeTierLlmPaused = paused;
+			}),
 	});
 };
 

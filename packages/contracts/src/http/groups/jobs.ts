@@ -22,6 +22,12 @@ export const GenerateWeeklySummariesResponseSchema = S.Struct({
 	failed: S.Number,
 });
 
+export const EvaluateCostCircuitBreakerResponseSchema = S.Struct({
+	actualCost24hCents: S.Number,
+	thresholdCents: S.Number,
+	freeTierLlmPaused: S.Boolean,
+});
+
 export const JobsGroup = HttpApiGroup.make("jobs")
 	.add(
 		HttpApiEndpoint.post("generateWeeklySummaries", "/weekly-summaries/generate")
@@ -31,7 +37,16 @@ export const JobsGroup = HttpApiGroup.make("jobs")
 			.addError(DatabaseError, { status: 500 })
 			.addError(AssessmentResultError, { status: 500 }),
 	)
+	.add(
+		HttpApiEndpoint.post("evaluateCostCircuitBreaker", "/cost-circuit-breaker/evaluate")
+			.setPayload(S.Struct({}))
+			.addSuccess(EvaluateCostCircuitBreakerResponseSchema)
+			.addError(Unauthorized, { status: 401 })
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.prefix("/jobs");
 
 export type GenerateWeeklySummariesPayload = typeof GenerateWeeklySummariesPayloadSchema.Type;
 export type GenerateWeeklySummariesResponse = typeof GenerateWeeklySummariesResponseSchema.Type;
+export type EvaluateCostCircuitBreakerResponse =
+	typeof EvaluateCostCircuitBreakerResponseSchema.Type;

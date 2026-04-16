@@ -46,6 +46,17 @@ export const RedisIoRedisRepositoryLive = Layer.succeed(
 
 		get: (key: string) => Effect.sync(() => store.get(key) || null),
 
+		set: (key: string, value: string) =>
+			Effect.sync(() => {
+				store.set(key, value);
+			}),
+
+		del: (key: string) =>
+			Effect.sync(() => {
+				store.delete(key);
+				ttls.delete(key);
+			}),
+
 		expire: (key: string, seconds: number) =>
 			Effect.sync(() => {
 				if (store.has(key)) {

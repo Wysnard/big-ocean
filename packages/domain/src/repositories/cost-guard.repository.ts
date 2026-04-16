@@ -129,6 +129,11 @@ export interface CostGuardMethods {
 		sessionId: string,
 		limitCents: number,
 	) => Effect.Effect<void, RedisOperationError | CostLimitExceeded>;
+
+	/** Redis flag: free-tier LLM surfaces paused when cost circuit breaker tripped (Story 11-1). */
+	readonly getFreeTierLlmPaused: () => Effect.Effect<boolean, RedisOperationError>;
+
+	readonly setFreeTierLlmPaused: (paused: boolean) => Effect.Effect<void, RedisOperationError>;
 }
 
 /**

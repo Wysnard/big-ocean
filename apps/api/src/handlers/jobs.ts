@@ -5,7 +5,10 @@
 import { HttpApiBuilder, HttpServerRequest } from "@effect/platform";
 import { BigOceanApi } from "@workspace/contracts";
 import { Effect } from "effect";
-import { generateWeeklySummariesForWeek } from "../use-cases/index";
+import {
+	evaluateFreeTierCostCircuitBreaker,
+	generateWeeklySummariesForWeek,
+} from "../use-cases/index";
 
 const getCronSecretHeader = (headers: unknown): string | undefined => {
 	if (headers instanceof Headers) {
@@ -22,14 +25,23 @@ const getCronSecretHeader = (headers: unknown): string | undefined => {
 
 export const JobsGroupLive = HttpApiBuilder.group(BigOceanApi, "jobs", (handlers) =>
 	Effect.gen(function* () {
-		return handlers.handle("generateWeeklySummaries", ({ payload }) =>
-			Effect.gen(function* () {
-				const request = yield* HttpServerRequest.HttpServerRequest;
-				return yield* generateWeeklySummariesForWeek({
-					weekId: payload.weekId,
-					cronSecretHeader: getCronSecretHeader(request.headers),
-				});
-			}),
-		);
+		return handlers
+			.handle("generateWeeklySummaries", ({ payload }) =>
+				Effect.gen(function* () {
+					const request = yield* HttpServerRequest.HttpServerRequest;
+					return yield* generateWeeklySummariesForWeek({
+						weekId: payload.weekId,
+						cronSecretHeader: getCronSecretHeader(request.headers),
+					});
+				}),
+			)
+			.handle("evaluateCostCircuitBreaker", () =>
+				Effect.gen(function* () {
+					const request = yield* HttpServerRequest.HttpServerRequest;
+					return yield* evaluateFreeTierCostCircuitBreaker({
+						cronSecretHeader: getCronSecretHeader(request.headers),
+					});
+				}),
+			);
 	}),
 );

@@ -10,6 +10,7 @@ export interface WeeklySummary {
 	readonly generatedAt: Date | null;
 	readonly failedAt: Date | null;
 	readonly retryCount: number;
+	readonly llmCostCents: number | null;
 	readonly createdAt: Date;
 }
 
@@ -21,6 +22,7 @@ export type WeeklySummarySaveInput =
 			readonly weekEndDate: string;
 			readonly content: string;
 			readonly generatedAt: Date;
+			readonly llmCostCents?: number;
 	  }
 	| {
 			readonly outcome: "failed";
@@ -46,5 +48,10 @@ export class WeeklySummaryRepository extends Context.Tag("WeeklySummaryRepositor
 		) => Effect.Effect<WeeklySummary | null, DatabaseError>;
 		readonly getByUserId: (userId: string) => Effect.Effect<WeeklySummary[], DatabaseError>;
 		readonly getLatestForUser: (userId: string) => Effect.Effect<WeeklySummary | null, DatabaseError>;
+
+		/** Rows with LLM cost since `since` (Story 11-1 — circuit breaker numerator). */
+		readonly listGeneratedCostsSince: (
+			since: Date,
+		) => Effect.Effect<ReadonlyArray<{ userId: string; llmCostCents: number }>, DatabaseError>;
 	}
 >() {}

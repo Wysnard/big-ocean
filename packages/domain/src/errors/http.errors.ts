@@ -95,6 +95,8 @@ export class CostLimitExceeded extends S.TaggedError<CostLimitExceeded>()("CostL
 	limit: S.Number,
 	resumeAfter: S.DateTimeUtc,
 	message: S.String,
+	/** When set, clients can distinguish viral circuit breaker from daily/session caps (Story 11-1). */
+	reason: S.optional(S.Literal("daily_budget", "session_budget", "circuit_breaker")),
 }) {}
 
 /**

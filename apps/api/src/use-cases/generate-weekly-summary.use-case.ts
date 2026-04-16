@@ -11,14 +11,17 @@ import {
 	AssessmentResultError,
 	AssessmentResultRepository,
 	ConversationRepository,
+	CostGuardRepository,
 	computeTraitResults,
 	DailyCheckInRepository,
 	DatabaseError,
 	type FacetName,
 	type FacetScoresMap,
 	generateOceanCode,
+	isEntitledTo,
 	LoggerRepository,
 	lookupArchetype,
+	PurchaseEventRepository,
 	PushNotificationQueueRepository,
 	PushSubscriptionRepository,
 	ResendEmailRepository,
@@ -73,6 +76,8 @@ export const generateWeeklySummariesForWeek = (
 	| PushSubscriptionRepository
 	| PushNotificationQueueRepository
 	| WebPushRepository
+	| PurchaseEventRepository
+	| CostGuardRepository
 > =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
@@ -98,6 +103,8 @@ export const generateWeeklySummariesForWeek = (
 		const resultsRepo = yield* AssessmentResultRepository;
 		const generator = yield* WeeklySummaryGeneratorRepository;
 		const logger = yield* LoggerRepository;
+		const purchaseRepo = yield* PurchaseEventRepository;
+		const costGuard = yield* CostGuardRepository;
 
 		const eligibleUserIds = yield* dailyRepo.listUserIdsWithAtLeastNCheckInsInRange(
 			MIN_CHECK_INS,
@@ -127,6 +134,27 @@ export const generateWeeklySummariesForWeek = (
 				const checkIns = yield* dailyRepo.listForWeek(userId, weekStartLocal, weekEndLocal);
 				if (checkIns.length < MIN_CHECK_INS) {
 					return { processed: 0, skipped: 1, failed: 0 };
+				}
+
+				const purchaseEvents = yield* purchaseRepo.getEventsByUserId(userId);
+				if (!isEntitledTo(purchaseEvents, "conversation_extension")) {
+					const paused = yield* costGuard.getFreeTierLlmPaused().pipe(
+						Effect.catchTag("RedisOperationError", (err) =>
+							Effect.sync(() => {
+								logger.warn("Redis unavailable for free_tier_llm_paused check, continuing", {
+									message: err.message,
+									userId,
+								});
+								return false;
+							}),
+						),
+					);
+					if (paused) {
+						logger.info("Weekly summary: skip free-tier user (LLM paused by cost breaker)", {
+							userId,
+						});
+						return { processed: 0, skipped: 1, failed: 0 };
+					}
 				}
 
 				const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
@@ -186,6 +214,7 @@ export const generateWeeklySummariesForWeek = (
 						weekEndDate: weekEndLocal,
 						content: genResult.out.content,
 						generatedAt: new Date(),
+						llmCostCents: genResult.out.llmCostCents,
 					});
 					logger.info("Weekly summary saved", { userId, weekId: input.weekId });
 

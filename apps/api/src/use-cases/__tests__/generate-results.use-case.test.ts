@@ -18,6 +18,7 @@ import {
 	ALL_FACETS,
 	type ConversationEvidenceRecord,
 	ConversationRepository,
+	CostGuardRepository,
 	FORMULA_DEFAULTS,
 	LIFE_DOMAINS,
 	LoggerRepository,
@@ -69,6 +70,23 @@ const mockLoggerRepo = {
 	debug: vi.fn(),
 };
 
+const mockCostGuardRepo = {
+	incrementDailyCost: vi.fn(() => Effect.succeed(0)),
+	getDailyCost: vi.fn(() => Effect.succeed(0)),
+	incrementAssessmentCount: vi.fn(() => Effect.succeed(0)),
+	getAssessmentCount: vi.fn(() => Effect.succeed(0)),
+	canStartAssessment: vi.fn(() => Effect.succeed(true)),
+	recordAssessmentStart: vi.fn(() => Effect.void),
+	checkDailyBudget: vi.fn(() => Effect.void),
+	checkMessageRateLimit: vi.fn(() => Effect.void),
+	checkAndRecordGlobalAssessmentStart: vi.fn(() => Effect.void),
+	incrementSessionCost: vi.fn(() => Effect.succeed(0)),
+	getSessionCost: vi.fn(() => Effect.succeed(0)),
+	checkSessionBudget: vi.fn(() => Effect.void),
+	getFreeTierLlmPaused: vi.fn(() => Effect.succeed(false)),
+	setFreeTierLlmPaused: vi.fn(() => Effect.void),
+};
+
 const mockFinalizingSession = {
 	id: "session_123",
 	userId: "user_456",
@@ -84,6 +102,7 @@ const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
+		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
 		UserSummaryDrizzleRepositoryLive,
@@ -95,6 +114,7 @@ const createTestLayerWithFailingUserSummaryGenerator = () =>
 	Layer.mergeAll(
 		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
+		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
 		UserSummaryDrizzleRepositoryLive,

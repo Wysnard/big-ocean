@@ -58,6 +58,11 @@ export const mockAppConfig: AppConfigService = {
 	recaptureThresholdDays: 3,
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: 2000,
+	// Cost ceiling (Story 11-1)
+	weeklyLetterExpectedCostCents: 4,
+	costCeilingActiveUsersEstimate: 500,
+	costCircuitBreakerMultiplier: 3,
+	costGuardRetryAfterSeconds: 900,
 	// Nerin Director (Story 43-3)
 	nerinDirectorModelId: "claude-haiku-4-5-20251001",
 	nerinDirectorMaxTokens: 1024,

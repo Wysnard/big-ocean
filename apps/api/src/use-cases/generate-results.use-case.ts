@@ -16,6 +16,7 @@ import {
 	AssessmentResultRepository,
 	ConversationEvidenceRepository,
 	ConversationRepository,
+	CostGuardRepository,
 	computeAllFacetResults,
 	computeDomainCoverage,
 	computeTraitResults,
@@ -238,6 +239,17 @@ export const generateResults = (input: GenerateResultsInput) =>
 			yield* sessionRepo.updateSession(input.sessionId, {
 				status: "completed",
 				finalizationProgress: "completed",
+			});
+
+			const costGuard = yield* CostGuardRepository;
+			const totalSessionCents = yield* costGuard
+				.getSessionCost(input.sessionId)
+				.pipe(Effect.catchTag("RedisOperationError", () => Effect.succeed(0)));
+			logger.info("session_llm_cost_complete", {
+				event: "session_llm_cost_complete",
+				sessionId: input.sessionId,
+				totalSessionCostCents: totalSessionCents,
+				userId: session.userId,
 			});
 
 			if (shouldQueueBundledPortrait) {

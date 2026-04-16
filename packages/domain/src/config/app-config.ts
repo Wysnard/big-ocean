@@ -158,6 +158,20 @@ export interface AppConfigService {
 	/** Per-session LLM cost limit in cents (default: 2000 = $0.20, matching NFR6) */
 	readonly sessionCostLimitCents: number;
 
+	// ─── Cost ceiling / circuit breaker (Story 11-1, ADR-50) ─────────────
+
+	/** Expected average weekly-letter LLM cost per user in cents (NFR7a envelope tuning). */
+	readonly weeklyLetterExpectedCostCents: number;
+
+	/** Estimated active free-tier users for expected-daily-cost denominator (config knob). */
+	readonly costCeilingActiveUsersEstimate: number;
+
+	/** Multiplier on expected daily free LLM cost before tripping breaker (default 3). */
+	readonly costCircuitBreakerMultiplier: number;
+
+	/** Cooldown for CostLimitExceeded when breaker is active (seconds, default 900). */
+	readonly costGuardRetryAfterSeconds: number;
+
 	// ─── Nerin Director Configuration (Story 43-3) ─────────────────────
 
 	/** Nerin Director model ID (default: Sonnet — Haiku as latency fallback) */

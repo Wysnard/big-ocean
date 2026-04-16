@@ -13,13 +13,16 @@ import {
 	AppConfig,
 	ConversationRepository,
 	CostGuardRepository,
+	CostLimitExceeded,
 	ExchangeRepository,
 	GREETING_MESSAGES,
+	isEntitledTo,
 	LoggerRepository,
 	MessageRepository,
+	PurchaseEventRepository,
 	pickOpeningQuestion,
 } from "@workspace/domain";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 export interface StartConversationInput {
 	readonly userId?: string;
@@ -174,6 +177,35 @@ export const startAuthenticatedConversation = (input: { userId: string }) =>
 				}),
 			),
 		);
+
+		// Free-tier LLM pause (Story 11-1) — session boundary only; fail-open on Redis
+		const purchaseRepo = yield* PurchaseEventRepository;
+		const purchaseEvents = yield* purchaseRepo.getEventsByUserId(userId);
+		if (!isEntitledTo(purchaseEvents, "conversation_extension")) {
+			const paused = yield* costGuard.getFreeTierLlmPaused().pipe(
+				Effect.catchTag("RedisOperationError", (err) =>
+					Effect.sync(() => {
+						logger.warn("Redis unavailable for free_tier_llm_paused check, allowing start", {
+							message: err.message,
+							userId,
+						});
+						return false;
+					}),
+				),
+			);
+			if (paused) {
+				const resumeAfter = DateTime.unsafeMake(Date.now() + config.costGuardRetryAfterSeconds * 1000);
+				return yield* Effect.fail(
+					new CostLimitExceeded({
+						dailySpend: 0,
+						limit: 0,
+						resumeAfter,
+						message: "Nerin is temporarily unavailable due to high demand. Please try again shortly.",
+						reason: "circuit_breaker",
+					}),
+				);
+			}
+		}
 
 		// Create session with greetings
 		const result = yield* createSessionWithGreetings(userId);

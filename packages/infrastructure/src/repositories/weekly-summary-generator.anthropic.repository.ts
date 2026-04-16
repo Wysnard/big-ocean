@@ -3,9 +3,11 @@
  */
 
 import { ChatAnthropic } from "@langchain/anthropic";
+import { AIMessage } from "@langchain/core/messages";
 import {
 	AppConfig,
 	buildWeeklySummaryPrompt,
+	calculateCost,
 	LoggerRepository,
 	WeeklySummaryGenerationError,
 	type WeeklySummaryGenerationInput,
@@ -58,13 +60,23 @@ export const WeeklySummaryGeneratorAnthropicRepositoryLive = Layer.effect(
 
 					const { systemPrompt, userPrompt } = buildWeeklySummaryPrompt(input);
 
-					const rawContent = yield* Effect.tryPromise({
+					const invokeResult = yield* Effect.tryPromise({
 						try: async () => {
 							const response = await model.invoke([
 								{ role: "system", content: systemPrompt },
 								{ role: "user", content: userPrompt },
 							]);
-							return extractTextContent(response.content);
+							const text = extractTextContent(response.content);
+							let inputTokens = 0;
+							let outputTokens = 0;
+							if (response instanceof AIMessage) {
+								const u = response.usage_metadata;
+								if (u) {
+									inputTokens = u.input_tokens ?? 0;
+									outputTokens = u.output_tokens ?? 0;
+								}
+							}
+							return { text, inputTokens, outputTokens };
 						},
 						catch: (error) =>
 							new WeeklySummaryGenerationError({
@@ -72,6 +84,8 @@ export const WeeklySummaryGeneratorAnthropicRepositoryLive = Layer.effect(
 								cause: error instanceof Error ? error.message : String(error),
 							}),
 					});
+
+					const rawContent = invokeResult.text;
 
 					if (!rawContent.trim()) {
 						return yield* Effect.fail(
@@ -81,15 +95,23 @@ export const WeeklySummaryGeneratorAnthropicRepositoryLive = Layer.effect(
 						);
 					}
 
+					const cost = calculateCost(
+						invokeResult.inputTokens,
+						invokeResult.outputTokens,
+						config.portraitGeneratorModelId,
+					);
+
 					const duration = Date.now() - startTime;
 					logger.info("Weekly summary generation completed", {
 						durationMs: duration,
 						contentLength: rawContent.length,
+						llmCostCents: cost.totalCents,
 					});
 
 					return {
 						content: rawContent.trim(),
 						modelUsed: config.portraitGeneratorModelId,
+						llmCostCents: cost.totalCents,
 					};
 				}),
 		});

@@ -651,6 +651,8 @@ export const weeklySummaries = pgTable(
 		generatedAt: timestamp("generated_at", { withTimezone: true }),
 		failedAt: timestamp("failed_at", { withTimezone: true }),
 		retryCount: smallint("retry_count").notNull().default(0),
+		/** LLM spend for this generation (Story 11-1) — nullable for rows created before column existed */
+		llmCostCents: integer("llm_cost_cents"),
 		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [

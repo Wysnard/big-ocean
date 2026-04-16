@@ -2,11 +2,12 @@ import {
 	createFileRoute,
 	isNotFound,
 	isRedirect,
+	Link,
 	notFound,
 	redirect,
 } from "@tanstack/react-router";
 import { OceanSpinner } from "@workspace/ui/components/ocean-spinner";
-import { Effect, Schema as S } from "effect";
+import { DateTime, Effect, Schema as S } from "effect";
 import { useCallback, useState } from "react";
 import { NotFound } from "@/components/NotFound";
 import { PageMain } from "@/components/PageMain";
@@ -28,6 +29,10 @@ const BooleanFromSearch = S.Union(
 const ChatSearchParams = S.Struct({
 	sessionId: S.optional(S.String),
 	waitlist: S.optional(BooleanFromSearch),
+	/** Story 11-1 — cost circuit breaker / cost guard hold (distinct from global-assessment waitlist). */
+	serviceBusy: S.optional(BooleanFromSearch),
+	/** Epoch ms when the user may retry (from server `resumeAfter`). */
+	resumeAt: S.optional(S.Union(S.Number, S.NumberFromString)),
 	highlightMessageId: S.optional(S.String),
 	highlightQuote: S.optional(S.String),
 	highlightStart: S.optional(S.Number),
@@ -55,7 +60,7 @@ export const Route = createFileRoute("/chat/")({
 			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
 		}
 
-		if (!search.sessionId && !search.waitlist) {
+		if (!search.sessionId && !search.waitlist && !search.serviceBusy) {
 			const result = await Effect.gen(function* () {
 				const client = yield* makeApiClient;
 				return yield* client.conversation.start({ payload: {} });
@@ -64,7 +69,16 @@ export const Route = createFileRoute("/chat/")({
 					Effect.succeed({ _tag: "waitlist" as const }),
 				),
 				Effect.catchTag("RateLimitExceeded", () => Effect.succeed({ _tag: "waitlist" as const })),
-				Effect.catchTag("CostLimitExceeded", () => Effect.succeed({ _tag: "waitlist" as const })),
+				Effect.catchTag("CostLimitExceeded", (e) =>
+					Effect.succeed(
+						e.reason === "circuit_breaker"
+							? {
+									_tag: "serviceBusy" as const,
+									resumeAt: DateTime.toDateUtc(e.resumeAfter).getTime(),
+								}
+							: { _tag: "waitlist" as const },
+					),
+				),
 				Effect.catchTag("ConversationAlreadyExists", (e) =>
 					// Story 31-5: The listSessions check below will redirect completed sessions to results
 					Effect.succeed({ _tag: "existing" as const, sessionId: e.existingSessionId }),
@@ -74,6 +88,12 @@ export const Route = createFileRoute("/chat/")({
 
 			if ("_tag" in result && result._tag === "waitlist") {
 				throw redirect({ to: "/chat", search: { waitlist: true } });
+			}
+			if ("_tag" in result && result._tag === "serviceBusy") {
+				throw redirect({
+					to: "/chat",
+					search: { serviceBusy: true, resumeAt: result.resumeAt },
+				});
 			}
 			if ("_tag" in result && result._tag === "existing") {
 				throw redirect({ to: "/chat", search: { sessionId: result.sessionId } });
@@ -122,6 +142,8 @@ function RouteComponent() {
 	const {
 		sessionId,
 		waitlist,
+		serviceBusy,
+		resumeAt,
 		highlightMessageId,
 		highlightQuote,
 		highlightStart,
@@ -150,11 +172,44 @@ function RouteComponent() {
 		);
 	}
 
-	// Story 15.3: Circuit breaker active — show waitlist form
+	// Story 15.3: Global assessment limit — show waitlist form
 	if (waitlist) {
 		return (
 			<PageMain title="Assessment waitlist" className="bg-background">
 				<WaitlistForm />
+			</PageMain>
+		);
+	}
+
+	// Story 11-1: Cost guard / free-tier LLM pause — distinct copy from waitlist
+	if (serviceBusy) {
+		const resumeLabel =
+			typeof resumeAt === "number" && !Number.isNaN(resumeAt)
+				? new Date(resumeAt).toLocaleString(undefined, {
+						dateStyle: "medium",
+						timeStyle: "short",
+					})
+				: "in a few minutes";
+		return (
+			<PageMain title="Temporarily unavailable" className="bg-background max-w-md mx-auto px-4 py-8">
+				<p className="text-foreground mb-2">
+					Nerin is temporarily unavailable while we catch our breath. This usually clears quickly.
+				</p>
+				<p className="text-muted-foreground text-sm mb-6">
+					You can try again after <span className="font-medium text-foreground">{resumeLabel}</span>.
+				</p>
+				<Link
+					to="/chat"
+					search={{
+						sessionId: undefined,
+						waitlist: undefined,
+						serviceBusy: undefined,
+						resumeAt: undefined,
+					}}
+					className="text-primary underline underline-offset-4 text-sm"
+				>
+					Try starting your assessment again
+				</Link>
 			</PageMain>
 		);
 	}

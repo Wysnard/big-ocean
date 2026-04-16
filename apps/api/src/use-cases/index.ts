@@ -15,6 +15,11 @@ export {
 } from "./create-shareable-profile.use-case";
 export { deleteAccount } from "./delete-account.use-case";
 export {
+	type EvaluateFreeTierCostCircuitBreakerInput,
+	type EvaluateFreeTierCostCircuitBreakerOutput,
+	evaluateFreeTierCostCircuitBreaker,
+} from "./evaluate-free-tier-cost-circuit-breaker.use-case";
+export {
 	type GenerateResultsInput,
 	generateResults,
 } from "./generate-results.use-case";

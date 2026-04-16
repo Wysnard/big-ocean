@@ -11,6 +11,7 @@ export const WeeklySummaryGeneratorMockRepositoryLive = Layer.succeed(
 			Effect.succeed({
 				content: `# Your week\n\n(Mock weekly letter for ${input.weekId})`,
 				modelUsed: "mock-weekly-summary",
+				llmCostCents: 0,
 			}),
 	}),
 );

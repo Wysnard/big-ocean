@@ -25,6 +25,8 @@ export interface WeeklySummaryGenerationInput {
 export interface WeeklySummaryGenerationOutput {
 	readonly content: string;
 	readonly modelUsed: string;
+	/** LLM spend for this letter (Story 11-1). */
+	readonly llmCostCents: number;
 }
 
 export class WeeklySummaryGenerationError extends Data.TaggedError("WeeklySummaryGenerationError")<{

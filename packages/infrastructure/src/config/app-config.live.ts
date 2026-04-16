@@ -130,6 +130,20 @@ const configSchema = Config.all({
 	// Cost Guard (Story 31-6)
 	sessionCostLimitCents: Config.number("SESSION_COST_LIMIT_CENTS").pipe(Config.withDefault(2000)),
 
+	// Cost ceiling circuit breaker (Story 11-1)
+	weeklyLetterExpectedCostCents: Config.number("WEEKLY_LETTER_EXPECTED_COST_CENTS").pipe(
+		Config.withDefault(4),
+	),
+	costCeilingActiveUsersEstimate: Config.number("COST_CEILING_ACTIVE_USERS_ESTIMATE").pipe(
+		Config.withDefault(500),
+	),
+	costCircuitBreakerMultiplier: Config.number("COST_CIRCUIT_BREAKER_MULTIPLIER").pipe(
+		Config.withDefault(3),
+	),
+	costGuardRetryAfterSeconds: Config.number("COST_GUARD_RETRY_AFTER_SECONDS").pipe(
+		Config.withDefault(900),
+	),
+
 	// Nerin Director (Story 43-3)
 	nerinDirectorModelId: Config.string("NERIN_DIRECTOR_MODEL_ID").pipe(
 		Config.withDefault("claude-haiku-4-5-20251001"),

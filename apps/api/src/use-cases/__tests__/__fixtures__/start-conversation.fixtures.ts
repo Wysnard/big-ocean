@@ -11,6 +11,7 @@ import {
 	ExchangeRepository,
 	LoggerRepository,
 	MessageRepository,
+	PurchaseEventRepository,
 } from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { vi } from "vitest";
@@ -64,6 +65,12 @@ export const mockCostGuardRepo = {
 	incrementSessionCost: vi.fn(),
 	getSessionCost: vi.fn(),
 	checkSessionBudget: vi.fn(),
+	getFreeTierLlmPaused: vi.fn(),
+	setFreeTierLlmPaused: vi.fn(),
+};
+
+export const mockPurchaseEventRepo = {
+	getEventsByUserId: vi.fn(),
 };
 
 export let saveMessageCallCount = 0;
@@ -133,6 +140,22 @@ export const mockAppConfig = {
 	resendApiKey: Redacted.make("test-resend-api-key"),
 	emailFromAddress: "noreply@test.bigocean.dev",
 	dropOffThresholdHours: 24,
+	costGuardRetryAfterSeconds: 900,
+	weeklyLetterExpectedCostCents: 4,
+	costCeilingActiveUsersEstimate: 500,
+	costCircuitBreakerMultiplier: 3,
+	polarProductSubscription: "test-sub",
+	pushVapidPublicKey: undefined,
+	pushVapidPrivateKey: undefined,
+	pushVapidSubject: undefined,
+	cronSecret: Redacted.make(""),
+	nerinDirectorModelId: "test",
+	nerinDirectorMaxTokens: 1024,
+	nerinDirectorTemperature: 0.7,
+	nerinDirectorRetryTemperature: 0.9,
+	checkInThresholdDays: 14,
+	subscriptionNudgeThresholdDays: 21,
+	recaptureThresholdDays: 3,
 };
 
 export const createTestLayer = () =>
@@ -142,7 +165,8 @@ export const createTestLayer = () =>
 		Layer.succeed(ExchangeRepository, mockExchangeRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
-		Layer.succeed(AppConfig, mockAppConfig),
+		Layer.succeed(PurchaseEventRepository, mockPurchaseEventRepo),
+		Layer.succeed(AppConfig, mockAppConfig as never),
 	);
 
 /**
@@ -226,4 +250,8 @@ export function setupDefaultMocks() {
 	mockCostGuardRepo.incrementSessionCost.mockImplementation(() => Effect.succeed(0));
 	mockCostGuardRepo.getSessionCost.mockImplementation(() => Effect.succeed(0));
 	mockCostGuardRepo.checkSessionBudget.mockImplementation(() => Effect.succeed(undefined));
+	mockCostGuardRepo.getFreeTierLlmPaused.mockImplementation(() => Effect.succeed(false));
+	mockCostGuardRepo.setFreeTierLlmPaused.mockImplementation(() => Effect.void);
+
+	mockPurchaseEventRepo.getEventsByUserId.mockImplementation(() => Effect.succeed([]));
 }
