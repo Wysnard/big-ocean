@@ -8,9 +8,6 @@ echo "🔧 Rebuilding esbuild for Linux platform..."
 pnpm add -D -w @esbuild/linux-arm64@0.27.2 --ignore-scripts
 pnpm rebuild esbuild
 
-echo "🗃️ Running database migrations..."
-cd /app && pnpm tsx apps/api/src/migrate.ts
-
 echo "✅ Setup complete"
 echo "🚀 Starting development server..."
 

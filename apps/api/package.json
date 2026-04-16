@@ -4,8 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "tsx -r dotenv/config --watch --watch-path=. --watch-path=../../packages src/index.ts",
-    "dev:docker": "tsx -r dotenv/config --watch --watch-path=. --watch-path=../../packages src/index.ts",
+    "migrate": "tsx -r dotenv/config src/migrate.ts",
+    "dev": "pnpm run migrate && tsx -r dotenv/config --watch --watch-path=. --watch-path=../../packages src/index.ts",
+    "dev:docker": "pnpm run migrate && tsx -r dotenv/config --watch --watch-path=. --watch-path=../../packages src/index.ts",
     "build": "tsc",
     "start": "tsx src/index.ts",
     "test": "vitest run",
