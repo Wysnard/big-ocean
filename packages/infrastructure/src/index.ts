@@ -77,6 +77,7 @@ export { RedisIoRedisRepositoryLive } from "./repositories/redis.ioredis.reposit
 export { RelationshipAnalysisDrizzleRepositoryLive } from "./repositories/relationship-analysis.drizzle.repository";
 export { RelationshipAnalysisGeneratorAnthropicRepositoryLive } from "./repositories/relationship-analysis-generator.anthropic.repository";
 export { RelationshipAnalysisGeneratorMockRepositoryLive } from "./repositories/relationship-analysis-generator.mock.repository";
+export { RelationshipSharedNoteDrizzleRepositoryLive } from "./repositories/relationship-shared-note.drizzle.repository";
 export { ResendEmailMockRepositoryLive } from "./repositories/resend-email.mock.repository";
 // Resend email repository implementations (Story 31-7)
 export { ResendEmailResendRepositoryLive } from "./repositories/resend-email.resend.repository";

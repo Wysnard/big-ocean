@@ -213,3 +213,12 @@
 - Participant names hardcoded as "Person A"/"Person B" — display names not resolved from entity. Pre-existing since Story 14.4. [`generate-relationship-analysis.use-case.ts:106-109`]
 - `Effect.catchAll` broader than `catchTag`-only guidance in CLAUDE.md — logs + re-fails without remapping. Pre-existing. [`generate-relationship-analysis.use-case.ts:116-125`]
 - Empty/malformed UserSummary fields not validated before prompt construction — `summaryText`, `quoteBank` entries may degrade silently. Pre-existing pattern across generators. [`relationship-analysis.prompt.ts:84-100`]
+
+## Deferred from: code review of 7-3-relationship-letter-page-living-relational-space (2026-04-16)
+
+- **Unbounded notes per analysis (no insert cap)** — `createRelationshipSharedNote` validates body length only; no ceiling on total notes per analysis. A participant could POST unlimited notes, causing unbounded list payloads. MVP; no scalability requirement in spec. [`apps/api/src/use-cases/create-relationship-shared-note.use-case.ts:14`]
+- **`isLatestVersion=true` vacuously when no completed result** — `isLatestVersion(resultId, null)` returns `true` when `getLatestByUserId` returns `null`, suppressing the "earlier chapter" banner. Pre-existing behavior from Story 36-3. [`apps/api/src/use-cases/get-relationship-analysis.use-case.ts:85`]
+
+## Deferred from: code review of 8-2-subscription-checkout-flow.md (2026-04-16)
+
+- **Portal `fetch` has no AbortSignal / timeout** — A hung TCP connection can leave the manage action pending until the browser gives up; same class of issue as other cookie-authenticated fetches. Defer to a cross-cutting fetch hygiene pass. [`apps/front/src/lib/polar-customer-portal.ts:10`]

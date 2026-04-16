@@ -8,6 +8,14 @@ import { PolarEmbedCheckout } from "@polar-sh/checkout/embed";
 import type { AppTheme } from "@workspace/ui/hooks/use-theme";
 import { authClient } from "./auth-client";
 
+/** Checkout slug for €9.99/mo subscription (maps to `polarProductSubscription` on the server). */
+export const POLAR_CHECKOUT_SLUG_SUBSCRIPTION = "subscription" as const;
+
+export type CheckoutEmbedLifecycleCallbacks = {
+	readonly onClose?: () => void;
+	readonly onSuccess?: () => void;
+};
+
 /**
  * Creates a Polar embedded checkout overlay with the given theme.
  *
@@ -18,15 +26,27 @@ export async function createThemedCheckoutEmbed(
 	slug: string,
 	theme: AppTheme,
 	metadata?: Record<string, string>,
+	lifecycle?: CheckoutEmbedLifecycleCallbacks,
 ) {
 	const res = await authClient.checkout({
 		slug,
 		metadata,
 		redirect: false,
-		embedOrigin: window.location.origin,
+		embedOrigin: typeof window !== "undefined" ? window.location.origin : "",
 	});
 	if (res.error) {
 		throw new Error(res.error.message ?? "Checkout creation failed");
 	}
-	return PolarEmbedCheckout.create(res.data.url, { theme });
+	const embed = await PolarEmbedCheckout.create(res.data.url, { theme });
+	if (lifecycle?.onSuccess) {
+		embed.addEventListener("success", () => {
+			lifecycle.onSuccess?.();
+		});
+	}
+	if (lifecycle?.onClose) {
+		embed.addEventListener("close", () => {
+			lifecycle.onClose?.();
+		});
+	}
+	return embed;
 }

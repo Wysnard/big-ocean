@@ -10,6 +10,7 @@ import { BigOceanApi } from "@workspace/contracts";
 import { CurrentUser, PurchaseEventRepository } from "@workspace/domain";
 import { Effect } from "effect";
 import { getCredits } from "../use-cases/get-credits.use-case";
+import { getSubscriptionState } from "../use-cases/get-subscription-state.use-case";
 
 /**
  * Purchase Handler Group (authenticated)
@@ -53,6 +54,19 @@ export const PurchaseGroupLive = HttpApiBuilder.group(BigOceanApi, "purchase", (
 							hasExtendedConversation: capabilities.hasExtendedConversation,
 						},
 					};
+				}),
+			)
+			.handle("getSubscriptionState", () =>
+				Effect.gen(function* () {
+					const userId = yield* CurrentUser;
+					if (!userId) {
+						return {
+							subscriptionStatus: "none" as const,
+							isEntitledToConversationExtension: false,
+							subscribedSince: null,
+						};
+					}
+					return yield* getSubscriptionState(userId);
 				}),
 			);
 	}),

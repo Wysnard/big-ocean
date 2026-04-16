@@ -18,6 +18,7 @@ import { PageMain } from "@/components/PageMain";
 import { RitualScreen } from "@/components/relationship/RitualScreen";
 import { makeApiClient } from "@/lib/api-client";
 import { getSession } from "@/lib/auth-client";
+import { markRelationshipLetterRitualSeen } from "@/lib/relationship-letter-ritual-storage";
 
 export const Route = createFileRoute("/relationship/$analysisId_/ritual")({
 	ssr: false,
@@ -37,7 +38,7 @@ function RitualRoute() {
 	const { analysisId } = Route.useParams();
 	const navigate = useNavigate();
 
-	const { data } = useQuery<RelationshipAnalysisResponse>({
+	const { data, isPending, isError } = useQuery<RelationshipAnalysisResponse>({
 		queryKey: ["relationship", "analysis", analysisId],
 		queryFn: () =>
 			Effect.gen(function* () {
@@ -50,15 +51,36 @@ function RitualRoute() {
 	});
 
 	const handleStart = useCallback(() => {
+		markRelationshipLetterRitualSeen(analysisId);
 		void navigate({
 			to: "/relationship/$analysisId",
 			params: { analysisId },
 		});
 	}, [navigate, analysisId]);
 
+	if (isPending) {
+		return (
+			<PageMain className="min-h-screen bg-background" title="Relationship letter">
+				<p className="sr-only" aria-live="polite">
+					Loading…
+				</p>
+			</PageMain>
+		);
+	}
+
+	if (isError || !data) {
+		return (
+			<PageMain className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
+				<p className="text-center text-sm text-muted-foreground">
+					This letter could not be loaded. Return to the letter from your home screen and try again.
+				</p>
+			</PageMain>
+		);
+	}
+
 	return (
 		<PageMain className="min-h-screen bg-background">
-			<RitualScreen userAName={data?.userAName} userBName={data?.userBName} onStart={handleStart} />
+			<RitualScreen userAName={data.userAName} userBName={data.userBName} onStart={handleStart} />
 		</PageMain>
 	);
 }

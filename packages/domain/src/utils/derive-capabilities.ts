@@ -203,3 +203,17 @@ export const isEntitledTo = (events: PurchaseEvent[], feature: EntitlementFeatur
 	}
 	return false;
 };
+
+/**
+ * First `subscription_started` timestamp for the user's current subscription lineage (Story 8.2).
+ * Returns null when there is no current subscription anchor.
+ */
+export const getSubscribedSinceForCurrentSubscription = (events: PurchaseEvent[]): Date | null => {
+	const sorted = sortEventsChronologically(events);
+	const currentSubscriptionId = getCurrentSubscriptionId(sorted);
+	if (currentSubscriptionId === null) return null;
+	const started = sorted.find(
+		(e) => e.eventType === "subscription_started" && e.polarSubscriptionId === currentSubscriptionId,
+	);
+	return started?.createdAt ?? null;
+};

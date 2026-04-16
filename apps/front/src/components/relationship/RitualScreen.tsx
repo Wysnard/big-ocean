@@ -131,7 +131,7 @@ export function RitualScreen({ userAName, userBName, onStart }: RitualScreenProp
 							variant="default"
 							className="mt-4 w-full min-h-11"
 							onClick={onStart}
-							aria-label="Start reading the relationship analysis"
+							aria-label="Start reading the relationship letter"
 						>
 							Start
 						</Button>

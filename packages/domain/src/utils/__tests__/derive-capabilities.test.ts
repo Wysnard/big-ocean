@@ -3,6 +3,7 @@ import type { PurchaseEvent } from "../../types/purchase.types";
 import { parseMetadata } from "../../types/purchase.types";
 import {
 	deriveCapabilities,
+	getSubscribedSinceForCurrentSubscription,
 	getSubscriptionStatus,
 	hasPortraitForResult,
 	isEntitledTo,
@@ -303,6 +304,24 @@ describe("getSubscriptionStatus", () => {
 				}),
 			]),
 		).toBe("active");
+	});
+});
+
+describe("getSubscribedSinceForCurrentSubscription", () => {
+	it("returns started-at for the current subscription id", () => {
+		const startedAt = new Date("2026-03-01T12:00:00Z");
+		const result = getSubscribedSinceForCurrentSubscription([
+			makeEvent({
+				eventType: "subscription_started",
+				polarSubscriptionId: "sub-1",
+				createdAt: startedAt,
+			}),
+		]);
+		expect(result?.toISOString()).toBe(startedAt.toISOString());
+	});
+
+	it("returns null when there is no subscription lifecycle", () => {
+		expect(getSubscribedSinceForCurrentSubscription([])).toBeNull();
 	});
 });
 

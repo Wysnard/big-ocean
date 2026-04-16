@@ -13,7 +13,7 @@
  */
 
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { checkout, polar, webhooks } from "@polar-sh/better-auth";
+import { checkout, polar, portal, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
 import type { AppConfigService, PortraitJob, PurchaseEventType } from "@workspace/domain";
@@ -528,6 +528,9 @@ export const BetterAuthLive = Layer.effect(
 									logger.error(`Polar webhook: failed to record purchase event: ${msg}`);
 								}
 							},
+						}),
+						portal({
+							returnUrl: `${config.frontendUrl}/me`,
 						}),
 					],
 				}),

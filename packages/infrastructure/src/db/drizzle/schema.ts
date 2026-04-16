@@ -545,6 +545,29 @@ export const relationshipAnalyses = pgTable("relationship_analyses", {
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ─── Relationship shared notes (Story 7.3 — Section D1) ───────────────────
+
+export const relationshipSharedNotes = pgTable(
+	"relationship_shared_notes",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		relationshipAnalysisId: uuid("relationship_analysis_id")
+			.notNull()
+			.references(() => relationshipAnalyses.id, { onDelete: "cascade" }),
+		authorUserId: text("author_user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		body: text("body").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		index("relationship_shared_notes_analysis_created_idx").on(
+			table.relationshipAnalysisId,
+			table.createdAt,
+		),
+	],
+);
+
 // ─── Push Notifications (Story 10-2) ─────────────────────────────────────
 
 export const pushSubscriptions = pgTable(

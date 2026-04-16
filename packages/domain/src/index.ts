@@ -129,6 +129,7 @@ export {
 	RateLimitExceeded,
 	RelationshipAnalysisNotFoundError,
 	RelationshipAnalysisUnauthorizedError,
+	RelationshipSharedNoteValidationError,
 	SelfInvitationError,
 	SessionCompletedError,
 	SessionExpired,
@@ -288,6 +289,11 @@ export {
 	type RelationshipAnalysisGenerationOutput,
 	RelationshipAnalysisGeneratorRepository,
 } from "./repositories/relationship-analysis-generator.repository";
+export {
+	type RelationshipSharedNoteRecord,
+	RelationshipSharedNoteRepository,
+	type RelationshipSharedNoteWithAuthor,
+} from "./repositories/relationship-shared-note.repository";
 // Resend email repository (Story 31-7)
 export {
 	EmailError,
@@ -555,6 +561,7 @@ export {
 	generateOceanCode,
 	getFacetColor,
 	getFacetLevel,
+	getSubscribedSinceForCurrentSubscription,
 	getSubscriptionStatus,
 	getTraitColor,
 	getTraitGradient,

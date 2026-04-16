@@ -42,7 +42,7 @@ export function RelationshipCard() {
 		<section
 			data-testid="relationship-card"
 			data-testid-state={state._tag}
-			aria-label="Relationship comparison"
+			aria-label="Relationship letter"
 		>
 			<CardContent state={state} />
 		</section>
@@ -94,10 +94,10 @@ function CardContent({ state }: { state: RelationshipCardState }) {
 				>
 					<div className="flex items-center gap-2 text-sm font-medium text-foreground">
 						<Loader2 className="w-4 h-4 text-primary motion-safe:animate-spin" />
-						Generating Analysis
+						Writing your letter
 					</div>
 					<p className="text-sm text-muted-foreground">
-						Your relationship analysis is being created. This usually takes a minute or two.
+						Your relationship letter is being written. This usually takes a minute or two.
 					</p>
 				</div>
 			);
@@ -110,15 +110,16 @@ function CardContent({ state }: { state: RelationshipCardState }) {
 				>
 					<div className="flex items-center gap-2 text-sm font-medium text-foreground">
 						<Heart className="w-4 h-4 text-primary" />
-						Analysis Ready
+						Letter ready
 					</div>
 					<p className="text-sm text-muted-foreground">
-						Your personality comparison with{" "}
-						<span className="font-medium text-foreground">{state.partnerName}</span> is ready to read.
+						The letter about your dynamic with{" "}
+						<span className="font-medium text-foreground">{state.partnerName}</span> is ready to read
+						together.
 					</p>
 					<Button size="sm" asChild>
 						<Link to="/relationship/$analysisId" params={{ analysisId: state.analysisId }}>
-							Read Analysis
+							Read letter
 						</Link>
 					</Button>
 				</div>

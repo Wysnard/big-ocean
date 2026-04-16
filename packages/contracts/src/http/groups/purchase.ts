@@ -32,11 +32,20 @@ const GetCreditsResponseSchema = S.Struct({
 	hasCompletedAssessment: S.Boolean,
 });
 
+const SubscriptionStatusSchema = S.Literal("active", "cancelled_active", "expired", "none");
+
+const GetSubscriptionStateResponseSchema = S.Struct({
+	subscriptionStatus: SubscriptionStatusSchema,
+	isEntitledToConversationExtension: S.Boolean,
+	subscribedSince: S.NullOr(S.String),
+});
+
 /**
  * Purchase Group (authenticated)
  *
  * GET /api/purchase/verify?checkoutId=X
  * GET /api/purchase/credits
+ * GET /api/purchase/subscription-state
  */
 export const PurchaseGroup = HttpApiGroup.make("purchase")
 	.add(
@@ -50,9 +59,15 @@ export const PurchaseGroup = HttpApiGroup.make("purchase")
 			.addSuccess(GetCreditsResponseSchema)
 			.addError(DatabaseError, { status: 500 }),
 	)
+	.add(
+		HttpApiEndpoint.get("getSubscriptionState", "/subscription-state")
+			.addSuccess(GetSubscriptionStateResponseSchema)
+			.addError(DatabaseError, { status: 500 }),
+	)
 	.middleware(OptionalAuthMiddleware)
 	.prefix("/purchase");
 
 // Export TypeScript types for frontend use
 export type VerifyPurchaseResponse = typeof VerifyPurchaseResponseSchema.Type;
 export type GetCreditsResponse = typeof GetCreditsResponseSchema.Type;
+export type GetSubscriptionStateResponse = typeof GetSubscriptionStateResponseSchema.Type;

@@ -17,6 +17,7 @@ export {
 } from "./confidence";
 export {
 	deriveCapabilities,
+	getSubscribedSinceForCurrentSubscription,
 	getSubscriptionStatus,
 	hasPortraitForResult,
 	isEntitledTo,

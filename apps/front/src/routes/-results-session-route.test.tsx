@@ -131,8 +131,8 @@ vi.mock("@/components/relationship/RelationshipCard", () => ({
 
 vi.mock("@/components/relationship/RelationshipAnalysesList", () => ({
 	RelationshipAnalysesList: () => (
-		<section data-testid="relationship-analyses-list" aria-label="Relationship analyses">
-			Relationship analyses
+		<section data-testid="relationship-analyses-list" aria-label="Relationship letters">
+			Relationship letters
 		</section>
 	),
 }));
@@ -246,7 +246,7 @@ describe("results/$conversationSessionId route behavior", () => {
 		expect(screen.getByRole("region", { name: "Relationship comparison" })).toContainElement(
 			screen.getByTestId("relationship-card"),
 		);
-		expect(screen.getByRole("region", { name: "Relationship analyses" })).toContainElement(
+		expect(screen.getByRole("region", { name: "Relationship letters" })).toContainElement(
 			screen.getByTestId("relationship-analyses-list"),
 		);
 	});

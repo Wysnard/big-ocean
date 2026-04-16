@@ -23,10 +23,10 @@ export function RelationshipAnalysesList() {
 	return (
 		<section
 			data-testid="relationship-analyses-list"
-			aria-label="Relationship analyses"
+			aria-label="Relationship letters"
 			className="space-y-3"
 		>
-			<h3 className="text-sm font-medium text-foreground">Relationship Analyses</h3>
+			<h3 className="text-sm font-medium text-foreground">Relationship letters</h3>
 			{analyses.map((analysis) => (
 				<div
 					key={analysis.analysisId}
@@ -56,7 +56,7 @@ export function RelationshipAnalysesList() {
 						{analysis.hasContent ? (
 							<Button size="sm" variant={analysis.isLatestVersion ? "default" : "outline"} asChild>
 								<Link to="/relationship/$analysisId" params={{ analysisId: analysis.analysisId }}>
-									Read Analysis
+									Read letter
 								</Link>
 							</Button>
 						) : (

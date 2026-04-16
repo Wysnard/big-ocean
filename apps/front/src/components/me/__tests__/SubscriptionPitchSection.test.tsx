@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockCreateThemedCheckoutEmbed, mockToastError } = vi.hoisted(() => ({
@@ -11,10 +13,11 @@ const { mockCreateThemedCheckoutEmbed, mockToastError } = vi.hoisted(() => ({
 
 vi.mock("@/lib/polar-checkout", () => ({
 	createThemedCheckoutEmbed: mockCreateThemedCheckoutEmbed,
+	POLAR_CHECKOUT_SLUG_SUBSCRIPTION: "subscription",
 }));
 
 vi.mock("sonner", () => ({
-	toast: { error: mockToastError, success: vi.fn() },
+	toast: { error: mockToastError, success: vi.fn(), message: vi.fn() },
 }));
 
 vi.mock("@workspace/ui/hooks/use-theme", () => ({
@@ -23,14 +26,19 @@ vi.mock("@workspace/ui/hooks/use-theme", () => ({
 
 import { SubscriptionPitchSection } from "../SubscriptionPitchSection";
 
+function renderWithClient(ui: ReactElement) {
+	const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+	return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
+
 describe("SubscriptionPitchSection", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockCreateThemedCheckoutEmbed.mockResolvedValue(undefined);
+		mockCreateThemedCheckoutEmbed.mockResolvedValue({ addEventListener: vi.fn() });
 	});
 
 	it("renders the Nerin-voiced pitch copy", () => {
-		render(<SubscriptionPitchSection />);
+		renderWithClient(<SubscriptionPitchSection />);
 
 		expect(screen.getByTestId("subscription-pitch")).toBeInTheDocument();
 		expect(screen.getByText(/Continue your conversation with Nerin/)).toBeInTheDocument();
@@ -38,22 +46,29 @@ describe("SubscriptionPitchSection", () => {
 	});
 
 	it("renders a single checkout CTA", () => {
-		render(<SubscriptionPitchSection />);
+		renderWithClient(<SubscriptionPitchSection />);
 
 		expect(screen.getByTestId("subscription-checkout-cta")).toBeInTheDocument();
 	});
 
-	it("calls createThemedCheckoutEmbed with the correct slug and theme on CTA click", async () => {
-		render(<SubscriptionPitchSection />);
+	it("calls createThemedCheckoutEmbed with the subscription slug and theme on CTA click", async () => {
+		renderWithClient(<SubscriptionPitchSection />);
 		const user = userEvent.setup();
 
 		await user.click(screen.getByTestId("subscription-checkout-cta"));
 
-		expect(mockCreateThemedCheckoutEmbed).toHaveBeenCalledWith("extended-conversation", "light");
+		expect(mockCreateThemedCheckoutEmbed).toHaveBeenCalledWith(
+			"subscription",
+			"light",
+			undefined,
+			expect.objectContaining({
+				onSuccess: expect.any(Function),
+			}),
+		);
 	});
 
 	it("does not show a value summary or skeleton", () => {
-		render(<SubscriptionPitchSection />);
+		renderWithClient(<SubscriptionPitchSection />);
 
 		expect(screen.queryByTestId("subscription-value-summary")).not.toBeInTheDocument();
 		expect(screen.queryByTestId("subscription-skeleton")).not.toBeInTheDocument();
@@ -61,7 +76,7 @@ describe("SubscriptionPitchSection", () => {
 
 	it("shows a Sonner error toast when checkout fails", async () => {
 		mockCreateThemedCheckoutEmbed.mockRejectedValueOnce(new Error("Polar unavailable"));
-		render(<SubscriptionPitchSection />);
+		renderWithClient(<SubscriptionPitchSection />);
 		const user = userEvent.setup();
 
 		await user.click(screen.getByTestId("subscription-checkout-cta"));

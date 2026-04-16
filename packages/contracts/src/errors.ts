@@ -37,6 +37,7 @@ export {
 	RateLimitExceeded,
 	RelationshipAnalysisNotFoundError,
 	RelationshipAnalysisUnauthorizedError,
+	RelationshipSharedNoteValidationError,
 	SelfInvitationError,
 	SessionCompletedError,
 	SessionExpired,

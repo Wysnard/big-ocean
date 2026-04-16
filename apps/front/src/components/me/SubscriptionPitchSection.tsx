@@ -1,21 +1,46 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { createThemedCheckoutEmbed } from "@/lib/polar-checkout";
+import {
+	pollUntilConversationExtensionEntitled,
+	subscriptionStateQueryKey,
+} from "@/hooks/use-subscription-state";
+import { createThemedCheckoutEmbed, POLAR_CHECKOUT_SLUG_SUBSCRIPTION } from "@/lib/polar-checkout";
 
 /**
- * Subscription pitch section for the Me page (Story 3.5).
+ * Subscription pitch section for the Me page (Story 3.5, checkout Story 8.2).
  *
- * Always shows the free-user pitch with a single Polar checkout CTA.
- * The subscriber branch (showing perks when subscription is active) will
- * be added in Epic 8 once subscription event types exist in the domain.
+ * Free users: Polar embedded checkout for the €9.99/mo subscription product.
+ * Subscriber branch is composed on the Me route (`SubscriptionValueSummary`).
  */
 export function SubscriptionPitchSection() {
 	const { appTheme } = useTheme();
+	const queryClient = useQueryClient();
+
+	const runPostCheckoutRefresh = () => {
+		void (async () => {
+			try {
+				await queryClient.invalidateQueries({ queryKey: subscriptionStateQueryKey });
+				const ok = await pollUntilConversationExtensionEntitled(queryClient);
+				if (!ok) {
+					toast.message(
+						"We're still confirming your subscription — refresh the page in a moment if Me doesn't update.",
+					);
+				}
+			} catch (err: unknown) {
+				toast.error(
+					err instanceof Error ? err.message : "Could not refresh subscription status. Try again.",
+				);
+			}
+		})();
+	};
 
 	const handleCheckout = () => {
-		void createThemedCheckoutEmbed("extended-conversation", appTheme).catch((err) => {
+		void createThemedCheckoutEmbed(POLAR_CHECKOUT_SLUG_SUBSCRIPTION, appTheme, undefined, {
+			onSuccess: runPostCheckoutRefresh,
+		}).catch((err: unknown) => {
 			toast.error(err instanceof Error ? err.message : "Checkout couldn't start. Try again.");
 		});
 	};

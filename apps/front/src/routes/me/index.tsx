@@ -1,16 +1,19 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import type { GetResultsResponse } from "@workspace/contracts";
+import { Button } from "@workspace/ui/components/button";
 import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
 import { SubscriptionPitchSection } from "@/components/me/SubscriptionPitchSection";
+import { SubscriptionValueSummary } from "@/components/me/SubscriptionValueSummary";
 import { YourCirclePreviewSection } from "@/components/me/YourCirclePreviewSection";
 import { YourGrowthSection } from "@/components/me/YourGrowthSection";
 import { YourPublicFaceSection } from "@/components/me/YourPublicFaceSection";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
 import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
+import { useSubscriptionState } from "@/hooks/use-subscription-state";
 import { getSession } from "@/lib/auth-client";
 
 type MeSectionSpec = {
@@ -82,6 +85,7 @@ export const Route = createFileRoute("/me/")({
 function MePage() {
 	const { sessionId } = Route.useLoaderData();
 	const { data: results, isLoading, error, refetch } = useGetResults(sessionId);
+	const subscriptionQuery = useSubscriptionState();
 	const [isErrorVisible, setIsErrorVisible] = useState(true);
 
 	useEffect(() => {
@@ -115,7 +119,11 @@ function MePage() {
 				/>
 			) : null}
 
-			{isLoading ? <MePageSkeleton /> : <MePageSections results={results} />}
+			{isLoading ? (
+				<MePageSkeleton />
+			) : (
+				<MePageSections results={results} subscriptionQuery={subscriptionQuery} />
+			)}
 		</ThreeSpaceLayout>
 	);
 }
@@ -183,7 +191,13 @@ function MePageSkeleton() {
 	);
 }
 
-function MePageSections({ results }: { results: GetResultsResponse | undefined }) {
+function MePageSections({
+	results,
+	subscriptionQuery,
+}: {
+	results: GetResultsResponse | undefined;
+	subscriptionQuery: ReturnType<typeof useSubscriptionState>;
+}) {
 	return (
 		<div className="space-y-10">
 			<MePageSection
@@ -238,7 +252,38 @@ function MePageSections({ results }: { results: GetResultsResponse | undefined }
 				data-slot="me-section-subscription"
 				data-testid="me-section-subscription"
 			>
-				<SubscriptionPitchSection />
+				{subscriptionQuery.isPending ? (
+					<p
+						className="text-sm leading-6 text-muted-foreground"
+						data-testid="subscription-section-loading"
+						aria-busy="true"
+					>
+						Checking your subscription status…
+					</p>
+				) : subscriptionQuery.isError ? (
+					<div className="space-y-3" data-testid="subscription-section-error">
+						<p className="text-sm leading-6 text-muted-foreground">
+							We couldn&apos;t load subscription status right now. You can try again or refresh the page.
+						</p>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							className="rounded-full"
+							data-testid="subscription-section-retry"
+							disabled={subscriptionQuery.isFetching}
+							onClick={() => {
+								void subscriptionQuery.refetch();
+							}}
+						>
+							Try again
+						</Button>
+					</div>
+				) : subscriptionQuery.data?.isEntitledToConversationExtension ? (
+					<SubscriptionValueSummary subscribedSince={subscriptionQuery.data.subscribedSince} />
+				) : (
+					<SubscriptionPitchSection />
+				)}
 			</MePageSection>
 
 			<footer

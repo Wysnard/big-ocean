@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ComponentType, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,6 +12,7 @@ const {
 	mockUseGetResults,
 	mockIdentityHeroSection,
 	mockUseHasCheckIns,
+	mockUseSubscriptionState,
 } = vi.hoisted(() => ({
 	mockSession: vi.fn(),
 	mockLoaderData: vi.fn(),
@@ -21,6 +23,18 @@ const {
 		data: { hasCheckIns: false },
 		isLoading: false,
 		isError: false,
+	})),
+	mockUseSubscriptionState: vi.fn(() => ({
+		data: {
+			subscriptionStatus: "none" as const,
+			isEntitledToConversationExtension: false,
+			subscribedSince: null,
+		},
+		isPending: false,
+		isError: false,
+		isFetching: false,
+		error: null,
+		refetch: vi.fn(),
 	})),
 }));
 
@@ -51,6 +65,12 @@ vi.mock("@/hooks/use-conversation", () => ({
 		queryFn: () => mockListSessionsQuery(),
 	}),
 	useGetResults: (...args: unknown[]) => mockUseGetResults(...args),
+}));
+
+vi.mock("@/hooks/use-subscription-state", () => ({
+	useSubscriptionState: () => mockUseSubscriptionState(),
+	pollUntilConversationExtensionEntitled: vi.fn(),
+	subscriptionStateQueryKey: ["purchase", "subscription-state"],
 }));
 
 vi.mock("@/components/BottomNav", () => ({
@@ -183,6 +203,18 @@ describe("three-space route guards", () => {
 describe("Me route layout", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockUseSubscriptionState.mockReturnValue({
+			data: {
+				subscriptionStatus: "none",
+				isEntitledToConversationExtension: false,
+				subscribedSince: null,
+			},
+			isPending: false,
+			isError: false,
+			isFetching: false,
+			error: null,
+			refetch: vi.fn(),
+		});
 		mockUseHasCheckIns.mockReturnValue({
 			data: { hasCheckIns: false },
 			isLoading: false,
@@ -284,6 +316,80 @@ describe("Me route layout", () => {
 
 		render(<Component />);
 		expect(screen.getByTestId("me-section-identity-hero")).toBeTruthy();
+	});
+
+	it("shows SubscriptionValueSummary when the user is entitled to conversation extension", async () => {
+		mockUseSubscriptionState.mockReturnValue({
+			data: {
+				subscriptionStatus: "active",
+				isEntitledToConversationExtension: true,
+				subscribedSince: "2025-01-15T00:00:00.000Z",
+			},
+			isPending: false,
+			isError: false,
+			isFetching: false,
+			error: null,
+			refetch: vi.fn(),
+		});
+		const Component = MeRoute.component as ComponentType;
+
+		render(<Component />);
+
+		expect(await screen.findByTestId("subscription-value-summary")).toBeTruthy();
+		expect(screen.queryByTestId("mock-subscription-pitch-section")).toBeNull();
+	});
+
+	it("shows subscription loading copy while the subscription query is pending", async () => {
+		mockUseSubscriptionState.mockReturnValue({
+			data: undefined,
+			isPending: true,
+			isError: false,
+			isFetching: true,
+			error: null,
+			refetch: vi.fn(),
+		});
+		const Component = MeRoute.component as ComponentType;
+
+		render(<Component />);
+
+		expect(await screen.findByTestId("subscription-section-loading")).toBeTruthy();
+		expect(screen.queryByTestId("mock-subscription-pitch-section")).toBeNull();
+	});
+
+	it("shows subscription error copy when the subscription query fails", async () => {
+		mockUseSubscriptionState.mockReturnValue({
+			data: undefined,
+			isPending: false,
+			isError: true,
+			isFetching: false,
+			error: new Error("subscription fetch failed"),
+			refetch: vi.fn(),
+		});
+		const Component = MeRoute.component as ComponentType;
+
+		render(<Component />);
+
+		expect(await screen.findByTestId("subscription-section-error")).toBeTruthy();
+		expect(screen.queryByTestId("mock-subscription-pitch-section")).toBeNull();
+	});
+
+	it("calls subscription refetch when Try again is clicked", async () => {
+		const refetch = vi.fn().mockResolvedValue({ data: undefined });
+		mockUseSubscriptionState.mockReturnValue({
+			data: undefined,
+			isPending: false,
+			isError: true,
+			isFetching: false,
+			error: new Error("subscription fetch failed"),
+			refetch,
+		});
+		const Component = MeRoute.component as ComponentType;
+		const user = userEvent.setup();
+
+		render(<Component />);
+
+		await user.click(await screen.findByTestId("subscription-section-retry"));
+		expect(refetch).toHaveBeenCalledTimes(1);
 	});
 });
 

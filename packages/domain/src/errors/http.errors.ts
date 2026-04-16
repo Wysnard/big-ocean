@@ -415,6 +415,16 @@ export class RelationshipAnalysisUnauthorizedError extends S.TaggedError<Relatio
 ) {}
 
 /**
+ * Relationship shared note validation error (400)
+ */
+export class RelationshipSharedNoteValidationError extends S.TaggedError<RelationshipSharedNoteValidationError>()(
+	"RelationshipSharedNoteValidationError",
+	{
+		message: S.String,
+	},
+) {}
+
+/**
  * Weekly letter not found or not yet available (404)
  */
 export class WeeklyLetterNotFound extends S.TaggedError<WeeklyLetterNotFound>()(

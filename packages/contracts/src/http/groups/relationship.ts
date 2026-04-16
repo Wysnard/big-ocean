@@ -11,8 +11,10 @@ import {
 	DatabaseError,
 	RelationshipAnalysisNotFoundError,
 	RelationshipAnalysisUnauthorizedError,
+	RelationshipSharedNoteValidationError,
 } from "../../errors";
 import { AuthMiddleware } from "../../middleware/auth";
+import { FacetScoreSchema } from "./profile";
 
 // ─── Schemas ──────────────────────────────────────────────────────────────
 
@@ -28,6 +30,9 @@ export const RelationshipCardStateSchema = S.Union(
 
 export type RelationshipCardState = typeof RelationshipCardStateSchema.Type;
 
+// FacetScoreSchema matches profile facet scores — same `{ score, confidence }` for trait/facet maps.
+const ScoreMapSchema = S.Record({ key: S.String, value: FacetScoreSchema });
+
 const RelationshipAnalysisResponseSchema = S.Struct({
 	analysisId: S.String,
 	content: S.NullOr(S.String),
@@ -35,6 +40,16 @@ const RelationshipAnalysisResponseSchema = S.Struct({
 	isLatestVersion: S.Boolean,
 	userAName: S.String,
 	userBName: S.String,
+	/** Locked-result facet scores for Section B (Story 7.3) */
+	userAFacets: ScoreMapSchema,
+	userBFacets: ScoreMapSchema,
+	/** Locked-result trait aggregates for Section B (Story 7.3) */
+	userATraits: ScoreMapSchema,
+	userBTraits: ScoreMapSchema,
+	/** When letter content finished generating (ISO 8601), null if still generating */
+	contentCompletedAt: S.NullOr(S.String),
+	/** When this relationship analysis row was created (ISO 8601) */
+	createdAt: S.String,
 });
 
 export type RelationshipAnalysisResponse = typeof RelationshipAnalysisResponseSchema.Type;
@@ -82,6 +97,21 @@ export type RelationshipAnalysisListItem = typeof RelationshipAnalysisListItemSc
 
 const RelationshipAnalysisListResponseSchema = S.Array(RelationshipAnalysisListItemSchema);
 
+const RelationshipSharedNoteItemSchema = S.Struct({
+	id: S.String,
+	authorDisplayName: S.String,
+	body: S.String,
+	createdAt: S.String,
+});
+
+export type RelationshipSharedNoteItem = typeof RelationshipSharedNoteItemSchema.Type;
+
+const ListRelationshipSharedNotesResponseSchema = S.Array(RelationshipSharedNoteItemSchema);
+
+const CreateRelationshipSharedNoteRequestSchema = S.Struct({
+	body: S.String,
+});
+
 // ─── Authenticated Group ──────────────────────────────────────────────────
 
 export const RelationshipGroup = HttpApiGroup.make("relationship")
@@ -109,6 +139,24 @@ export const RelationshipGroup = HttpApiGroup.make("relationship")
 	.add(
 		HttpApiEndpoint.get("listRelationshipAnalyses", "/analyses")
 			.addSuccess(RelationshipAnalysisListResponseSchema)
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.get("listRelationshipSharedNotes", "/analysis/:analysisId/notes")
+			.setPath(S.Struct({ analysisId: S.String }))
+			.addSuccess(ListRelationshipSharedNotesResponseSchema)
+			.addError(RelationshipAnalysisNotFoundError, { status: 404 })
+			.addError(RelationshipAnalysisUnauthorizedError, { status: 403 })
+			.addError(DatabaseError, { status: 500 }),
+	)
+	.add(
+		HttpApiEndpoint.post("createRelationshipSharedNote", "/analysis/:analysisId/notes")
+			.setPath(S.Struct({ analysisId: S.String }))
+			.setPayload(CreateRelationshipSharedNoteRequestSchema)
+			.addSuccess(RelationshipSharedNoteItemSchema)
+			.addError(RelationshipSharedNoteValidationError, { status: 400 })
+			.addError(RelationshipAnalysisNotFoundError, { status: 404 })
+			.addError(RelationshipAnalysisUnauthorizedError, { status: 403 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.middleware(AuthMiddleware)

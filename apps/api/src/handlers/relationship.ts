@@ -9,9 +9,11 @@ import { HttpApiBuilder } from "@effect/platform";
 import { BigOceanApi } from "@workspace/contracts";
 import { AuthenticatedUser } from "@workspace/domain";
 import { Effect } from "effect";
+import { createRelationshipSharedNote } from "../use-cases/create-relationship-shared-note.use-case";
 import { getRelationshipAnalysis } from "../use-cases/get-relationship-analysis.use-case";
 import { getRelationshipState } from "../use-cases/get-relationship-state.use-case";
 import { listRelationshipAnalyses } from "../use-cases/list-relationship-analyses.use-case";
+import { listRelationshipSharedNotes } from "../use-cases/list-relationship-shared-notes.use-case";
 import { retryRelationshipAnalysis } from "../use-cases/retry-relationship-analysis.use-case";
 
 /**
@@ -53,6 +55,25 @@ export const RelationshipGroupLive = HttpApiBuilder.group(BigOceanApi, "relation
 						contentCompletedAt: a.contentCompletedAt?.toISOString() ?? null,
 						createdAt: a.createdAt.toISOString(),
 					}));
+				}),
+			)
+			.handle("listRelationshipSharedNotes", ({ path }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* listRelationshipSharedNotes({
+						analysisId: path.analysisId,
+						userId,
+					});
+				}),
+			)
+			.handle("createRelationshipSharedNote", ({ path, payload }) =>
+				Effect.gen(function* () {
+					const userId = yield* AuthenticatedUser;
+					return yield* createRelationshipSharedNote({
+						analysisId: path.analysisId,
+						userId,
+						body: payload.body,
+					});
 				}),
 			);
 	}),
