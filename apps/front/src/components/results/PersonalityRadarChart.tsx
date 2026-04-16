@@ -229,7 +229,9 @@ export const PersonalityRadarChart = memo(function PersonalityRadarChart({
 	if (standalone) {
 		return (
 			<div data-slot="personality-radar-chart">
-				{chart}
+				<div role="img" aria-label={chartAriaLabel}>
+					{chart}
+				</div>
 				{dataTable}
 			</div>
 		);

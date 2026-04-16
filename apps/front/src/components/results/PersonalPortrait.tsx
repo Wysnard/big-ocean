@@ -80,7 +80,7 @@ export const PersonalPortrait = memo(function PersonalPortrait({
 							<p className="text-xs text-muted-foreground mt-1">Please try again</p>
 						</div>
 						{onRetryPortrait && (
-							<Button variant="outline" size="sm" onClick={onRetryPortrait} className="gap-2">
+							<Button variant="outline" onClick={onRetryPortrait} className="min-h-11 gap-2 px-4">
 								<RefreshCw className="w-4 h-4" />
 								Retry
 							</Button>

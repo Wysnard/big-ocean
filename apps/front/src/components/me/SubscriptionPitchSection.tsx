@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@workspace/ui/components/button";
 import { useTheme } from "@workspace/ui/hooks/use-theme";
 import { Sparkles } from "lucide-react";
+import { useRef } from "react";
 import { toast } from "sonner";
 import {
 	pollUntilConversationExtensionEntitled,
@@ -18,6 +19,7 @@ import { createThemedCheckoutEmbed, POLAR_CHECKOUT_SLUG_SUBSCRIPTION } from "@/l
 export function SubscriptionPitchSection() {
 	const { appTheme } = useTheme();
 	const queryClient = useQueryClient();
+	const checkoutTriggerRef = useRef<HTMLButtonElement>(null);
 
 	const runPostCheckoutRefresh = () => {
 		void (async () => {
@@ -40,6 +42,9 @@ export function SubscriptionPitchSection() {
 	const handleCheckout = () => {
 		void createThemedCheckoutEmbed(POLAR_CHECKOUT_SLUG_SUBSCRIPTION, appTheme, undefined, {
 			onSuccess: runPostCheckoutRefresh,
+			onClose: () => {
+				queueMicrotask(() => checkoutTriggerRef.current?.focus());
+			},
 		}).catch((err: unknown) => {
 			toast.error(err instanceof Error ? err.message : "Checkout couldn't start. Try again.");
 		});
@@ -57,9 +62,10 @@ export function SubscriptionPitchSection() {
 			</div>
 
 			<Button
+				ref={checkoutTriggerRef}
 				data-testid="subscription-checkout-cta"
 				onClick={handleCheckout}
-				className="rounded-full"
+				className="min-h-11 rounded-full px-6"
 				size="lg"
 			>
 				<Sparkles className="size-4" aria-hidden="true" />

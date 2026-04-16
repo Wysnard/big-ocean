@@ -34,6 +34,17 @@ describe("PersonalityRadarChart", () => {
 		expect(screen.getByText("Personality Shape")).toBeInTheDocument();
 	});
 
+	it("standalone mode wraps the chart with role=img and the sr-only trait table", () => {
+		const { container } = render(<PersonalityRadarChart traits={mockTraits} standalone />);
+		expect(container.querySelector('[data-slot="personality-radar-chart"]')).toBeInTheDocument();
+		expect(
+			screen.getByRole("img", {
+				name: /personality radar chart for this profile\. highest trait: openness \(90 of 120\)\./i,
+			}),
+		).toBeInTheDocument();
+		expect(screen.getByRole("table", { name: /trait scores/i })).toBeInTheDocument();
+	});
+
 	it("has role='img' and aria-label on the chart visual container", () => {
 		render(<PersonalityRadarChart traits={mockTraits} />);
 		const imgEl = screen.getByRole("img", {

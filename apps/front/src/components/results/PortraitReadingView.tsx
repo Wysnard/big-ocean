@@ -82,7 +82,7 @@ export const PortraitReadingView = memo(function PortraitReadingView({
 						params={{ conversationSessionId: sessionId }}
 						search={{}}
 						data-testid="view-full-profile-btn"
-						className="inline-block text-foreground/60 hover:text-foreground/80 transition-colors font-heading text-base"
+						className="inline-flex min-h-11 min-w-min items-center justify-center rounded-lg px-4 py-2 text-center font-heading text-base text-foreground/60 transition-colors hover:text-foreground/80"
 					>
 						There's more to see →
 					</Link>

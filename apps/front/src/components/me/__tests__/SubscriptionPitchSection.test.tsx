@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -63,8 +63,35 @@ describe("SubscriptionPitchSection", () => {
 			undefined,
 			expect.objectContaining({
 				onSuccess: expect.any(Function),
+				onClose: expect.any(Function),
 			}),
 		);
+	});
+
+	it("returns focus to the checkout CTA when Polar onClose runs", async () => {
+		let capturedOnClose: (() => void) | undefined;
+		mockCreateThemedCheckoutEmbed.mockImplementation(async (_slug, _theme, _email, opts) => {
+			capturedOnClose = opts?.onClose;
+			return { addEventListener: vi.fn() };
+		});
+		renderWithClient(<SubscriptionPitchSection />);
+		const user = userEvent.setup();
+		const cta = screen.getByTestId("subscription-checkout-cta");
+		await user.click(cta);
+
+		const other = document.createElement("button");
+		other.textContent = "other-focus";
+		document.body.appendChild(other);
+		other.focus();
+		expect(document.activeElement).toBe(other);
+
+		await act(async () => {
+			capturedOnClose?.();
+			await Promise.resolve();
+		});
+
+		expect(document.activeElement).toBe(cta);
+		other.remove();
 	});
 
 	it("does not show a value summary or skeleton", () => {

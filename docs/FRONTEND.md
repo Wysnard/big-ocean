@@ -28,6 +28,7 @@ Data attributes provide a clean, type-safe way to style components based on stat
 ### Why Data Attributes?
 
 ✅ **Benefits:**
+
 - **Cleaner JSX** - No ternary operators in className props
 - **Better composability** - State styling is declarative and stackable
 - **Framework integration** - Works seamlessly with Radix UI, React Aria, Headless UI
@@ -35,6 +36,7 @@ Data attributes provide a clean, type-safe way to style components based on stat
 - **Performance** - No runtime class concatenation
 
 ❌ **Avoid for:**
+
 - Standard HTML states (use `disabled:`, `required:`, `checked:` variants)
 - Responsive design (use `sm:`, `md:`, `lg:` variants)
 - One-off boolean toggles (use conditional `cn()` for simplicity)
@@ -141,8 +143,9 @@ function DialogContent({ className, children, ...props }) {
 ```
 
 **How it works:**
+
 1. Radix UI's `DialogPrimitive.Overlay` automatically provides `data-state="open"` or `data-state="closed"`
-2. Tailwind's `data-[state=open]:*` variant applies styles when `data-state="open"` is present
+2. Tailwind's `data-[state=open]:`* variant applies styles when `data-state="open"` is present
 3. No JavaScript logic needed in the component - pure declarative styling
 
 ### Project Conventions
@@ -167,6 +170,7 @@ This project uses data attributes for two distinct purposes:
 ```
 
 **Guidelines:**
+
 - ✅ **Always use** on component primitives and compound component parts
 - ✅ Use kebab-case naming: `data-slot="dialog-header"`
 - ✅ Name should match component name or logical part name
@@ -175,7 +179,7 @@ This project uses data attributes for two distinct purposes:
 
 **Why:** Enables stable selectors for E2E tests and CSS overrides without relying on class names.
 
-##### 2. State Management (`data-state`, `data-*`)
+##### 2. State Management (`data-state`, `data-`*)
 
 **Purpose:** Apply conditional styles based on component state
 
@@ -199,6 +203,7 @@ This project uses data attributes for two distinct purposes:
 ```
 
 **Guidelines:**
+
 - ✅ **Prefer `data-state`** for binary states (open/closed, active/inactive)
 - ✅ Use descriptive attribute names: `data-validation`, `data-loading`, `data-status`
 - ✅ Keep values simple: strings or booleans
@@ -209,26 +214,30 @@ This project uses data attributes for two distinct purposes:
 
 Radix UI primitives automatically provide `data-state` and `data-disabled` attributes:
 
-| Radix Component | Auto-Provided Attributes | Example Usage |
-|-----------------|-------------------------|---------------|
-| Dialog | `data-state="open\|closed"` | `data-[state=open]:scale-100` |
-| Collapsible | `data-state="open\|closed"` | `data-[state=closed]:hidden` |
-| Accordion | `data-state="open\|closed"` | `data-[state=open]:rotate-180` |
-| Checkbox | `data-state="checked\|unchecked"` | `data-[state=checked]:bg-blue-500` |
-| All primitives | `data-disabled` | `data-[disabled]:opacity-50` |
+
+| Radix Component | Auto-Provided Attributes         | Example Usage                      |
+| --------------- | -------------------------------- | ---------------------------------- |
+| Dialog          | `data-state="open|closed"`       | `data-[state=open]:scale-100`      |
+| Collapsible     | `data-state="open|closed"`       | `data-[state=closed]:hidden`       |
+| Accordion       | `data-state="open|closed"`       | `data-[state=open]:rotate-180`     |
+| Checkbox        | `data-state="checked|unchecked"` | `data-[state=checked]:bg-blue-500` |
+| All primitives  | `data-disabled`                  | `data-[disabled]:opacity-50`       |
+
 
 **Reference:** [Radix UI - Styling](https://www.radix-ui.com/primitives/docs/guides/styling#data-attributes)
 
 ### When to Use Each Pattern
 
-| Scenario | Pattern | Example |
-|----------|---------|---------|
-| Radix UI component state | Use provided `data-state` | `data-[state=open]:animate-in` |
-| Custom app state (status, phase) | Custom `data-*` attribute | `data-[status=error]:border-red-500` |
-| Boolean feature flags | `data-feature` existence check | `data-beta:opacity-50` |
-| Validation states | `data-validation` | `data-[validation=error]:ring-red-500` |
-| Loading states | `data-loading` | `data-loading:cursor-wait` |
-| Component variants | Use `variant` prop + `cva()` | See [Component Patterns](#component-patterns) |
+
+| Scenario                         | Pattern                        | Example                                       |
+| -------------------------------- | ------------------------------ | --------------------------------------------- |
+| Radix UI component state         | Use provided `data-state`      | `data-[state=open]:animate-in`                |
+| Custom app state (status, phase) | Custom `data-`* attribute      | `data-[status=error]:border-red-500`          |
+| Boolean feature flags            | `data-feature` existence check | `data-beta:opacity-50`                        |
+| Validation states                | `data-validation`              | `data-[validation=error]:ring-red-500`        |
+| Loading states                   | `data-loading`                 | `data-loading:cursor-wait`                    |
+| Component variants               | Use `variant` prop + `cva()`   | See [Component Patterns](#component-patterns) |
+
 
 ### Anti-Patterns to Avoid
 
@@ -268,10 +277,12 @@ Radix UI primitives automatically provide `data-state` and `data-disabled` attri
 
 #### `data-testid` vs `data-slot` — Two Separate Concerns
 
-| Attribute | Purpose | Who uses it | Managed by |
-|-----------|---------|-------------|------------|
-| `data-testid` | E2E test selectors (Playwright) | QA / test automation | Developers — added explicitly |
-| `data-slot` | Component structural identification | shadcn/ui internals, CSS targeting | shadcn/ui — auto-generated |
+
+| Attribute     | Purpose                             | Who uses it                        | Managed by                    |
+| ------------- | ----------------------------------- | ---------------------------------- | ----------------------------- |
+| `data-testid` | E2E test selectors (Playwright)     | QA / test automation               | Developers — added explicitly |
+| `data-slot`   | Component structural identification | shadcn/ui internals, CSS targeting | shadcn/ui — auto-generated    |
+
 
 **Hard rule: NEVER remove, replace, or rename `data-testid` attributes.** They coexist with `data-slot` — they serve different purposes. E2E tests use `data-testid` exclusively.
 
@@ -296,6 +307,7 @@ const title = within(dialog).getByText('Title');
 ```
 
 **Guidelines:**
+
 - ✅ **Use `data-testid`** for E2E test selectors — `page.getByTestId("element-name")`
 - ✅ Use semantic queries first (role, label), then `data-testid` when needed
 - ❌ **Do NOT use `data-slot` for testing** — it's for styling/CSS targeting only
@@ -352,6 +364,7 @@ export function Button({ className, variant, size, ...props }: ButtonProps) {
 ```
 
 **When to use CVA vs data attributes:**
+
 - **CVA:** Visual variants that are part of the component API (primary/secondary, small/large)
 - **Data attributes:** Dynamic state that changes during runtime (open/closed, loading/idle)
 
@@ -524,11 +537,14 @@ packages/ui/
 ---
 
 **Related Documentation:**
+
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Backend architecture and Effect-ts patterns
 - [CLAUDE.md](../CLAUDE.md) - Repository overview and setup
 - [packages/ui/README.md](../packages/ui/README.md) - Component library documentation
 
 **External Resources:**
+
 - [Tailwind CSS - Data Attributes](https://tailwindcss.com/docs/hover-focus-and-other-states#data-attributes)
 - [Radix UI - Styling Guide](https://www.radix-ui.com/primitives/docs/guides/styling)
 - [TanStack Start](https://tanstack.com/start)
+

@@ -27,20 +27,22 @@ When working on frontend code (`apps/front` or `packages/ui`), consult [FRONTEND
 **Core Vision:** Conversational, coherence-based personality assessment via LLM agents → scientific research integration → memorable archetypes → social features for comparison and discovery.
 
 **Node requirement:** >= 20
-**Package manager:** pnpm@10.4.1
+**Package manager:** [pnpm@10.4.1](mailto:pnpm@10.4.1)
 
 **Workspace packages:**
 
-| Package | Path | Purpose |
-|---------|------|---------|
-| `front` | `apps/front` | React frontend (TanStack Router + Start, TanStack Query) |
-| `api` | `apps/api` | Effect-ts HTTP API server |
-| `@workspace/contracts` | `packages/contracts` | Shared API schemas, endpoint definitions, error re-exports |
-| `@workspace/domain` | `packages/domain` | Business logic: use-cases, repository interfaces, domain types, errors |
-| `@workspace/infrastructure` | `packages/infrastructure` | Drizzle repositories, LLM clients, external service adapters |
-| `@workspace/ui` | `packages/ui` | Shared shadcn/ui component library |
-| `@workspace/lint` | `packages/lint` | Shared Biome config |
-| `@workspace/typescript-config` | `packages/typescript-config` | Shared tsconfig bases |
+
+| Package                        | Path                         | Purpose                                                                |
+| ------------------------------ | ---------------------------- | ---------------------------------------------------------------------- |
+| `front`                        | `apps/front`                 | React frontend (TanStack Router + Start, TanStack Query)               |
+| `api`                          | `apps/api`                   | Effect-ts HTTP API server                                              |
+| `@workspace/contracts`         | `packages/contracts`         | Shared API schemas, endpoint definitions, error re-exports             |
+| `@workspace/domain`            | `packages/domain`            | Business logic: use-cases, repository interfaces, domain types, errors |
+| `@workspace/infrastructure`    | `packages/infrastructure`    | Drizzle repositories, LLM clients, external service adapters           |
+| `@workspace/ui`                | `packages/ui`                | Shared shadcn/ui component library                                     |
+| `@workspace/lint`              | `packages/lint`              | Shared Biome config                                                    |
+| `@workspace/typescript-config` | `packages/typescript-config` | Shared tsconfig bases                                                  |
+
 
 ## Common Commands
 
@@ -104,13 +106,15 @@ The codebase follows **hexagonal architecture** (ports & adapters) with Effect-t
 
 **Naming conventions:**
 
-| Component | Pattern | Example |
-|-----------|---------|---------|
-| Repository Interface | `{entity}.repository.ts` in `domain/` | `assessment-message.repository.ts` |
+
+| Component                 | Pattern                                               | Example                                    |
+| ------------------------- | ----------------------------------------------------- | ------------------------------------------ |
+| Repository Interface      | `{entity}.repository.ts` in `domain/`                 | `assessment-message.repository.ts`         |
 | Repository Implementation | `{entity}.drizzle.repository.ts` in `infrastructure/` | `assessment-message.drizzle.repository.ts` |
-| Live Layer Export | `{Entity}DrizzleRepositoryLive` | `AssessmentMessageDrizzleRepositoryLive` |
-| Use-Case | `{action}.use-case.ts` | `send-message.use-case.ts` |
-| Handler | `{domain}.ts` in `handlers/` | `assessment.ts` |
+| Live Layer Export         | `{Entity}DrizzleRepositoryLive`                       | `AssessmentMessageDrizzleRepositoryLive`   |
+| Use-Case                  | `{action}.use-case.ts`                                | `send-message.use-case.ts`                 |
+| Handler                   | `{domain}.ts` in `handlers/`                          | `assessment.ts`                            |
+
 
 See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for branch naming, commit format, and more.
 
@@ -119,6 +123,7 @@ See [NAMING-CONVENTIONS.md](./docs/NAMING-CONVENTIONS.md) for branch naming, com
 ### Route Loader Auth Pattern
 
 Check auth state in `beforeLoad` using `getSession()` from `@/lib/auth-client`:
+
 ```typescript
 import { getSession } from "@/lib/auth-client";
 import { redirect } from "@tanstack/react-router";
@@ -165,11 +170,13 @@ Pure deterministic function: 30 facet scores → 5-letter semantic OCEAN code (e
 **Algorithm:** Sum 6 facets per trait (0-120) → derive low/mid/high band → map each trait to its trait-specific semantic letter → concatenate in OCEAN order.
 
 **Band thresholds:**
+
 - 0-40 = low
 - 40-80 = mid
 - 80-120 = high
 
 **Letter mapping:**
+
 - Openness: `T` / `M` / `O`
 - Conscientiousness: `F` / `S` / `C`
 - Extraversion: `I` / `B` / `E`
@@ -188,13 +195,13 @@ const code = generateOceanCode(facetScoresMap); // → "OCBAV"
 
 **Migration rule:** When modifying the DB schema (`packages/infrastructure/src/db/drizzle/schema.ts`), always hand-write a corresponding migration SQL file following the Drizzle migration format (see existing files in `drizzle/` for reference). **NEVER modify an existing migration file** — always append a new migration. Existing migrations may already be applied to production or other developers' databases; modifying them causes migration journal mismatches and failures.
 
-**Schema change cascade rule:** When modifying the DB schema, also check and update seed scripts (`scripts/seed-*.ts`), test fixtures (`**/__mocks__/**`, `**/fixtures/**`, `**/*.fixtures.ts`), and the local dev test user setup to match the new schema. Added/removed/renamed columns, new NOT NULL constraints, and enum changes will break seeding, tests, and local dev if not kept in sync.
+**Schema change cascade rule:** When modifying the DB schema, also check and update seed scripts (`scripts/seed-*.ts`), test fixtures (`**/__mocks__/`**, `**/fixtures/`**, `**/*.fixtures.ts`), and the local dev test user setup to match the new schema. Added/removed/renamed columns, new NOT NULL constraints, and enum changes will break seeding, tests, and local dev if not kept in sync.
 
 ## Testing Rules
 
 **E2E standard:** When writing or reviewing Playwright E2E tests, follow the [E2E Testing Standard](./docs/E2E-TESTING.md). Key rules: E2E is only for critical multi-page journeys and access control boundaries — push everything else to integration or unit tests. Total suite must stay under 5 minutes. New specs must be self-contained (no dependency chains unless technically required).
 
-**`data-testid` rule:** NEVER remove, replace, or rename `data-testid` attributes. They are used exclusively by e2e tests (Playwright). `data-slot` is a separate shadcn/ui concern — they coexist. See [FRONTEND.md](./docs/FRONTEND.md#testing-with-data-attributes).
+`**data-testid` rule:** NEVER remove, replace, or rename `data-testid` attributes. They are used exclusively by e2e tests (Playwright). `data-slot` is a separate shadcn/ui concern — they coexist. See [FRONTEND.md](./docs/FRONTEND.md#testing-with-data-attributes).
 
 **Route test files:** NEVER place test files (`.test.ts`, `.test.tsx`) directly in `apps/front/src/routes/`. TanStack Router treats all files in this directory as routes, causing build errors. Prefix with `-` (e.g., `-my-route.test.tsx`) to exclude from route generation, or place tests in a sibling `__tests__` directory.
 
@@ -203,12 +210,14 @@ const code = generateOceanCode(facetScoresMap); // → "OCBAV"
 Mock implementations are co-located with repository implementations using Vitest's `__mocks__` auto-resolution.
 
 **Rules:**
+
 - Each `__mocks__` file exports the same Live layer name as the real module
 - Implements `Layer.succeed(Tag, implementation)` with in-memory behavior
 - Never import directly from `__mocks__/` paths — always use `vi.mock()` + original paths
 - No centralized `TestRepositoriesLayer` — each test composes a minimal local `TestLayer` via `Layer.mergeAll(...)`
 
 **Import ordering with `@effect/vitest`** (critical — avoids `"Cannot access '__vi_import_0__' before initialization"`):
+
 ```typescript
 import { vi } from "vitest";                    // FIRST — vi.mock() hoisting needs this
 vi.mock("@workspace/infrastructure/repositories/...");
@@ -235,20 +244,23 @@ import { describe, expect, it } from "@effect/vitest"; // AFTER vi.mock calls
 ## UI Component Rules
 
 **Placement:**
+
 - Reusable, generic components (buttons, dialogs, inputs) belong in `packages/ui`
 - Page-specific or business-logic components belong in `apps/front/src/components/`
 
 **Component selection priority (follow this order):**
+
 1. **Check `packages/ui` first** — look for an existing component in the workspace UI library that already fits the use case
 2. **Check shadcn/ui** — if nothing exists in `packages/ui`, look at the shadcn docs for a component that fits
 3. **Extend or modify** — if an existing component (from `packages/ui` or shadcn) is close but not exact, extend or modify it directly in `packages/ui` if the change benefits the whole app
 4. **Build custom** — only create a new component from scratch if none of the above works
 
-**`/dev/` routes:** The `/dev/` route is for development-only pages. Prototypes may live here but are throwaway — do not maintain, fix, or update them. If a prototype breaks the build, delete it rather than fix it. Only the `/dev/components` kitchen sink must be kept up to date.
+`**/dev/` routes:** The `/dev/` route is for development-only pages. Prototypes may live here but are throwaway — do not maintain, fix, or update them. If a prototype breaks the build, delete it rather than fix it. Only the `/dev/components` kitchen sink must be kept up to date.
 
 **Kitchen sink rule:** Every component in `packages/ui` must have a demo in the `/dev/components` route. When modifying or adding a component in `packages/ui`, update the kitchen sink to reflect the changes so it stays up to date.
 
 **Adding a shadcn component:**
+
 ```bash
 pnpm dlx shadcn@latest add [component-name] -c apps/front
 # Then move from apps/front to packages/ui/src/components/

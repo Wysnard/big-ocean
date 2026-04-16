@@ -12,6 +12,7 @@ import { authClient } from "./auth-client";
 export const POLAR_CHECKOUT_SLUG_SUBSCRIPTION = "subscription" as const;
 
 export type CheckoutEmbedLifecycleCallbacks = {
+	/** Fired when the Polar embed overlay closes (success, cancel, or error). Use to restore focus to the checkout trigger for keyboard users. */
 	readonly onClose?: () => void;
 	readonly onSuccess?: () => void;
 };

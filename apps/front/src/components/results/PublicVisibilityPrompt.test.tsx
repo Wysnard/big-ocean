@@ -89,4 +89,29 @@ describe("PublicVisibilityPrompt", () => {
 		);
 		expect(screen.getByTestId("visibility-prompt-accept")).toHaveTextContent(/make public/i);
 	});
+
+	it("exposes aria-modal on the dialog surface when open", () => {
+		render(
+			<PublicVisibilityPrompt
+				open={true}
+				onAccept={() => {}}
+				onDecline={() => {}}
+				isLoading={false}
+			/>,
+		);
+		expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
+	});
+
+	it("uses minimum touch target height on footer actions", () => {
+		render(
+			<PublicVisibilityPrompt
+				open={true}
+				onAccept={() => {}}
+				onDecline={() => {}}
+				isLoading={false}
+			/>,
+		);
+		expect(screen.getByTestId("visibility-prompt-accept").className).toMatch(/min-h-11/);
+		expect(screen.getByTestId("visibility-prompt-decline").className).toMatch(/min-h-11/);
+	});
 });

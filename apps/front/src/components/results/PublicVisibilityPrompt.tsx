@@ -37,10 +37,16 @@ export function PublicVisibilityPrompt({
 						variant="outline"
 						onClick={onDecline}
 						disabled={isLoading}
+						className="min-h-11"
 					>
 						Cancel
 					</Button>
-					<Button data-testid="visibility-prompt-accept" onClick={onAccept} disabled={isLoading}>
+					<Button
+						data-testid="visibility-prompt-accept"
+						onClick={onAccept}
+						disabled={isLoading}
+						className="min-h-11"
+					>
 						{isLoading ? (
 							<>
 								<Loader2 className="w-4 h-4 mr-2 motion-safe:animate-spin" />

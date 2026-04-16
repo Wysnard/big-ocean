@@ -42,7 +42,7 @@ const mockFacetDetails = [
 	{
 		name: "artistic_interests" as const,
 		score: 12,
-		confidence: 45,
+		confidence: 0.45,
 		evidence: [],
 	},
 ];
@@ -87,6 +87,20 @@ describe("DetailZone", () => {
 		);
 		// confidence 85 → "Strong"
 		expect(screen.getByText("Strong")).toBeInTheDocument();
+	});
+
+	it("exposes facet confidence rings as labeled graphics", () => {
+		render(
+			<DetailZone
+				trait={mockTrait}
+				facetDetails={mockFacetDetails}
+				isOpen={true}
+				onClose={vi.fn()}
+				isLoading={false}
+			/>,
+		);
+		expect(screen.getByRole("img", { name: "Facet evidence confidence: 85%" })).toBeInTheDocument();
+		expect(screen.getByRole("img", { name: "Facet evidence confidence: 45%" })).toBeInTheDocument();
 	});
 
 	it("shows 'No evidence recorded' for empty facets", () => {

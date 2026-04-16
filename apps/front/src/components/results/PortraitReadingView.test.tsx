@@ -61,6 +61,11 @@ describe("PortraitReadingView", () => {
 		expect(screen.getByText("There's more to see →")).toBeTruthy();
 	});
 
+	it("gives the back-to-results link a minimum touch target height", () => {
+		render(<PortraitReadingView content={SAMPLE_PORTRAIT} sessionId="test-session-id" />);
+		expect(screen.getByTestId("view-full-profile-btn").className).toMatch(/min-h-11/);
+	});
+
 	it("keeps the reading surface at prose width", () => {
 		render(<PortraitReadingView content={SAMPLE_PORTRAIT} sessionId="test-session-id" />);
 

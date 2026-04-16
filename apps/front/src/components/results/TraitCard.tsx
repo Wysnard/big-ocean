@@ -64,7 +64,7 @@ export const TraitCard = memo(function TraitCard({
 			aria-expanded={isSelected}
 			aria-controls={`trait-detail-zone-${trait.name}`}
 			onClick={() => onToggle(trait.name)}
-			className="relative flex flex-col h-full text-left rounded-xl border bg-card p-0 overflow-hidden cursor-pointer motion-safe:transition-all motion-safe:duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 data-selected:shadow-none data-selected:translate-y-0"
+			className="relative flex min-h-11 min-w-0 flex-col h-full text-left rounded-xl border bg-card p-0 overflow-hidden cursor-pointer motion-safe:transition-all motion-safe:duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.06)] motion-safe:hover:-translate-y-0.5 data-selected:shadow-none motion-safe:data-selected:translate-y-0"
 			style={
 				{
 					"--trait-color": traitVar,
@@ -96,7 +96,10 @@ export const TraitCard = memo(function TraitCard({
 					</span>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<div className="ml-auto flex items-center gap-1" data-slot="confidence-ring">
+							<div
+								className="ml-auto inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-md"
+								data-slot="confidence-ring"
+							>
 								<svg className="-rotate-90" width={18} height={18} viewBox="0 0 20 20" aria-hidden="true">
 									<circle
 										cx={10}
@@ -166,7 +169,7 @@ export const TraitCard = memo(function TraitCard({
 				</div>
 
 				{/* Hint — anchored at bottom */}
-				<div className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground mt-auto">
+				<div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-auto">
 					<span>Tap to see evidence</span>
 					<ChevronDown className="w-3 h-3" />
 				</div>

@@ -8,7 +8,7 @@ import type { ChartConfig } from "@workspace/ui/components/chart";
 import { ChartContainer } from "@workspace/ui/components/chart";
 import { OceanHieroglyph } from "@workspace/ui/components/ocean-hieroglyph";
 import { X } from "lucide-react";
-import { type KeyboardEvent, useMemo } from "react";
+import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 import { formatDeviation, getDomainLabel, getSignalBadge } from "./evidence-utils";
 
@@ -33,6 +33,14 @@ const confidenceChartConfig: ChartConfig = {
 	confidence: { label: "Confidence", color: "var(--primary)" },
 };
 
+/** Widen `MediaQueryList` so legacy `addListener` / optional `addEventListener` can be expressed for older WebKit. */
+type MediaQueryListCompat = Omit<MediaQueryList, "addEventListener" | "removeEventListener"> & {
+	addEventListener?: MediaQueryList["addEventListener"];
+	removeEventListener?: MediaQueryList["removeEventListener"];
+	addListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
+	removeListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
+};
+
 function FacetConfidenceRing({ confidence }: { confidence: number }) {
 	const displayConfidence = Math.round(confidence * 100);
 	const endAngle = confidence * 360;
@@ -41,8 +49,33 @@ function FacetConfidenceRing({ confidence }: { confidence: number }) {
 		[displayConfidence],
 	);
 
+	const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+		if (typeof window === "undefined" || !window.matchMedia) return false;
+		return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	});
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.matchMedia) return;
+		const mql = window.matchMedia("(prefers-reduced-motion: reduce)") as MediaQueryListCompat;
+		const sync = () => setPrefersReducedMotion(mql.matches);
+		sync();
+		if (typeof mql.addEventListener === "function") {
+			mql.addEventListener("change", sync);
+			return () => mql.removeEventListener?.("change", sync);
+		}
+		if (typeof mql.addListener === "function") {
+			mql.addListener(sync);
+			return () => mql.removeListener?.(sync);
+		}
+		return () => {};
+	}, []);
+
 	return (
-		<ChartContainer config={confidenceChartConfig} className="size-10">
+		<ChartContainer
+			config={confidenceChartConfig}
+			className="size-10"
+			role="img"
+			aria-label={`Facet evidence confidence: ${displayConfidence}%`}
+		>
 			<RadialBarChart
 				data={chartData}
 				startAngle={0}
@@ -57,7 +90,12 @@ function FacetConfidenceRing({ confidence }: { confidence: number }) {
 					className="first:fill-muted last:fill-background"
 					polarRadius={[17, 11]}
 				/>
-				<RadialBar dataKey="confidence" background cornerRadius={10} />
+				<RadialBar
+					dataKey="confidence"
+					background
+					cornerRadius={10}
+					isAnimationActive={!prefersReducedMotion}
+				/>
 				<PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
 					<Label
 						content={({ viewBox }) => {
@@ -160,7 +198,7 @@ export function DetailZone({
 						{Array.from({ length: 6 }).map((_, i) => (
 							<Card
 								key={`skeleton-${TRAIT_TO_FACETS[trait.name][i] ?? i}`}
-								className="p-4 gap-0 rounded-lg shadow-none animate-pulse"
+								className="p-4 gap-0 rounded-lg shadow-none animate-pulse motion-reduce:animate-none"
 							>
 								<div className="h-4 w-24 bg-muted rounded mb-2" />
 								<div className="h-2 w-full bg-muted rounded mb-3" />
@@ -180,7 +218,7 @@ export function DetailZone({
 									key={facet.name}
 									data-slot="facet-detail-card"
 									data-facet={facet.name}
-									className={`flex-row${onFacetClick ? " cursor-pointer hover:ring-1 hover:ring-primary/30 motion-safe:transition-shadow" : ""}`}
+									className={`min-h-11 flex-row${onFacetClick ? " cursor-pointer hover:ring-1 hover:ring-primary/30 motion-safe:transition-shadow" : ""}`}
 									onClick={
 										onFacetClick ? (event) => onFacetClick(facet.name, event.currentTarget) : undefined
 									}
