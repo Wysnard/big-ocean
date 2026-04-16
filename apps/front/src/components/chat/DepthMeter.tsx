@@ -12,6 +12,19 @@ interface DepthMeterProps {
 	milestones?: readonly number[];
 }
 
+/** Shared ARIA for conversation depth (desktop sidebar meter + narrow-viewport duplicate in chat header). */
+export function conversationDepthProgressAriaProps(currentTurn: number, totalTurns: number) {
+	return {
+		role: "progressbar" as const,
+		"aria-valuenow": currentTurn,
+		"aria-valuemin": 0,
+		"aria-valuemax": totalTurns,
+		"aria-valuetext":
+			totalTurns > 0 ? `Exchange ${currentTurn} of ${totalTurns}` : "No exchanges yet",
+		"aria-label": "Conversation depth",
+	};
+}
+
 export function DepthMeter({
 	currentTurn,
 	totalTurns,
@@ -57,67 +70,63 @@ export function DepthMeter({
 	}, [currentTurn, totalTurns, milestones]);
 
 	return (
-		<nav
-			data-slot="depth-meter"
-			role="progressbar"
-			aria-valuenow={currentTurn}
-			aria-valuemin={0}
-			aria-valuemax={totalTurns}
-			aria-valuetext={totalTurns > 0 ? `Exchange ${currentTurn} of ${totalTurns}` : "No exchanges yet"}
-			aria-label="Conversation depth"
-			className="fixed left-5 top-1/2 z-[90] flex -translate-y-1/2 flex-col items-center transition-opacity duration-500 max-[900px]:hidden"
-			style={{
-				opacity: progress > 0.02 ? 1 : 0,
-				pointerEvents: progress > 0.02 ? "auto" : "none",
-			}}
-		>
-			{/* Track with milestones */}
-			<div className="relative h-[160px] w-[2px] rounded-[1px] bg-border">
-				{/* Fill */}
-				<div
-					data-testid="depth-meter-fill"
-					className="w-full rounded-[1px] bg-primary motion-safe:transition-[height] motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.4,0,0.2,1)]"
-					style={{ height: `${Math.round(progress * 100)}%` }}
-				/>
+		<>
+			<nav
+				data-slot="depth-meter"
+				className="fixed left-5 top-1/2 z-[90] flex -translate-y-1/2 flex-col items-center transition-opacity duration-500 max-[900px]:hidden"
+				style={{
+					opacity: progress > 0.02 ? 1 : 0,
+					pointerEvents: progress > 0.02 ? "auto" : "none",
+				}}
+				{...conversationDepthProgressAriaProps(currentTurn, totalTurns)}
+			>
+				{/* Track with milestones */}
+				<div className="relative h-[160px] w-[2px] rounded-[1px] bg-border">
+					{/* Fill */}
+					<div
+						data-testid="depth-meter-fill"
+						className="w-full rounded-[1px] bg-primary motion-safe:transition-[height] motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.4,0,0.2,1)]"
+						style={{ height: `${Math.round(progress * 100)}%` }}
+					/>
 
-				{/* Milestone ticks */}
-				{milestones.map((m) => {
-					const pct = getMilestoneLabel(m);
-					const reached = isMilestoneReached(currentTurn, totalTurns, m);
-					const isPulsing = pulsing.has(pct);
+					{/* Milestone ticks */}
+					{milestones.map((m) => {
+						const pct = getMilestoneLabel(m);
+						const reached = isMilestoneReached(currentTurn, totalTurns, m);
+						const isPulsing = pulsing.has(pct);
 
-					return (
-						<div
-							key={pct}
-							data-testid={`milestone-tick-${pct}`}
-							data-reached={reached ? "true" : "false"}
-							className="absolute left-1/2 -translate-x-1/2"
-							style={{ top: `${getMilestonePositionPercent(totalTurns, m)}%` }}
-						>
-							{/* Glow ring (behind the tick) — only during pulse */}
-							{isPulsing && (
+						return (
+							<div
+								key={pct}
+								data-testid={`milestone-tick-${pct}`}
+								data-reached={reached ? "true" : "false"}
+								className="absolute left-1/2 -translate-x-1/2"
+								style={{ top: `${getMilestonePositionPercent(totalTurns, m)}%` }}
+							>
+								{/* Glow ring (behind the tick) — only during pulse */}
+								{isPulsing && (
+									<span
+										aria-hidden="true"
+										className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-primary/40 motion-safe:animate-ping"
+									/>
+								)}
+								{/* Tick dot */}
 								<span
 									aria-hidden="true"
-									className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-primary/40 motion-safe:animate-ping"
+									className={[
+										"block h-[6px] w-[6px] rounded-full transition-colors duration-300",
+										reached ? "bg-primary" : "bg-border",
+									].join(" ")}
 								/>
-							)}
-							{/* Tick dot */}
-							<span
-								aria-hidden="true"
-								className={[
-									"block h-[6px] w-[6px] rounded-full transition-colors duration-300",
-									reached ? "bg-primary" : "bg-border",
-								].join(" ")}
-							/>
-						</div>
-					);
-				})}
-			</div>
-
-			{/* Visually hidden live region for milestone announcements */}
+							</div>
+						);
+					})}
+				</div>
+			</nav>
+			{/* Outside the desktop-only nav so milestone announcements still reach AT when the bar is display:none (narrow viewports). */}
 			<span data-testid="depth-meter-announcer" aria-live="polite" className="sr-only">
 				{announcement}
 			</span>
-		</nav>
+		</>
 	);
 }

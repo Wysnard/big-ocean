@@ -1,5 +1,11 @@
 # Deferred Work
 
+## Deferred from: code review of 13-2-conversation-and-chat-accessibility.md (2026-04-16)
+
+- **`<nav>` element hosts `role="progressbar"` — semantic element/role mismatch** — `DepthMeter` wraps the sidebar progress bar in a `<nav>` element whose native implicit role (`navigation`) is overridden by `role="progressbar"`. Pre-existing before Story 13.2. Consider replacing `<nav>` with a `<div>` or `<span>` host in a future cleanup pass. [`apps/front/src/components/chat/DepthMeter.tsx`]
+- **`opacity: 0` does not remove progressbar from accessibility tree at turn 0** — When conversation starts (`progress <= 0.02`), the sidebar nav has `opacity: 0` but remains in the AT, advertising an invisible "Conversation depth" progressbar to screen readers on wide viewports. Pre-existing. Fix by guarding with `aria-hidden={progress <= 0.02}` on the nav when it is fully invisible. [`apps/front/src/components/chat/DepthMeter.tsx`]
+- **`aria-valuenow` may exceed `aria-valuemax` in extended sessions** — `conversationDepthProgressAriaProps` passes `currentTurn` raw; if `currentTurn > totalTurns` (extended conversation), ARIA validity is violated. Pre-existing; visual bar already clamps with `Math.min`. Fix by also clamping `aria-valuenow`: `Math.min(currentTurn, totalTurns)`. [`apps/front/src/components/chat/DepthMeter.tsx`]
+
 ## Deferred from: code review of 12-2-knowledge-library-content-expansion.md (2026-04-16)
 
 - ~~**Lighthouse SEO on facet URLs (AC #6)** — No Lighthouse report or recorded scores in-repo for a sample of `/library/facet/*` pages. Run manual or CI Lighthouse (SEO category) before release to confirm >90 remains true for the new tier.~~ **Resolved 2026-04-16:** Manual `lighthouse@12.8.2` (SEO-only, desktop) on local Nitro preview — `imagination`, `activity_level`, `vulnerability` facet pages scored **100** each; JSON-LD present in HTML.

@@ -1,7 +1,6 @@
 import { ASSESSMENT_MESSAGE_MAX_LENGTH } from "@workspace/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
 import { Button } from "@workspace/ui/components/button";
-import { Textarea } from "@workspace/ui/components/textarea";
 import { NerinMessage } from "@workspace/ui/components/chat";
 import {
 	DropdownMenu,
@@ -9,6 +8,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 import { Info, Loader2, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +17,7 @@ import { getPlaceholder } from "@/constants/chat-placeholders";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useTherapistChat } from "@/hooks/useTherapistChat";
 import { ChatInputBarShell } from "./chat/ChatInputBarShell";
-import { DepthMeter } from "./chat/DepthMeter";
+import { conversationDepthProgressAriaProps, DepthMeter } from "./chat/DepthMeter";
 import { ASSESSMENT_MILESTONES, isMilestoneReached } from "./chat/depth-milestones";
 import { PostAssessmentTransitionButton } from "./chat/PostAssessmentTransitionButton";
 import { GeometricOcean } from "./sea-life/GeometricOcean";
@@ -580,6 +580,12 @@ function ChatContent({
 					data-slot="chat-header"
 					className="relative z-10 border-b border-border bg-card/80 px-4 md:px-6 py-3 md:py-4 shadow-sm backdrop-blur-sm flex items-center justify-between"
 				>
+					{/* Narrow viewports: sidebar DepthMeter is hidden — duplicate progress semantics for AT (Story 13.2). */}
+					<span
+						data-testid="conversation-depth-progress-narrow"
+						className="sr-only min-[901px]:hidden"
+						{...conversationDepthProgressAriaProps(currentTurn, totalTurns)}
+					/>
 					<div className="flex items-center gap-2">
 						<Avatar className="bg-gradient-to-br from-tertiary to-primary" aria-hidden="true">
 							<AvatarFallback className="bg-gradient-to-br from-tertiary to-primary font-heading text-[.75rem] font-bold text-white">

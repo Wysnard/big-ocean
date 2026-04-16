@@ -140,6 +140,17 @@ describe("TherapistChat", () => {
 		expect(screen.getByRole("log", { name: "Conversation history" })).toBeInTheDocument();
 	});
 
+	it("exposes narrow-viewport conversation depth progress for assistive tech (Story 13.2)", () => {
+		renderWithProviders(<TherapistChat sessionId="session-123" />);
+
+		const narrow = screen.getByTestId("conversation-depth-progress-narrow");
+		expect(narrow).toHaveAttribute("role", "progressbar");
+		expect(narrow).toHaveAttribute("aria-label", "Conversation depth");
+		expect(narrow).toHaveAttribute("aria-valuetext", "Exchange 0 of 15");
+		expect(narrow).toHaveAttribute("aria-valuenow", "0");
+		expect(narrow).toHaveAttribute("aria-valuemax", "15");
+	});
+
 	it("renders a polite live region for assistant summary announcements", () => {
 		renderWithProviders(<TherapistChat sessionId="session-123" />);
 
