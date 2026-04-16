@@ -1,6 +1,9 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import {
 	FACET_DESCRIPTIONS,
+	FACET_LEVEL_LABELS,
+	type FacetLevelCode,
+	getTraitLevelLabel,
 	TRAIT_DESCRIPTIONS,
 	TRAIT_TO_FACETS,
 	type TraitName,
@@ -100,9 +103,11 @@ export const Route = createFileRoute("/library/trait/$slug")({
 });
 
 function SpectrumCard({
+	trait,
 	tagline,
 	spectrum,
 }: {
+	trait: TraitName;
 	tagline: string;
 	spectrum: Array<{ level: string; description: string }>;
 }) {
@@ -111,14 +116,18 @@ function SpectrumCard({
 			<h2 className="text-lg font-semibold tracking-tight text-foreground">Across the spectrum</h2>
 			<p className="mt-3 text-sm leading-6 text-muted-foreground">{tagline}</p>
 			<div className="mt-4 space-y-3">
-				{spectrum.map((level) => (
-					<div key={level.level} className="rounded-[1.25rem] border border-border/70 bg-background p-4">
-						<p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-							{level.level}
-						</p>
-						<p className="mt-2 text-sm leading-6 text-foreground/90">{level.description}</p>
-					</div>
-				))}
+				{spectrum.map((row) => {
+					const levelName = getTraitLevelLabel(trait, row.level);
+					return (
+						<div key={row.level} className="rounded-[1.25rem] border border-border/70 bg-background p-4">
+							<p className="text-sm font-semibold leading-snug text-foreground">
+								{levelName}
+								<span className="ml-2 font-normal tabular-nums text-muted-foreground">({row.level})</span>
+							</p>
+							<p className="mt-2 text-sm leading-6 text-foreground/90">{row.description}</p>
+						</div>
+					);
+				})}
 			</div>
 		</section>
 	);
@@ -126,22 +135,35 @@ function SpectrumCard({
 
 function FacetBreakdown({
 	facets,
+	omitSectionHeading = false,
 }: {
 	facets: Array<{ name: string; description: Record<string, string> }>;
+	/** When true, only the cards render (MDX already provides the “Facet breakdown” heading + intro). */
+	omitSectionHeading?: boolean;
 }) {
 	return (
-		<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
-			<h2 className="text-lg font-semibold tracking-tight text-foreground">Facet breakdown</h2>
-			<div className="mt-4 space-y-3">
+		<section
+			className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5"
+			aria-label={omitSectionHeading ? "Facet breakdown detail" : undefined}
+		>
+			{!omitSectionHeading ? (
+				<h2 className="text-lg font-semibold tracking-tight text-foreground">Facet breakdown</h2>
+			) : null}
+			<div className={omitSectionHeading ? "space-y-3" : "mt-4 space-y-3"}>
 				{facets.map((facet) => (
 					<div key={facet.name} className="rounded-[1.25rem] border border-border/70 bg-background p-4">
 						<h3 className="text-base font-semibold text-foreground">{facet.name}</h3>
 						<div className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-							{Object.entries(facet.description).map(([level, description]) => (
-								<p key={level}>
-									<span className="font-medium text-foreground">{level}:</span> {description}
-								</p>
-							))}
+							{Object.entries(facet.description).map(([code, description]) => {
+								const label = FACET_LEVEL_LABELS[code as FacetLevelCode] ?? code;
+								return (
+									<p key={code}>
+										<span className="font-semibold text-foreground">{label}</span>
+										<span className="ml-2 font-normal tabular-nums text-muted-foreground">({code})</span>
+										<span className="text-foreground/90"> — {description}</span>
+									</p>
+								);
+							})}
 						</div>
 					</div>
 				))}
@@ -163,12 +185,12 @@ function TraitArticlePage() {
 			ctaText={entry.cta}
 			supplementary={
 				<div className="space-y-6">
-					<SpectrumCard tagline={tagline} spectrum={spectrum} />
-					<FacetBreakdown facets={facets} />
+					<SpectrumCard trait={entry.slug as TraitName} tagline={tagline} spectrum={spectrum} />
 				</div>
 			}
 		>
 			<Content />
+			<FacetBreakdown facets={facets} omitSectionHeading />
 		</KnowledgeArticleLayout>
 	);
 }

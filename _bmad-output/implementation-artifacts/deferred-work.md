@@ -1,5 +1,9 @@
 # Deferred Work
 
+## Deferred from: code review of 12-2-knowledge-library-content-expansion.md (2026-04-16)
+
+- ~~**Lighthouse SEO on facet URLs (AC #6)** — No Lighthouse report or recorded scores in-repo for a sample of `/library/facet/*` pages. Run manual or CI Lighthouse (SEO category) before release to confirm >90 remains true for the new tier.~~ **Resolved 2026-04-16:** Manual `lighthouse@12.8.2` (SEO-only, desktop) on local Nitro preview — `imagination`, `activity_level`, `vulnerability` facet pages scored **100** each; JSON-LD present in HTML.
+
 ## Deferred from: code review of 9-4-reassurance-section-and-fear-addressing-cards.md (2026-04-16)
 
 - **`HomepageReassurancePlaceholder` naming** — File and export still say “Placeholder” though the section is fully implemented. Rename to `HomepageReassuranceSection` (or add a clear re-export alias) when convenient to reduce onboarding confusion. [`apps/front/src/components/home/HomepageReassurancePlaceholder.tsx`]

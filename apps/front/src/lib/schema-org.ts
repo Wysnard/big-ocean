@@ -127,3 +127,44 @@ export function buildTraitSchema({
 		},
 	];
 }
+
+export function buildFacetSchema({
+	origin = DEFAULT_ORIGIN,
+	entry,
+	parentTraitUrl,
+	parentTraitMentionName,
+}: {
+	origin?: string;
+	entry: LibraryEntryData;
+	parentTraitUrl: string;
+	parentTraitMentionName: string;
+}) {
+	const url = toAbsoluteUrl(origin, entry.pathname);
+	const offer = buildAssessmentOffer(origin, entry.cta);
+
+	return [
+		{
+			"@type": "DefinedTerm",
+			name: entry.title,
+			description: entry.description,
+			url,
+			inDefinedTermSet: toAbsoluteUrl(origin, "/library/facet"),
+			offers: offer,
+			mentions: [
+				{
+					"@type": "Thing",
+					name: parentTraitMentionName,
+					url: toAbsoluteUrl(origin, parentTraitUrl),
+				},
+			],
+		},
+		{
+			"@type": "EducationalOccupationalCredential",
+			name: `${entry.title} explainer`,
+			description: `Facet-level deep dive for ${entry.title.toLowerCase()}.`,
+			credentialCategory: "Psychology explainer",
+			url,
+			offers: offer,
+		},
+	];
+}
