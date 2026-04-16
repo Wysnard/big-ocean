@@ -1,5 +1,5 @@
-# generated: 2026-04-16T01:18:25+02:00
-# last_updated: 2026-04-16T22:05:00+02:00
+# generated: 2026-04-16T02:20:53+02:00
+# last_updated: 2026-04-16T02:20:53+02:00
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,8 +43,8 @@
 # - epics-nerin-steering-format.md: Steering format (steering-epic-1 to steering-epic-2) — COMPLETED (superseded by director model)
 # - epics-director-model.md: Director model (dm-epic-1 to dm-epic-2) — COMPLETED (retro Apr 2026)
 
-generated: 2026-04-16T01:18:25+02:00
-last_updated: 2026-04-16T22:05:00+02:00
+generated: 2026-04-16T02:20:53+02:00
+last_updated: 2026-04-16T02:20:53+02:00
 project: big-ocean
 project_key: NOKEY
 tracking_system: file-system
