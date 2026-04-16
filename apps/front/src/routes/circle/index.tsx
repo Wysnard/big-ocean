@@ -17,7 +17,6 @@ export const Route = createFileRoute("/circle/")({
 function CirclePage() {
 	return (
 		<ThreeSpaceLayout
-			title="Circle"
 			data-slot="circle-page"
 			data-testid="circle-page"
 			className="min-h-[calc(100dvh-3.5rem)] bg-background pb-28 lg:pb-0"

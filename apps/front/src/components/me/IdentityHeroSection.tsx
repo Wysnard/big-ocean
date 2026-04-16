@@ -27,7 +27,7 @@ export function IdentityHeroSection({ results }: IdentityHeroSectionProps) {
 	return (
 		<div className="overflow-hidden -m-6 sm:-m-8">
 			{/* ArchetypeHeroSection renders its own <section> element.
-			    MePageSection owns the outer <section> landmark (aria-label="Identity Hero"),
+			    MePageSection owns the outer <section> landmark (aria-label="Your identity"),
 			    so we deliberately omit sectionLabel here to avoid duplicate landmarks. */}
 			<ArchetypeHeroSection
 				archetypeName={results.archetypeName}
@@ -36,6 +36,7 @@ export function IdentityHeroSection({ results }: IdentityHeroSectionProps) {
 				description={results.archetypeDescription}
 				overallConfidence={confidenceNormalised}
 				isCurated={results.isCurated}
+				archetypeNameHeadingLevel={3}
 				containerElement="div"
 				/* No displayName — this is the user's own page ("Your Personality Archetype") */
 				/* No showScrollIndicator — only for the results hero */

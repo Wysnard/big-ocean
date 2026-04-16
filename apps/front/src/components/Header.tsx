@@ -13,7 +13,7 @@ export default function Header() {
 			<div className="flex h-full items-center px-4">
 				<Logo />
 
-				<nav aria-label="Main" className="ml-6 hidden items-center gap-4 md:flex">
+				<nav aria-label="Site" className="ml-6 hidden items-center gap-4 md:flex">
 					<Link
 						to="/library"
 						data-testid="header-library-link"
@@ -28,7 +28,7 @@ export default function Header() {
 				</div>
 
 				{/* Desktop nav */}
-				<nav data-slot="header-nav" aria-label="Primary" className="hidden items-center gap-2 md:flex">
+				<nav data-slot="header-nav" aria-label="Account" className="hidden items-center gap-2 md:flex">
 					<UserNav />
 				</nav>
 

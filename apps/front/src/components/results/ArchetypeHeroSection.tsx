@@ -35,6 +35,11 @@ interface ArchetypeHeroSectionProps {
 	sectionLabel?: string;
 	/** Use a non-landmark wrapper when embedding the hero inside another semantic section. */
 	containerElement?: "section" | "div";
+	/**
+	 * Heading level for the archetype name (default 1).
+	 * Use 3 on /me where `PageMain` provides an sr-only h1 and `MePageSection` provides an h2.
+	 */
+	archetypeNameHeadingLevel?: 1 | 2 | 3;
 }
 
 function ScrollIndicator() {
@@ -70,6 +75,7 @@ export function ArchetypeHeroSection({
 	framingLine,
 	sectionLabel,
 	containerElement = "section",
+	archetypeNameHeadingLevel = 1,
 }: ArchetypeHeroSectionProps) {
 	const tooltipBaseId = useId();
 	const Container = containerElement;
@@ -138,12 +144,28 @@ export function ArchetypeHeroSection({
 				</div>
 
 				{/* Archetype Name — display-hero scale */}
-				<h1
-					data-testid="archetype-name"
-					className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-2"
-				>
-					{archetypeName}
-				</h1>
+				{archetypeNameHeadingLevel === 1 ? (
+					<h1
+						data-testid="archetype-name"
+						className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-2"
+					>
+						{archetypeName}
+					</h1>
+				) : archetypeNameHeadingLevel === 2 ? (
+					<h2
+						data-testid="archetype-name"
+						className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-2"
+					>
+						{archetypeName}
+					</h2>
+				) : (
+					<h3
+						data-testid="archetype-name"
+						className="font-display text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground mb-2"
+					>
+						{archetypeName}
+					</h3>
+				)}
 
 				{/* OCEAN code — each letter as a navigable button with tooltip (AC #2) */}
 				<div

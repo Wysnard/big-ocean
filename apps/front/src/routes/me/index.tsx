@@ -24,7 +24,7 @@ type MeSectionSpec = {
 };
 
 const ME_SECTION_SPECS: readonly MeSectionSpec[] = [
-	{ key: "identity-hero", title: "Identity Hero" },
+	{ key: "identity-hero", title: "Your identity" },
 	{ key: "portrait", title: "Your Portrait" },
 	{ key: "growth", title: "Your Growth", isConditional: true, hidden: true },
 	{ key: "public-face", title: "Your Public Face" },
@@ -201,7 +201,7 @@ function MePageSections({
 	return (
 		<div className="space-y-10">
 			<MePageSection
-				title="Identity Hero"
+				title="Your identity"
 				data-slot="me-section-identity-hero"
 				data-testid="me-section-identity-hero"
 			>

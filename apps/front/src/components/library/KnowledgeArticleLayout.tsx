@@ -24,7 +24,7 @@ export function KnowledgeArticleLayout({
 	return (
 		<>
 			<LibraryNav activeTier={tier} articleTitle={title} />
-			<PageMain title={title} className="bg-background px-4 py-10 sm:px-6 lg:px-8">
+			<PageMain className="bg-background px-4 py-10 sm:px-6 lg:px-8">
 				<div className="mx-auto max-w-6xl">
 					<div className="rounded-[2rem] border border-border/70 bg-linear-to-br from-primary/[0.04] via-background to-primary/[0.07] p-6 shadow-sm sm:p-8">
 						<header className="max-w-3xl">

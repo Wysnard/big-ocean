@@ -24,6 +24,16 @@ describe("ArchetypeHeroSection", () => {
 		expect(screen.getByTestId("archetype-name")).toHaveTextContent("The Beacon");
 	});
 
+	it("renders archetype name as h3 when archetypeNameHeadingLevel is 3", () => {
+		renderWithTooltipProvider(
+			<ArchetypeHeroSection {...defaultProps} archetypeNameHeadingLevel={3} />,
+		);
+		expect(screen.getByRole("heading", { level: 3, name: "The Beacon" })).toHaveAttribute(
+			"data-testid",
+			"archetype-name",
+		);
+	});
+
 	it("renders OCEAN code letters", () => {
 		renderWithTooltipProvider(<ArchetypeHeroSection {...defaultProps} />);
 		expect(screen.getByTestId("ocean-code")).toHaveTextContent("OCEAR");

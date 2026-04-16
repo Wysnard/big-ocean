@@ -33,7 +33,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
 	return (
-		<PageMain className="bg-slate-100">
+		<PageMain title="Home" className="bg-slate-100">
 			<DepthScrollProvider>
 				<div className="lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.95fr)]">
 					<div className="min-w-0 pb-24 lg:pb-0">

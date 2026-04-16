@@ -221,7 +221,7 @@ function RelationshipLetterPage() {
 					)}
 				</div>
 
-				<main className="space-y-16">
+				<div className="space-y-16">
 					<section aria-labelledby="relationship-letter-a-title" className="scroll-mt-8">
 						<h2 id="relationship-letter-a-title" className="sr-only">
 							This year&apos;s letter
@@ -260,7 +260,7 @@ function RelationshipLetterPage() {
 					/>
 
 					<RelationshipLetterNextAnchor />
-				</main>
+				</div>
 			</div>
 		</PageMain>
 	);
