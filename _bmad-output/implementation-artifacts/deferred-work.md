@@ -219,6 +219,11 @@
 - **Unbounded notes per analysis (no insert cap)** — `createRelationshipSharedNote` validates body length only; no ceiling on total notes per analysis. A participant could POST unlimited notes, causing unbounded list payloads. MVP; no scalability requirement in spec. [`apps/api/src/use-cases/create-relationship-shared-note.use-case.ts:14`]
 - **`isLatestVersion=true` vacuously when no completed result** — `isLatestVersion(resultId, null)` returns `true` when `getLatestByUserId` returns `null`, suppressing the "earlier chapter" banner. Pre-existing behavior from Story 36-3. [`apps/api/src/use-cases/get-relationship-analysis.use-case.ts:85`]
 
+## Deferred from: code review of 7-3-relationship-letter-page-living-relational-space — re-run (2026-04-16)
+
+- **`resetRelationshipSharedNoteMockStore` unused** — In-memory notes mock is not imported by any test; calling the reset helper in `beforeEach` is optional until tests adopt that layer. [`packages/infrastructure/src/repositories/__mocks__/relationship-shared-note.drizzle.repository.ts:11`]
+- **E2E for ritual → letter → notes** — AC9 prefers unit/integration; full Playwright journey deferred unless QA requests it.
+
 ## Deferred from: code review of 8-2-subscription-checkout-flow.md (2026-04-16)
 
 - **Portal `fetch` has no AbortSignal / timeout** — A hung TCP connection can leave the manage action pending until the browser gives up; same class of issue as other cookie-authenticated fetches. Defer to a cross-cutting fetch hygiene pass. [`apps/front/src/lib/polar-customer-portal.ts:10`]

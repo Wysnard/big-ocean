@@ -6,7 +6,7 @@
 
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { Button } from "@workspace/ui/components/button";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { PageMain } from "@/components/PageMain";
 import { RelationshipLetterBody } from "@/components/relationship/RelationshipLetterBody";
@@ -130,9 +130,14 @@ function RelationshipLetterPage() {
 				title="Relationship letter"
 				className="min-h-screen bg-background"
 			>
-				<div className="sr-only" aria-live="polite">
-					Opening reading together…
-				</div>
+				<output
+					className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-5"
+					aria-live="polite"
+					aria-busy="true"
+				>
+					<Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+					<p className="text-center text-sm text-muted-foreground">Opening reading together…</p>
+				</output>
 			</PageMain>
 		);
 	}

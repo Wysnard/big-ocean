@@ -1,6 +1,6 @@
 # Story 7.3: Relationship Letter Page — Living Relational Space
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -212,23 +212,8 @@ Composer (Cursor)
 
 ### Review Findings
 
-- [ ] [Review][Decision] **Section B raw numbers vs complementarity framing** — `RelationshipLetterTraitGrid` displays `Math.round(score)` beneath each bar for both participants, making it readable as a ranking. The spec requires "complementarity framing, not winner/loser." Fix direction depends on whether product wants (a) remove the numbers entirely, (b) replace with qualitative band labels (Low/Mid/High), or (c) add per-trait complementarity copy. [AC: #2] [`apps/front/src/components/relationship/RelationshipLetterTraitGrid.tsx:44`]
-- [ ] [Review][Decision] **`authorDisplayName` live-from-DB vs snapshot** — `listByAnalysisId` resolves `authorDisplayName` via a live `INNER JOIN user` at read time (`relationship-shared-note.drizzle.repository.ts:40`), so name changes retroactively update all historical notes. `createRelationshipSharedNote` returns the analysis-time snapshot name instead, causing inconsistency. Fix requires either (a) adding an `author_display_name` column + migration so every note freezes the name at write time, or (b) accepting live-resolution for both list and create. [AC: #4] [`packages/infrastructure/src/repositories/relationship-shared-note.drizzle.repository.ts:40`]
-- [ ] [Review][Patch] **Module-level mock `notes` array bleeds between test files** — `__mocks__/relationship-shared-note.drizzle.repository.ts:8` — `const notes: RelationshipSharedNoteWithAuthor[] = []` at module scope is shared across the Vitest worker lifetime. Add a `_reset()` export or use a per-`Layer.effect` closure to isolate state. [`packages/infrastructure/src/repositories/__mocks__/relationship-shared-note.drizzle.repository.ts:8`]
-- [ ] [Review][Patch] **4 extra DB queries fired on every poll tick while content is null** — `get-relationship-analysis.use-case.ts:70` — `Effect.all([latestUserA, latestUserB, resultA, resultB])` runs unconditionally, including when `analysis.content === null`. Short-circuit before the block: if `!analysis.content`, return early with empty maps and skip the 4 calls. [`apps/api/src/use-cases/get-relationship-analysis.use-case.ts:70`]
-- [ ] [Review][Patch] **Back button uses `navigate()` instead of `<Link>` — violates CLAUDE.md nav rule** — `$analysisId.tsx` uses `<Button onClick={() => navigate({ to: "/" })}>` for non-programmatic navigation. Replace with `<Button asChild ...><Link to="/">Back</Link></Button>`. [AC: #1] [`apps/front/src/routes/relationship/$analysisId.tsx:183`]
-- [ ] [Review][Patch] **`serializeFacetMap` and `serializeTraitMap` are identical** — both functions loop `Object.entries(...)` to copy `{ score, confidence }`. Collapse to one `serializeScoreMap` helper. [`apps/api/src/use-cases/get-relationship-analysis.use-case.ts:24`]
-- [ ] [Review][Patch] **`FacetScoreSchema` cross-group import — silent coupling** — `relationship.ts:17` imports `FacetScoreSchema` from `./profile`. Any breaking change to profile's facet schema automatically changes the relationship wire format. Add a comment or extract to a shared schema. [`packages/contracts/src/http/groups/relationship.ts:17`]
-- [ ] [Review][Patch] **Empty-string `content` breaks ready/polling/notes/ritual coherence** — `shouldPollRelationshipAnalysis` treats `""` as "ready" (non-null); the page renders the ready branch; but `useRelationshipSharedNotes(enabled: Boolean(""))` stays disabled and the ritual `useEffect` bails because `!data?.content` is truthy. Normalize `""` → `null` in the use-case before returning. [`apps/api/src/use-cases/get-relationship-analysis.use-case.ts:92`]
-- [ ] [Review][Patch] **Failed notes list request silently shows "No notes yet"** — `RelationshipSharedNotesPanel` checks only `isLoading`, not `isError`. On error, `notes` defaults to `[]` and the copy reads "No notes yet." Add an `isError` branch with a retry prompt. [`apps/front/src/components/relationship/RelationshipSharedNotesPanel.tsx:110`]
-- [ ] [Review][Patch] **Create-note failure is invisible to the user** — `RelationshipSharedNotesPanel` `onSubmit` `catch {}` silently swallows errors; the comment says "Parent can surface toast later" but no mechanism exists. Surface the API error message (including 400 validation text). [`apps/front/src/components/relationship/RelationshipSharedNotesPanel.tsx:41`]
-- [ ] [Review][Patch] **No client-side maxLength on note textarea** — server enforces 2000 chars but the `<Textarea>` has no `maxLength` prop. Add `maxLength={2000}` and an optional character counter. [`apps/front/src/components/relationship/RelationshipSharedNotesPanel.tsx:80`]
-- [ ] [Review][Patch] **NaN trait scores break TraitBar** — `?? 0` does not replace `NaN`; if a score field is `NaN`, `width: "NaN%"` and `aria-valuenow={NaN}` render. Add `Number.isFinite(score) ? score : 0` in `TraitBar`. [`apps/front/src/components/relationship/RelationshipLetterTraitGrid.tsx:28`]
-- [ ] [Review][Patch] **Bad ISO `createdAt` on a note renders "Invalid Date"** — `RelationshipSharedNotesPanel:124` uses `new Date(n.createdAt).toLocaleString()` without a guard. Add a fallback label when the date is invalid. [`apps/front/src/components/relationship/RelationshipSharedNotesPanel.tsx:124`]
-- [ ] [Review][Patch] **"Relationship Analyses" heading/aria-label visible in RelationshipAnalysesList** — `RelationshipAnalysesList.tsx` still has `aria-label="Relationship analyses"` on the section and a matching visible heading. Change to "Relationship letters" / "Your letters". [AC: #8] [`apps/front/src/components/relationship/RelationshipAnalysesList.tsx:25`]
-- [ ] [Review][Patch] **`authorUserId` exposed in notes API contract** — `RelationshipSharedNoteItemSchema` includes `authorUserId: S.String`, transmitting internal user IDs to both participants over the wire. Remove from the schema; `authorDisplayName` is sufficient. [AC: #4] [`packages/contracts/src/http/groups/relationship.ts:101`]
-- [ ] [Review][Patch] **Missing test for `useRelationshipSharedNotes` hook** — AC9 requires tests for new hooks. Other hooks in the same directory have tests. Add `apps/front/src/hooks/useRelationshipSharedNotes.test.ts` covering: query disabled when `enabled=false`, query fires when `enabled=true`, `onSuccess` invalidates correct cache key. [AC: #9]
-- [ ] [Review][Patch] **Ritual redirect fires in `useEffect` — brief content flash on first visit** — full letter content renders for one frame before `navigate({ replace: true })` fires. Render `null` when `data.content` is non-null and `!hasSeenRelationshipLetterRitual(analysisId)` to prevent the flash. [AC: #6] [`apps/front/src/routes/relationship/$analysisId.tsx:58`]
+_First-pass review (2026-04-16): prior decision/patch items were re-verified in HEAD and addressed in code (see `#### BMAD code-review re-run` summary)._
+
 - [x] [Review][Defer] **Unbounded notes per analysis (no insert cap)** — `create-relationship-shared-note.use-case.ts` validates only body length, not total count. A participant could POST unlimited notes, causing unbounded list responses. Pre-existing pattern for MVP; no scalability requirement specified. [`apps/api/src/use-cases/create-relationship-shared-note.use-case.ts:14`]
 - [x] [Review][Defer] **`isLatestVersion=true` when no completed result** — `isLatestVersion(resultId, null)` returns `true` vacuously when `getLatestByUserId` returns `null`. The "earlier chapter" banner may be incorrectly suppressed. Pre-existing behavior from Story 36-3, not introduced here. [`apps/api/src/use-cases/get-relationship-analysis.use-case.ts:85`]
 
@@ -236,7 +221,23 @@ Composer (Cursor)
 
 - **2026-04-16:** Story 7.3 implemented — living relationship letter page, shared notes API, ritual persistence, tests, and sprint status set to **review**.
 - **2026-04-16:** Code review (3-layer adversarial) — 2 decision-needed, 15 patch, 2 deferred, 0 dismissed.
+- **2026-04-16:** BMAD code-review re-run — prior items verified fixed in HEAD; 1 new patch, 2 defer, remainder dismissed as addressed or noise.
+- **2026-04-16:** Re-review patch applied — visible loading on `opening-ritual` handoff; story marked **done**.
 
 ---
 
-**Story completion status:** Implementation complete — **review** (ready for `code-review` workflow).
+#### BMAD code-review re-run (2026-04-16)
+
+**Summary of first-pass closure:** those issues were verified implemented (short-circuit when content null, merged `serializeScoreMap`, `FacetScoreSchema` coupling comment, Back as `<Link>`, blank `content` normalization, notes list/create error handling, textarea `maxLength` + counter, `TraitBar` finite scores, note timestamp fallback, “Relationship letters” copy, `authorUserId` removed from API schema, `useRelationshipSharedNotes` tests, `opening-ritual` gate, live `authorDisplayName` via `UserAccountRepository`, per-trait complementarity copy, `resetRelationshipSharedNoteMockStore` export).
+
+New triage:
+
+- [x] [Review][Patch] **`opening-ritual` shell lacks visible loading affordance** — Addressed: visible `Loader2` + copy in `opening-ritual` branch, `output` with `aria-live` / `aria-busy`. [AC #6] [`apps/front/src/routes/relationship/$analysisId.tsx`]
+
+- [x] [Review][Defer] **`resetRelationshipSharedNoteMockStore` unused by tests** — No test file imports the in-memory notes repository mock; cross-test leakage remains theoretical until the mock is adopted. Call `resetRelationshipSharedNoteMockStore()` from `beforeEach` when that layer is used. [`packages/infrastructure/src/repositories/__mocks__/relationship-shared-note.drizzle.repository.ts:11`]
+
+- [x] [Review][Defer] **E2E for full letter journey** — AC9 allows unit/integration; Playwright coverage of ritual → letter → notes is optional unless QA prioritizes it.
+
+---
+
+**Story completion status:** **done** — open patches from re-review resolved.
