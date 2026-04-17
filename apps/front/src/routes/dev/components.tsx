@@ -1,4 +1,4 @@
-import { ClientOnly, createFileRoute, redirect } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute, Link, redirect } from "@tanstack/react-router";
 import type {
 	FacetName,
 	FacetResult,
@@ -79,6 +79,7 @@ const SECTIONS = [
 	{ id: "charts", label: "Charts" },
 	{ id: "modals", label: "Modals" },
 	{ id: "depth", label: "Depth Zones" },
+	{ id: "library-composer", label: "Library UX" },
 ] as const;
 
 function StickyNav() {
@@ -1489,6 +1490,120 @@ function DepthSection() {
 	);
 }
 
+/* ── Library article redesigns (dev routes) ───────────── */
+
+function LibraryComposerSection() {
+	return (
+		<section className="mb-20">
+			<SectionHeading
+				id="library-composer"
+				title="Library article layouts"
+				subtitle="Three full-page explorations of the knowledge article shell — same sample copy, different information architecture"
+			/>
+			<SubSection title="Composer iterations">
+				<p className="text-body text-muted-foreground max-w-3xl mb-6">
+					Each route mirrors production pieces (<code className="text-xs">LibraryNav</code>,{" "}
+					<code className="text-xs">AssessmentCTA</code>, shared prose) so you can compare rhythm,
+					density, and where secondary context lands.
+				</p>
+				<div className="grid gap-4 md:grid-cols-3">
+					<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+						<CardHeader>
+							<CardTitle className="text-lg">Iteration 1</CardTitle>
+							<CardDescription>
+								Editorial spine — sticky TOC, accent hero, CTA after reading
+							</CardDescription>
+						</CardHeader>
+						<CardFooter>
+							<Button variant="secondary" asChild className="w-full">
+								<Link to="/dev/library/composer/redesign-1">Open full page</Link>
+							</Button>
+						</CardFooter>
+					</Card>
+					<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+						<CardHeader>
+							<CardTitle className="text-lg">Iteration 2</CardTitle>
+							<CardDescription>Magazine split — hero column, story column, context rail</CardDescription>
+						</CardHeader>
+						<CardFooter>
+							<Button variant="secondary" asChild className="w-full">
+								<Link to="/dev/library/composer/redesign-2">Open full page</Link>
+							</Button>
+						</CardFooter>
+					</Card>
+					<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+						<CardHeader>
+							<CardTitle className="text-lg">Iteration 3</CardTitle>
+							<CardDescription>
+								Capsule reader — single glass surface, inset secondary modules
+							</CardDescription>
+						</CardHeader>
+						<CardFooter>
+							<Button variant="secondary" asChild className="w-full">
+								<Link to="/dev/library/composer/redesign-3">Open full page</Link>
+							</Button>
+						</CardFooter>
+					</Card>
+				</div>
+			</SubSection>
+		</section>
+	);
+}
+
+function LibraryDirectionMockupsSection() {
+	return (
+		<section className="mb-20">
+			<SectionHeading
+				id="library-direction-mockups"
+				title="Library article directions (validated)"
+				subtitle="Real MDX with reading rails (trait, facet, archetype), primary-themed heroes, facet maps, and sticky side columns"
+			/>
+			<div className="grid gap-4 md:grid-cols-3">
+				<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+					<CardHeader>
+						<CardTitle className="text-lg">Trait · Openness</CardTitle>
+						<CardDescription>
+							Reading rail; main column: facet map, across-the-spectrum, MDX; side column: CTA only
+						</CardDescription>
+					</CardHeader>
+					<CardFooter>
+						<Button variant="secondary" asChild className="w-full">
+							<Link to="/dev/library/direction/trait">Open full page</Link>
+						</Button>
+					</CardFooter>
+				</Card>
+				<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+					<CardHeader>
+						<CardTitle className="text-lg">Facet · Imagination</CardTitle>
+						<CardDescription>
+							Reading rail + poles + sibling grid + MDX; parent trait + CTA column; Imagination heading
+							anchors
+						</CardDescription>
+					</CardHeader>
+					<CardFooter>
+						<Button variant="secondary" asChild className="w-full">
+							<Link to="/dev/library/direction/facet">Open full page</Link>
+						</Button>
+					</CardFooter>
+				</Card>
+				<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+					<CardHeader>
+						<CardTitle className="text-lg">Archetype · Beacon</CardTitle>
+						<CardDescription>
+							Pull-quote hero, reading rail, article then inline CTA, relational “pairs with” column
+						</CardDescription>
+					</CardHeader>
+					<CardFooter>
+						<Button variant="secondary" asChild className="w-full">
+							<Link to="/dev/library/direction/archetype">Open full page</Link>
+						</Button>
+					</CardFooter>
+				</Card>
+			</div>
+		</section>
+	);
+}
+
 /* ── Main Page ──────────────────────────────────────────── */
 
 function KitchenSinkPage() {
@@ -1504,6 +1619,8 @@ function KitchenSinkPage() {
 				<ChartsSection />
 				<ModalsSection />
 				<DepthSection />
+				<LibraryComposerSection />
+				<LibraryDirectionMockupsSection />
 				<ClientOnly fallback={null}>
 					<OceanLoadingSection />
 				</ClientOnly>

@@ -87,7 +87,7 @@ export const Route = createFileRoute("/library/")({
 });
 
 function LibraryIndexPage() {
-	const { groups } = Route.useLoaderData();
+	const { groups } = Route.useLoaderData() as { groups: LibraryGroup[] };
 
 	return (
 		<>

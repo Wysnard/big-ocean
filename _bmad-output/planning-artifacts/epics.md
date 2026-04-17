@@ -1187,6 +1187,38 @@ So that SEO coverage grows and more organic visitors discover the product.
 **And** all new pages have Schema.org structured data and assessment CTAs
 **And** the sitemap is automatically updated when new pages are added
 
+### Story 12.3: Knowledge Library Article Page Layout (UX §21)
+
+As a reader arriving from search or `LibraryArticleCard`,
+I want trait, facet, and archetype articles to use one coherent layout system with tier-appropriate modules and in-page navigation,
+So that longform library content feels like the rest of the product and stays easy to scan and orient within.
+
+**Acceptance Criteria:**
+
+**Given** UX Design Specification **§21 Knowledge Library Article Page Layout** and direction mockups `/dev/library/direction/trait`, `/dev/library/direction/facet`, `/dev/library/direction/archetype`
+
+**When** production `/library/trait/$slug`, `/library/facet/$slug`, and `/library/archetype/$slug` render
+
+**Then** each tier follows its spine (hero → reading rail → main column → optional side column) per §21.5–§21.7, honoring the **Intimacy Principle** and **primary-tinted orientation** (§21.2)
+
+**And** responsive grid matches §21.3: default `<lg` single column with **reading rail first**; `lg` two columns `[14rem | minmax(0,1fr)]` with side column stacked below main where applicable; `xl` three columns with sticky right rail where specified
+
+**And** **reading rail:** sticky numbered TOC on `lg+`; on `<lg`, `<details>` “On this page” **closed by default**; hash links target stable section `id`s; `IntersectionObserver` (or equivalent) sets active row emphasis and `aria-current="location"`; `scroll-behavior: smooth` only when `prefers-reduced-motion: no-preference`
+
+**And** **trait** pages: facet map → across-the-spectrum → visual seam → MDX body (main); assessment CTA + optional “continue exploring” in side column (`xl`; below on `lg`) per §21.5
+
+**And** **facet** pages: poles/scale → sibling facet map → seam → MDX (main); parent trait + CTA + optional sibling continue in side column per §21.6
+
+**And** **archetype** pages: hero includes **identity pull-quote**; MDX body with **inline assessment CTA** after the article; side column **Who this pattern pairs with** relational cards per §21.7
+
+**And** **MDX contract (§21.8):** stable ids on every `h2` (or build-time slugging) that the rail lists; non-MDX modules (facet map, spectrum, poles, sibling map) expose matching `id` + `scroll-margin-top`; estimated read time in hero (static or word-count — implementer’s choice)
+
+**And** **accessibility (§21.9):** focusable rail links with visible focus rings; mobile disclosure does not trap focus; touch targets ≥44px where practical; active chapter not indicated by color alone
+
+**And** production layout matches direction mockups in visual QA; drift between `/dev/library/direction/*` and production is **retired** after parity (§21.10)
+
+**And** shared implementation converges on `KnowledgeArticleLayout` (or successor) with a tier prop and optional shared chrome (e.g. reading rail + scroll-spy) per architecture ADR-49 and §21.10
+
 ---
 
 ## Epic 13: Accessibility Foundations

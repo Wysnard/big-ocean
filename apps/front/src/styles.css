@@ -1,5 +1,12 @@
 @import "@workspace/ui/globals.css";
 
+/* In-page anchor jumps (reading rails, TOC) ease to the target instead of jumping. */
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
 /* Story 12.2: Pulse highlight animation for transcript scroll target */
 @keyframes pulse-highlight {
 	0%,

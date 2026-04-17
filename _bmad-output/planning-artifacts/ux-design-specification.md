@@ -1,8 +1,12 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-lastEdited: '2026-04-16'
+lastEdited: '2026-04-18'
 lastStep: 14
 editHistory:
+  - date: '2026-04-18'
+    type: 'revision'
+    source: 'Stakeholder decision — knowledge library article layouts (trait / facet / archetype directions)'
+    summary: 'New §21 Knowledge Library Article Page Layout: tier-specific spines, reading rail (mobile disclosure + desktop sticky + active-section highlighting), responsive grid (lg two-column, xl three-column), hero rules, main-column modules, CTA placement, MDX anchor contract, smooth in-page scroll; cross-ref from §11 LibraryArticleCard.'
   - date: '2026-04-16'
     type: 'revision'
     source: 'Stakeholder decision — consolidate Results into Me (canonical /me)'
@@ -46,7 +50,7 @@ inputDocuments:
 # UX Design Specification big-ocean
 
 **Author:** Vincentlay
-**Date:** 2026-04-16 (latest revision — see `editHistory` frontmatter for full timeline)
+**Date:** 2026-04-18 (latest revision — see `editHistory` frontmatter for full timeline)
 
 **Status:** Revision in progress. All 14 workflow steps are marked completed in `stepsCompleted`; substantive revisions (2026-04-11 architecture pivot, **2026-04-16 Results → Me URL canonicalization §18.17**) are in-place updates, not a full re-run of the workflow.
 
@@ -3776,6 +3780,8 @@ The following components are new additions required for the three-space architec
 
 **Accessibility:** `<article>` with semantic headings. Link to the full article.
 
+**Full article page layout (route `/library/...`):** See **§21 Knowledge Library Article Page Layout** — how trait, facet, and archetype articles are structured when the user opens the article from the library or deep links.
+
 ---
 
 #### WeeklyLetterCard (Today page top inline card)
@@ -7107,5 +7113,104 @@ All breakpoints hide BottomNav. Focused reading is the whole viewport.
 | Conversion pitch component | Doesn't exist | Inline conversion section with Polar checkout | Build component + integrate Polar embed |
 | Three-act logic | Doesn't exist | `includes_conversion_pitch` calculation | Build week-number calculator |
 | Edge case handling | Doesn't exist | Skipped weeks, 1-2 check-ins fallback, late check-ins | Build in generation job logic |
+
+---
+
+## 21. Knowledge Library Article Page Layout
+
+### 21.1 Purpose
+
+Public knowledge articles at `/library/{tier}/{slug}` serve **both** unauthenticated education and post-assessment reference. This section locks the **layout and interaction decisions** validated in dev direction mockups (`/dev/library/direction/trait`, `/dev/library/direction/facet`, `/dev/library/direction/archetype`) so implementation converges on one system, not ad-hoc per-page shells.
+
+**Relationship to other sections:** Library surfacing from Today / weekly letter uses `LibraryArticleCard` (§11.4a). This section defines the **destination article page** only.
+
+### 21.2 Design principles
+
+1. **Tier-specific spine** — Trait, facet, and archetype articles use different information architecture; all share the same outer rhythm (hero → reading rail → main column → optional side column).
+2. **Neutral editorial trait hero** — No “what you will learn” bullet list in the trait hero; orientation lives in headings, the facet map, spectrum section, and body copy.
+3. **Primary-tinted orientation** — Eyebrow, subtitle line, key icons, and reading-rail numbers use theme `primary` so the library feels cohesive with the rest of the product without loud marketing chrome.
+4. **Intimacy Principle** — Library remains private reference and education: no social counts, no “compare to everyone,” no directory framing in copy or layout.
+5. **Real anchors** — Reading rail links jump to in-page `id`s on headings and on mock “above the fold” modules; targets use `scroll-margin-top` so content clears sticky global navigation.
+
+### 21.3 Responsive grid (all tiers)
+
+| Breakpoint | Columns | Behavior |
+|------------|---------|----------|
+| Default (`<lg`) | Single column, source order | **Reading rail first** (see §21.4), then main article card, then side column content when present. |
+| `lg` | Two columns: `[14rem | minmax(0,1fr)]` | Reading rail + main. **Side column** (CTA, parent trait, relational cards) **stacks below** the main article at full width — avoids a cramped three-column band on tablets. |
+| `xl` | Three columns: `[14rem | minmax(0,1fr) | 20rem]` (archetype third column `18rem` acceptable) | Side column becomes a **right rail**, `position: sticky` with top offset under global nav. |
+
+**Implementation note:** Side column placement uses explicit grid column assignment so it occupies column 2 on `lg` and column 3 row 1 on `xl` (see direction mockup implementation).
+
+### 21.4 Reading rail
+
+**Desktop (`lg+`, always visible in left column):** Sticky mini-TOC with numbered chapter rows. Each row is a single internal `Link` to the current route with a **hash** matching a section `id`.
+
+**Mobile / small tablet (`<lg`):** The same chapter list is wrapped in a **`<details>` disclosure** titled “On this page”, **closed by default** so the first paragraph of the article is not pushed below the fold. The summary line may show the **currently active** chapter label when known.
+
+**Active section:** Use `IntersectionObserver` (or equivalent) so the row for the section nearest the viewport top (after accounting for sticky nav) receives **visual emphasis** and `aria-current="location"` on its link. Keeps keyboard and screen-reader users oriented during long scroll.
+
+**Motion:** Prefer `scroll-behavior: smooth` on `html` for hash navigation **only** when `prefers-reduced-motion: no-preference`.
+
+### 21.5 Trait articles (example: Openness)
+
+| Zone | Content |
+|------|---------|
+| Hero | Themed eyebrow + primary subtitle line (“Trait · Big Five reference” style), title, description, **estimated read time** (clock icon in primary). |
+| Main column (single card) | **Facet map** (six facets × levels, scan-first module) → **Across the spectrum** (trait levels + tagline) → **visual seam** (“Long form article” rule between modules and prose) → **MDX body** with standard longform typography. |
+| Side column (`xl` only; below article on `lg`) | **Assessment CTA** + optional **“Continue exploring”** card linking into the facet library (one suggested next read). |
+
+**Reading rail chapter list** must include: facet map module, across-the-spectrum module, then each major `h2` in the MDX (stable `id`s on headings).
+
+### 21.6 Facet articles (example: Imagination)
+
+| Zone | Content |
+|------|---------|
+| Hero | Facet guide eyebrow; **primary** line linking to the **parent trait** article; title; description; read time. |
+| Main column | **Poles / scale** block (levels-first) → **Sibling facet map** (grid of all facets under the parent trait; highlight “You are here”; use **`Layers3`** for this map to distinguish from the parent-trait `MapPinned` hero cue) → **same longform seam** → MDX body. |
+| Side column | **Parent trait** summary + link → **Assessment CTA** → optional **continue** card to a sibling facet. |
+
+**Reading rail** includes: poles section id, sibling-map section id, then each MDX `h2` id.
+
+### 21.7 Archetype articles (example: Beacon)
+
+| Zone | Content |
+|------|---------|
+| Hero | Archetype guide eyebrow; primary subtitle; title; description; read time; **identity pull-quote** (short excerpt from the article voice, `font-heading`, body text color for contrast — scale type down on small screens). |
+| Main column | MDX body → **inline assessment CTA immediately after the article** (earned placement, not only in the rail). |
+| Side column | **“Who this pattern pairs with”** — small set of related archetype cards with **relational** labels (e.g. ballast / contrast / warmth), not a generic directory. |
+
+**Reading rail** follows MDX `h2` order for the archetype file.
+
+### 21.8 MDX and content contract
+
+- **Stable heading ids:** Library MDX files expose explicit `<h2 id="…">` (or equivalent build-time slugging) for every chapter the reading rail lists. Mock-only modules (facet map, spectrum block, poles, sibling map) expose matching `id` + `scroll-margin-top`.
+- **Reading time:** Shown in the hero; v1 may use static estimates per article or word-count metadata — implementation choice, but the **surface** is required.
+- **Prose:** Shared longform token set (`max-width` for line length, heading scale, list styles) across tiers.
+
+### 21.9 Accessibility and interaction checklist
+
+- [ ] Reading rail links are real focusable controls with visible **focus rings**.
+- [ ] `aria-current="location"` reflects the active section when scroll-spy is used.
+- [ ] Mobile disclosure has an accessible name (“On this page”) and does not trap focus.
+- [ ] Touch targets for rail rows and disclosure summary meet **minimum 44px** height where practical.
+- [ ] Color is **not** the only indicator for “active” chapter (use border/weight change too).
+
+### 21.10 Implementation direction
+
+- **Converge** production `KnowledgeArticleLayout` (or successor) toward these patterns: tier prop selects spine modules; reading rail + observer logic can live in a shared `LibraryArticleChrome` (name TBD) used by trait/facet/archetype routes.
+- **Retire drift** between `/dev/library/direction/*` and production once parity is verified in visual QA.
+
+### 21.11 Implementation gap (current → target)
+
+| Area | Current | Target | Work Required |
+|------|---------|--------|---------------|
+| Layout shell | `KnowledgeArticleLayout` — hero + two-column article + supplementary | Tier-specific spine + reading rail + responsive three-breakpoint grid | Refactor layout component(s); migrate trait/facet/archetype routes |
+| Reading rail | None in production | Disclosure on small viewports; sticky TOC + scroll spy on large | New component + `IntersectionObserver` hook |
+| Trait modules | Spectrum lives in supplementary rail | Facet map + spectrum in **main** column; rail for CTA + optional continue card | Move modules; add facet map data wiring |
+| Facet modules | Levels in supplementary | Poles + sibling map in main; rail for parent + CTA | Move modules; sibling grid |
+| Archetype hero | Title + description only | Add pull-quote + relational side column | Hero + `RelatedPatternsColumn` pattern |
+| MDX ids | Partial | All listed chapters have stable ids | Audit MDX; add missing ids |
+| Smooth scroll | None | `scroll-behavior: smooth` behind reduced-motion guard | Global CSS (already added in dev branch pattern) |
 
 ---

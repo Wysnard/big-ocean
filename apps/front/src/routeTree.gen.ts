@@ -26,7 +26,6 @@ import { Route as TodayCalendarRouteImport } from './routes/today/calendar'
 import { Route as RelationshipAnalysisIdRouteImport } from './routes/relationship/$analysisId'
 import { Route as PublicProfilePublicProfileIdRouteImport } from './routes/public-profile.$publicProfileId'
 import { Route as MeConversationSessionIdRouteImport } from './routes/me/$conversationSessionId'
-import { Route as DevLibraryArticleLayoutRouteImport } from './routes/dev/library-article-layout'
 import { Route as DevEmailsRouteImport } from './routes/dev/emails'
 import { Route as DevComponentsRouteImport } from './routes/dev/components'
 import { Route as TodayWeekWeekIdRouteImport } from './routes/today/week.$weekId'
@@ -37,6 +36,18 @@ import { Route as LibraryScienceSlugRouteImport } from './routes/library/science
 import { Route as LibraryGuidesSlugRouteImport } from './routes/library/guides.$slug'
 import { Route as LibraryFacetSlugRouteImport } from './routes/library/facet.$slug'
 import { Route as LibraryArchetypeSlugRouteImport } from './routes/library/archetype.$slug'
+import { Route as DevLibraryOpusRedesign3RouteImport } from './routes/dev/library/opus/redesign-3'
+import { Route as DevLibraryOpusRedesign2RouteImport } from './routes/dev/library/opus/redesign-2'
+import { Route as DevLibraryOpusRedesign1RouteImport } from './routes/dev/library/opus/redesign-1'
+import { Route as DevLibraryGptRedesign3RouteImport } from './routes/dev/library/gpt/redesign-3'
+import { Route as DevLibraryGptRedesign2RouteImport } from './routes/dev/library/gpt/redesign-2'
+import { Route as DevLibraryGptRedesign1RouteImport } from './routes/dev/library/gpt/redesign-1'
+import { Route as DevLibraryDirectionTraitRouteImport } from './routes/dev/library/direction/trait'
+import { Route as DevLibraryDirectionFacetRouteImport } from './routes/dev/library/direction/facet'
+import { Route as DevLibraryDirectionArchetypeRouteImport } from './routes/dev/library/direction/archetype'
+import { Route as DevLibraryComposerRedesign3RouteImport } from './routes/dev/library/composer/redesign-3'
+import { Route as DevLibraryComposerRedesign2RouteImport } from './routes/dev/library/composer/redesign-2'
+import { Route as DevLibraryComposerRedesign1RouteImport } from './routes/dev/library/composer/redesign-1'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -124,11 +135,6 @@ const MeConversationSessionIdRoute = MeConversationSessionIdRouteImport.update({
   path: '/me/$conversationSessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DevLibraryArticleLayoutRoute = DevLibraryArticleLayoutRouteImport.update({
-  id: '/dev/library-article-layout',
-  path: '/dev/library-article-layout',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DevEmailsRoute = DevEmailsRouteImport.update({
   id: '/dev/emails',
   path: '/dev/emails',
@@ -180,6 +186,72 @@ const LibraryArchetypeSlugRoute = LibraryArchetypeSlugRouteImport.update({
   path: '/library/archetype/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevLibraryOpusRedesign3Route = DevLibraryOpusRedesign3RouteImport.update({
+  id: '/dev/library/opus/redesign-3',
+  path: '/dev/library/opus/redesign-3',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLibraryOpusRedesign2Route = DevLibraryOpusRedesign2RouteImport.update({
+  id: '/dev/library/opus/redesign-2',
+  path: '/dev/library/opus/redesign-2',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLibraryOpusRedesign1Route = DevLibraryOpusRedesign1RouteImport.update({
+  id: '/dev/library/opus/redesign-1',
+  path: '/dev/library/opus/redesign-1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLibraryGptRedesign3Route = DevLibraryGptRedesign3RouteImport.update({
+  id: '/dev/library/gpt/redesign-3',
+  path: '/dev/library/gpt/redesign-3',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLibraryGptRedesign2Route = DevLibraryGptRedesign2RouteImport.update({
+  id: '/dev/library/gpt/redesign-2',
+  path: '/dev/library/gpt/redesign-2',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLibraryGptRedesign1Route = DevLibraryGptRedesign1RouteImport.update({
+  id: '/dev/library/gpt/redesign-1',
+  path: '/dev/library/gpt/redesign-1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLibraryDirectionTraitRoute =
+  DevLibraryDirectionTraitRouteImport.update({
+    id: '/dev/library/direction/trait',
+    path: '/dev/library/direction/trait',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevLibraryDirectionFacetRoute =
+  DevLibraryDirectionFacetRouteImport.update({
+    id: '/dev/library/direction/facet',
+    path: '/dev/library/direction/facet',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevLibraryDirectionArchetypeRoute =
+  DevLibraryDirectionArchetypeRouteImport.update({
+    id: '/dev/library/direction/archetype',
+    path: '/dev/library/direction/archetype',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevLibraryComposerRedesign3Route =
+  DevLibraryComposerRedesign3RouteImport.update({
+    id: '/dev/library/composer/redesign-3',
+    path: '/dev/library/composer/redesign-3',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevLibraryComposerRedesign2Route =
+  DevLibraryComposerRedesign2RouteImport.update({
+    id: '/dev/library/composer/redesign-2',
+    path: '/dev/library/composer/redesign-2',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevLibraryComposerRedesign1Route =
+  DevLibraryComposerRedesign1RouteImport.update({
+    id: '/dev/library/composer/redesign-1',
+    path: '/dev/library/composer/redesign-1',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -192,7 +264,6 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
-  '/dev/library-article-layout': typeof DevLibraryArticleLayoutRoute
   '/me/$conversationSessionId': typeof MeConversationSessionIdRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
@@ -210,6 +281,18 @@ export interface FileRoutesByFullPath {
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
   '/today/week/$weekId': typeof TodayWeekWeekIdRoute
+  '/dev/library/composer/redesign-1': typeof DevLibraryComposerRedesign1Route
+  '/dev/library/composer/redesign-2': typeof DevLibraryComposerRedesign2Route
+  '/dev/library/composer/redesign-3': typeof DevLibraryComposerRedesign3Route
+  '/dev/library/direction/archetype': typeof DevLibraryDirectionArchetypeRoute
+  '/dev/library/direction/facet': typeof DevLibraryDirectionFacetRoute
+  '/dev/library/direction/trait': typeof DevLibraryDirectionTraitRoute
+  '/dev/library/gpt/redesign-1': typeof DevLibraryGptRedesign1Route
+  '/dev/library/gpt/redesign-2': typeof DevLibraryGptRedesign2Route
+  '/dev/library/gpt/redesign-3': typeof DevLibraryGptRedesign3Route
+  '/dev/library/opus/redesign-1': typeof DevLibraryOpusRedesign1Route
+  '/dev/library/opus/redesign-2': typeof DevLibraryOpusRedesign2Route
+  '/dev/library/opus/redesign-3': typeof DevLibraryOpusRedesign3Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -222,7 +305,6 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
-  '/dev/library-article-layout': typeof DevLibraryArticleLayoutRoute
   '/me/$conversationSessionId': typeof MeConversationSessionIdRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
@@ -240,6 +322,18 @@ export interface FileRoutesByTo {
   '/relationship/$analysisId/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
   '/today/week/$weekId': typeof TodayWeekWeekIdRoute
+  '/dev/library/composer/redesign-1': typeof DevLibraryComposerRedesign1Route
+  '/dev/library/composer/redesign-2': typeof DevLibraryComposerRedesign2Route
+  '/dev/library/composer/redesign-3': typeof DevLibraryComposerRedesign3Route
+  '/dev/library/direction/archetype': typeof DevLibraryDirectionArchetypeRoute
+  '/dev/library/direction/facet': typeof DevLibraryDirectionFacetRoute
+  '/dev/library/direction/trait': typeof DevLibraryDirectionTraitRoute
+  '/dev/library/gpt/redesign-1': typeof DevLibraryGptRedesign1Route
+  '/dev/library/gpt/redesign-2': typeof DevLibraryGptRedesign2Route
+  '/dev/library/gpt/redesign-3': typeof DevLibraryGptRedesign3Route
+  '/dev/library/opus/redesign-1': typeof DevLibraryOpusRedesign1Route
+  '/dev/library/opus/redesign-2': typeof DevLibraryOpusRedesign2Route
+  '/dev/library/opus/redesign-3': typeof DevLibraryOpusRedesign3Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -253,7 +347,6 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/dev/components': typeof DevComponentsRoute
   '/dev/emails': typeof DevEmailsRoute
-  '/dev/library-article-layout': typeof DevLibraryArticleLayoutRoute
   '/me/$conversationSessionId': typeof MeConversationSessionIdRoute
   '/public-profile/$publicProfileId': typeof PublicProfilePublicProfileIdRoute
   '/relationship/$analysisId': typeof RelationshipAnalysisIdRoute
@@ -271,6 +364,18 @@ export interface FileRoutesById {
   '/relationship/$analysisId_/ritual': typeof RelationshipAnalysisIdRitualRoute
   '/relationship/qr/$token': typeof RelationshipQrTokenRoute
   '/today/week/$weekId': typeof TodayWeekWeekIdRoute
+  '/dev/library/composer/redesign-1': typeof DevLibraryComposerRedesign1Route
+  '/dev/library/composer/redesign-2': typeof DevLibraryComposerRedesign2Route
+  '/dev/library/composer/redesign-3': typeof DevLibraryComposerRedesign3Route
+  '/dev/library/direction/archetype': typeof DevLibraryDirectionArchetypeRoute
+  '/dev/library/direction/facet': typeof DevLibraryDirectionFacetRoute
+  '/dev/library/direction/trait': typeof DevLibraryDirectionTraitRoute
+  '/dev/library/gpt/redesign-1': typeof DevLibraryGptRedesign1Route
+  '/dev/library/gpt/redesign-2': typeof DevLibraryGptRedesign2Route
+  '/dev/library/gpt/redesign-3': typeof DevLibraryGptRedesign3Route
+  '/dev/library/opus/redesign-1': typeof DevLibraryOpusRedesign1Route
+  '/dev/library/opus/redesign-2': typeof DevLibraryOpusRedesign2Route
+  '/dev/library/opus/redesign-3': typeof DevLibraryOpusRedesign3Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -285,7 +390,6 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
-    | '/dev/library-article-layout'
     | '/me/$conversationSessionId'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
@@ -303,6 +407,18 @@ export interface FileRouteTypes {
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
     | '/today/week/$weekId'
+    | '/dev/library/composer/redesign-1'
+    | '/dev/library/composer/redesign-2'
+    | '/dev/library/composer/redesign-3'
+    | '/dev/library/direction/archetype'
+    | '/dev/library/direction/facet'
+    | '/dev/library/direction/trait'
+    | '/dev/library/gpt/redesign-1'
+    | '/dev/library/gpt/redesign-2'
+    | '/dev/library/gpt/redesign-3'
+    | '/dev/library/opus/redesign-1'
+    | '/dev/library/opus/redesign-2'
+    | '/dev/library/opus/redesign-3'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -315,7 +431,6 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
-    | '/dev/library-article-layout'
     | '/me/$conversationSessionId'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
@@ -333,6 +448,18 @@ export interface FileRouteTypes {
     | '/relationship/$analysisId/ritual'
     | '/relationship/qr/$token'
     | '/today/week/$weekId'
+    | '/dev/library/composer/redesign-1'
+    | '/dev/library/composer/redesign-2'
+    | '/dev/library/composer/redesign-3'
+    | '/dev/library/direction/archetype'
+    | '/dev/library/direction/facet'
+    | '/dev/library/direction/trait'
+    | '/dev/library/gpt/redesign-1'
+    | '/dev/library/gpt/redesign-2'
+    | '/dev/library/gpt/redesign-3'
+    | '/dev/library/opus/redesign-1'
+    | '/dev/library/opus/redesign-2'
+    | '/dev/library/opus/redesign-3'
   id:
     | '__root__'
     | '/'
@@ -345,7 +472,6 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/dev/components'
     | '/dev/emails'
-    | '/dev/library-article-layout'
     | '/me/$conversationSessionId'
     | '/public-profile/$publicProfileId'
     | '/relationship/$analysisId'
@@ -363,6 +489,18 @@ export interface FileRouteTypes {
     | '/relationship/$analysisId_/ritual'
     | '/relationship/qr/$token'
     | '/today/week/$weekId'
+    | '/dev/library/composer/redesign-1'
+    | '/dev/library/composer/redesign-2'
+    | '/dev/library/composer/redesign-3'
+    | '/dev/library/direction/archetype'
+    | '/dev/library/direction/facet'
+    | '/dev/library/direction/trait'
+    | '/dev/library/gpt/redesign-1'
+    | '/dev/library/gpt/redesign-2'
+    | '/dev/library/gpt/redesign-3'
+    | '/dev/library/opus/redesign-1'
+    | '/dev/library/opus/redesign-2'
+    | '/dev/library/opus/redesign-3'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -376,7 +514,6 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   DevComponentsRoute: typeof DevComponentsRoute
   DevEmailsRoute: typeof DevEmailsRoute
-  DevLibraryArticleLayoutRoute: typeof DevLibraryArticleLayoutRoute
   MeConversationSessionIdRoute: typeof MeConversationSessionIdRoute
   PublicProfilePublicProfileIdRoute: typeof PublicProfilePublicProfileIdRoute
   RelationshipAnalysisIdRoute: typeof RelationshipAnalysisIdRoute
@@ -394,6 +531,18 @@ export interface RootRouteChildren {
   RelationshipAnalysisIdRitualRoute: typeof RelationshipAnalysisIdRitualRoute
   RelationshipQrTokenRoute: typeof RelationshipQrTokenRoute
   TodayWeekWeekIdRoute: typeof TodayWeekWeekIdRoute
+  DevLibraryComposerRedesign1Route: typeof DevLibraryComposerRedesign1Route
+  DevLibraryComposerRedesign2Route: typeof DevLibraryComposerRedesign2Route
+  DevLibraryComposerRedesign3Route: typeof DevLibraryComposerRedesign3Route
+  DevLibraryDirectionArchetypeRoute: typeof DevLibraryDirectionArchetypeRoute
+  DevLibraryDirectionFacetRoute: typeof DevLibraryDirectionFacetRoute
+  DevLibraryDirectionTraitRoute: typeof DevLibraryDirectionTraitRoute
+  DevLibraryGptRedesign1Route: typeof DevLibraryGptRedesign1Route
+  DevLibraryGptRedesign2Route: typeof DevLibraryGptRedesign2Route
+  DevLibraryGptRedesign3Route: typeof DevLibraryGptRedesign3Route
+  DevLibraryOpusRedesign1Route: typeof DevLibraryOpusRedesign1Route
+  DevLibraryOpusRedesign2Route: typeof DevLibraryOpusRedesign2Route
+  DevLibraryOpusRedesign3Route: typeof DevLibraryOpusRedesign3Route
 }
 
 declare module '@tanstack/react-router' {
@@ -517,13 +666,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeConversationSessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dev/library-article-layout': {
-      id: '/dev/library-article-layout'
-      path: '/dev/library-article-layout'
-      fullPath: '/dev/library-article-layout'
-      preLoaderRoute: typeof DevLibraryArticleLayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dev/emails': {
       id: '/dev/emails'
       path: '/dev/emails'
@@ -594,6 +736,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryArchetypeSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/library/opus/redesign-3': {
+      id: '/dev/library/opus/redesign-3'
+      path: '/dev/library/opus/redesign-3'
+      fullPath: '/dev/library/opus/redesign-3'
+      preLoaderRoute: typeof DevLibraryOpusRedesign3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/opus/redesign-2': {
+      id: '/dev/library/opus/redesign-2'
+      path: '/dev/library/opus/redesign-2'
+      fullPath: '/dev/library/opus/redesign-2'
+      preLoaderRoute: typeof DevLibraryOpusRedesign2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/opus/redesign-1': {
+      id: '/dev/library/opus/redesign-1'
+      path: '/dev/library/opus/redesign-1'
+      fullPath: '/dev/library/opus/redesign-1'
+      preLoaderRoute: typeof DevLibraryOpusRedesign1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/gpt/redesign-3': {
+      id: '/dev/library/gpt/redesign-3'
+      path: '/dev/library/gpt/redesign-3'
+      fullPath: '/dev/library/gpt/redesign-3'
+      preLoaderRoute: typeof DevLibraryGptRedesign3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/gpt/redesign-2': {
+      id: '/dev/library/gpt/redesign-2'
+      path: '/dev/library/gpt/redesign-2'
+      fullPath: '/dev/library/gpt/redesign-2'
+      preLoaderRoute: typeof DevLibraryGptRedesign2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/gpt/redesign-1': {
+      id: '/dev/library/gpt/redesign-1'
+      path: '/dev/library/gpt/redesign-1'
+      fullPath: '/dev/library/gpt/redesign-1'
+      preLoaderRoute: typeof DevLibraryGptRedesign1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/direction/trait': {
+      id: '/dev/library/direction/trait'
+      path: '/dev/library/direction/trait'
+      fullPath: '/dev/library/direction/trait'
+      preLoaderRoute: typeof DevLibraryDirectionTraitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/direction/facet': {
+      id: '/dev/library/direction/facet'
+      path: '/dev/library/direction/facet'
+      fullPath: '/dev/library/direction/facet'
+      preLoaderRoute: typeof DevLibraryDirectionFacetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/direction/archetype': {
+      id: '/dev/library/direction/archetype'
+      path: '/dev/library/direction/archetype'
+      fullPath: '/dev/library/direction/archetype'
+      preLoaderRoute: typeof DevLibraryDirectionArchetypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/composer/redesign-3': {
+      id: '/dev/library/composer/redesign-3'
+      path: '/dev/library/composer/redesign-3'
+      fullPath: '/dev/library/composer/redesign-3'
+      preLoaderRoute: typeof DevLibraryComposerRedesign3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/composer/redesign-2': {
+      id: '/dev/library/composer/redesign-2'
+      path: '/dev/library/composer/redesign-2'
+      fullPath: '/dev/library/composer/redesign-2'
+      preLoaderRoute: typeof DevLibraryComposerRedesign2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/composer/redesign-1': {
+      id: '/dev/library/composer/redesign-1'
+      path: '/dev/library/composer/redesign-1'
+      fullPath: '/dev/library/composer/redesign-1'
+      preLoaderRoute: typeof DevLibraryComposerRedesign1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -608,7 +834,6 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   DevComponentsRoute: DevComponentsRoute,
   DevEmailsRoute: DevEmailsRoute,
-  DevLibraryArticleLayoutRoute: DevLibraryArticleLayoutRoute,
   MeConversationSessionIdRoute: MeConversationSessionIdRoute,
   PublicProfilePublicProfileIdRoute: PublicProfilePublicProfileIdRoute,
   RelationshipAnalysisIdRoute: RelationshipAnalysisIdRoute,
@@ -626,6 +851,18 @@ const rootRouteChildren: RootRouteChildren = {
   RelationshipAnalysisIdRitualRoute: RelationshipAnalysisIdRitualRoute,
   RelationshipQrTokenRoute: RelationshipQrTokenRoute,
   TodayWeekWeekIdRoute: TodayWeekWeekIdRoute,
+  DevLibraryComposerRedesign1Route: DevLibraryComposerRedesign1Route,
+  DevLibraryComposerRedesign2Route: DevLibraryComposerRedesign2Route,
+  DevLibraryComposerRedesign3Route: DevLibraryComposerRedesign3Route,
+  DevLibraryDirectionArchetypeRoute: DevLibraryDirectionArchetypeRoute,
+  DevLibraryDirectionFacetRoute: DevLibraryDirectionFacetRoute,
+  DevLibraryDirectionTraitRoute: DevLibraryDirectionTraitRoute,
+  DevLibraryGptRedesign1Route: DevLibraryGptRedesign1Route,
+  DevLibraryGptRedesign2Route: DevLibraryGptRedesign2Route,
+  DevLibraryGptRedesign3Route: DevLibraryGptRedesign3Route,
+  DevLibraryOpusRedesign1Route: DevLibraryOpusRedesign1Route,
+  DevLibraryOpusRedesign2Route: DevLibraryOpusRedesign2Route,
+  DevLibraryOpusRedesign3Route: DevLibraryOpusRedesign3Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
