@@ -1,5 +1,5 @@
 # generated: 2026-04-16T17:35:26Z
-# last_updated: 2026-04-18T00:00:00Z
+# last_updated: 2026-04-18T20:00:00Z
 # project: big-ocean
 # project_key: NOKEY
 # tracking_system: file-system
@@ -141,7 +141,7 @@ development_status:
   epic-12: in-progress
   12-1-knowledge-library-architecture-and-first-10-pages: done
   12-2-knowledge-library-content-expansion: done
-  12-3-knowledge-library-article-page-layout-ux-spec: backlog
+  12-3-knowledge-library-article-page-layout-ux-spec: review
   epic-12-retrospective: optional
 
   # Epic 13: Accessibility Foundations (MVP)

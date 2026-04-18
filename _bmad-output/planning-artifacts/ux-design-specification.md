@@ -7156,7 +7156,7 @@ Public knowledge articles at `/library/{tier}/{slug}` serve **both** unauthentic
 
 | Zone | Content |
 |------|---------|
-| Hero | Themed eyebrow + primary subtitle line (“Trait · Big Five reference” style), title, description, **estimated read time** (clock icon in primary). |
+| Hero | Themed eyebrow (**`BookOpenText`** + “Trait guide”) + primary subtitle line (“Trait · Big Five reference” style), title, description, **estimated read time** (clock icon in primary; derive minutes from MDX word count in v1). |
 | Main column (single card) | **Facet map** (six facets × levels, scan-first module) → **Across the spectrum** (trait levels + tagline) → **visual seam** (“Long form article” rule between modules and prose) → **MDX body** with standard longform typography. |
 | Side column (`xl` only; below article on `lg`) | **Assessment CTA** + optional **“Continue exploring”** card linking into the facet library (one suggested next read). |
 
@@ -7166,8 +7166,8 @@ Public knowledge articles at `/library/{tier}/{slug}` serve **both** unauthentic
 
 | Zone | Content |
 |------|---------|
-| Hero | Facet guide eyebrow; **primary** line linking to the **parent trait** article; title; description; read time. |
-| Main column | **Poles / scale** block (levels-first) → **Sibling facet map** (grid of all facets under the parent trait; highlight “You are here”; use **`Layers3`** for this map to distinguish from the parent-trait `MapPinned` hero cue) → **same longform seam** → MDX body. |
+| Hero | Facet guide eyebrow (**`MapPinned`** + “Facet guide”); **primary** line linking to the **parent trait** article; title; description; read time (MDX word count). |
+| Main column | **Poles / scale** block (levels-first) → **Sibling facet map** (grid of all facets under the parent trait; highlight “You are here”; use **`Layers3`** for this map to distinguish from the parent trait article’s **`BookOpenText`** eyebrow and “Trait guide” label) → **same longform seam** → MDX body. |
 | Side column | **Parent trait** summary + link → **Assessment CTA** → optional **continue** card to a sibling facet. |
 
 **Reading rail** includes: poles section id, sibling-map section id, then each MDX `h2` id.

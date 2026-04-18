@@ -6,19 +6,26 @@ import {
 	FACET_TO_TRAIT,
 	type FacetName,
 	isFacetName,
+	TRAIT_TO_FACETS,
+	type TraitName,
 } from "@workspace/domain";
+import { BookOpenText, Layers3, MapPinned } from "lucide-react";
+import { AssessmentCTA } from "@/components/library/AssessmentCTA";
+import { FacetPolesSection } from "@/components/library/FacetPolesSection";
+import { FacetSiblingMapSection } from "@/components/library/FacetSiblingMapSection";
 import { KnowledgeArticleLayout } from "@/components/library/KnowledgeArticleLayout";
-import { getLibraryEntry, getLibraryEntryData } from "@/lib/library-content";
+import { LongFormSeam } from "@/components/library/LongFormSeam";
+import { libraryArticleProseClass } from "@/components/library/library-article-prose";
+import { humanizeUnderscored } from "@/lib/humanize-slug";
+import {
+	getLibraryEntry,
+	getLibraryEntryData,
+	getLibraryReadTimeMinutes,
+} from "@/lib/library-content";
+import { getFacetReadingChapters } from "@/lib/library-facet-reading-chapters";
 import { buildBreadcrumbSchema, buildFacetSchema, buildJsonLdGraph } from "@/lib/schema-org";
 
 const SITE_ORIGIN = import.meta.env.VITE_APP_URL ?? "https://bigocean.dev";
-
-function humanize(value: string) {
-	return value
-		.split("_")
-		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-		.join(" ");
-}
 
 function getFacetPageData(slug: string) {
 	if (!isFacetName(slug)) {
@@ -31,10 +38,17 @@ function getFacetPageData(slug: string) {
 		return undefined;
 	}
 
+	const article = getLibraryEntry("facet", slug);
+
+	if (!article) {
+		return undefined;
+	}
+
 	const facetName = slug as FacetName;
 	const parentTrait = FACET_TO_TRAIT[facetName];
 	const traitEntry = getLibraryEntryData("trait", parentTrait);
-	const parentTraitMentionName = traitEntry?.title ?? `${humanize(parentTrait)} trait guide`;
+	const parentTraitMentionName =
+		traitEntry?.title ?? `${humanizeUnderscored(parentTrait)} trait guide`;
 
 	const levels = Object.entries(FACET_DESCRIPTIONS[facetName].levels).map(([code, description]) => ({
 		code,
@@ -45,7 +59,7 @@ function getFacetPageData(slug: string) {
 	return {
 		entry,
 		parentTrait,
-		parentTraitLabel: humanize(parentTrait),
+		parentTraitLabel: humanizeUnderscored(parentTrait),
 		parentTraitMentionName,
 		levels,
 	};
@@ -100,76 +114,113 @@ export const Route = createFileRoute("/library/facet/$slug")({
 	component: FacetArticlePage,
 });
 
-function ParentTraitLink({ traitSlug, traitLabel }: { traitSlug: string; traitLabel: string }) {
-	return (
-		<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
-			<h2 className="text-lg font-semibold tracking-tight text-foreground">Parent trait</h2>
-			<p className="mt-3 text-sm leading-6 text-muted-foreground">
-				This facet is one of six dimensions within the broader trait.
-			</p>
-			<Link
-				to="/library/trait/$slug"
-				params={{ slug: traitSlug }}
-				className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-			>
-				Read the {traitLabel} guide →
-			</Link>
-		</section>
-	);
-}
-
-function LevelBreakdown({
-	levels,
-	lowCode,
-	highCode,
-}: {
-	levels: Array<{ code: string; label: string; description: string }>;
-	lowCode: string;
-	highCode: string;
-}) {
-	return (
-		<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
-			<h2 className="text-lg font-semibold tracking-tight text-foreground">Two poles</h2>
-			<div className="mt-4 space-y-3">
-				{levels.map((level) => {
-					const pole =
-						level.code === lowCode ? "Lower pole" : level.code === highCode ? "Higher pole" : "Pole";
-					return (
-						<div key={level.code} className="rounded-[1.25rem] border border-border/70 bg-background p-4">
-							<p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-								{pole}
-							</p>
-							<p className="mt-2 text-base font-semibold text-foreground">{level.label}</p>
-							<p className="mt-0.5 text-xs font-mono text-muted-foreground/90">{level.code}</p>
-							<p className="mt-2 text-sm leading-6 text-foreground/90">{level.description}</p>
-						</div>
-					);
-				})}
-			</div>
-		</section>
-	);
+function pickSiblingContinueSlug(facet: FacetName, parentTrait: TraitName): FacetName | null {
+	const slugs = TRAIT_TO_FACETS[parentTrait];
+	if (slugs.length <= 1) {
+		return null;
+	}
+	const idx = slugs.indexOf(facet);
+	for (let i = 1; i < slugs.length; i++) {
+		const next = slugs[(idx + i) % slugs.length];
+		if (next !== facet) return next;
+	}
+	const alt = slugs.find((s) => s !== facet);
+	return alt ?? null;
 }
 
 function FacetArticlePage() {
 	const { entry, parentTrait, parentTraitLabel, levels } = Route.useLoaderData();
-	const article = getLibraryEntry("facet", entry.slug)!;
-	const Content = article.Content;
-	const [lowCode, highCode] = FACET_LETTER_MAP[entry.slug as FacetName];
+	const article = getLibraryEntry("facet", entry.slug);
+	if (!article) {
+		throw notFound();
+	}
+	const { Content } = article;
+	const facet = entry.slug as FacetName;
+	const [lowCode, highCode] = FACET_LETTER_MAP[facet];
+	const traitEntry = getLibraryEntryData("trait", parentTrait);
+	const siblingSlugs = TRAIT_TO_FACETS[parentTrait];
+	const continueSlug = pickSiblingContinueSlug(facet, parentTrait);
+	const continueEntry = continueSlug ? getLibraryEntryData("facet", continueSlug) : undefined;
+	const showSiblingContinue = siblingSlugs.length > 1 && continueSlug !== null;
 
 	return (
 		<KnowledgeArticleLayout
+			tier="facet"
+			articlePath={entry.pathname}
 			title={entry.title}
 			description={entry.description}
-			tier="facet"
-			ctaText={entry.cta}
-			supplementary={
+			readTimeMinutes={getLibraryReadTimeMinutes("facet", entry.slug)}
+			readingChapters={getFacetReadingChapters(facet)}
+			heroEyebrow={
+				<>
+					<MapPinned className="size-4 shrink-0" aria-hidden />
+					<span>Facet guide</span>
+				</>
+			}
+			heroPrimaryLine={
+				<span>
+					Part of{" "}
+					<Link
+						to="/library/trait/$slug"
+						params={{ slug: parentTrait }}
+						className="underline decoration-primary/40 underline-offset-4 hover:text-primary"
+					>
+						{traitEntry?.title ?? `${parentTraitLabel} trait`}
+					</Link>
+				</span>
+			}
+			mainColumn={
+				<article className="rounded-[2rem] border border-border/70 bg-background p-6 shadow-sm sm:p-8">
+					<FacetPolesSection levels={levels} lowCode={lowCode} highCode={highCode} />
+					<FacetSiblingMapSection parentTrait={parentTrait} currentFacet={facet} />
+					<LongFormSeam />
+					<div className={libraryArticleProseClass()}>
+						<Content />
+					</div>
+				</article>
+			}
+			sideColumn={
 				<div className="space-y-6">
-					<ParentTraitLink traitSlug={parentTrait} traitLabel={parentTraitLabel} />
-					<LevelBreakdown levels={levels} lowCode={lowCode} highCode={highCode} />
+					<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
+						<h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
+							<BookOpenText className="size-5 shrink-0 text-primary" aria-hidden />
+							Parent trait
+						</h2>
+						<p className="mt-3 text-sm leading-6 text-muted-foreground">
+							This facet is one of six dimensions within the broader trait.
+						</p>
+						<Link
+							to="/library/trait/$slug"
+							params={{ slug: parentTrait }}
+							className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+						>
+							Read the {parentTraitLabel} guide →
+						</Link>
+					</section>
+					<AssessmentCTA tier="facet" ctaText={entry.cta} />
+					{showSiblingContinue && continueSlug ? (
+						<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
+							<p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+								Continue exploring
+							</p>
+							<h2 className="mt-2 flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+								<Layers3 className="size-4 shrink-0 text-primary" aria-hidden />
+								Sibling facet
+							</h2>
+							<p className="mt-3 text-sm leading-6 text-muted-foreground">
+								Stay on the same trait — open a neighboring facet guide.
+							</p>
+							<Link
+								to="/library/facet/$slug"
+								params={{ slug: continueSlug }}
+								className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+							>
+								Read {continueEntry?.title ?? humanizeUnderscored(continueSlug)}
+							</Link>
+						</section>
+					) : null}
 				</div>
 			}
-		>
-			<Content />
-		</KnowledgeArticleLayout>
+		/>
 	);
 }

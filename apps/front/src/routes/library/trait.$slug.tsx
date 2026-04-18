@@ -1,25 +1,29 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
 	FACET_DESCRIPTIONS,
 	FACET_LEVEL_LABELS,
 	type FacetLevelCode,
-	getTraitLevelLabel,
 	TRAIT_DESCRIPTIONS,
 	TRAIT_TO_FACETS,
 	type TraitName,
 } from "@workspace/domain";
+import { BookOpenText, Layers3 } from "lucide-react";
+import { AssessmentCTA } from "@/components/library/AssessmentCTA";
 import { KnowledgeArticleLayout } from "@/components/library/KnowledgeArticleLayout";
-import { getLibraryEntry, getLibraryEntryData } from "@/lib/library-content";
+import { LongFormSeam } from "@/components/library/LongFormSeam";
+import { libraryArticleProseClass } from "@/components/library/library-article-prose";
+import { TraitFacetMapSection } from "@/components/library/TraitFacetMapSection";
+import { TraitSpectrumSection } from "@/components/library/TraitSpectrumSection";
+import { humanizeUnderscored } from "@/lib/humanize-slug";
+import {
+	getLibraryEntry,
+	getLibraryEntryData,
+	getLibraryReadTimeMinutes,
+} from "@/lib/library-content";
+import { getTraitReadingChapters } from "@/lib/library-trait-reading-chapters";
 import { buildBreadcrumbSchema, buildJsonLdGraph, buildTraitSchema } from "@/lib/schema-org";
 
 const SITE_ORIGIN = import.meta.env.VITE_APP_URL ?? "https://bigocean.dev";
-
-function humanize(value: string) {
-	return value
-		.split("_")
-		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-		.join(" ");
-}
 
 function isTraitName(value: string): value is TraitName {
 	return value in TRAIT_DESCRIPTIONS;
@@ -36,13 +40,19 @@ function getTraitPageData(slug: string) {
 		return undefined;
 	}
 
+	const article = getLibraryEntry("trait", slug);
+
+	if (!article) {
+		return undefined;
+	}
+
 	const spectrum = Object.entries(TRAIT_DESCRIPTIONS[slug].levels).map(([level, description]) => ({
 		level,
 		description,
 	}));
 
 	const facets = TRAIT_TO_FACETS[slug].map((facetName) => ({
-		name: humanize(facetName),
+		name: humanizeUnderscored(facetName),
 		description: FACET_DESCRIPTIONS[facetName].levels,
 	}));
 
@@ -102,43 +112,11 @@ export const Route = createFileRoute("/library/trait/$slug")({
 	component: TraitArticlePage,
 });
 
-function SpectrumCard({
-	trait,
-	tagline,
-	spectrum,
-}: {
-	trait: TraitName;
-	tagline: string;
-	spectrum: Array<{ level: string; description: string }>;
-}) {
-	return (
-		<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
-			<h2 className="text-lg font-semibold tracking-tight text-foreground">Across the spectrum</h2>
-			<p className="mt-3 text-sm leading-6 text-muted-foreground">{tagline}</p>
-			<div className="mt-4 space-y-3">
-				{spectrum.map((row) => {
-					const levelName = getTraitLevelLabel(trait, row.level);
-					return (
-						<div key={row.level} className="rounded-[1.25rem] border border-border/70 bg-background p-4">
-							<p className="text-sm font-semibold leading-snug text-foreground">
-								{levelName}
-								<span className="ml-2 font-normal tabular-nums text-muted-foreground">({row.level})</span>
-							</p>
-							<p className="mt-2 text-sm leading-6 text-foreground/90">{row.description}</p>
-						</div>
-					);
-				})}
-			</div>
-		</section>
-	);
-}
-
 function FacetBreakdown({
 	facets,
 	omitSectionHeading = false,
 }: {
 	facets: Array<{ name: string; description: Record<string, string> }>;
-	/** When true, only the cards render (MDX already provides the “Facet breakdown” heading + intro). */
 	omitSectionHeading?: boolean;
 }) {
 	return (
@@ -174,23 +152,72 @@ function FacetBreakdown({
 
 function TraitArticlePage() {
 	const { entry, tagline, spectrum, facets } = Route.useLoaderData();
-	const article = getLibraryEntry("trait", entry.slug)!;
-	const Content = article.Content;
+	const article = getLibraryEntry("trait", entry.slug);
+	if (!article) {
+		throw notFound();
+	}
+	const { Content } = article;
+	const trait = entry.slug as TraitName;
+	const facetSlugs = TRAIT_TO_FACETS[trait];
+	const showContinueExploring = facetSlugs.length > 0;
+	const firstFacetSlug = facetSlugs[0];
+	const firstFacetTitle =
+		firstFacetSlug !== undefined
+			? (getLibraryEntryData("facet", firstFacetSlug)?.title ?? humanizeUnderscored(firstFacetSlug))
+			: "";
 
 	return (
 		<KnowledgeArticleLayout
+			tier="trait"
+			articlePath={entry.pathname}
 			title={entry.title}
 			description={entry.description}
-			tier="trait"
-			ctaText={entry.cta}
-			supplementary={
+			readTimeMinutes={getLibraryReadTimeMinutes("trait", entry.slug)}
+			readingChapters={getTraitReadingChapters(trait)}
+			heroEyebrow={
+				<>
+					<BookOpenText className="size-4 shrink-0" aria-hidden />
+					<span>Trait guide</span>
+				</>
+			}
+			heroPrimaryLine={<span>{humanizeUnderscored(trait)} · Big Five reference</span>}
+			mainColumn={
+				<article className="rounded-[2rem] border border-border/70 bg-background p-6 shadow-sm sm:p-8">
+					<TraitFacetMapSection trait={trait} />
+					<TraitSpectrumSection trait={trait} tagline={tagline} spectrum={spectrum} />
+					<LongFormSeam />
+					<div className={libraryArticleProseClass()}>
+						<Content />
+					</div>
+					<FacetBreakdown facets={facets} omitSectionHeading />
+				</article>
+			}
+			sideColumn={
 				<div className="space-y-6">
-					<SpectrumCard trait={entry.slug as TraitName} tagline={tagline} spectrum={spectrum} />
+					<AssessmentCTA tier="trait" ctaText={entry.cta} />
+					{showContinueExploring && firstFacetSlug !== undefined ? (
+						<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
+							<p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+								Continue exploring
+							</p>
+							<h2 className="mt-2 flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+								<Layers3 className="size-4 shrink-0 text-primary" aria-hidden />
+								Browse facets
+							</h2>
+							<p className="mt-3 text-sm leading-6 text-muted-foreground">
+								Start with a facet that maps how this trait shows up in everyday life.
+							</p>
+							<Link
+								to="/library/facet/$slug"
+								params={{ slug: firstFacetSlug }}
+								className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+							>
+								Read {firstFacetTitle}
+							</Link>
+						</section>
+					) : null}
 				</div>
 			}
-		>
-			<Content />
-			<FacetBreakdown facets={facets} omitSectionHeading />
-		</KnowledgeArticleLayout>
+		/>
 	);
 }

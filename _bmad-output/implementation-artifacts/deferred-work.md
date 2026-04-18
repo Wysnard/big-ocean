@@ -1,5 +1,9 @@
 # Deferred Work
 
+## Deferred from: code review of 12-3-knowledge-library-article-page-layout-ux-spec.md (2026-04-18)
+
+- ~~**Lighthouse SEO spot-check on `/library/trait/*`, `/library/facet/*`, `/library/archetype/*` after the layout refactor** — Story 12.1/12.2 standard >90; not evidenced in-repo. Run manually before release.~~ **Resolved 2026-04-18:** `lighthouse@12.8.2` (SEO category only, headless) against local dev `http://127.0.0.1:3000` — `/library/trait/openness`, `/library/facet/imagination`, `/library/archetype/beacon-personality-archetype` each scored **100** (no failing SEO audits in the run).
+
 ## Deferred from: code review of 13-2-conversation-and-chat-accessibility.md (2026-04-16)
 
 - **`<nav>` element hosts `role="progressbar"` — semantic element/role mismatch** — `DepthMeter` wraps the sidebar progress bar in a `<nav>` element whose native implicit role (`navigation`) is overridden by `role="progressbar"`. Pre-existing before Story 13.2. Consider replacing `<nav>` with a `<div>` or `<span>` host in a future cleanup pass. [`apps/front/src/components/chat/DepthMeter.tsx`]

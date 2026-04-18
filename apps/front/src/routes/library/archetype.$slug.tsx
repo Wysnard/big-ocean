@@ -1,39 +1,32 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
+import { AssessmentCTA } from "@/components/library/AssessmentCTA";
 import { KnowledgeArticleLayout } from "@/components/library/KnowledgeArticleLayout";
-import { getLibraryEntry, getLibraryEntryData, type LibraryEntryData } from "@/lib/library-content";
+import { libraryArticleProseClass } from "@/components/library/library-article-prose";
+import { RelatedArchetypePatternsColumn } from "@/components/library/RelatedArchetypePatternsColumn";
+import {
+	ARCHETYPE_RELATIONAL_ROLES,
+	type ArchetypeSlug,
+	COMPATIBLE_ARCHETYPE_SLUGS,
+	isArchetypeSlug,
+} from "@/lib/library-archetype-article-meta";
+import { getArchetypeReadingChapters } from "@/lib/library-archetype-reading-chapters";
+import {
+	getLibraryEntry,
+	getLibraryEntryData,
+	getLibraryMdxRaw,
+	getLibraryReadTimeMinutes,
+	type LibraryEntryData,
+} from "@/lib/library-content";
+import {
+	archetypeShortNameFromTitle,
+	extractArchetypeOverviewFirstParagraph,
+} from "@/lib/library-mdx-helpers";
 import { buildArchetypeSchema, buildBreadcrumbSchema, buildJsonLdGraph } from "@/lib/schema-org";
 
 const SITE_ORIGIN = import.meta.env.VITE_APP_URL ?? "https://bigocean.dev";
 
-const COMPATIBLE_ARCHETYPE_SLUGS: Record<string, string[]> = {
-	"beacon-personality-archetype": [
-		"anchor-personality-archetype",
-		"compass-personality-archetype",
-		"ember-personality-archetype",
-	],
-	"forge-personality-archetype": [
-		"beacon-personality-archetype",
-		"anchor-personality-archetype",
-		"ember-personality-archetype",
-	],
-	"compass-personality-archetype": [
-		"beacon-personality-archetype",
-		"anchor-personality-archetype",
-		"ember-personality-archetype",
-	],
-	"anchor-personality-archetype": [
-		"beacon-personality-archetype",
-		"compass-personality-archetype",
-		"ember-personality-archetype",
-	],
-	"ember-personality-archetype": [
-		"compass-personality-archetype",
-		"anchor-personality-archetype",
-		"beacon-personality-archetype",
-	],
-};
-
-function getCompatibleArchetypes(slug: string) {
+function getCompatibleArchetypes(slug: ArchetypeSlug) {
 	return (COMPATIBLE_ARCHETYPE_SLUGS[slug] ?? [])
 		.map((relatedSlug) => getLibraryEntryData("archetype", relatedSlug))
 		.filter((entry): entry is LibraryEntryData => Boolean(entry))
@@ -46,9 +39,14 @@ function getCompatibleArchetypes(slug: string) {
 
 export const Route = createFileRoute("/library/archetype/$slug")({
 	loader: ({ params }) => {
-		const entry = getLibraryEntryData("archetype", params.slug);
+		if (!isArchetypeSlug(params.slug)) {
+			throw notFound();
+		}
 
-		if (!entry) {
+		const entry = getLibraryEntryData("archetype", params.slug);
+		const article = getLibraryEntry("archetype", params.slug);
+
+		if (!entry || !article) {
 			throw notFound();
 		}
 
@@ -95,49 +93,72 @@ export const Route = createFileRoute("/library/archetype/$slug")({
 	component: ArchetypeArticlePage,
 });
 
-function CompatibleArchetypes({
-	compatibleArchetypes,
-}: {
-	compatibleArchetypes: Array<{ title: string; description: string; pathname: string }>;
-}) {
-	if (compatibleArchetypes.length === 0) {
-		return null;
+function ArchetypeArticlePage() {
+	const { entry, compatibleArchetypes } = Route.useLoaderData();
+	const article = getLibraryEntry("archetype", entry.slug);
+	if (!article) {
+		throw notFound();
+	}
+	const { Content } = article;
+	const slug = entry.slug as ArchetypeSlug;
+	const rawMdx = getLibraryMdxRaw("archetype", slug);
+	const overviewExcerpt = rawMdx ? extractArchetypeOverviewFirstParagraph(rawMdx) : null;
+	const pull =
+		overviewExcerpt !== null
+			? {
+					body: overviewExcerpt,
+					footer: `From the overview · ${archetypeShortNameFromTitle(entry.title)}`,
+				}
+			: undefined;
+	const rolesForSlug = ARCHETYPE_RELATIONAL_ROLES[slug] ?? {};
+	const roleByRelatedSlug: Record<string, string> = {};
+	for (const row of compatibleArchetypes) {
+		const relatedSlug = row.pathname.split("/").filter(Boolean).pop();
+		if (!relatedSlug || !isArchetypeSlug(relatedSlug)) {
+			continue;
+		}
+		roleByRelatedSlug[relatedSlug] = rolesForSlug[relatedSlug] ?? "Also explore";
 	}
 
 	return (
-		<section className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-5">
-			<h2 className="text-lg font-semibold tracking-tight text-foreground">Compatible archetypes</h2>
-			<div className="mt-4 space-y-3">
-				{compatibleArchetypes.map((archetype) => (
-					<Link
-						key={archetype.pathname}
-						to={archetype.pathname}
-						data-testid={`compatible-archetype-${archetype.pathname.split("/").pop()}`}
-						className="block rounded-[1.25rem] border border-border/70 bg-background p-4 transition-transform hover:-translate-y-0.5"
-					>
-						<h3 className="text-base font-semibold text-foreground">{archetype.title}</h3>
-						<p className="mt-2 text-sm leading-6 text-muted-foreground">{archetype.description}</p>
-					</Link>
-				))}
-			</div>
-		</section>
-	);
-}
-
-function ArchetypeArticlePage() {
-	const { entry, compatibleArchetypes } = Route.useLoaderData();
-	const article = getLibraryEntry("archetype", entry.slug)!;
-	const Content = article.Content;
-
-	return (
 		<KnowledgeArticleLayout
+			tier="archetype"
+			articlePath={entry.pathname}
 			title={entry.title}
 			description={entry.description}
-			tier="archetype"
-			ctaText={entry.cta}
-			supplementary={<CompatibleArchetypes compatibleArchetypes={compatibleArchetypes} />}
-		>
-			<Content />
-		</KnowledgeArticleLayout>
+			readTimeMinutes={getLibraryReadTimeMinutes("archetype", slug)}
+			readingChapters={getArchetypeReadingChapters(slug)}
+			heroEyebrow={
+				<>
+					<Sparkles className="size-4 shrink-0" aria-hidden />
+					<span className="text-xs font-semibold uppercase tracking-[0.25em] text-primary/90">
+						Archetype guide
+					</span>
+				</>
+			}
+			heroPrimaryLine={<span>Archetypal pattern · lived language</span>}
+			pullQuote={
+				pull ?? {
+					body: entry.description,
+					footer: "From the overview",
+				}
+			}
+			mainColumn={
+				<>
+					<article className="rounded-[2rem] border border-border/70 bg-background p-6 shadow-sm sm:p-8">
+						<div className={libraryArticleProseClass()}>
+							<Content />
+						</div>
+					</article>
+					<AssessmentCTA tier="archetype" ctaText={entry.cta} />
+				</>
+			}
+			sideColumn={
+				<RelatedArchetypePatternsColumn
+					compatibleArchetypes={compatibleArchetypes}
+					roleByRelatedSlug={roleByRelatedSlug}
+				/>
+			}
+		/>
 	);
 }

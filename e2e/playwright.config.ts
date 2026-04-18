@@ -120,6 +120,12 @@ export default defineConfig({
 			testMatch: "specs/homepage.spec.ts",
 		},
 
+		// ── Library articles: public reading rail + article navigation ───
+		{
+			name: "library-articles",
+			testMatch: /specs\/library-articles.*\.spec\.ts/,
+		},
+
 		// ── Access-control: unauthenticated ──────────────────────────────
 		{
 			name: "unauth",

@@ -1,5 +1,7 @@
 import type { ComponentType } from "react";
 
+import { estimateReadMinutesFromMdxRaw, normalizeMdxRawSource } from "@/lib/library-mdx-helpers";
+
 export const LIBRARY_TIERS = ["archetype", "trait", "facet", "science", "guides"] as const;
 
 export type LibraryTier = (typeof LIBRARY_TIERS)[number];
@@ -61,6 +63,44 @@ const TIER_ORDER: Record<LibraryTier, number> = {
 const CONTENT_MODULES = import.meta.glob<LibraryModule>("../content/library/**/*.mdx", {
 	eager: true,
 });
+
+const CONTENT_RAW = import.meta.glob<string>("../content/library/**/*.mdx", {
+	eager: true,
+	import: "default",
+	query: "?raw",
+});
+
+function tierContentFolder(tier: LibraryTier): string {
+	switch (tier) {
+		case "trait":
+			return "traits";
+		case "facet":
+			return "facets";
+		case "archetype":
+			return "archetypes";
+		default:
+			return tier;
+	}
+}
+
+/** Raw MDX source for a library entry, when available (same glob keys as compiled modules). */
+export function getLibraryMdxRaw(tier: LibraryTier, slug: string): string | undefined {
+	const needle = `library/${tierContentFolder(tier)}/${slug}.mdx`;
+	for (const [path, raw] of Object.entries(CONTENT_RAW)) {
+		if (path.replaceAll("\\", "/").endsWith(needle)) {
+			return normalizeMdxRawSource(raw);
+		}
+	}
+	return undefined;
+}
+
+export function getLibraryReadTimeMinutes(tier: LibraryTier, slug: string): number {
+	const raw = getLibraryMdxRaw(tier, slug);
+	if (!raw) {
+		return 7;
+	}
+	return estimateReadMinutesFromMdxRaw(raw);
+}
 
 function isLibraryTier(value: string): value is LibraryTier {
 	return (LIBRARY_TIERS as readonly string[]).includes(value);

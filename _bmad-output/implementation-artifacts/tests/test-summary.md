@@ -1,5 +1,35 @@
 # Test Automation Summary
 
+## Update: 2026-04-18
+
+### Scope
+
+Added public E2E coverage for **library article pages** with emphasis on the **desktop reading rail** and article-to-article navigation.
+
+### Generated Tests
+
+#### E2E Tests
+
+- [x] `e2e/specs/library-articles.spec.ts`
+  - Trait article: desktop rail deep-link navigation to late sections + continue-exploring link
+  - Facet article: desktop rail deep-link navigation to late sections + parent-trait link
+  - Archetype article: desktop rail deep-link navigation to late sections + compatible-archetype card navigation
+  - Desktop reading-rail auto-highlighting while scrolling: covered for the tail sections on trait / facet / archetype pages
+
+**Playwright project:** `library-articles`
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| `pnpm --filter @workspace/e2e test:e2e --project=library-articles` | Passed (`6 passed`) |
+
+### Notes
+
+- The smoke tests are green and validate **public article accessibility + hash navigation** for the reading rail.
+- The desktop reading-rail **scroll-sync bug** was fixed in production code and is now covered by passing Playwright assertions.
+- This run intentionally does **not** treat layout styling as an E2E concern; it focuses on browser navigation/state changes per `docs/E2E-TESTING.md`.
+
 **Generated:** 2026-04-15  
 **Workflow:** `bmad-qa-generate-e2e-tests`  
 **Project:** big-ocean (Playwright + Vitest stack)
