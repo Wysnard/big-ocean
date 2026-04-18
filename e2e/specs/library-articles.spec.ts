@@ -11,9 +11,17 @@ async function gotoArticle(page: Page, path: string) {
 async function scrollHeadingToTop(page: Page, id: string) {
 	const heading = page.locator(`#${id}`);
 	await expect(heading).toBeVisible();
-	await heading.evaluate((element) => {
-		element.scrollIntoView({ block: "start" });
-	});
+	await expect
+		.poll(async () => {
+			await heading.evaluate((element) => {
+				element.scrollIntoView({ block: "start", behavior: "instant" });
+			});
+			return page.evaluate(
+				(headingId) => document.getElementById(headingId)?.getBoundingClientRect().top ?? null,
+				id,
+			);
+		})
+		.toBeLessThan(DESKTOP_VIEWPORT.height);
 }
 
 async function expectActiveRailLabel(page: Page, label: string) {
@@ -33,6 +41,7 @@ async function clickRailLink(page: Page, label: string) {
 		.locator('nav[aria-label="On this page"]')
 		.getByRole("link", { name: label, exact: true })
 		.click();
+	await expectActiveRailLabel(page, label);
 }
 
 async function expectHashAndHeadingInViewport(page: Page, hash: string) {
@@ -128,19 +137,19 @@ test.describe("Library article reading rail", () => {
 		await expectActiveRailLabel(page, "Facet breakdown");
 	});
 
-	test("facet article desktop rail stays on the top-aligned prose chapter near the bottom @smoke", async ({
+	test("facet article desktop rail activates the final visible prose chapter near the bottom @smoke", async ({
 		page,
 	}) => {
 		await gotoArticle(page, "/library/facet/imagination");
 		await scrollHeadingToTop(page, "how-it-shows-up-in-daily-life");
-		await expectActiveRailLabel(page, "What imagination measures");
+		await expectActiveRailLabel(page, "How it shows up in daily life");
 	});
 
-	test("archetype article desktop rail stays on the top-aligned chapter near the bottom @smoke", async ({
+	test("archetype article desktop rail activates the final visible chapter near the bottom @smoke", async ({
 		page,
 	}) => {
 		await gotoArticle(page, "/library/archetype/beacon-personality-archetype");
 		await scrollHeadingToTop(page, "compatible-archetypes");
-		await expectActiveRailLabel(page, "Strengths");
+		await expectActiveRailLabel(page, "Compatible archetypes");
 	});
 });

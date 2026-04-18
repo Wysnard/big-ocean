@@ -39,6 +39,9 @@ import { Route as LibraryArchetypeSlugRouteImport } from './routes/library/arche
 import { Route as DevLibraryOpusRedesign3RouteImport } from './routes/dev/library/opus/redesign-3'
 import { Route as DevLibraryOpusRedesign2RouteImport } from './routes/dev/library/opus/redesign-2'
 import { Route as DevLibraryOpusRedesign1RouteImport } from './routes/dev/library/opus/redesign-1'
+import { Route as DevLibraryLandingRedesign3RouteImport } from './routes/dev/library/landing/redesign-3'
+import { Route as DevLibraryLandingRedesign2RouteImport } from './routes/dev/library/landing/redesign-2'
+import { Route as DevLibraryLandingRedesign1RouteImport } from './routes/dev/library/landing/redesign-1'
 import { Route as DevLibraryGptRedesign3RouteImport } from './routes/dev/library/gpt/redesign-3'
 import { Route as DevLibraryGptRedesign2RouteImport } from './routes/dev/library/gpt/redesign-2'
 import { Route as DevLibraryGptRedesign1RouteImport } from './routes/dev/library/gpt/redesign-1'
@@ -201,6 +204,24 @@ const DevLibraryOpusRedesign1Route = DevLibraryOpusRedesign1RouteImport.update({
   path: '/dev/library/opus/redesign-1',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevLibraryLandingRedesign3Route =
+  DevLibraryLandingRedesign3RouteImport.update({
+    id: '/dev/library/landing/redesign-3',
+    path: '/dev/library/landing/redesign-3',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevLibraryLandingRedesign2Route =
+  DevLibraryLandingRedesign2RouteImport.update({
+    id: '/dev/library/landing/redesign-2',
+    path: '/dev/library/landing/redesign-2',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevLibraryLandingRedesign1Route =
+  DevLibraryLandingRedesign1RouteImport.update({
+    id: '/dev/library/landing/redesign-1',
+    path: '/dev/library/landing/redesign-1',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DevLibraryGptRedesign3Route = DevLibraryGptRedesign3RouteImport.update({
   id: '/dev/library/gpt/redesign-3',
   path: '/dev/library/gpt/redesign-3',
@@ -290,6 +311,9 @@ export interface FileRoutesByFullPath {
   '/dev/library/gpt/redesign-1': typeof DevLibraryGptRedesign1Route
   '/dev/library/gpt/redesign-2': typeof DevLibraryGptRedesign2Route
   '/dev/library/gpt/redesign-3': typeof DevLibraryGptRedesign3Route
+  '/dev/library/landing/redesign-1': typeof DevLibraryLandingRedesign1Route
+  '/dev/library/landing/redesign-2': typeof DevLibraryLandingRedesign2Route
+  '/dev/library/landing/redesign-3': typeof DevLibraryLandingRedesign3Route
   '/dev/library/opus/redesign-1': typeof DevLibraryOpusRedesign1Route
   '/dev/library/opus/redesign-2': typeof DevLibraryOpusRedesign2Route
   '/dev/library/opus/redesign-3': typeof DevLibraryOpusRedesign3Route
@@ -331,6 +355,9 @@ export interface FileRoutesByTo {
   '/dev/library/gpt/redesign-1': typeof DevLibraryGptRedesign1Route
   '/dev/library/gpt/redesign-2': typeof DevLibraryGptRedesign2Route
   '/dev/library/gpt/redesign-3': typeof DevLibraryGptRedesign3Route
+  '/dev/library/landing/redesign-1': typeof DevLibraryLandingRedesign1Route
+  '/dev/library/landing/redesign-2': typeof DevLibraryLandingRedesign2Route
+  '/dev/library/landing/redesign-3': typeof DevLibraryLandingRedesign3Route
   '/dev/library/opus/redesign-1': typeof DevLibraryOpusRedesign1Route
   '/dev/library/opus/redesign-2': typeof DevLibraryOpusRedesign2Route
   '/dev/library/opus/redesign-3': typeof DevLibraryOpusRedesign3Route
@@ -373,6 +400,9 @@ export interface FileRoutesById {
   '/dev/library/gpt/redesign-1': typeof DevLibraryGptRedesign1Route
   '/dev/library/gpt/redesign-2': typeof DevLibraryGptRedesign2Route
   '/dev/library/gpt/redesign-3': typeof DevLibraryGptRedesign3Route
+  '/dev/library/landing/redesign-1': typeof DevLibraryLandingRedesign1Route
+  '/dev/library/landing/redesign-2': typeof DevLibraryLandingRedesign2Route
+  '/dev/library/landing/redesign-3': typeof DevLibraryLandingRedesign3Route
   '/dev/library/opus/redesign-1': typeof DevLibraryOpusRedesign1Route
   '/dev/library/opus/redesign-2': typeof DevLibraryOpusRedesign2Route
   '/dev/library/opus/redesign-3': typeof DevLibraryOpusRedesign3Route
@@ -416,6 +446,9 @@ export interface FileRouteTypes {
     | '/dev/library/gpt/redesign-1'
     | '/dev/library/gpt/redesign-2'
     | '/dev/library/gpt/redesign-3'
+    | '/dev/library/landing/redesign-1'
+    | '/dev/library/landing/redesign-2'
+    | '/dev/library/landing/redesign-3'
     | '/dev/library/opus/redesign-1'
     | '/dev/library/opus/redesign-2'
     | '/dev/library/opus/redesign-3'
@@ -457,6 +490,9 @@ export interface FileRouteTypes {
     | '/dev/library/gpt/redesign-1'
     | '/dev/library/gpt/redesign-2'
     | '/dev/library/gpt/redesign-3'
+    | '/dev/library/landing/redesign-1'
+    | '/dev/library/landing/redesign-2'
+    | '/dev/library/landing/redesign-3'
     | '/dev/library/opus/redesign-1'
     | '/dev/library/opus/redesign-2'
     | '/dev/library/opus/redesign-3'
@@ -498,6 +534,9 @@ export interface FileRouteTypes {
     | '/dev/library/gpt/redesign-1'
     | '/dev/library/gpt/redesign-2'
     | '/dev/library/gpt/redesign-3'
+    | '/dev/library/landing/redesign-1'
+    | '/dev/library/landing/redesign-2'
+    | '/dev/library/landing/redesign-3'
     | '/dev/library/opus/redesign-1'
     | '/dev/library/opus/redesign-2'
     | '/dev/library/opus/redesign-3'
@@ -540,6 +579,9 @@ export interface RootRouteChildren {
   DevLibraryGptRedesign1Route: typeof DevLibraryGptRedesign1Route
   DevLibraryGptRedesign2Route: typeof DevLibraryGptRedesign2Route
   DevLibraryGptRedesign3Route: typeof DevLibraryGptRedesign3Route
+  DevLibraryLandingRedesign1Route: typeof DevLibraryLandingRedesign1Route
+  DevLibraryLandingRedesign2Route: typeof DevLibraryLandingRedesign2Route
+  DevLibraryLandingRedesign3Route: typeof DevLibraryLandingRedesign3Route
   DevLibraryOpusRedesign1Route: typeof DevLibraryOpusRedesign1Route
   DevLibraryOpusRedesign2Route: typeof DevLibraryOpusRedesign2Route
   DevLibraryOpusRedesign3Route: typeof DevLibraryOpusRedesign3Route
@@ -757,6 +799,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevLibraryOpusRedesign1RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/library/landing/redesign-3': {
+      id: '/dev/library/landing/redesign-3'
+      path: '/dev/library/landing/redesign-3'
+      fullPath: '/dev/library/landing/redesign-3'
+      preLoaderRoute: typeof DevLibraryLandingRedesign3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/landing/redesign-2': {
+      id: '/dev/library/landing/redesign-2'
+      path: '/dev/library/landing/redesign-2'
+      fullPath: '/dev/library/landing/redesign-2'
+      preLoaderRoute: typeof DevLibraryLandingRedesign2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/library/landing/redesign-1': {
+      id: '/dev/library/landing/redesign-1'
+      path: '/dev/library/landing/redesign-1'
+      fullPath: '/dev/library/landing/redesign-1'
+      preLoaderRoute: typeof DevLibraryLandingRedesign1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/library/gpt/redesign-3': {
       id: '/dev/library/gpt/redesign-3'
       path: '/dev/library/gpt/redesign-3'
@@ -860,6 +923,9 @@ const rootRouteChildren: RootRouteChildren = {
   DevLibraryGptRedesign1Route: DevLibraryGptRedesign1Route,
   DevLibraryGptRedesign2Route: DevLibraryGptRedesign2Route,
   DevLibraryGptRedesign3Route: DevLibraryGptRedesign3Route,
+  DevLibraryLandingRedesign1Route: DevLibraryLandingRedesign1Route,
+  DevLibraryLandingRedesign2Route: DevLibraryLandingRedesign2Route,
+  DevLibraryLandingRedesign3Route: DevLibraryLandingRedesign3Route,
   DevLibraryOpusRedesign1Route: DevLibraryOpusRedesign1Route,
   DevLibraryOpusRedesign2Route: DevLibraryOpusRedesign2Route,
   DevLibraryOpusRedesign3Route: DevLibraryOpusRedesign3Route,

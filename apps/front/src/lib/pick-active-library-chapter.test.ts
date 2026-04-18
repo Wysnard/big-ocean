@@ -15,9 +15,9 @@ describe("pickActiveLibraryChapterId", () => {
 		expect(pickActiveLibraryChapterId(["a", "b", "c"], (id) => tops[id] ?? null, offset)).toBe("b");
 	});
 
-	it("stops at the first gap in scroll order (does not skip to a lower section)", () => {
+	it("sorts measured chapters by document order before picking the active section", () => {
 		const tops: Record<string, number> = { a: -40, b: 400, c: 20 };
-		expect(pickActiveLibraryChapterId(["a", "b", "c"], (id) => tops[id] ?? null, offset)).toBe("a");
+		expect(pickActiveLibraryChapterId(["a", "b", "c"], (id) => tops[id] ?? null, offset)).toBe("c");
 	});
 
 	it("returns null for an empty list", () => {
@@ -40,5 +40,78 @@ describe("pickActiveLibraryChapterId", () => {
 		expect(
 			pickActiveLibraryChapterId(["a", "b", "c", "d", "e", "f"], (id) => tops[id] ?? null, offset),
 		).toBe("c");
+	});
+
+	it("moves the activation line down near the document bottom", () => {
+		const tops: Record<string, number> = {
+			overview: -800,
+			strengths: -200,
+			growth: 320,
+			compatible: 760,
+		};
+
+		expect(
+			pickActiveLibraryChapterId(
+				["overview", "strengths", "growth", "compatible"],
+				(id) => tops[id] ?? null,
+				offset,
+				{ viewportHeight: 1200, scrollY: 800, scrollHeight: 2000 },
+			),
+		).toBe("compatible");
+	});
+
+	it("keeps the sticky-nav anchor away from the document bottom", () => {
+		const tops: Record<string, number> = {
+			overview: -800,
+			strengths: -200,
+			growth: 320,
+			compatible: 760,
+		};
+
+		expect(
+			pickActiveLibraryChapterId(
+				["overview", "strengths", "growth", "compatible"],
+				(id) => tops[id] ?? null,
+				offset,
+				{ viewportHeight: 1200, scrollY: 100, scrollHeight: 3000 },
+			),
+		).toBe("strengths");
+	});
+
+	it("prefers a visible hash-targeted chapter when multiple lower headings share the bottom scroll position", () => {
+		const tops: Record<string, number> = {
+			what: 127,
+			quieter: 379,
+			vivid: 631,
+			daily: 883,
+		};
+
+		expect(
+			pickActiveLibraryChapterId(
+				["what", "quieter", "vivid", "daily"],
+				(id) => tops[id] ?? null,
+				offset,
+				{ viewportHeight: 1200, scrollY: 1523, scrollHeight: 2723 },
+				"quieter",
+			),
+		).toBe("quieter");
+	});
+
+	it("ignores a hash-targeted chapter after it leaves the viewport", () => {
+		const tops: Record<string, number> = {
+			overview: -1300,
+			strengths: 20,
+			compatible: 760,
+		};
+
+		expect(
+			pickActiveLibraryChapterId(
+				["overview", "strengths", "compatible"],
+				(id) => tops[id] ?? null,
+				offset,
+				{ viewportHeight: 1200, scrollY: 600, scrollHeight: 2400 },
+				"overview",
+			),
+		).toBe("strengths");
 	});
 });

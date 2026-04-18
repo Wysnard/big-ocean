@@ -5,6 +5,10 @@ lastStep: 14
 editHistory:
   - date: '2026-04-18'
     type: 'revision'
+    source: 'Stakeholder decision - knowledge library landing redesign'
+    summary: 'Added §22 Knowledge Library Landing Page: selected the Personality Atlas direction from `/dev/library/landing/redesign-2`; removed duplicate useful-first-route module; added authenticated-assessed recommended path ("pattern to precision"); required atlas preview columns with View all jumps; required complete index shelves listing every article, including all 30 facets; added route-composition and article-page cross-references.'
+  - date: '2026-04-18'
+    type: 'revision'
     source: 'Stakeholder decision — knowledge library article layouts (trait / facet / archetype directions)'
     summary: 'New §21 Knowledge Library Article Page Layout: tier-specific spines, reading rail (mobile disclosure + desktop sticky + active-section highlighting), responsive grid (lg two-column, xl three-column), hero rules, main-column modules, CTA placement, MDX anchor contract, smooth in-page scroll; cross-ref from §11 LibraryArticleCard.'
   - date: '2026-04-16'
@@ -4190,6 +4194,7 @@ Page layouts that compose library components with data-fetching concerns. Live i
 | **RelationshipLetterPage** | `/circle/$personId` | RelationshipLetterRitualGate (first visit only) + Section A (`RelationshipLetterSectionA`) + Section B + Section C + Section D (post-MVP) + Section E + Section F. `BottomNav` hidden during ritual, visible after. |
 | **InviteLandingPage** | `/invite/$inviteId` | Inviter framing + ceremony explanation + QR consent contract + Accept / Not now buttons. No auth gate — renders for all visitors; Accept flow handles auth routing. |
 | **PublicProfilePage** | `/public-profile/$id` | Framing line + archetype name/description + GeometricSignature + OceanCodeStrand + ConversationCTA + trait bars + InviteIntoCircleCTA (logged-in visitors). SSR. `BottomNav` hidden. |
+| **LibraryLandingPage** | `/library` | Knowledge library landing: Personality Atlas hero, article-count metrics, authenticated-assessed recommended path, compact atlas preview, complete index shelves for all tiers. See §22. |
 | **SettingsPage** | `/settings` | Account admin: email, password, notification preferences, notification permission revoke, data export, delete account. `BottomNav` visible. Accessed via gear icon on Me. |
 
 **Hidden BottomNav routes:** `/chat`, `/me/$conversationSessionId?view=portrait`, `/today/week/$weekId`, `/circle/$personId?ritual=true`, `/public-profile/$id`, unauthenticated routes.
@@ -7122,7 +7127,7 @@ All breakpoints hide BottomNav. Focused reading is the whole viewport.
 
 Public knowledge articles at `/library/{tier}/{slug}` serve **both** unauthenticated education and post-assessment reference. This section locks the **layout and interaction decisions** validated in dev direction mockups (`/dev/library/direction/trait`, `/dev/library/direction/facet`, `/dev/library/direction/archetype`) so implementation converges on one system, not ad-hoc per-page shells.
 
-**Relationship to other sections:** Library surfacing from Today / weekly letter uses `LibraryArticleCard` (§11.4a). This section defines the **destination article page** only.
+**Relationship to other sections:** Library surfacing from Today / weekly letter uses `LibraryArticleCard` (§11.4a). The library index / browse surface is defined in **§22 Knowledge Library Landing Page**. This section defines the **destination article page** only.
 
 ### 21.2 Design principles
 
@@ -7212,5 +7217,153 @@ Public knowledge articles at `/library/{tier}/{slug}` serve **both** unauthentic
 | Archetype hero | Title + description only | Add pull-quote + relational side column | Hero + `RelatedPatternsColumn` pattern |
 | MDX ids | Partial | All listed chapters have stable ids | Audit MDX; add missing ids |
 | Smooth scroll | None | `scroll-behavior: smooth` behind reduced-motion guard | Global CSS (already added in dev branch pattern) |
+
+---
+
+## 22. Knowledge Library Landing Page
+
+### 22.1 Purpose
+
+The library landing page at `/library` is the browse surface for the SEO knowledge library. It must serve two modes without splitting into separate pages:
+
+1. **Exploration mode** for unauthenticated visitors, authenticated users without an assessment, and users arriving from search or shared links. The page helps them understand the library's taxonomy: archetypes, traits, facets, science, and guides.
+2. **Post-assessment reference mode** for `authenticated-assessed` users. The page gives them a personal starting path through the library after their portrait exists.
+
+**Selected design direction:** Use the **Personality Atlas** direction from `/dev/library/landing/redesign-2` as the baseline. Redesign 1's recommended path is retained only as the authenticated-assessed module. Redesign 3's reading-room density is not the target for v1.
+
+### 22.2 Design principles
+
+1. **Atlas first, not marketing first** — The landing page should explain how to browse the model, not sell the product again. The hero is an orientation tool.
+2. **Levels of zoom** — Archetypes name the whole pattern; traits explain broad forces; facets show where a trait becomes visible. The layout should make these levels obvious.
+3. **No duplicate recommendation modules** — The generic "useful first route" pattern and the personalized "read your results" path compete for the same job. Keep only one route-path module per state.
+4. **Complete shelves must be complete** — Preview cards may be capped, but the page must expose every article in each tier. Facets must show all 30 facet articles.
+5. **Personalization only when earned** — The recommended path appears only when the user is signed in and has completed an assessment. Otherwise, the page remains a neutral atlas.
+6. **Editorial coherence with article pages** — Use the same rounded surfaces, primary-tinted gradients, muted cards, font-heading hierarchy, and `LibraryNav` rhythm as §21.
+
+### 22.3 Page structure
+
+| Order | Zone | Content | State |
+|-------|------|---------|-------|
+| 1 | Dev / production nav | `LibraryNav`; in dev, optional banner and iteration switcher | All |
+| 2 | Hero left | big-ocean mark, "Knowledge Library" label, title "Choose the level of zoom that matches your question.", explanatory paragraph, CTAs ("Browse library", "Open the atlas") | All |
+| 3 | Hero right | Three metric cards: Pattern / Trait / Facet article counts. Short explanatory note: atlas for exploration, recommended path for completed assessment | All |
+| 4 | Recommended path band | "Read your results from pattern to precision." Three-card path: archetype article -> trait article -> facet article. CTA: "Start recommended path" | `authenticated-assessed` only |
+| 5 | Atlas preview | Three columns: Archetypes, Traits, Facets. Each column previews a compact subset and has a "View all N {tier}" anchor jump when truncated | All |
+| 6 | Complete index | Full shelves for all tiers: Archetypes, Traits, Facets, Science, Guides. Each shelf lists every article in that tier | All |
+
+### 22.4 Hero and atlas behavior
+
+**Hero left:** Keep the copy short and structural. The core concept is not "we have articles"; it is "choose a level of zoom."
+
+**Hero right:** Use metrics as orientation, not vanity. Counts are content inventory counts, not user/social counts, and therefore do not violate the Intimacy Principle. Metrics should initially highlight:
+
+| Metric | Meaning |
+|--------|---------|
+| Pattern | Published archetype articles |
+| Trait | Published Big Five trait articles |
+| Facet | Published facet articles |
+
+**Do not place a first-route link list in the hero.** That module was removed because it duplicates the authenticated recommended path. If the user has no completed assessment, the correct action is browsing the atlas or complete index.
+
+### 22.5 Authenticated-assessed recommended path
+
+**Display condition:** User is authenticated and has at least one completed assessment / portrait-ready session (`authState = "authenticated-assessed"` in existing public-profile CTA language).
+
+**Position:** Immediately after the hero, before the atlas preview.
+
+**Purpose:** Translate the user's assessment into a reading sequence:
+
+1. **Archetype / pattern:** User's current archetype article.
+2. **Trait / broad force:** Highest-salience trait from the latest result. Salience can be derived from extremity, confidence, or product-chosen priority; exact scoring is implementation detail.
+3. **Facet / precise handle:** Most relevant facet under that trait, preferably high-confidence and actionable.
+
+**Fallback:** If personalized article mapping is unavailable in v1, use the static mock path from the dev prototype only as a temporary fallback. The surface must still be state-gated to completed users.
+
+**Copy:**
+- Eyebrow badges: `Assessment complete`, `Signed-in state`
+- Heading: "Read your results from pattern to precision."
+- Body: "After someone has their portrait, the library can stop being generic. Start with the archetype pattern, then move into the trait and facet language that helps the result feel usable."
+- CTA: "Start recommended path"
+
+**Interaction:** Each card links directly to the article. The CTA links to the first card in the sequence.
+
+### 22.6 Atlas preview
+
+The atlas preview is a compact browse aid, not the full index.
+
+| Column | Icon | Preview behavior |
+|--------|------|------------------|
+| Archetypes | `Sparkles` | Show first / featured archetype articles, capped for rhythm |
+| Traits | `Compass` | Show trait articles, capped only if needed |
+| Facets | `MapPinned` | Show a subset only; must include "View all 30 facets" jump to complete index |
+
+**View all jumps:** If a tier is truncated in preview, render an anchor link to `#all-{tier}` with the total article count in the label. Example: "View all 30 facets."
+
+**Accessibility:** Preview links are normal article links. "View all" jumps are real anchors to visible sections, not disclosure-only controls.
+
+### 22.7 Complete index shelves
+
+The complete index is mandatory. It solves the browsing question: "How do I see all facet articles?"
+
+**Required shelves:**
+- `#all-archetype` — all archetype articles
+- `#all-trait` — all trait articles
+- `#all-facet` — all 30 facet articles
+- `#all-science` — all science articles or planned-state message
+- `#all-guides` — all guide articles or planned-state message
+
+**Shelf structure:**
+- Shelf heading
+- One-sentence tier description
+- Article count
+- Grid of links to every article in that tier
+
+**Empty tier behavior:** Render a dashed planned-state block ("More articles are planned.") rather than hiding the shelf. This keeps the taxonomy stable.
+
+**No hidden truncation:** The complete index must not slice to the first 4 or first 6 articles. If the list is long, use grid wrapping and vertical page length. Do not paginate facets in v1; 30 links is acceptable on a library index.
+
+### 22.8 Responsive behavior
+
+| Breakpoint | Behavior |
+|------------|----------|
+| Default (`<lg`) | Single column. Hero left, hero metrics, recommended path, atlas preview columns stacked, full index shelves stacked. |
+| `lg+` | Hero uses two columns. Atlas preview uses three columns. Complete index uses left explanatory column + right full shelves. |
+| Mobile | All cards must preserve stable dimensions and avoid horizontal scroll. The facet shelf becomes a single or two-column link grid depending on available width. |
+
+### 22.9 Visual treatment
+
+- Outer page background: `bg-background`.
+- Major sections: `rounded-[2rem]`, `border-border/70`, `shadow-sm`.
+- Hero metrics panel: primary-tinted gradient consistent with article direction hero (`from-primary/[0.08] via-background to-primary/[0.03]`).
+- Cards: `rounded-2xl`, muted backgrounds, hover border-color change only; avoid hover transforms that shift layout.
+- Typography: `font-heading` for headings, normal letter spacing, no viewport-scaled font beyond established Tailwind breakpoints.
+- Image/mark: Use `/ocean-icon.svg` as the visual anchor; no decorative orbs or unrelated imagery.
+
+### 22.10 Accessibility and interaction checklist
+
+- [ ] Every article link has visible focus state.
+- [ ] "View all" jumps target visible `id`s (`#all-facet`, etc.).
+- [ ] The complete facet shelf exposes all 30 links to keyboard and screen readers.
+- [ ] Metrics are plain content, not announced as social proof.
+- [ ] Authenticated-assessed module has a stable state hook (`data-auth-state="authenticated-assessed"` or equivalent) for testing.
+- [ ] No duplicate route-path module appears on the same page state.
+
+### 22.11 Implementation direction
+
+- Use existing `getAllLibraryEntries()`, `LIBRARY_TIERS`, `LIBRARY_TIER_LABELS`, and `LIBRARY_TIER_DESCRIPTIONS` data as the canonical article source.
+- Keep `/library` as the production route; dev prototypes remain under `/dev/library/landing/redesign-*` until parity is verified.
+- Add a small selector / adapter for the authenticated recommended path once latest-assessment result data is available on the library landing route.
+- Production should converge on the selected redesign 2 structure; redesign 1 and redesign 3 are exploration artifacts, not separate product variants.
+
+### 22.12 Implementation gap (current -> target)
+
+| Area | Current | Target | Work Required |
+|------|---------|--------|---------------|
+| Landing hero | Simple editorial intro + grouped cards | Personality Atlas hero with level-of-zoom framing and article-count metrics | Replace `/library` hero layout |
+| Authenticated path | None | Completed-assessment recommended path after hero | Load latest completed result; map archetype / trait / facet to articles |
+| Atlas preview | None | Three compact preview columns with View all jumps | Build preview component from library entry data |
+| Full shelves | Grouped cards exist, but not in selected atlas structure | Complete index shelves for all tiers, including all 30 facets | Render unsliced shelves with stable anchors |
+| Duplicate first-route module | Prototype had both useful-first-route and recommended path | Only recommended path for completed users | Keep hero metrics informational |
+| State testing | None | `authenticated-assessed` hook and facet shelf count test | Add component / E2E coverage |
 
 ---

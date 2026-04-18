@@ -79,6 +79,7 @@ const SECTIONS = [
 	{ id: "charts", label: "Charts" },
 	{ id: "modals", label: "Modals" },
 	{ id: "depth", label: "Depth Zones" },
+	{ id: "library-landing", label: "Library Landing" },
 	{ id: "library-composer", label: "Library UX" },
 ] as const;
 
@@ -1492,6 +1493,65 @@ function DepthSection() {
 
 /* ── Library article redesigns (dev routes) ───────────── */
 
+function LibraryLandingSection() {
+	return (
+		<section className="mb-20">
+			<SectionHeading
+				id="library-landing"
+				title="Library landing layouts"
+				subtitle="Three full-page explorations of the knowledge library landing page, aligned with the validated trait, facet, and archetype article direction"
+			/>
+			<SubSection title="Landing iterations">
+				<p className="text-body text-muted-foreground max-w-3xl mb-6">
+					Each route keeps the production <code className="text-xs">LibraryNav</code>, real MDX entry
+					data, and the editorial surfaces used in the article direction mockups.
+				</p>
+				<div className="grid gap-4 md:grid-cols-3">
+					<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+						<CardHeader>
+							<CardTitle className="text-lg">Landing 1</CardTitle>
+							<CardDescription>
+								Editorial index - prominent search, tier metrics, and a guided path
+							</CardDescription>
+						</CardHeader>
+						<CardFooter>
+							<Button variant="secondary" asChild className="w-full">
+								<Link to="/dev/library/landing/redesign-1">Open full page</Link>
+							</Button>
+						</CardFooter>
+					</Card>
+					<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+						<CardHeader>
+							<CardTitle className="text-lg">Landing 2 - preferred</CardTitle>
+							<CardDescription>
+								Personality atlas - levels of zoom plus completed-assessment recommended path
+							</CardDescription>
+						</CardHeader>
+						<CardFooter>
+							<Button variant="secondary" asChild className="w-full">
+								<Link to="/dev/library/landing/redesign-2">Open full page</Link>
+							</Button>
+						</CardFooter>
+					</Card>
+					<Card className="rounded-2xl border-border/80 shadow-sm transition-shadow hover:shadow-md">
+						<CardHeader>
+							<CardTitle className="text-lg">Landing 3</CardTitle>
+							<CardDescription>
+								Reading room - compact start list, sticky search, and shelf summary
+							</CardDescription>
+						</CardHeader>
+						<CardFooter>
+							<Button variant="secondary" asChild className="w-full">
+								<Link to="/dev/library/landing/redesign-3">Open full page</Link>
+							</Button>
+						</CardFooter>
+					</Card>
+				</div>
+			</SubSection>
+		</section>
+	);
+}
+
 function LibraryComposerSection() {
 	return (
 		<section className="mb-20">
@@ -1619,6 +1679,7 @@ function KitchenSinkPage() {
 				<ChartsSection />
 				<ModalsSection />
 				<DepthSection />
+				<LibraryLandingSection />
 				<LibraryComposerSection />
 				<LibraryDirectionMockupsSection />
 				<ClientOnly fallback={null}>

@@ -2,6 +2,14 @@ import { useEffect, useState } from "react";
 import { LIBRARY_SCROLL_SPY_STICKY_OFFSET_PX } from "@/lib/library-layout";
 import { pickActiveLibraryChapterId } from "@/lib/pick-active-library-chapter";
 
+function getHashChapterId(ids: readonly string[]) {
+	const hash = window.location.hash.replace(/^#/, "");
+	if (!hash) {
+		return null;
+	}
+	return ids.includes(hash) ? hash : null;
+}
+
 /**
  * Tracks the reading-rail chapter aligned with scroll position.
  *
@@ -29,6 +37,12 @@ export function useLibraryScrollSpy(chapterIds: readonly string[]) {
 				ids,
 				(id) => document.getElementById(id)?.getBoundingClientRect().top ?? null,
 				LIBRARY_SCROLL_SPY_STICKY_OFFSET_PX,
+				{
+					viewportHeight: window.innerHeight,
+					scrollY: window.scrollY,
+					scrollHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+				},
+				getHashChapterId(ids),
 			);
 
 		let rafId = 0;
@@ -43,11 +57,15 @@ export function useLibraryScrollSpy(chapterIds: readonly string[]) {
 
 		window.addEventListener("scroll", schedule, { passive: true });
 		window.addEventListener("resize", schedule);
+		window.addEventListener("hashchange", schedule);
+		document.addEventListener("click", schedule);
 
 		return () => {
 			cancelAnimationFrame(rafId);
 			window.removeEventListener("scroll", schedule);
 			window.removeEventListener("resize", schedule);
+			window.removeEventListener("hashchange", schedule);
+			document.removeEventListener("click", schedule);
 		};
 	}, [idsKey]);
 
