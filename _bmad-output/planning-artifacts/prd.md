@@ -1,7 +1,11 @@
 ---
-stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-03-edit-2026-04-18-validation-polish"]
+stepsCompleted: ["step-01-init", "step-02-discovery", "step-03-success", "step-04-journeys", "step-05-domain", "step-06-innovation", "step-07-project-type", "step-08-scoping", "step-09-functional", "step-10-nonfunctional", "step-11-polish", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-01-discovery", "step-e-02-review", "step-e-03-edit", "step-e-03-edit-2026-04-18-validation-polish", "step-e-03-edit-2026-04-18-ux-library-landing-sync", "step-e-03-edit-2026-04-18-validation-simple-fixes"]
 lastEdited: '2026-04-18'
 editHistory:
+  - date: '2026-04-18'
+    changes: 'Validation simple fixes from prd-validation-report-2026-04-18-library-sync.md: removed retired FR38/FR48 tombstones from active FR list; moved relationship credit retirement to notes; removed LLM call/cost mechanics from FR29a/FR69/FR87/FR88; tightened NFR17/NFR18/NFR19/NFR26 with measurable verification conditions.'
+  - date: '2026-04-18'
+    changes: 'Alignment with UX §22 Knowledge Library Landing Page: added `/library` as the public Personality Atlas browse surface; clarified MVP acquisition scope and SEO strategy; added FR83a covering atlas-first hero, content inventory metrics, authenticated-assessed recommended path, atlas preview columns, complete index shelves, all 30 facet links, no duplicate route-path modules, and testable accessibility anchors; extended NFR20 accessibility coverage to the library landing page.'
   - date: '2026-04-18'
     changes: 'BMAD Edit workflow (guided by prd-validation-report-2026-04-18): FR layer — reduced implementation leakage (FR3/13/14/20/25/47/94); FR30 wording; acceptance criteria on FR18/32/53/65; FR53 cascade clarity. NFR layer — NFR1 end-to-end latency wording; NFR15/NFR16 rolling 30-day measurement. Frontmatter — dropped missing inputDocument refs; completedStoriesDocs count 0.'
   - date: '2026-04-16'
@@ -32,6 +36,7 @@ inputDocuments:
   - "epics-innovation-strategy.md"
   - "ux-design-innovation-strategy.md"
   - "public-profile-redesign-ux-spec.md"
+  - "ux-design-specification.md (2026-04-18 — §22 Knowledge Library Landing Page / Personality Atlas direction for `/library`)"
   - "ux-design-specification.md (2026-02-12, outdated — included as context)"
   - "prd-2026-02-02-archived.md (baseline reference)"
   - "brainstorming-session-2026-03-23.md (homepage improvement — messaging, layout, UX)"
@@ -300,6 +305,7 @@ The full journey (conversation → portrait → three-space product world → da
 - Free relationship letter (static letter + real-time data grid + letter history + "Your Next Letter" anticipation)
 - Free Circle with invite ceremony (reward-first copy, privacy-led)
 - Public profile + archetype card sharing (unauthenticated, SEO, SSR)
+- Knowledge library landing page (`/library`) + SEO article pages (unauthenticated, SSR): `/library` is the public Personality Atlas browse surface; article pages serve specific search intent
 - Homepage + pre-conversation onboarding (load-bearing for conversion since anonymous path removed)
 - Subscription flow (€9.99/mo) unlocking **conversation extension** (+15 exchanges to continue with Nerin, Director model re-initialization) and **automatic portrait regeneration on the first extension** — the sole paid perks in MVP
 
@@ -738,6 +744,7 @@ big-ocean is a hybrid SSR web application built with TanStack Start (React 19) w
 - **Public profiles are SEO-critical:** Server-rendered with structured data, unique URLs per user
 - **OG meta tags per public profile:** Archetype name, OCEAN code, archetype card image — optimized for social preview when shared in messaging apps and social media
 - **OG image generation:** Dynamic archetype card image per user for social previews
+- **Knowledge library landing page:** `/library` is the SSR public browse surface for the SEO library. It orients users by level of zoom — archetypes as whole-pattern pages, traits as broad forces, facets as precise handles — and links to article shelves without requiring authentication
 - **Knowledge library pages:** SSR with structured data. Four tiers: archetype definitions (81 pages), trait/facet explainers (35), Big Five science articles (10-20), relationship/career guides (50-100). Each page targets specific search intent and includes a CTA to the free assessment. Schema.org structured data for scientific content
 - **Landing/marketing pages:** SSR for SEO. Standard meta tags, structured data
 - **Authenticated app surfaces** (conversation, Me, Today, Circle, focused reading): Not indexed. `noindex` meta tag
@@ -1003,7 +1010,7 @@ First B2B play — closest to existing product, warm leads available:
 
 - **FR28:** Users can initiate a relationship letter by opening a QR drawer from the Circle page invite ceremony; the other person scans the QR code or opens the contained URL
 - **FR29:** The relationship letter page is a living relational space with the following sections: (1) **This Year's Letter** — warm narrative in letter format describing the relationship dynamic, entered through a "Read Together Again" ritual screen on first read, LLM-generated at letter-creation time, same visual language as the personal portrait, free for both users; (2) **Where You Are Right Now** — real-time data grid with side-by-side traits, facets, and overlap with complementarity framing, updated automatically from conversation data (derive-at-read), free; (3) **Letter History** — vertical timeline of all letters (single letter in MVP, grows with annual regeneration post-MVP), free; (4) **Your Next Letter** — anticipation anchor for the annual ritual ("Nerin is already learning more about both of you"), free; (5) **Things You've Learned About Each Other** — user-owned shared notes, attributed per entry, free. *Post-MVP Section D (D2 relational observations, D3 "take care of" suggestions, D4 alignment patterns) is subscriber-only and not in MVP scope.*
-- **FR29a:** The relationship letter is generated once when both users complete their assessments. The LLM call uses both users' facets, traits, archetype, and representative evidence strings to produce the narrative. Cost: ~1 LLM call per relationship (not per view).
+- **FR29a:** The relationship letter is generated once when both users complete their assessments. The generated narrative uses both users' facets, traits, archetype, and representative evidence strings. Reopening the page displays the stored letter rather than creating a new letter per view
 - **FR30:** The QR accept screen shows the initiator's name, Accept and Refuse buttons, and a data-sharing disclaimer: accepting means (1) sharing the user's trait and facet scores with the initiator to generate the relationship letter, (2) ongoing data sharing — Nerin will use conversation data from both users to keep the relationship letter current and regenerate it on connection anniversary (post-MVP), (3) consent is revocable at any time from settings. Single consent gate — accepting is informed consent to ongoing data sharing, no per-action consent required
 - **FR31:** Users see a ritual suggestion screen before accessing the relationship letter for the first time. Subsequent visits bypass the ritual by default; a "Read Together Again" button re-enters the ritual mode
 - **FR32:** The relationship letter describes relational dynamics without blame language and without exposing individual vulnerability data. The narrative celebrates the relationship — it names dynamics and tensions as shared patterns, not individual deficits. Harm-reduction framing rule: "dynamics not deficits, no blame, no one is the problem". *Acceptance: sample of generated letters (n≥10) contains no second-person accusation against either partner as a person and no disclosure of private mood-note or daily check-in content from either side.*
@@ -1014,7 +1021,8 @@ First B2B play — closest to existing product, warm leads available:
 - **FR35a:** *(Post-MVP — Year 1 Q4)* The system automatically regenerates the relationship letter on the anniversary of the QR accept date. Both users receive a notification ("Your [year] letter from Nerin is ready"). Old letters are preserved in version history. Regeneration uses current conversation data from both users — no per-regeneration consent required because the original QR consent (FR30) covers ongoing use
 - **FR36:** Users receive a notification when a relationship letter they participated in is ready (initial generation in MVP; annual regeneration post-MVP)
 - **FR37:** The QR accept screen is only accessible to logged-in users with a completed assessment. There is no pre-account context — User B must sign up, verify their email, and complete their assessment before seeing the accept screen
-- **FR38:** *(Removed — relationship letter is free and unlimited, no credit tracking needed)*
+
+**Retired requirement note:** Relationship-letter credit tracking was removed. Relationship letters are free and unlimited per FR33.
 
 ### Public Profile & Social Sharing
 
@@ -1030,8 +1038,9 @@ First B2B play — closest to existing product, warm leads available:
 ### Subscription & Monetization
 
 - **FR47:** Users can subscribe at €9.99/mo via embedded checkout (billing provider per deployment architecture; aligns with NFR25). In MVP, the subscription unlocks exactly two perks: **conversation extension with Nerin** (FR10, FR25 — add +15 exchanges; new session seeded from prior session state per FR25) and **automatic portrait regeneration on the first extension** (FR23 — new portrait bundled, no additional payment). Post-MVP unlocks are defined in Phase 2a and include daily LLM recognition (FR69), mini-dialogue (FR69a), prescriptive weekly letter layer (FR88), subsequent portrait regenerations (FR23a), portrait gallery (FR74), confidence milestone notifications (FR75), and Section D relational observations (FR32a). *Acceptance: checkout completes in under 90 seconds from tap to confirmed subscription status; cancellation is self-service and effective at end of billing period*
-- **FR48:** *(Removed — relationship letter is free, no credit purchase needed)*
 - **FR49:** *(Subscription — MVP)* Subscribers have access to conversation extensions (FR10) as part of their subscription. Extension is unlimited for subscribers — they can re-extend on each extended assessment result as long as their subscription is active
+
+**Retired requirement note:** Relationship-letter credit purchase was removed. Relationship letters are free per FR33; subscription value is conversation extension plus first-extension portrait regeneration per FR47 and FR49.
 
 ### User Account & Privacy
 
@@ -1064,6 +1073,7 @@ First B2B play — closest to existing product, warm leads available:
 - **FR81:** Big Five science articles cover foundational topics (origin of the model, OCEAN vs MBTI, how personality is measured, personality across cultures, etc.) for informational search intent. Each article includes a CTA to the free assessment
 - **FR82:** Relationship and career guide pages combine personality dimensions with practical contexts (e.g., "How high-Openness people handle conflict," "Best career paths for [archetype]," "[Archetype A] × [Archetype B] compatibility"). AI-generated drafts, human-edited
 - **FR83:** Knowledge library pages are included in the sitemap and rendered with Schema.org structured data for scientific and educational content
+- **FR83a:** The `/library` landing page presents the public knowledge library as a **Personality Atlas** browse surface, not a marketing page. It contains: (1) an atlas-first hero explaining levels of zoom; (2) content inventory metrics for Pattern / Trait / Facet article counts; (3) an authenticated-assessed recommended path shown only to signed-in users with a completed assessment, linking archetype -> trait -> facet articles from their latest result when mapping is available; (4) atlas preview columns for Archetypes, Traits, and Facets with "View all N" anchor jumps when truncated; (5) complete index shelves for Archetypes, Traits, Facets, Science, and Guides; (6) all 30 facet article links exposed in the complete facet shelf; (7) planned-state messaging for empty shelves rather than hidden tiers; (8) no duplicate generic first-route module when the recommended path is present. *Acceptance: unauthenticated users can reach every complete-index shelf from `/library`; authenticated-assessed users see exactly one recommended path module; the facet shelf exposes 30 keyboard-focusable links; "View all" controls are real anchors to visible shelf IDs; Lighthouse SEO score >90.*
 
 ### Cost Management
 
@@ -1084,7 +1094,7 @@ First B2B play — closest to existing product, warm leads available:
 - **FR67:** Users can perform a daily check-in on the Today page consisting of (1) a personality-typed prompt from Nerin at the top, (2) a 5-option mood selector, (3) an optional note text field, and (4) a note visibility selector (Private / Inner circle / Public pulse)
 - **FR68:** When a user submits their daily check-in, the entry is saved to the mood calendar and displayed on the Today page in **journal format** — user's entry anchored at the top, 7-day dot grid with today filled, and a quiet anticipation line beneath: *"Nerin will write you a letter about your week on Sunday."* No LLM response, no Nerin recognition, no "thank you" message. Silent deposit. *Acceptance: a check-in submission triggers zero LLM calls and renders the journal view within 500ms*
 - **FR68a:** The Today page displays a quiet weekly anticipation line ("Nerin will write you a letter about your week on Sunday") whenever the user has checked in this week and the week is not yet Sunday. On Sunday after the weekly letter has generated, an inline card replaces the anticipation line with "Your week with Nerin is ready"
-- **FR69:** *(Post-MVP — subscription, Phase 1b)* Subscribers receive an LLM-generated Nerin recognition in journal format per check-in. The recognition is 2-3 sentences connecting the user's mood to their personality (top 3 facets, dominant traits, archetype, representative evidence strings) with no generic wellness language and no advice — pure observation. Tight LLM call (~$0.002-0.005 per call). The system includes lightweight pattern signals as prompt context — streak (consecutive check-ins), silence break (first check-in after >3-day gap) — with no separate rule engine
+- **FR69:** *(Post-MVP — subscription, Phase 1b)* Subscribers receive a Nerin recognition in journal format per check-in. The recognition is 2-3 sentences connecting the user's mood to their personality (top 3 facets, dominant traits, archetype, representative evidence strings) with no generic wellness language and no advice — pure observation. Recognition may include lightweight pattern signals such as streak (consecutive check-ins) and silence break (first check-in after >3-day gap)
 - **FR69a:** *(Post-MVP — subscription, Phase 1b)* Subscribers can tap "Tell me more →" on a daily recognition to open a scoped 3-5 exchange mini-dialogue with Nerin, who reads the actual note and responds in chat format
 - **FR70:** Users can view a mood calendar showing their check-in history over time, rendered as a grid of dots with mood emoji selections and day markers. The calendar is visible on the Me page ("Your Growth" section, conditional on having any check-in history) and inline on Today as the "week-so-far" dot grid
 - **FR71:** Users choose note visibility per check-in: (1) **Private** (default) — only the user and Nerin see the note, (2) **Inner circle** — visible to consented people in Circle, (3) **Public pulse** (post-MVP) — mood emoji only on public profile, note hidden
@@ -1099,8 +1109,8 @@ First B2B play — closest to existing product, warm leads available:
 ### Today Page & Weekly Letter from Nerin
 
 - **FR86:** The system generates a weekly summary every Sunday at 6pm local time (per user time zone) for each user who submitted ≥3 daily check-ins during that week. Users with 0-2 check-ins receive no summary and no notification — no shame messaging
-- **FR87:** The weekly summary is LLM-generated as a **letter from Nerin** using the letter format (focused reading, max-width 720px, warm background, same visual language as the portrait). The free version contains: (1) date range header, (2) personalized opening ("Dear [name]"), (3) week narrative — 2-3 paragraphs observing the pattern of the week and referencing specific mood selections and note content with personality-informed framing, (4) visual mood shape — 7-day dot grid as a small secondary element, (5) "What stood out" beat — one specific observation from the week's notes, (6) Nerin's sign-off. *Critical rule: the free version must feel complete and satisfying on its own — not a preview, not cripple-ware.* LLM cost: ~$0.02-0.05 per user per week
-- **FR88:** *(Post-MVP — subscription, Phase 1b)* The subscriber weekly summary is generated from the same LLM call as the free version with additional prescriptive sections: (1) **For the week ahead** — prescriptive focus statement + one concrete micro-action, (2) **Zooming out** — cross-week pattern detection observations, (3) **Relational beat** (if partner in circle and mood sharing opted in) — observations about how partners' weeks looked relative to each other, (4) **Library article link** — contextually-selected from the SEO knowledge library based on this week's theme, (5) **Reflective prompt** — single open question to sit with until next week
+- **FR87:** The weekly summary is generated as a **letter from Nerin** using the letter format (focused reading, max-width 720px, warm background, same visual language as the portrait). The free version contains: (1) date range header, (2) personalized opening ("Dear [name]"), (3) week narrative — 2-3 paragraphs observing the pattern of the week and referencing specific mood selections and note content with personality-informed framing, (4) visual mood shape — 7-day dot grid as a small secondary element, (5) "What stood out" beat — one specific observation from the week's notes, (6) Nerin's sign-off. *Critical rule: the free version must feel complete and satisfying on its own — not a preview, not cripple-ware.*
+- **FR88:** *(Post-MVP — subscription, Phase 1b)* The subscriber weekly summary extends the free version with additional prescriptive sections: (1) **For the week ahead** — prescriptive focus statement + one concrete micro-action, (2) **Zooming out** — cross-week pattern detection observations, (3) **Relational beat** (if partner in circle and mood sharing opted in) — observations about how partners' weeks looked relative to each other, (4) **Library article link** — contextually-selected from the SEO knowledge library based on this week's theme, (5) **Reflective prompt** — single open question to sit with until next week
 - **FR89:** Users receive a push notification at weekly summary generation time with copy *"Your week with Nerin is ready."* Email fallback for users without push notification permission. An inline card also appears on the Today page top on Sundays when the summary is ready
 - **FR90:** The weekly summary is accessed at a dedicated focused reading route `/today/week/$weekId`. The reading view uses the same visual language and component shell as the portrait reading view (FR94). Entered from the Today inline card or the notification tap
 - **FR91:** The free weekly summary ends with a soft conversion CTA in Nerin's voice, not system voice: "I have more I want to say about what comes next. With a subscription, I can write you a fuller letter each week — with what to try, what patterns I'm seeing across weeks, and what I think might help in the week ahead. **Or: continue our conversation. Extend your 15 exchanges with another 15, and I'll write you a new portrait afterwards that reflects everything I've learned about you since.**" The primary MVP CTA is the conversation extension path (€9.99/mo subscription). A soft dismiss option ("Not right now") returns the user to Today with no escalation. The CTA reappears each Sunday with the same framing — no aggressive retention nag
@@ -1156,13 +1166,13 @@ First B2B play — closest to existing product, warm leads available:
 
 - **NFR15:** Assessment completion without server-side errors >99% measured rolling 30-day across started assessments (errors = HTTP 5xx, pipeline failure, or transcript persistence failure)
 - **NFR16:** Portrait generation completes successfully >99% measured rolling 30-day across portrait generation jobs (failures after automatic retries count against this rate)
-- **NFR17:** Portrait generation retries automatically on failure
-- **NFR18:** Cost guard never terminates an active session — only blocks at session boundaries
-- **NFR19:** Conversation sessions are resumable after browser close or connection loss
+- **NFR17:** Portrait generation retries automatically according to FR27's retry policy (up to 3 attempts with 5s, 15s, and 45s backoff). Retry outcomes are included in NFR16's rolling 30-day success measurement
+- **NFR18:** Cost guard blocks only before a new session, extension, portrait generation, relationship letter generation, or weekly letter generation starts. Across 100% of active sessions, cost guard must not terminate a session after a user message has been accepted
+- **NFR19:** Conversation sessions are resumable after browser close or connection loss for the full retention period defined by NFR12. On reopen, the latest persisted transcript and current exchange count must load within 2s
 
 ### Accessibility
 
-- **NFR20:** WCAG 2.1 AA compliance required for: public profile, conversation UI, Me page and session-scoped identity views (including post-assessment trait and evidence UI), subscription modal. Best-effort AA for remaining pages
+- **NFR20:** WCAG 2.1 AA compliance required for: public profile, knowledge library landing page and article pages, conversation UI, Me page and session-scoped identity views (including post-assessment trait and evidence UI), subscription modal. Best-effort AA for remaining pages
 - **NFR21:** Chat interface keyboard-navigable with proper ARIA labels
 - **NFR22:** Score visualizations (facet bars, trait bands) have text alternatives
 - **NFR23:** Ocean theme color palette meets AA contrast ratios
@@ -1171,7 +1181,7 @@ First B2B play — closest to existing product, warm leads available:
 ### Integration
 
 - **NFR25:** Embedded checkout integration for subscription billing (€9.99/mo)
-- **NFR26:** The system can switch LLM providers without code changes to the conversation or portrait pipeline
+- **NFR26:** LLM provider selection is configuration-driven for conversation, portrait, relationship letter, and weekly letter generation. Switching providers requires no code changes in those pipelines and is verified by a configuration-only provider swap in staging
 - **NFR27:** Transactional email delivery. Three email types: (1) drop-off re-engagement with last territory, (2) Nerin check-in ~2 weeks post-assessment, (3) subscription conversion nudge for engaged free users. Relationship analysis notifications delivered within 5 minutes of completion, >95% delivery rate. Confidence milestone notifications within 1 hour of threshold
 
 ### Observability
