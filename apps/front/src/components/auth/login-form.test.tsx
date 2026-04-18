@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { AnchorHTMLAttributes } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock auth hook
@@ -37,7 +38,11 @@ vi.mock("@/hooks/use-auth", async () => {
 const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
 	useNavigate: () => mockNavigate,
-	Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+	Link: ({ children, to, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { to?: string }) => (
+		<a {...props} href={to}>
+			{children}
+		</a>
+	),
 }));
 
 // Mock OceanHieroglyphSet
@@ -63,6 +68,16 @@ describe("LoginForm", () => {
 
 		expect(screen.getByLabelText("Email")).toBeTruthy();
 		expect(screen.getByLabelText("Password")).toBeTruthy();
+	});
+
+	it("uses shared card primitives for the page variant", () => {
+		const { container } = renderLoginForm();
+		const card = container.querySelector('[data-slot="card"]');
+
+		expect(card).toBeInTheDocument();
+		expect(card?.querySelector('[data-slot="card-accent"]')).not.toBeInTheDocument();
+		expect(card?.querySelector('[data-slot="card-header"]')).toBeInTheDocument();
+		expect(card?.querySelector('[data-slot="card-content"]')).toBeInTheDocument();
 	});
 
 	it("shows generic error message for any login failure (AC #3)", async () => {
@@ -232,10 +247,11 @@ describe("LoginForm", () => {
 	});
 
 	it("embed variant omits page chrome and duplicate signup link", () => {
-		render(<LoginForm variant="embed" />);
+		const { container } = render(<LoginForm variant="embed" />);
 		expect(screen.getByTestId("login-form-embed")).toBeInTheDocument();
 		expect(screen.queryByText(/Welcome/)).not.toBeInTheDocument();
 		expect(screen.queryByText(/New here\? Create account/)).not.toBeInTheDocument();
 		expect(screen.getByText("Log in")).toBeInTheDocument();
+		expect(container.querySelector('[data-slot="card"]')).not.toBeInTheDocument();
 	});
 });

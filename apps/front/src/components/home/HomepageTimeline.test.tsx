@@ -51,6 +51,12 @@ describe("HomepageTimeline", () => {
 		expect(within(carousel).getAllByTestId("homepage-archetype-card")).toHaveLength(5);
 	});
 
+	it("uses shared chat bubbles for the conversation preview", () => {
+		const { container } = render(<HomepageTimeline />);
+
+		expect(container.querySelectorAll("[data-slot='chat-bubble']")).toHaveLength(3);
+	});
+
 	it("includes in-section gradient bleeds between phases (no standalone gaps)", () => {
 		render(<HomepageTimeline />);
 

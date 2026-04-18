@@ -9,8 +9,8 @@ const REASSURANCE_CARDS = [
 		evidenceLabel: "Conversation preview",
 		evidenceContent:
 			"No quiz energy here. Just tell me where your mind goes when the room finally gets quiet.",
-		accentClassName:
-			"border-sky-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.96)_0%,rgba(239,246,255,0.98)_100%)] dark:border-sky-500/25 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.96)_0%,rgba(8,47,73,0.58)_100%)]",
+		accentClassName: "border-primary/30 bg-primary/10",
+		quoteClassName: "border-primary/55",
 	},
 	{
 		eyebrow: "Time commitment",
@@ -18,8 +18,8 @@ const REASSURANCE_CARDS = [
 		body: "The pace is slow enough to breathe in and fast enough to keep its shape.",
 		evidenceLabel: "What people say",
 		evidenceContent: '"By minute seven, I forgot I was supposed to be good at this."',
-		accentClassName:
-			"border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,251,235,0.98)_0%,rgba(255,255,255,0.98)_100%)] dark:border-amber-500/25 dark:bg-[linear-gradient(180deg,rgba(41,37,20,0.94)_0%,rgba(15,23,42,0.96)_100%)]",
+		accentClassName: "border-secondary/30 bg-secondary/10",
+		quoteClassName: "border-secondary/55",
 	},
 	{
 		eyebrow: "Self-exposure",
@@ -28,8 +28,8 @@ const REASSURANCE_CARDS = [
 			"The point is recognition, not diagnosis. The voice stays close to what is human and already true.",
 		evidenceLabel: "Portrait tone example",
 		evidenceContent: "Nothing in you is too much for the page. The gentleness is part of the seeing.",
-		accentClassName:
-			"border-rose-200/80 bg-[linear-gradient(180deg,rgba(255,241,242,0.98)_0%,rgba(255,255,255,0.98)_100%)] dark:border-rose-500/25 dark:bg-[linear-gradient(180deg,rgba(76,5,25,0.5)_0%,rgba(15,23,42,0.96)_100%)]",
+		accentClassName: "border-tertiary/30 bg-tertiary/10",
+		quoteClassName: "border-tertiary/55",
 	},
 ] as const;
 
@@ -54,25 +54,25 @@ export function ReassuranceCards() {
 				>
 					<ArtifactSurfaceCard
 						as="article"
-						className={`flex h-full flex-col gap-5 rounded-[1.75rem] p-6 text-left shadow-[0_20px_45px_rgba(15,23,42,0.08)] dark:shadow-[0_20px_45px_rgba(2,6,23,0.45)] ${card.accentClassName}`}
+						className={`flex h-full flex-col gap-5 rounded-lg p-6 text-left shadow-[0_20px_45px_rgba(26,26,46,0.08)] dark:shadow-[0_20px_45px_rgba(0,0,0,0.35)] ${card.accentClassName}`}
 					>
 						<div className="space-y-3">
-							<p className="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase dark:text-slate-300">
+							<p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
 								{card.eyebrow}
 							</p>
-							<h3 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-slate-50">
-								{card.title}
-							</h3>
-							<p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{card.body}</p>
+							<h3 className="text-xl font-semibold tracking-tight text-foreground">{card.title}</h3>
+							<p className="text-sm leading-6 text-muted-foreground">{card.body}</p>
 						</div>
 
 						<div className="space-y-2">
-							<p className="text-[0.7rem] font-semibold tracking-[0.18em] text-slate-500 uppercase dark:text-slate-400">
+							<p className="text-[0.7rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
 								{card.evidenceLabel}
 							</p>
-							<div className="rounded-[1.25rem] border border-white/70 bg-white/75 p-4 text-sm leading-6 text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-200">
+							<blockquote
+								className={`border-l-2 py-1 pl-4 text-sm leading-6 text-foreground ${card.quoteClassName}`}
+							>
 								{card.evidenceContent}
-							</div>
+							</blockquote>
 						</div>
 					</ArtifactSurfaceCard>
 				</motion.div>

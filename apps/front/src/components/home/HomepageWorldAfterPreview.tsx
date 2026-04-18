@@ -1,3 +1,4 @@
+import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { ArchetypeCarousel } from "./ArchetypeCarousel";
 import { HomepageWeeklyLetterPreview } from "./HomepageWeeklyLetterPreview";
 import { getHomepagePhaseConfig } from "./homepage-phase-config";
@@ -12,14 +13,17 @@ export function HomepageWorldAfterPreview() {
 		<section
 			id={getHomepagePhaseConfig("worldAfter").sectionId}
 			data-homepage-phase="worldAfter"
-			className="min-h-[92svh] bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_46%,#ffffff_100%)] px-6 py-12 text-slate-900 sm:px-8 lg:min-h-screen lg:rounded-b-[2rem] lg:px-12 lg:py-16 dark:bg-[linear-gradient(180deg,#0f172a_0%,#0b1220_50%,#020617_100%)] dark:text-slate-50"
+			className="homepage-world-surface min-h-[92svh] px-6 py-12 text-foreground sm:px-8 lg:min-h-screen lg:px-12 lg:py-16"
 		>
 			<div className="mx-auto flex max-w-6xl flex-col gap-12 lg:gap-16">
 				<div className="space-y-3">
-					<p className="text-xs font-semibold tracking-[0.22em] text-teal-700 uppercase dark:text-teal-300">
-						World After
-					</p>
-					<h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+					<div className="flex items-center gap-3">
+						<OceanHieroglyphSet size={14} />
+						<p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
+							World After
+						</p>
+					</div>
+					<h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-foreground">
 						The conversation becomes a place you can return to, not a one-time result.
 					</h2>
 				</div>
@@ -40,7 +44,7 @@ export function HomepageWorldAfterPreview() {
 				<div
 					aria-hidden
 					data-testid="homepage-timeline-bleed-world-to-reassurance"
-					className="-mx-6 mt-12 h-20 shrink-0 bg-gradient-to-b from-transparent via-slate-100/90 to-white sm:-mx-8 lg:-mx-12 dark:via-slate-800/80 dark:to-slate-950"
+					className="homepage-bleed-world-to-reassurance -mx-6 mt-12 h-20 shrink-0 sm:-mx-8 lg:-mx-12"
 				/>
 			</div>
 		</section>

@@ -23,8 +23,7 @@ export const HOMEPAGE_PHASE_CONFIG: Record<HomepagePhase, HomepagePhaseConfig> =
 		textBefore: "A conversation that",
 		keyword: "SEES",
 		textAfter: "you.",
-		gradientClassName:
-			"bg-gradient-to-r from-sky-400 via-violet-500 to-sky-400 dark:from-sky-300 dark:via-violet-400 dark:to-sky-300",
+		gradientClassName: "bg-gradient-to-r from-primary via-tertiary to-secondary",
 	},
 	portrait: {
 		phase: "portrait",
@@ -32,8 +31,7 @@ export const HOMEPAGE_PHASE_CONFIG: Record<HomepagePhase, HomepagePhaseConfig> =
 		textBefore: "Words you've been",
 		keyword: "CARRYING",
 		textAfter: "without knowing.",
-		gradientClassName:
-			"bg-gradient-to-r from-amber-400 via-rose-400 to-amber-400 dark:from-amber-300 dark:via-rose-300 dark:to-amber-300",
+		gradientClassName: "bg-gradient-to-r from-secondary via-primary to-tertiary",
 	},
 	worldAfter: {
 		phase: "worldAfter",
@@ -41,8 +39,7 @@ export const HOMEPAGE_PHASE_CONFIG: Record<HomepagePhase, HomepagePhaseConfig> =
 		textBefore: "A place that",
 		keyword: "STAYS",
 		textAfter: ".",
-		gradientClassName:
-			"bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-400 dark:from-teal-300 dark:via-cyan-300 dark:to-teal-300",
+		gradientClassName: "bg-gradient-to-r from-tertiary via-primary to-secondary",
 	},
 	reassurance: {
 		phase: "reassurance",
@@ -50,8 +47,7 @@ export const HOMEPAGE_PHASE_CONFIG: Record<HomepagePhase, HomepagePhaseConfig> =
 		textBefore: "",
 		keyword: "YOURS.",
 		textAfter: "",
-		gradientClassName:
-			"bg-gradient-to-r from-violet-400 via-rose-400 to-amber-400 dark:from-violet-300 dark:via-rose-300 dark:to-amber-300",
+		gradientClassName: "bg-gradient-to-r from-primary via-secondary to-tertiary",
 	},
 };
 

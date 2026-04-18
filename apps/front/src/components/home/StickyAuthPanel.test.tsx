@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+
+import { render, screen, within } from "@testing-library/react";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@tanstack/react-router", () => ({
-	Link: ({ children, ...props }: any) => (
-		<a {...props} href={props.to as string}>
+	Link: ({ children, to, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { to?: string }) => (
+		<a {...props} href={to}>
 			{children}
 		</a>
 	),
@@ -32,9 +33,7 @@ vi.mock("@workspace/ui/components/ocean-hieroglyph-set", () => ({
 }));
 
 vi.mock("@workspace/ui/components/field", () => ({
-	Field: ({ children, ...props }: { children?: ReactNode }) => (
-		<div {...props}>{children}</div>
-	),
+	Field: ({ children, ...props }: { children?: ReactNode }) => <div {...props}>{children}</div>,
 	FieldLabel: ({ children, htmlFor }: { children?: ReactNode; htmlFor?: string }) => (
 		<label htmlFor={htmlFor}>{children}</label>
 	),
@@ -62,8 +61,21 @@ import { StickyAuthPanel } from "./StickyAuthPanel";
 describe("StickyAuthPanel", () => {
 	it("renders the panel with data-slot attribute", () => {
 		render(<StickyAuthPanel />);
-		const panel = screen.getByRole("complementary", { name: /sign up/i });
-		expect(panel.querySelector("[data-slot='sticky-auth-panel']")).toBeInTheDocument();
+		const panel = screen.getByRole("complementary", { name: /log in/i });
+		expect(within(panel).getByTestId("sticky-auth-panel")).toHaveAttribute("data-slot", "card");
+		expect(within(panel).getByTestId("sticky-auth-panel")).toHaveAttribute(
+			"data-homepage-slot",
+			"sticky-auth-panel",
+		);
+	});
+
+	it("uses shared card sections for the login rail content", () => {
+		render(<StickyAuthPanel />);
+		const card = screen.getByTestId("sticky-auth-panel");
+		expect(card.querySelector('[data-slot="card-accent"]')).not.toBeInTheDocument();
+		expect(card.querySelector('[data-slot="card-header"]')).toBeInTheDocument();
+		expect(card.querySelector('[data-slot="card-content"]')).toBeInTheDocument();
+		expect(card.querySelector('[data-slot="card-footer"]')).toBeInTheDocument();
 	});
 
 	it("renders the brand mark with OceanHieroglyphSet", () => {
@@ -77,9 +89,9 @@ describe("StickyAuthPanel", () => {
 		expect(screen.getByTestId("homepage-dynamic-hook")).toBeInTheDocument();
 	});
 
-	it("renders signup link and embedded login form", () => {
+	it("renders the embedded login form without a signup CTA", () => {
 		render(<StickyAuthPanel />);
-		expect(screen.getByText(/start yours/i)).toHaveAttribute("href", "/signup");
+		expect(screen.queryByText(/start yours/i)).not.toBeInTheDocument();
 		expect(screen.getByTestId("login-form-embed")).toBeInTheDocument();
 		expect(screen.getByLabelText("Email")).toBeInTheDocument();
 		expect(screen.getByLabelText("Password")).toBeInTheDocument();
@@ -92,13 +104,16 @@ describe("StickyAuthPanel", () => {
 
 	it("sets data-phase from useHomepagePhase", () => {
 		render(<StickyAuthPanel />);
-		const panel = screen.getByRole("complementary", { name: /sign up/i });
-		expect(panel.querySelector("[data-phase='conversation']")).toBeInTheDocument();
+		const panel = screen.getByRole("complementary", { name: /log in/i });
+		expect(within(panel).getByTestId("sticky-auth-panel")).toHaveAttribute(
+			"data-phase",
+			"conversation",
+		);
 	});
 
 	it("sizes the sticky shell below the global header (h-14), not full viewport height", () => {
 		render(<StickyAuthPanel />);
-		const shell = screen.getByRole("complementary", { name: /sign up/i }).firstElementChild;
+		const shell = screen.getByRole("complementary", { name: /log in/i }).firstElementChild;
 		expect(shell?.className).toContain("top-14");
 		expect(shell?.className).toContain("calc(100dvh-3.5rem)");
 	});

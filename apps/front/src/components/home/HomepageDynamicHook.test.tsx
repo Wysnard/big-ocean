@@ -31,10 +31,10 @@ describe("HomepageDynamicHook", () => {
 	});
 
 	it.each([
-		["conversation", "A conversation thatSEESyou.", "SEES", "from-sky-400"],
-		["portrait", "Words you've beenCARRYINGwithout knowing.", "CARRYING", "from-amber-400"],
-		["worldAfter", "A place thatSTAYS.", "STAYS", "from-teal-400"],
-		["reassurance", "YOURS.", "YOURS.", "from-violet-400"],
+		["conversation", "A conversation thatSEESyou.", "SEES", "from-primary"],
+		["portrait", "Words you've beenCARRYINGwithout knowing.", "CARRYING", "from-secondary"],
+		["worldAfter", "A place thatSTAYS.", "STAYS", "from-tertiary"],
+		["reassurance", "YOURS.", "YOURS.", "from-primary"],
 	] as const)("renders the exact hook copy and gradient for %s", (phase, expectedText, expectedKeyword, expectedGradient) => {
 		render(<HomepageDynamicHook phase={phase} />);
 
@@ -86,6 +86,6 @@ describe("HomepageDynamicHook", () => {
 		render(<HomepageDynamicHook phase="conversation" lightBackground />);
 
 		const root = screen.getByTestId("homepage-dynamic-hook");
-		expect(root.className).toContain("text-slate-900");
+		expect(root.className).toContain("text-[#1a1a2e]");
 	});
 });

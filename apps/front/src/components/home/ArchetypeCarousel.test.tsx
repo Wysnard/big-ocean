@@ -24,7 +24,10 @@ describe("ArchetypeCarousel", () => {
 		render(<ArchetypeCarousel />);
 
 		expect(screen.getAllByTestId("homepage-archetype-card")).toHaveLength(5);
-		expect(screen.getAllByTestId("geometric-signature")).toHaveLength(5);
+		expect(screen.getAllByTestId("archetype-card")).toHaveLength(5);
+		expect(screen.getAllByTestId("ocean-code-4")).toHaveLength(5);
+		expect(screen.getAllByTestId("ocean-code-5")).toHaveLength(5);
+		expect(screen.getAllByTestId("confidence-indicator")).toHaveLength(5);
 	});
 
 	it("scroll navigation buttons are present", () => {

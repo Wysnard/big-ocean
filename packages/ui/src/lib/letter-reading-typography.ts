@@ -18,4 +18,4 @@ export const letterHomepageWeeklyBodyClass =
 
 /** Homepage marketing: portrait phase serif pull quotes. */
 export const letterHomepagePortraitBodyClass =
-	"font-serif text-[1.45rem] leading-[1.75] text-slate-800";
+	"font-serif text-[1.45rem] leading-[1.75] text-foreground/90";

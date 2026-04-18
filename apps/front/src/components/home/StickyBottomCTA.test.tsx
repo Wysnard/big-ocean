@@ -80,9 +80,7 @@ describe("StickyBottomCTA", () => {
 
 		it("sets data-marketing-only on the container", () => {
 			render(<StickyBottomCTA isAuthenticated={false} marketingOnly />);
-			expect(screen.getByTestId("sticky-bottom-cta").getAttribute("data-marketing-only")).toBe(
-				"true",
-			);
+			expect(screen.getByTestId("sticky-bottom-cta").getAttribute("data-marketing-only")).toBe("true");
 		});
 	});
 

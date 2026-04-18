@@ -7,6 +7,13 @@
 
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@workspace/ui/components/card";
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Input } from "@workspace/ui/components/input";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
@@ -89,50 +96,9 @@ export function LoginForm({ anonymousSessionId, redirectTo, variant = "page" }: 
 		);
 	}
 
-	return (
-		<div
-			className={
-				isEmbed
-					? "w-full"
-					: "relative mx-auto max-w-md overflow-hidden rounded-3xl bg-card p-8 shadow-lg sm:p-10"
-			}
-		>
-			{!isEmbed && (
-				<>
-					{/* Corner geometric decorations */}
-					<div className="pointer-events-none absolute -right-2.5 -top-2.5" aria-hidden="true">
-						<div className="absolute right-4 top-4 h-11 w-11 rounded-full bg-trait-openness opacity-10" />
-						<div
-							className="absolute right-13 top-1 h-0 w-0 opacity-8"
-							style={{
-								borderLeft: "12px solid transparent",
-								borderRight: "12px solid transparent",
-								borderBottom: "20px solid var(--trait-agreeableness)",
-							}}
-						/>
-					</div>
-
-					{/* Brand mark */}
-					<div className="mb-5 flex items-center gap-1">
-						<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
-						<OceanHieroglyphSet size={12} />
-					</div>
-
-					{/* Heading with gradient accent */}
-					<h2 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-						Welcome{" "}
-						<span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-							back
-						</span>
-					</h2>
-					<p className="mt-2 mb-6 text-sm text-muted-foreground">Sign in to continue your journey.</p>
-				</>
-			)}
-
-			{isEmbed && (
-				<p className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-200">Log in</p>
-			)}
-
+	const formMarkup = (
+		<>
+			{isEmbed && <p className="mb-3 text-sm font-semibold text-foreground">Log in</p>}
 			<form
 				data-testid={isEmbed ? "login-form-embed" : undefined}
 				noValidate
@@ -253,6 +219,45 @@ export function LoginForm({ anonymousSessionId, redirectTo, variant = "page" }: 
 					</Link>
 				)}
 			</form>
-		</div>
+		</>
+	);
+
+	if (isEmbed) {
+		return <div className="w-full">{formMarkup}</div>;
+	}
+
+	return (
+		<Card className="relative mx-auto max-w-md gap-0 overflow-hidden rounded-lg border-border p-0 shadow-lg">
+			<div className="pointer-events-none absolute -top-2.5 -right-2.5" aria-hidden="true">
+				<div className="absolute top-4 right-4 h-11 w-11 rounded-full bg-trait-openness opacity-10" />
+				<div
+					className="absolute top-1 right-13 h-0 w-0 opacity-8"
+					style={{
+						borderLeft: "12px solid transparent",
+						borderRight: "12px solid transparent",
+						borderBottom: "20px solid var(--trait-agreeableness)",
+					}}
+				/>
+			</div>
+
+			<CardHeader className="relative flex flex-col gap-0 border-0 px-8 pt-8 pb-0 sm:px-10 sm:pt-10">
+				<div className="mb-5 flex items-center gap-1">
+					<span className="font-heading text-lg font-bold tracking-tight text-foreground">big-</span>
+					<OceanHieroglyphSet size={12} />
+				</div>
+
+				<CardTitle className="font-heading text-3xl font-bold tracking-tight text-foreground">
+					Welcome{" "}
+					<span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+						back
+					</span>
+				</CardTitle>
+				<CardDescription className="mt-2 text-sm text-muted-foreground">
+					Sign in to continue your journey.
+				</CardDescription>
+			</CardHeader>
+
+			<CardContent className="relative px-8 pt-6 pb-8 sm:px-10 sm:pb-10">{formMarkup}</CardContent>
+		</Card>
 	);
 }
