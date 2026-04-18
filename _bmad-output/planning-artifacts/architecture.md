@@ -3,9 +3,9 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-04-12'
+lastUpdated: '2026-04-18'
 lastConsolidated: '2026-04-05 — unified all satellite architecture docs into this single authoritative file'
-lastDeltaUpdate: '2026-04-12 — added ADR-55 (UserSummary as living cross-cutting asset with rolling regeneration, recency decay, versioning) and ADR-56 (subscriber Nerin chat sessions). Edited ADR-3 (agent table — UserSummary Generator updated for rolling lifecycle, weekly letter + relationship letter inputs changed to UserSummary), ADR-10 (relationship letter reads both UserSummaries), ADR-41 (UserSummary is primary personality context source), ADR-45 (weekly letter reads UserSummary instead of raw evidence), ADR-47 (added subscriber_chat to SubscriptionFeature), ADR-52 (marked as evolved → ADR-55). Updated cost ceiling, cross-component flows.'
+lastDeltaUpdate: '2026-04-18 — synced latest PRD changes. ADR-49 now treats `/library` as the public Personality Atlas browse surface (FR83a), with atlas-first hero, recommended path, complete shelves, facet link exposure, accessibility anchors, and no duplicate route-path modules. Updated NFR alignment for accessibility, cost-guard boundaries, retry measurement, session resumability, and configuration-driven LLM provider selection. Preserved ADR count at 56 because this is a refinement to ADR-49/validation text, not a new architectural decision.'
 adrsTotal: 56
 adrsAdded:
   - 'ADR-22 through ADR-30 (post-completion)'
@@ -60,6 +60,7 @@ This is a self-contained architecture document. All content from previously sepa
 - **UserSummary lifecycle & subscriber chat (added 2026-04-12):** ADR-55 through ADR-56
   - ADR-55: UserSummary as Living Cross-Cutting Asset (rolling regeneration, recency decay, versioning, monthly check-in aggregation)
   - ADR-56: Subscriber Nerin Chat Sessions (15-turn Director/Actor sessions with UserSummary injection, triggers portrait + summary refresh)
+- **Latest PRD sync (2026-04-18):** ADR-49 refined for the `/library` Personality Atlas landing page (FR83a) and NFR validation wording updated to match the PRD's measurable reliability/accessibility/integration requirements.
 - **Post-MVP design decisions (design now, build later):** ADR-39 through ADR-41 — conversations table rename, agent type architecture, personality context pattern. ADR-42 promoted to ADR-47 MVP.
 - **Superseded by 2026-04-11 delta:** ADR-23 (Dashboard/Profile Consolidation) — replaced by ADR-43 (Three-Space Navigation)
 - **Historical pacing pipeline:** ADR-5, 17-19, 21 (marked `[SUPERSEDED]`) + Historical Appendix A
@@ -182,6 +183,7 @@ This consolidated architecture covers the complete big-ocean system across all i
 7. **LLM prompt architecture** — Five distinct agents with separate prompts, model tiers, and resilience strategies. Nerin is split into a Director (strategy) and Actor (voice). ConversAnalyzer is evidence-only and three-tier fail-open. Nerin Output Grammar governs format-specific prompt composition for chat/letter/journal registers (ADR-48).
 8. **Three-space navigation** — Today/Me/Circle as the authenticated hub-and-spoke model; `/chat` is an onboarding tunnel outside the three-space world (ADR-43). Replaces `/dashboard` (ADR-23 superseded).
 9. **Intimacy Principle** — Architectural guardrail for Circle: no count metrics, no sort/search/directory, no follower/fan semantics, no profile-view counters. See Anti-Patterns section.
+10. **LLM provider configurability** — Provider/model selection for conversation, portrait, relationship letter, and weekly letter pipelines is configuration-driven. Staging verification requires a config-only provider/model swap with no code changes in those pipelines (NFR26).
 
 ## Technology Stack
 
@@ -419,7 +421,7 @@ Two patterns exist for async LLM generation:
 Trigger → `Queue.offer` → worker fiber → LLM → insert portrait row on outcome.
 
 1. **Trigger** — Assessment completion (`generate-results` use-case) offers a job to `PortraitJobQueue` (Effect Queue). Subscription extension completion offers a second job with `replaces_portrait_id` metadata so the new portrait supersedes the old one as "previous version" (FR23, ADR-11).
-2. **Worker fiber** — Long-lived `Effect.forever` loop takes from queue, calls `generateFullPortrait` with `Effect.retry({ times: 2 })`, inserts portrait row with content (success) or `failedAt` (failure)
+2. **Worker fiber** — Long-lived `Effect.forever` loop takes from queue, calls `generateFullPortrait` under the FR27/NFR17 retry policy (up to 3 job attempts with 5s, 15s, and 45s backoff), inserts portrait row with content (success) or `failedAt` (failure)
 3. **Client polls** — TanStack Query `refetchInterval` while `generating`, stops on `ready`/`failed`. The post-assessment focused-reading view (ADR-46) is the primary consumer.
 4. **Status derivation** — Read-only: `portrait?.content` → ready, `portrait?.failedAt` → failed, `assessment_result && !portrait` → generating, else → none
 5. **Reconciliation** — If the assessment result exists but no portrait row, queues a new job (covers trigger failures)
@@ -1372,7 +1374,8 @@ big-ocean/                                    # Monorepo root
 | Relationship Letter | `/relationship/$id` | RelationshipLetterPage: Section A (This Year's Letter, letter format), Section B (Where You Are Right Now real-time), Section C (Letter History), Section D1 (shared notes), [post-MVP] Section D2-D4 (subscriber-gated) | relationship.analysis, relationship.notes |
 | QR Accept | `/relationship/qr/$token` | QR accept/refuse screen (initiator name, archetype card, confidence rings, ongoing-consent disclaimer per FR30). No credit balance (letters free) | relationship.qr |
 | Auth | `/login`, `/signup`, `/verify-email` | login-form, signup-form, verify-email page | auth/* |
-| Knowledge Library (ADR-49) | `/library/archetype/$slug`, `/library/trait/$slug`, `/library/facet/$slug`, `/library/science/$slug`, `/library/guides/$slug` | KnowledgeArticleLayout, Schema.org JSON-LD, AssessmentCTA | content.library (static generation) |
+| Knowledge Library Atlas (ADR-49) | `/library` | PersonalityAtlasLanding, LibraryShelf, RecommendedPath (authenticated-assessed only), inventory metrics, stable shelf anchors | content.library registry, latest result mapping when signed in |
+| Knowledge Library Articles (ADR-49) | `/library/archetype/$slug`, `/library/trait/$slug`, `/library/facet/$slug`, `/library/science/$slug`, `/library/guides/$slug` | KnowledgeArticleLayout, Schema.org JSON-LD, AssessmentCTA | content.library (static generation) |
 | Sharing | (server route) | archetype-card-template (Satori JSX) | OG card generation |
 
 _`/dashboard` and the `Dashboard*Card` component family are removed (ADR-23 superseded by ADR-43)._
@@ -1444,14 +1447,14 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
    ```text
    POST /generate-results → idempotency check → compute facet scores (derive-at-read) →
    compute trait scores → generate OCEAN code → lookup archetype →
-   save assessment_results → redirect to results page
+   save assessment_results → redirect to /me/$sessionId?view=portrait
    ```
 
 3. **Portrait generation flow (ADR-3 free, ADR-46 focused reading):**
    ```text
    Assessment completion (15 exchanges) → generate-results use-case creates assessment_results row →
    Queue.offer(PortraitJobQueue) → worker fiber takes job →
-   Sonnet 4.6 generation (retry x2) → INSERT portrait row (content on success, failedAt on failure) →
+   Sonnet 4.6 generation (up to 3 job attempts: 5s, 15s, 45s backoff) → INSERT portrait row (content on success, failedAt on failure) →
    User navigates to /me/$sessionId?view=portrait (FR93 button) →
    Client polls GET /portrait/status (read-only) → fade-in letter format on ready
    ```
@@ -1580,7 +1583,7 @@ _Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs
 
 ### Coherence Validation
 
-**Decision Compatibility:** All 38 ADRs are coherent when read as an evolution. The live conversation runtime is the Director model (ADR-30 + ADR-31 through ADR-38), while ADR-5/17-19/21 are marked `[SUPERSEDED]` and retained as historical context. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the five live LLM agents (ADR-3) from business logic. The evidence model (ADR-4/27) feeds both derive-at-read scoring (ADR-6) and Director coverage targeting (ADR-30) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11) creates new sessions linked via parent_session_id. Email infrastructure (ADR-12) adds Resend for 3 transactional email types. Portrait reconciliation (ADR-13) covers the payment-received-but-no-placeholder edge case. Director model ADRs (31-38) specify the complete live conversation runtime — prompt architecture, pipeline design, exchange migration, and code scope. No contradictory live-runtime decisions found.
+**Decision Compatibility:** All 56 ADRs are coherent when read as an evolution. The live conversation runtime is the Director model (ADR-30 + ADR-31 through ADR-38), while ADR-5/17-19/21 are marked `[SUPERSEDED]` and retained as historical context. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the live LLM agents (ADR-3) from business logic. The evidence model (ADR-4/27) feeds both derive-at-read scoring (ADR-6) and Director coverage targeting (ADR-30) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11/56) creates continuation sessions linked to prior state. Email infrastructure (ADR-12) adds Resend for transactional email and fallback delivery. Portrait reconciliation (ADR-13) covers the generation-received-but-no-placeholder edge case. MVP product-world ADRs (43-50), portrait pipeline ADRs (51-54), and UserSummary lifecycle ADRs (55-56) align with the latest PRD edits. No contradictory live-runtime decisions found.
 
 **Pattern Consistency:** Naming conventions are uniform: `kebab-case` files, `PascalCase` exports, `camelCase` properties, `UPPER_SNAKE_CASE` constants. The repository interface → implementation → mock triplet follows the same pattern across all 24 repositories. Test patterns (vi.mock + local TestLayer) are consistent. Error architecture (three locations, no remapping) is applied uniformly. Director model patterns (Director + Actor prompt separation, coverage-analyzer pure function, exchange persistence) are consistent with the hexagonal architecture.
 
@@ -1611,11 +1614,15 @@ _Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs
 | Concurrency | Yes | Advisory locks per session. Exchange transaction boundary prevents turn drift. |
 | Privacy | Yes | Default-private, RLS, consent chains |
 | Idempotency | Yes | Three-tier guards, `WHERE content IS NULL` |
-| Async reliability | Yes | Placeholder-row + lazy retry (ADR-7) |
+| Async reliability | Yes | Placeholder-row + lazy retry (ADR-7); portrait retry outcomes measured in rolling 30-day success rate |
+| Accessibility | Yes | WCAG 2.1 AA required for public profile, `/library`, article pages, conversation UI, Me/session-scoped identity views, and subscription modal |
+| Cost guard boundaries | Yes | Cost guard blocks only before new sessions/extensions or async generation jobs start; it never terminates an accepted active session mid-turn |
+| Session resumability | Yes | Persisted transcripts and exchange counts support reopen within the NFR12 retention period |
+| LLM provider configurability | Yes | Provider/model selection is configuration-driven across conversation, portrait, relationship letter, and weekly letter pipelines |
 
 ### Implementation Readiness Validation
 
-**Decision Completeness:** All 38 ADRs document the decision, rationale, and implementation location. The live Director runtime is fully specified in ADR-30 through ADR-38. Historical pacing ADRs (superseded) are retained for lineage context. Code examples provided for all major patterns.
+**Decision Completeness:** All 56 ADRs document the decision, rationale, and implementation location. The live Director runtime is fully specified in ADR-30 through ADR-38. MVP product-world decisions are covered by ADR-43 through ADR-50, portrait pipeline decisions by ADR-51 through ADR-54, and UserSummary/subscriber chat decisions by ADR-55 through ADR-56. Historical pacing ADRs (superseded) are retained for lineage context. Code examples provided for all major patterns.
 
 **Structure Completeness:** Full directory tree with every handler, use-case, repository interface, implementation, and mock file listed. The live conversation file map highlights `nerin-pipeline.ts`, `coverage-analyzer.ts`, Director/Actor prompt contracts, and the simplified result-shape persistence. Director model file creation/deletion scope specified in ADR-37. All routes, component directories, hooks, and lib files are accounted for.
 
@@ -1645,7 +1652,7 @@ _Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs
 - [x] Cross-cutting concerns mapped (cost, auth, errors, derive-at-read, consent)
 
 **Architectural Decisions**
-- [x] 38 ADRs documented with implementation details (30 platform + 8 Director model)
+- [x] 56 ADRs documented with implementation details (platform, Director model, MVP product world, portrait pipeline, UserSummary lifecycle, and subscriber chat)
 - [x] Technology stack fully specified (brownfield, all choices established)
 - [x] Integration patterns defined (Better Auth plugin, Polar webhook, LLM agents, Director runtime)
 - [x] Performance considerations addressed (Director/Actor latency tradeoff, advisory locks, fail-open evidence extraction)
@@ -3244,9 +3251,9 @@ packages/domain/src/constants/
 
 ### ADR-49: Knowledge Library SSR Architecture
 
-**Source:** PRD FR78–FR83, NFR26 (SEO), Homepage/Acquisition Strategy.
+**Source:** PRD FR78–FR83a, NFR20, Homepage/Acquisition Strategy, UX §22 Knowledge Library Landing Page.
 
-**Decision:** The knowledge library is a server-rendered set of content pages organized in four tiers — archetype definitions (81), trait/facet explainers (35), Big Five science (10–20), relationship/career guides (50–100). Content is authored as MDX in the repo, rendered via TanStack Start SSR with Schema.org structured data, and deployed with the app. Each page includes a single CTA to the free assessment.
+**Decision:** The knowledge library is a server-rendered public acquisition surface with two layers: (1) `/library`, the Personality Atlas browse surface, and (2) tier-specific article pages organized around archetype definitions (81), trait/facet explainers (35), Big Five science (10–20), and relationship/career guides (50–100). Content is authored as MDX in the repo, rendered via TanStack Start SSR with Schema.org structured data, and deployed with the app. Article pages include a single CTA to the free assessment; the atlas landing page prioritizes browse orientation and complete index access over marketing copy.
 
 **Route tree:**
 
@@ -3258,6 +3265,15 @@ packages/domain/src/constants/
 /library/science/$slug            # 10-20 Big Five science articles (FR81)
 /library/guides/$slug             # 50-100 relationship/career guides (FR82)
 ```
+
+**`/library` Personality Atlas landing page (FR83a):**
+- Atlas-first hero explains the levels of zoom: patterns/archetypes, traits, and facets.
+- Content inventory metrics show Pattern / Trait / Facet article counts from the same content registry used by the shelves.
+- Authenticated users with a completed assessment see exactly one recommended path module when mapping is available: latest archetype → strongest/relevant trait → relevant facet article. This module must not be duplicated by a generic first-route module.
+- Preview columns for Archetypes, Traits, and Facets may truncate, but "View all N" controls are real anchors to visible complete shelves.
+- Complete index shelves exist for Archetypes, Traits, Facets, Science, and Guides. The complete facet shelf exposes all 30 facet links as keyboard-focusable anchors.
+- Empty or not-yet-published shelves use planned-state messaging; tiers are not silently hidden.
+- Shelf IDs and anchor links are stable so accessibility tests and deep links can target them.
 
 **Content storage:** MDX files in `apps/front/src/content/library/` organized by tier. Each file has frontmatter: `title`, `description`, `slug`, `tier`, `schemaType`, `cta`. Human-edited; relationship/career guides (Tier 4) may start as AI-generated drafts then human-edited (FR82).
 
@@ -3273,7 +3289,7 @@ All pages include `BreadcrumbList` and an `Offer` (free assessment CTA).
 
 **Sitemap (FR83):** Generated at build time by a build script that walks `apps/front/src/content/library/` and emits URLs. Public profiles (opt-in, FR40) and homepage are also included. Weekly auto-refresh on deploy.
 
-**SEO performance targets:** Lighthouse SEO audit >90 per FR79. All pages SSR, LCP <1.5s. Images optimized via Sharp/AVIF at build time.
+**SEO and accessibility targets:** Lighthouse SEO audit >90 for `/library` and article pages. All pages SSR, LCP <1.5s. Images optimized via Sharp/AVIF at build time. `/library` and article pages are WCAG 2.1 AA scope per NFR20, including keyboard-focusable shelf links, semantic headings, skip/focus behavior for anchor jumps, and visible focus states.
 
 **CTA injection:** Every page renders an `AssessmentCTA` component above the footer. Component copy is tier-sensitive (archetype: "Discover your archetype in 30 minutes"; science: "See the Big Five in action — free assessment") but the underlying component is shared.
 
@@ -3282,8 +3298,12 @@ All pages include `BreadcrumbList` and an `Offer` (free assessment CTA).
 **Tier-1 first 10 pages pre-launch (acquisition strategy):** Before general launch, the 10 highest-traffic archetype slugs are published and indexed. The remaining 71 archetype pages, trait/facet explainers, and guides ship progressively. This is a content cadence decision, not an architectural one — the route tree supports all pages from day 1.
 
 **File map:**
-- `apps/front/src/routes/library/*.tsx` — route handlers
+- `apps/front/src/routes/library/index.tsx` — single `/library` Personality Atlas route; do not create duplicate route-path modules for the same landing surface
+- `apps/front/src/routes/library/*.tsx` — tier article route handlers
 - `apps/front/src/content/library/**/*.mdx` — content files
+- `apps/front/src/components/library/PersonalityAtlasLanding.tsx` — atlas-first landing composition
+- `apps/front/src/components/library/LibraryShelf.tsx` — complete shelf renderer with stable IDs and anchor targets
+- `apps/front/src/components/library/RecommendedPath.tsx` — authenticated-assessed latest-result path module
 - `apps/front/src/components/library/KnowledgeArticleLayout.tsx` — shared article shell
 - `apps/front/src/components/library/AssessmentCTA.tsx` — CTA component
 - `apps/front/src/lib/schema-org.ts` — JSON-LD builders per tier
