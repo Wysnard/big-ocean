@@ -28,6 +28,7 @@ import {
 } from "@workspace/infrastructure/repositories/user-summary.drizzle.repository";
 import { UserSummaryGeneratorMockRepositoryLive } from "@workspace/infrastructure/repositories/user-summary-generator.mock.repository";
 import { Effect, Layer } from "effect";
+import type { AuthenticatedConversation } from "../authenticated-conversation/access";
 import { generateUserSummary } from "../generate-user-summary.use-case";
 
 const mockLoggerRepo = {
@@ -53,6 +54,23 @@ const makeEvidence = (sessionId: string): ConversationEvidenceRecord[] => [
 		createdAt: new Date(),
 	},
 ];
+
+const makeConversation = (
+	sessionId: string,
+	parentConversationId: string | null = null,
+): AuthenticatedConversation => ({
+	policy: "owned-session",
+	session: {
+		id: sessionId,
+		userId: "user_1",
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		status: "completed",
+		finalizationProgress: "completed",
+		messageCount: 12,
+		parentConversationId,
+	},
+});
 
 const testLayer = Layer.mergeAll(
 	Layer.succeed(LoggerRepository, mockLoggerRepo),
@@ -83,11 +101,7 @@ describe("generateUserSummary", () => {
 			});
 			seedConversationEvidence(makeEvidence("session_abc"));
 
-			yield* generateUserSummary({
-				sessionId: "session_abc",
-				userId: "user_1",
-				parentConversationId: null,
-			});
+			yield* generateUserSummary({ conversation: makeConversation("session_abc") });
 
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
 				"User summary: persisted",
@@ -112,19 +126,11 @@ describe("generateUserSummary", () => {
 			});
 			seedConversationEvidence(makeEvidence("session_abc"));
 
-			yield* generateUserSummary({
-				sessionId: "session_abc",
-				userId: "user_1",
-				parentConversationId: null,
-			});
+			yield* generateUserSummary({ conversation: makeConversation("session_abc") });
 			vi.clearAllMocks();
 			mockLoggerRepo.info.mockImplementation(() => {});
 
-			yield* generateUserSummary({
-				sessionId: "session_abc",
-				userId: "user_1",
-				parentConversationId: null,
-			});
+			yield* generateUserSummary({ conversation: makeConversation("session_abc") });
 
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
 				"User summary: already exists, skipping generation",

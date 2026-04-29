@@ -10,7 +10,6 @@ import {
 	ALL_FACETS,
 	AppConfig,
 	AssessmentResultRepository,
-	ConversationRepository,
 	calculateTraitConfidence,
 	DEFAULT_FACET_SCORE,
 	type FacetConfidenceScores,
@@ -19,10 +18,10 @@ import {
 	initializeFacetConfidence,
 	LoggerRepository,
 	MessageRepository,
-	SessionNotFound,
 } from "@workspace/domain";
 import type { MessageEntity } from "@workspace/domain/entities/message.entity";
 import { Effect } from "effect";
+import { requireAuthenticatedConversation } from "./authenticated-conversation/access";
 
 export interface ResumeSessionInput {
 	readonly sessionId: string;
@@ -52,24 +51,16 @@ export interface ResumeSessionOutput {
 export const resumeSession = (input: ResumeSessionInput) =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
-		const sessionRepo = yield* ConversationRepository;
 		const messageRepo = yield* MessageRepository;
 		const resultRepo = yield* AssessmentResultRepository;
 		const evidenceRepo = yield* FacetEvidenceRepository;
 		const logger = yield* LoggerRepository;
 
-		// Get session (validates it exists)
-		const session = yield* sessionRepo.getSession(input.sessionId);
-
-		// Sessions are private to their authenticated owner.
-		if (session.userId !== input.authenticatedUserId) {
-			return yield* Effect.fail(
-				new SessionNotFound({
-					sessionId: input.sessionId,
-					message: `Session '${input.sessionId}' not found`,
-				}),
-			);
-		}
+		const { session } = yield* requireAuthenticatedConversation({
+			sessionId: input.sessionId,
+			authenticatedUserId: input.authenticatedUserId,
+			policy: "owned-session",
+		});
 
 		// Get all messages
 		const messages = yield* messageRepo.getMessages(input.sessionId);

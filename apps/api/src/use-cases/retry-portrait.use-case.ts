@@ -9,14 +9,13 @@
 
 import {
 	AssessmentResultRepository,
-	ConversationRepository,
 	LoggerRepository,
 	PortraitJobQueue,
 	PortraitRepository,
 	type PortraitStatus,
-	SessionNotFound,
 } from "@workspace/domain";
 import { Effect, Queue } from "effect";
+import { requireAuthenticatedConversation } from "./authenticated-conversation/access";
 import { deriveStatus } from "./get-portrait-status.use-case";
 
 export interface RetryPortraitInput {
@@ -30,22 +29,16 @@ export interface RetryPortraitOutput {
 
 export const retryPortrait = (input: RetryPortraitInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* ConversationRepository;
 		const resultRepo = yield* AssessmentResultRepository;
 		const portraitRepo = yield* PortraitRepository;
 		const queue = yield* PortraitJobQueue;
 		const logger = yield* LoggerRepository;
 
-		// 1. Validate session ownership
-		const session = yield* sessionRepo.getSession(input.sessionId);
-		if (session.userId !== input.userId) {
-			return yield* Effect.fail(
-				new SessionNotFound({
-					sessionId: input.sessionId,
-					message: `Session '${input.sessionId}' not found`,
-				}),
-			);
-		}
+		yield* requireAuthenticatedConversation({
+			sessionId: input.sessionId,
+			authenticatedUserId: input.userId,
+			policy: "portrait-retry",
+		});
 
 		// 2. Get current portrait and check it's failed
 		const portrait = yield* portraitRepo.getFullPortraitBySessionId(input.sessionId);

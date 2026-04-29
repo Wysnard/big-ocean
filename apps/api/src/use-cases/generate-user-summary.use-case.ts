@@ -7,32 +7,34 @@
 import {
 	AssessmentResultError,
 	AssessmentResultRepository,
-	ConversationEvidenceRepository,
 	LoggerRepository,
 	UserSummaryGeneratorRepository,
 	UserSummaryRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
+import type { AuthenticatedConversation } from "./authenticated-conversation/access";
+import {
+	loadScopedConversationEvidence,
+	resolveAuthenticatedConversationScope,
+} from "./authenticated-conversation/scope";
 
 export interface GenerateUserSummaryInput {
-	readonly sessionId: string;
-	readonly userId: string;
-	readonly parentConversationId: string | null;
+	readonly conversation: AuthenticatedConversation;
 }
 
 export const generateUserSummary = (input: GenerateUserSummaryInput) =>
 	Effect.gen(function* () {
 		const assessmentResultRepo = yield* AssessmentResultRepository;
-		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const userSummaryRepo = yield* UserSummaryRepository;
 		const generator = yield* UserSummaryGeneratorRepository;
 		const logger = yield* LoggerRepository;
+		const session = input.conversation.session;
 
-		const result = yield* assessmentResultRepo.getBySessionId(input.sessionId);
+		const result = yield* assessmentResultRepo.getBySessionId(session.id);
 		if (!result) {
 			return yield* Effect.fail(
 				new AssessmentResultError({
-					message: `No assessment result for session ${input.sessionId}`,
+					message: `No assessment result for session ${session.id}`,
 				}),
 			);
 		}
@@ -40,25 +42,24 @@ export const generateUserSummary = (input: GenerateUserSummaryInput) =>
 		const existing = yield* userSummaryRepo.getByAssessmentResultId(result.id);
 		if (existing) {
 			logger.info("User summary: already exists, skipping generation", {
-				sessionId: input.sessionId,
+				sessionId: session.id,
 				assessmentResultId: result.id,
 			});
 			return;
 		}
 
-		const isExtension = input.parentConversationId != null;
-		const evidence = isExtension
-			? yield* conversationEvidenceRepo.findByUserId(input.userId)
-			: yield* conversationEvidenceRepo.findBySession(input.sessionId);
+		const evidence = yield* loadScopedConversationEvidence(
+			resolveAuthenticatedConversationScope(input.conversation),
+		);
 
 		const genOut = yield* generator.generate({
-			sessionId: input.sessionId,
+			sessionId: session.id,
 			facets: result.facets,
 			evidence,
 		});
 
 		yield* userSummaryRepo.upsertForAssessmentResult({
-			userId: input.userId,
+			userId: session.userId,
 			assessmentResultId: result.id,
 			themes: genOut.themes,
 			quoteBank: genOut.quoteBank,
@@ -67,7 +68,7 @@ export const generateUserSummary = (input: GenerateUserSummaryInput) =>
 		});
 
 		logger.info("User summary: persisted", {
-			sessionId: input.sessionId,
+			sessionId: session.id,
 			assessmentResultId: result.id,
 		});
 	});

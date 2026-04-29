@@ -5,8 +5,8 @@
  * Used by the frontend to poll during the wait screen.
  */
 
-import { ConversationRepository, SessionNotFound } from "@workspace/domain";
 import { Effect } from "effect";
+import { requireAuthenticatedConversation } from "./authenticated-conversation/access";
 
 export interface GetFinalizationStatusInput {
 	readonly sessionId: string;
@@ -26,19 +26,11 @@ const PROGRESS_MAP: Record<string, number> = {
 
 export const getFinalizationStatus = (input: GetFinalizationStatusInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* ConversationRepository;
-
-		const session = yield* sessionRepo.getSession(input.sessionId);
-
-		// Ownership guard
-		if (session.userId !== input.authenticatedUserId) {
-			return yield* Effect.fail(
-				new SessionNotFound({
-					sessionId: input.sessionId,
-					message: `Session '${input.sessionId}' not found`,
-				}),
-			);
-		}
+		const { session } = yield* requireAuthenticatedConversation({
+			sessionId: input.sessionId,
+			authenticatedUserId: input.authenticatedUserId,
+			policy: "owned-session",
+		});
 
 		// If session is completed, always return completed
 		if (session.status === "completed") {

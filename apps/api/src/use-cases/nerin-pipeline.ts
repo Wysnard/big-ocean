@@ -41,12 +41,20 @@ import {
 	pickFarewellMessage,
 } from "@workspace/domain";
 import { Effect } from "effect";
+import type { AuthenticatedConversation } from "./authenticated-conversation/access";
+import {
+	loadScopedConversationEvidence,
+	loadScopedExchanges,
+	loadScopedMessages,
+	resolveAuthenticatedConversationScope,
+} from "./authenticated-conversation/scope";
 import { runThreeTierExtraction } from "./three-tier-extraction";
 
 export interface NerinPipelineInput {
 	readonly sessionId: string;
 	readonly userId: string;
 	readonly userMessage: string;
+	readonly conversation?: AuthenticatedConversation;
 }
 
 export interface NerinPipelineOutput {
@@ -94,23 +102,25 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// ---- Gather context ----
 
-		const session = yield* sessionRepo.getSession(input.sessionId);
+		const conversation =
+			input.conversation ??
+			({
+				session: yield* sessionRepo.getSession(input.sessionId),
+				policy: "owned-session" as const,
+			} satisfies AuthenticatedConversation);
+		const session = conversation.session;
 		const isExtensionSession = !!session.parentConversationId;
+		const scope = resolveAuthenticatedConversationScope(conversation, "living-personality-model");
 
-		// Load all persisted messages — for authenticated users this spans all
-		// sessions so Nerin Director sees one continuous conversation history.
-		const savedMessages = yield* messageRepo
-			.getMessagesByUserId(input.userId)
-			.pipe(Effect.catchAll(() => messageRepo.getMessages(input.sessionId)));
+		// Nerin chat intentionally opts into the Living Personality Model so the
+		// Director can use continuity from the user's authenticated history.
+		const savedMessages = yield* loadScopedMessages(scope, { fallbackToCurrentSession: true });
 
 		// Current session exchanges — needed for turn counting and message linking.
 		const sessionExchanges = yield* exchangeRepo.findBySession(input.sessionId);
 
-		// For authenticated users, load ALL exchanges/evidence across all sessions
-		// for coverage analysis.
-		const allExchanges = yield* exchangeRepo
-			.findByUserId(input.userId)
-			.pipe(Effect.catchAll(() => exchangeRepo.findBySession(input.sessionId)));
+		// Coverage analysis follows the same scope as Nerin's message context.
+		const allExchanges = yield* loadScopedExchanges(scope, { fallbackToCurrentSession: true });
 
 		// Append the current (not yet persisted) user message
 		const domainMessages: DomainMessage[] = [
@@ -122,9 +132,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			{ id: `pending-${Date.now()}`, role: "user" as const, content: input.userMessage },
 		];
 
-		const allEvidence = yield* evidenceRepo
-			.findByUserId(input.userId)
-			.pipe(Effect.catchAll(() => evidenceRepo.findBySession(input.sessionId)));
+		const allEvidence = yield* loadScopedConversationEvidence(scope, {
+			fallbackToCurrentSession: true,
+		});
 
 		const totalTurns = config.assessmentTurnCount;
 		const exchangeTurnNumber = sessionExchanges.filter((e) => e.turnNumber > 0).length + 1;

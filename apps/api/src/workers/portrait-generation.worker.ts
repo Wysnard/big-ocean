@@ -27,7 +27,7 @@ export const portraitGenerationWorker = Effect.gen(function* () {
 				userId: job.userId,
 			});
 
-			yield* generateFullPortrait({ sessionId: job.sessionId }).pipe(
+			yield* generateFullPortrait({ sessionId: job.sessionId, userId: job.userId }).pipe(
 				Effect.catchAllCause((cause) =>
 					Effect.sync(() =>
 						logger.error(`Portrait worker: job failed for session ${job.sessionId}`, {

@@ -12,6 +12,10 @@ The completion step that turns a finished Nerin conversation into persisted asse
 A Nerin conversation owned by a signed-in user from its first turn.
 *Avoid*: anonymous session, guest session
 
+**Living Personality Model**:
+The evolving cross-session personality state for an authenticated user, built from their accumulated Nerin conversation evidence and used by downstream Nerin surfaces when an **Authenticated Conversation** extends prior context.
+*Avoid*: global profile blob, all-user dump
+
 **UserSummary**:
 A persisted compressed representation of a user's personality evidence, themes, tensions, and quote bank for downstream Nerin-voiced surfaces.
 *Avoid*: summary blob, profile summary
@@ -42,6 +46,7 @@ The persisted `public_profiles` record for a completed assessment session (priva
 - An **Assessment Finalization** provisions the session’s shareable public profile row (private by default); `/results` reads that row and does not create it.
 - A **Completed Assessment Results Read** requires both `assessment_results.stage=completed` and an existing **Public profile row (shareable)** for the same session.
 - An **Assessment surface** is derived from the same facet scores that feed trait views and confidence; it does not replace **UserSummary** or **Portrait**.
+- A conversation extension contributes to the user’s **Living Personality Model** by default; callers may deliberately request a narrower current-session scope when the product surface needs it.
 
 ## Example Dialogue
 

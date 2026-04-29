@@ -14,7 +14,6 @@
 import type { EvidenceInput } from "@workspace/domain";
 import {
 	AssessmentResultRepository,
-	ConversationEvidenceRepository,
 	ConversationRepository,
 	CostGuardRepository,
 	computeAllFacetResults,
@@ -23,9 +22,13 @@ import {
 	LoggerRepository,
 	PortraitJobQueue,
 	SessionNotFinalizing,
-	SessionNotFound,
 } from "@workspace/domain";
 import { Effect, Queue } from "effect";
+import { requireAuthenticatedConversation } from "./authenticated-conversation/access";
+import {
+	loadScopedConversationEvidence,
+	resolveAuthenticatedConversationScope,
+} from "./authenticated-conversation/scope";
 import { ensurePublicProfileForSession } from "./ensure-public-profile-for-session";
 import { generateUserSummary } from "./generate-user-summary.use-case";
 
@@ -40,20 +43,14 @@ export const generateResults = (input: GenerateResultsInput) =>
 	Effect.gen(function* () {
 		const sessionRepo = yield* ConversationRepository;
 		const logger = yield* LoggerRepository;
-		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
 		const assessmentResultRepo = yield* AssessmentResultRepository;
 
-		// 1. Validate session exists and user owns it
-		const session = yield* sessionRepo.getSession(input.sessionId);
-
-		if (session.userId == null || session.userId !== input.authenticatedUserId) {
-			return yield* Effect.fail(
-				new SessionNotFound({
-					sessionId: input.sessionId,
-					message: `Session '${input.sessionId}' not found`,
-				}),
-			);
-		}
+		const conversation = yield* requireAuthenticatedConversation({
+			sessionId: input.sessionId,
+			authenticatedUserId: input.authenticatedUserId,
+			policy: "finalization",
+		});
+		const session = conversation.session;
 		const userId = session.userId;
 
 		// 2. Idempotency: already completed (session-level check)
@@ -66,6 +63,8 @@ export const generateResults = (input: GenerateResultsInput) =>
 		}
 
 		// 3. Validate session is in finalizing status
+		// The access policy already rejects non-finalizing sessions; this branch
+		// keeps the invariant explicit for callers that inspect status locally.
 		if (session.status !== "finalizing") {
 			return yield* Effect.fail(
 				new SessionNotFinalizing({
@@ -118,12 +117,11 @@ export const generateResults = (input: GenerateResultsInput) =>
 				// Update progress
 				yield* sessionRepo.updateSession(input.sessionId, { finalizationProgress: "analyzing" });
 
-				// Fetch conversation evidence (authoritative source — Story 18-4)
-				// Story 36-3: For extension sessions with authenticated users, use ALL user evidence
-				const isExtension = session.parentConversationId != null;
-				const conversationEvidence = isExtension
-					? yield* conversationEvidenceRepo.findByUserId(userId)
-					: yield* conversationEvidenceRepo.findBySession(input.sessionId);
+				// Fetch conversation evidence (authoritative source — Story 18-4).
+				// Extension sessions use the Living Personality Model by default.
+				const conversationEvidence = yield* loadScopedConversationEvidence(
+					resolveAuthenticatedConversationScope(conversation),
+				);
 
 				// Map conversation evidence to EvidenceInput for scoring
 				const scoringInputs: EvidenceInput[] = conversationEvidence.map((ev) => ({
@@ -205,9 +203,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 			// ═══════════════════════════════════════════════════════
 
 			yield* generateUserSummary({
-				sessionId: input.sessionId,
-				userId,
-				parentConversationId: session.parentConversationId ?? null,
+				conversation,
 			});
 
 			// ═══════════════════════════════════════════════════════

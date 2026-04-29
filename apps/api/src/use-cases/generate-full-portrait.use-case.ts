@@ -25,9 +25,16 @@ import {
 } from "@workspace/domain";
 import type { EvidenceInput } from "@workspace/domain/types/evidence";
 import { Effect, Schedule } from "effect";
+import { requireAuthenticatedConversation } from "./authenticated-conversation/access";
+import {
+	loadScopedConversationEvidence,
+	loadScopedMessages,
+	resolveAuthenticatedConversationScope,
+} from "./authenticated-conversation/scope";
 
 export interface GenerateFullPortraitInput {
 	readonly sessionId: string;
+	readonly userId?: string;
 }
 
 /**
@@ -65,11 +72,28 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			return;
 		}
 
-		// 2. Load conversation evidence (authoritative source — Story 18-6)
-		const conversationEvidence = yield* conversationEvidenceRepo.findBySession(input.sessionId);
+		// 2. Load conversation evidence (authoritative source — Story 18-6).
+		// Queued jobs pass userId, which lets extension sessions use the Living
+		// Personality Model; older direct callers preserve current-session scope.
+		const scopedConversation =
+			input.userId === undefined
+				? null
+				: yield* requireAuthenticatedConversation({
+						sessionId: input.sessionId,
+						authenticatedUserId: input.userId,
+						policy: "owned-session",
+					});
+		const scope = scopedConversation
+			? resolveAuthenticatedConversationScope(scopedConversation)
+			: null;
+		const conversationEvidence = scope
+			? yield* loadScopedConversationEvidence(scope)
+			: yield* conversationEvidenceRepo.findBySession(input.sessionId);
 
 		// 3. Load messages for portrait context
-		const messages = yield* messageRepo.getMessages(input.sessionId);
+		const messages = scope
+			? yield* loadScopedMessages(scope)
+			: yield* messageRepo.getMessages(input.sessionId);
 
 		// 4. Build facet scores map from result
 		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;

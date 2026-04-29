@@ -6,13 +6,9 @@
  * Requires authenticated session owner — conversation transcripts are private data.
  */
 
-import {
-	ConversationRepository,
-	MessageRepository,
-	SessionNotCompleted,
-	SessionNotFound,
-} from "@workspace/domain";
+import { MessageRepository } from "@workspace/domain";
 import { Effect } from "effect";
+import { requireAuthenticatedConversation } from "./authenticated-conversation/access";
 
 export interface GetTranscriptInput {
 	readonly sessionId: string;
@@ -32,31 +28,13 @@ export interface GetTranscriptOutput {
 
 export const getTranscript = (input: GetTranscriptInput) =>
 	Effect.gen(function* () {
-		const sessionRepo = yield* ConversationRepository;
 		const messageRepo = yield* MessageRepository;
 
-		const session = yield* sessionRepo.getSession(input.sessionId);
-
-		// Verify ownership — transcripts are private
-		if (session.userId !== input.authenticatedUserId) {
-			return yield* Effect.fail(
-				new SessionNotFound({
-					sessionId: input.sessionId,
-					message: `Session '${input.sessionId}' not found`,
-				}),
-			);
-		}
-
-		// Verify session is completed
-		if (session.status !== "completed") {
-			return yield* Effect.fail(
-				new SessionNotCompleted({
-					sessionId: input.sessionId,
-					message: `Session '${input.sessionId}' is not yet completed`,
-					currentStatus: session.status,
-				}),
-			);
-		}
+		yield* requireAuthenticatedConversation({
+			sessionId: input.sessionId,
+			authenticatedUserId: input.authenticatedUserId,
+			policy: "completed-read",
+		});
 
 		const messages = yield* messageRepo.getMessages(input.sessionId);
 

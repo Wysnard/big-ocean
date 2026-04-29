@@ -120,7 +120,9 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 							portraitId: portrait.id,
 							sessionId: session.id,
 						});
-						yield* Effect.forkDaemon(generateFullPortrait({ sessionId: session.id }));
+						yield* Effect.forkDaemon(
+							generateFullPortrait({ sessionId: session.id, userId: input.userId }),
+						);
 					}
 				}
 			}
@@ -187,7 +189,7 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 		// Spawn portrait generation daemon if portrait-triggering event
 		if (shouldTriggerPortrait(eventType) && sessionId) {
 			logger.info("Spawning portrait generation daemon", { sessionId });
-			yield* Effect.forkDaemon(generateFullPortrait({ sessionId }));
+			yield* Effect.forkDaemon(generateFullPortrait({ sessionId, userId: input.userId }));
 		}
 
 		// ───────────────────────────────────────────────────────────────

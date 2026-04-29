@@ -22,8 +22,8 @@ import {
 	type TraitResult,
 } from "@workspace/domain";
 import { Effect } from "effect";
+import { requireAuthenticatedConversation } from "./authenticated-conversation/access";
 import { assembleCompletedSessionResults } from "./get-results/assemble-completed-session-results";
-import { requireCompletedOwnedSession } from "./get-results/require-completed-owned-session";
 
 export interface GetResultsInput {
 	readonly sessionId: string;
@@ -53,9 +53,10 @@ export const getResults = (input: GetResultsInput) =>
 		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
 
-		yield* requireCompletedOwnedSession({
+		yield* requireAuthenticatedConversation({
 			sessionId: input.sessionId,
 			authenticatedUserId: input.authenticatedUserId,
+			policy: "completed-read",
 		});
 
 		const assembled = yield* assembleCompletedSessionResults({
