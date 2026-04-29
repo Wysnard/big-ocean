@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
 interface ResultsSignUpFormProps {
-	sessionId?: string;
 	onSuccess: () => void;
 	onSwitchToSignIn: () => void;
 }
@@ -50,11 +49,7 @@ const formatValidationErrors = (errors: readonly unknown[]): string[] =>
 		})
 		.filter((message) => message.length > 0);
 
-export function ResultsSignUpForm({
-	sessionId,
-	onSuccess,
-	onSwitchToSignIn,
-}: ResultsSignUpFormProps) {
+export function ResultsSignUpForm({ onSuccess, onSwitchToSignIn }: ResultsSignUpFormProps) {
 	const { signUp, refreshSession } = useAuth();
 	const [error, setError] = useState<string | null>(null);
 	const errorId = "results-signup-error";
@@ -71,13 +66,7 @@ export function ResultsSignUpForm({
 			setError(null);
 
 			try {
-				await signUp.email(
-					value.email,
-					value.password,
-					undefined,
-					sessionId,
-					`${window.location.origin}/today`,
-				);
+				await signUp.email(value.email, value.password, undefined, `${window.location.origin}/today`);
 				await refreshSession();
 				onSuccess();
 			} catch (authError) {

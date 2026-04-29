@@ -69,11 +69,9 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 		}
 
 		const isOwner =
-			input.viewerUserId !== null &&
-			profile.userId !== null &&
-			input.viewerUserId === profile.userId;
+			input.viewerUserId !== null && profile.userId !== null && input.viewerUserId === profile.userId;
 
-		// 3. Private check — anonymous or non-owners cannot read private profiles
+		// 3. Private check — unauthenticated users and non-owners cannot read private profiles
 		if (!profile.isPublic && !isOwner) {
 			return yield* Effect.fail(
 				new ProfilePrivate({

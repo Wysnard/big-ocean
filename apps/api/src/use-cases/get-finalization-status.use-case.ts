@@ -10,7 +10,7 @@ import { Effect } from "effect";
 
 export interface GetFinalizationStatusInput {
 	readonly sessionId: string;
-	readonly authenticatedUserId: string | null;
+	readonly authenticatedUserId: string;
 }
 
 export type FinalizationStatusResult = {
@@ -31,7 +31,7 @@ export const getFinalizationStatus = (input: GetFinalizationStatusInput) =>
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
 		// Ownership guard
-		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+		if (session.userId !== input.authenticatedUserId) {
 			return yield* Effect.fail(
 				new SessionNotFound({
 					sessionId: input.sessionId,

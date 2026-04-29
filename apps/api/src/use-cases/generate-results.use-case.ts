@@ -30,7 +30,7 @@ import { generateUserSummary } from "./generate-user-summary.use-case";
 
 export interface GenerateResultsInput {
 	readonly sessionId: string;
-	readonly authenticatedUserId: string | null;
+	readonly authenticatedUserId: string;
 }
 
 export type GenerateResultsStatus = "analyzing" | "completed";
@@ -45,7 +45,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 		// 1. Validate session exists and user owns it
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
-		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+		if (session.userId == null || session.userId !== input.authenticatedUserId) {
 			return yield* Effect.fail(
 				new SessionNotFound({
 					sessionId: input.sessionId,
@@ -53,6 +53,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 				}),
 			);
 		}
+		const userId = session.userId;
 
 		// 2. Idempotency: already completed (session-level check)
 		if (session.status === "completed") {
@@ -117,11 +118,9 @@ export const generateResults = (input: GenerateResultsInput) =>
 				// Fetch conversation evidence (authoritative source — Story 18-4)
 				// Story 36-3: For extension sessions with authenticated users, use ALL user evidence
 				const isExtension = session.parentConversationId != null;
-				const hasAuthenticatedUser = session.userId != null;
-				const conversationEvidence =
-					isExtension && hasAuthenticatedUser
-						? yield* conversationEvidenceRepo.findByUserId(session.userId as string)
-						: yield* conversationEvidenceRepo.findBySession(input.sessionId);
+				const conversationEvidence = isExtension
+					? yield* conversationEvidenceRepo.findByUserId(userId)
+					: yield* conversationEvidenceRepo.findBySession(input.sessionId);
 
 				// Map conversation evidence to EvidenceInput for scoring
 				const scoringInputs: EvidenceInput[] = conversationEvidence.map((ev) => ({
@@ -202,35 +201,25 @@ export const generateResults = (input: GenerateResultsInput) =>
 			// STAGE: USER SUMMARY (Story 7.1) — before completion
 			// ═══════════════════════════════════════════════════════
 
-			if (session.userId != null) {
-				yield* generateUserSummary({
-					sessionId: input.sessionId,
-					userId: session.userId,
-					parentConversationId: session.parentConversationId ?? null,
-				});
-			} else {
-				logger.info("Generate results: skipping UserSummary (no userId on session)", {
-					sessionId: input.sessionId,
-				});
-			}
+			yield* generateUserSummary({
+				sessionId: input.sessionId,
+				userId,
+				parentConversationId: session.parentConversationId ?? null,
+			});
 
 			// ═══════════════════════════════════════════════════════
 			// STAGE: COMPLETION
 			// ═══════════════════════════════════════════════════════
 
-			if (session.userId != null && session.parentConversationId != null) {
-				const k = `extension-finalize:${session.userId}`;
+			if (session.parentConversationId != null) {
+				const k = `extension-finalize:${userId}`;
 				yield* sessionRepo.acquireSessionLock(k);
 				extensionUserSerializeKey = k;
 			}
 
 			const shouldQueueBundledPortrait =
-				session.userId != null &&
 				session.parentConversationId != null &&
-				(yield* sessionRepo.countCompletedExtensionSessionsExcluding(
-					session.userId,
-					input.sessionId,
-				)) === 0;
+				(yield* sessionRepo.countCompletedExtensionSessionsExcluding(userId, input.sessionId)) === 0;
 
 			// Set stage=completed on assessment_results
 			yield* assessmentResultRepo.updateStage(input.sessionId, "completed");
@@ -249,18 +238,18 @@ export const generateResults = (input: GenerateResultsInput) =>
 				event: "session_llm_cost_complete",
 				sessionId: input.sessionId,
 				totalSessionCostCents: totalSessionCents,
-				userId: session.userId,
+				userId,
 			});
 
 			if (shouldQueueBundledPortrait) {
 				const portraitQueue = yield* PortraitJobQueue;
 				yield* Queue.offer(portraitQueue, {
 					sessionId: input.sessionId,
-					userId: session.userId as string,
+					userId,
 				});
 				logger.info("Generate results: queued bundled portrait for first extension completion", {
 					sessionId: input.sessionId,
-					userId: session.userId,
+					userId,
 				});
 			}
 

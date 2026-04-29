@@ -131,7 +131,6 @@ describe("HomepageSignupForm", () => {
 				"test@example.com",
 				"securepassword123",
 				"Test User",
-				undefined,
 				expect.any(String),
 			);
 		});

@@ -15,11 +15,10 @@ import { useState } from "react";
 import { useAuth } from "../../hooks/use-auth";
 
 interface SignupFormProps {
-	anonymousSessionId?: string;
 	redirectTo?: string;
 }
 
-export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) {
+export function SignupForm({ redirectTo }: SignupFormProps) {
 	const { signUp } = useAuth();
 	const navigate = useNavigate();
 	const [serverError, setServerError] = useState<string | null>(null);
@@ -56,13 +55,7 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 			setIsLoading(true);
 
 			try {
-				await signUp.email(
-					value.email,
-					value.password,
-					value.name,
-					anonymousSessionId,
-					`${window.location.origin}/today`,
-				);
+				await signUp.email(value.email, value.password, value.name, `${window.location.origin}/today`);
 
 				await navigate({
 					to: "/verify-email",
@@ -294,7 +287,6 @@ export function SignupForm({ anonymousSessionId, redirectTo }: SignupFormProps) 
 				<Link
 					to="/login"
 					search={{
-						sessionId: anonymousSessionId,
 						redirectTo,
 					}}
 					className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"

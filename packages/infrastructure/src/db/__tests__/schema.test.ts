@@ -42,7 +42,6 @@ describe("Assessment Session Schema", () => {
 	it("should have all required columns", () => {
 		expect(conversation.id).toBeDefined();
 		expect(conversation.userId).toBeDefined();
-		expect(conversation.sessionToken).toBeDefined();
 		expect(conversation.status).toBeDefined();
 		expect(conversation.finalizationProgress).toBeDefined();
 		expect(conversation.messageCount).toBeDefined();

@@ -71,7 +71,7 @@ export interface CostGuardMethods {
 
 	/**
 	 * Check daily budget — fails with CostLimitExceeded if limit reached
-	 * @param key - Cost key (userId or sessionId for anonymous)
+	 * @param key - Cost key (userId or sessionId)
 	 * @param limitCents - Daily budget in cents
 	 */
 	readonly checkDailyBudget: (
@@ -81,7 +81,7 @@ export interface CostGuardMethods {
 
 	/**
 	 * Check per-user message rate limit (2 messages/minute fixed-window)
-	 * @param key - Cost key (userId or sessionId for anonymous)
+	 * @param key - Cost key (userId or sessionId)
 	 * @throws MessageRateLimitError if rate limit exceeded
 	 * @throws RedisOperationError if Redis operation fails
 	 */

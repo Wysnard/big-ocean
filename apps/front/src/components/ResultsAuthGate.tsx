@@ -5,7 +5,6 @@ import { ResultsSignInForm } from "./auth/ResultsSignInForm";
 import { ResultsSignUpForm } from "./auth/ResultsSignUpForm";
 
 interface ResultsAuthGateProps {
-	sessionId: string;
 	expired?: boolean;
 	onAuthSuccess: () => void;
 	onStartFresh: () => void;
@@ -14,7 +13,6 @@ interface ResultsAuthGateProps {
 type GateMode = "gate" | "signup" | "signin";
 
 export function ResultsAuthGate({
-	sessionId,
 	expired = false,
 	onAuthSuccess,
 	onStartFresh,
@@ -36,7 +34,7 @@ export function ResultsAuthGate({
 					</h1>
 					<p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
 						For privacy, your session is only available for 24 hours. You can sign up to start a fresh
-						assessment or begin again anonymously.
+						assessment or sign in to continue.
 					</p>
 					<div className="mt-6 flex flex-col gap-3">
 						<Button type="button" className="min-h-11 font-heading" onClick={() => setMode("signup")}>
@@ -105,17 +103,9 @@ export function ResultsAuthGate({
 		>
 			<div className="w-full rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
 				{mode === "signup" ? (
-					<ResultsSignUpForm
-						sessionId={expired ? undefined : sessionId}
-						onSuccess={onAuthSuccess}
-						onSwitchToSignIn={() => setMode("signin")}
-					/>
+					<ResultsSignUpForm onSuccess={onAuthSuccess} onSwitchToSignIn={() => setMode("signin")} />
 				) : (
-					<ResultsSignInForm
-						sessionId={expired ? undefined : sessionId}
-						onSuccess={onAuthSuccess}
-						onSwitchToSignUp={() => setMode("signup")}
-					/>
+					<ResultsSignInForm onSuccess={onAuthSuccess} onSwitchToSignUp={() => setMode("signup")} />
 				)}
 
 				<div className="mx-auto mt-4 max-w-md">

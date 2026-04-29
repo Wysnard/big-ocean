@@ -4,17 +4,19 @@ const steps = [
 	{
 		icon: MessageCircle,
 		title: "Talk to Nerin",
-		description: "A conversation about you over ~30 minutes. No quiz, no checkboxes.",
+		description:
+			"A guided conversation about you over ~30 minutes. Nerin listens—no checklist, no performance.",
 	},
 	{
 		icon: Sparkles,
 		title: "Get your portrait",
-		description: "Your archetype, OCEAN code, and a personal letter from Nerin.",
+		description:
+			"A written portrait in language you recognize: archetype, OCEAN code, and a personal letter from Nerin.",
 	},
 	{
 		icon: Users,
 		title: "Compare with someone who matters",
-		description: "Scan QR codes together for a relationship analysis.",
+		description: "Scan QR codes together to see how you show up in the relationship.",
 	},
 ];
 

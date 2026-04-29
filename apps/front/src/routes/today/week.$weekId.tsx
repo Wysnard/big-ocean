@@ -21,11 +21,11 @@ export const Route = createFileRoute("/today/week/$weekId")({
 		try {
 			const { data: session } = await getSession();
 			if (!session?.user) {
-				throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+				throw redirect({ to: "/login", search: { redirectTo: undefined } });
 			}
 		} catch (e) {
 			if (isRedirect(e)) throw e;
-			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+			throw redirect({ to: "/login", search: { redirectTo: undefined } });
 		}
 	},
 	loader: async ({ params, context }) => {
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/today/week/$weekId")({
 			if (isWeeklyLetterApiError(e)) {
 				if (e.status === 404) throw notFound();
 				if (e.status === 401) {
-					throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+					throw redirect({ to: "/login", search: { redirectTo: undefined } });
 				}
 			}
 			throw e;

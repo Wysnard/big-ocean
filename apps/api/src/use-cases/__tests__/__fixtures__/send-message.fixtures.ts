@@ -27,10 +27,6 @@ export const mockSessionRepo = {
 	getActiveSessionByUserId: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
-	findByToken: vi.fn(),
-	assignUserId: vi.fn(),
-	rotateToken: vi.fn(),
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
@@ -96,8 +92,7 @@ export const mockCostGuardRepo = {
 // Mock data
 export const mockActiveSession = {
 	id: "session_test_123",
-	userId: null,
-	sessionToken: "mock_token",
+	userId: "user_456",
 	createdAt: new Date("2026-02-01"),
 	updatedAt: new Date("2026-02-01"),
 	status: "active",

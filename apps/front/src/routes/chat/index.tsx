@@ -57,7 +57,7 @@ export const Route = createFileRoute("/chat/")({
 		// Redirect unauthenticated users to sign-in
 		const { data: sessionData } = await getSession();
 		if (!sessionData?.user) {
-			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+			throw redirect({ to: "/login", search: { redirectTo: undefined } });
 		}
 
 		if (!search.sessionId && !search.waitlist && !search.serviceBusy) {
@@ -105,10 +105,8 @@ export const Route = createFileRoute("/chat/")({
 			});
 		}
 
-		// Story 9.4: Verify session ownership after anonymous-to-authenticated transition.
-		// When an authenticated user navigates here with a sessionId (e.g., post-auth redirect),
-		// verify the session was actually linked to their account.
-		// If not (conflict — user already had a different session), redirect to their real session.
+		// Verify the requested session belongs to the authenticated account.
+		// If not, redirect to the user's real session when one exists.
 		if (search.sessionId) {
 			try {
 				const data = await Effect.gen(function* () {

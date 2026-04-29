@@ -74,7 +74,7 @@ function ResetPasswordPage() {
 					setTimeout(() => {
 						void navigate({
 							to: "/login",
-							search: { sessionId: undefined, redirectTo: undefined },
+							search: { redirectTo: undefined },
 						});
 					}, 2000);
 				}

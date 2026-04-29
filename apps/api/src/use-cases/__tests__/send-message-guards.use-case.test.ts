@@ -64,6 +64,7 @@ describe("sendMessage Use Case", () => {
 				const exit = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Test",
+					userId: "user_456",
 				}).pipe(Effect.exit);
 
 				expect(exit._tag).toBe("Failure");
@@ -80,6 +81,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Test",
+					userId: "user_456",
 				});
 
 				expect(mockSessionRepo.acquireSessionLock).toHaveBeenCalledWith("session_test_123");
@@ -101,6 +103,7 @@ describe("sendMessage Use Case", () => {
 				const exit = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Test",
+					userId: "user_456",
 				}).pipe(Effect.exit);
 
 				expect(exit._tag).toBe("Failure");
@@ -128,6 +131,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Test",
+					userId: "user_456",
 				}).pipe(Effect.exit);
 
 				expect(mockSessionRepo.acquireSessionLock).toHaveBeenCalledWith("session_test_123");
@@ -157,6 +161,7 @@ describe("sendMessage Use Case", () => {
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Final message",
+					userId: "user_456",
 				});
 
 				expect(result.isFinalTurn).toBe(true);
@@ -181,6 +186,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Normal message",
+					userId: "user_456",
 				});
 
 				expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
@@ -196,6 +202,7 @@ describe("sendMessage Use Case", () => {
 				const exit = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Test",
+					userId: "user_456",
 				}).pipe(Effect.exit);
 
 				expect(exit._tag).toBe("Failure");

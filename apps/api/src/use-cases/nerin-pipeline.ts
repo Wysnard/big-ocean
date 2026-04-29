@@ -45,7 +45,7 @@ import { runThreeTierExtraction } from "./three-tier-extraction";
 
 export interface NerinPipelineInput {
 	readonly sessionId: string;
-	readonly userId?: string;
+	readonly userId: string;
 	readonly userMessage: string;
 }
 
@@ -89,7 +89,7 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const evidenceRepo = yield* ConversationEvidenceRepository;
 		const costGuard = yield* CostGuardRepository;
 
-		const costKey = input.userId ?? input.sessionId;
+		const costKey = input.userId;
 		const t0 = Date.now();
 
 		// ---- Gather context ----
@@ -99,22 +99,18 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 
 		// Load all persisted messages — for authenticated users this spans all
 		// sessions so Nerin Director sees one continuous conversation history.
-		const savedMessages = yield* input.userId
-			? messageRepo
-					.getMessagesByUserId(input.userId)
-					.pipe(Effect.catchAll(() => messageRepo.getMessages(input.sessionId)))
-			: messageRepo.getMessages(input.sessionId);
+		const savedMessages = yield* messageRepo
+			.getMessagesByUserId(input.userId)
+			.pipe(Effect.catchAll(() => messageRepo.getMessages(input.sessionId)));
 
 		// Current session exchanges — needed for turn counting and message linking.
 		const sessionExchanges = yield* exchangeRepo.findBySession(input.sessionId);
 
 		// For authenticated users, load ALL exchanges/evidence across all sessions
 		// for coverage analysis.
-		const allExchanges = yield* input.userId
-			? exchangeRepo
-					.findByUserId(input.userId)
-					.pipe(Effect.catchAll(() => exchangeRepo.findBySession(input.sessionId)))
-			: exchangeRepo.findBySession(input.sessionId);
+		const allExchanges = yield* exchangeRepo
+			.findByUserId(input.userId)
+			.pipe(Effect.catchAll(() => exchangeRepo.findBySession(input.sessionId)));
 
 		// Append the current (not yet persisted) user message
 		const domainMessages: DomainMessage[] = [
@@ -126,11 +122,9 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			{ id: `pending-${Date.now()}`, role: "user" as const, content: input.userMessage },
 		];
 
-		const allEvidence = yield* input.userId
-			? evidenceRepo
-					.findByUserId(input.userId)
-					.pipe(Effect.catchAll(() => evidenceRepo.findBySession(input.sessionId)))
-			: evidenceRepo.findBySession(input.sessionId);
+		const allEvidence = yield* evidenceRepo
+			.findByUserId(input.userId)
+			.pipe(Effect.catchAll(() => evidenceRepo.findBySession(input.sessionId)));
 
 		const totalTurns = config.assessmentTurnCount;
 		const exchangeTurnNumber = sessionExchanges.filter((e) => e.turnNumber > 0).length + 1;

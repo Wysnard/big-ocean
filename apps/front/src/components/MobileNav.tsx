@@ -13,7 +13,6 @@ import { type UserTheme, useTheme } from "@workspace/ui/hooks/use-theme";
 import { BookOpen, Home, LogOut, Menu, Monitor, Moon, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/use-auth";
-import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
 
 export function MobileNav() {
 	const [open, setOpen] = useState(false);
@@ -23,21 +22,7 @@ export function MobileNav() {
 	const { setTheme, userTheme } = useTheme();
 	const router = useRouter();
 	const authLinkSearch = useRouterState({
-		select: (state) => {
-			// Type-safe extraction of search params - TanStack Router provides these as Record<string, unknown>
-			// which matches the signature expected by getActiveAssessmentSessionId
-			const search: Record<string, unknown> = state.location.search;
-			const sessionId = getActiveAssessmentSessionId(state.location.pathname, search);
-
-			if (!sessionId) {
-				return undefined;
-			}
-
-			return {
-				sessionId,
-				redirectTo: state.location.pathname,
-			};
-		},
+		select: (state) => ({ redirectTo: state.location.pathname }),
 	});
 
 	// Close sheet on navigation
@@ -166,7 +151,6 @@ export function MobileNav() {
 									<Link
 										to="/login"
 										search={{
-											sessionId: authLinkSearch?.sessionId,
 											redirectTo: authLinkSearch?.redirectTo,
 										}}
 									>
@@ -179,7 +163,6 @@ export function MobileNav() {
 									<Link
 										to="/signup"
 										search={{
-											sessionId: authLinkSearch?.sessionId,
 											redirectTo: authLinkSearch?.redirectTo,
 										}}
 									>

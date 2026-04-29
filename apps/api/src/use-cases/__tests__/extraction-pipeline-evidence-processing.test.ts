@@ -38,10 +38,6 @@ const mockSessionRepo = {
 	getActiveSessionByUserId: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
-	findByToken: vi.fn(),
-	assignUserId: vi.fn(),
-	rotateToken: vi.fn(),
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
@@ -233,7 +229,6 @@ function setupDefaultMocks() {
 		Effect.succeed({
 			id: "session_test_123",
 			userId: null,
-			sessionToken: null,
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			status: "active",

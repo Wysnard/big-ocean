@@ -133,19 +133,18 @@ describe("sendMessage Use Case", () => {
 			);
 		});
 
-		describe("Anonymous cost key (AC #6)", () => {
-			it.effect("should use sessionId as cost key when userId is undefined", () =>
+		describe("Authenticated cost key", () => {
+			it.effect("should use userId as cost key", () =>
 				Effect.gen(function* () {
 					yield* sendMessage({
 						sessionId: "session_test_123",
-						message: "Anonymous message",
-						// No userId — anonymous
+						message: "Authenticated message",
+						userId: "user_456",
 					});
 
-					// Should use sessionId as cost key for anonymous users
-					expect(mockCostGuardRepo.checkMessageRateLimit).toHaveBeenCalledWith("session_test_123");
+					expect(mockCostGuardRepo.checkMessageRateLimit).toHaveBeenCalledWith("user_456");
 					expect(mockCostGuardRepo.incrementDailyCost).toHaveBeenCalledWith(
-						"session_test_123",
+						"user_456",
 						expect.any(Number),
 					);
 					// Per-session cost always uses sessionId

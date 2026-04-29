@@ -1,7 +1,7 @@
 /**
  * Resume Session Use Case Tests
  *
- * Verifies session ownership behavior for linked vs anonymous sessions,
+ * Verifies authenticated session ownership behavior,
  * and orphan user message retry via Nerin pipeline.
  */
 
@@ -89,7 +89,7 @@ describe("resumeSession Use Case", () => {
 		mockSessionRepo.getSession.mockReturnValue(
 			Effect.succeed({
 				id: TEST_SESSION_ID,
-				userId: null,
+				userId: "owner_user",
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				status: "active",
@@ -115,15 +115,27 @@ describe("resumeSession Use Case", () => {
 		mockLogger.debug.mockImplementation(() => {});
 	});
 
-	it("allows anonymous pre-link sessions to resume without authentication", async () => {
-		const result = await Effect.runPromise(
-			resumeSession({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+	it("denies legacy unowned sessions", async () => {
+		mockSessionRepo.getSession.mockReturnValue(
+			Effect.succeed({
+				id: TEST_SESSION_ID,
+				userId: null,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				status: "active",
+				messageCount: 2,
+			}),
 		);
 
-		expect(result.messages).toHaveLength(1);
-		expect(result.assessmentTurnCount).toBe(15);
-		expect(mockMessageRepo.getMessages).toHaveBeenCalledWith(TEST_SESSION_ID);
-		expect(mockEvidenceRepo.getEvidenceBySession).toHaveBeenCalledWith(TEST_SESSION_ID);
+		const error = await Effect.runPromise(
+			resumeSession({
+				sessionId: TEST_SESSION_ID,
+				authenticatedUserId: "owner_user",
+			}).pipe(Effect.provide(createTestLayer()), Effect.flip),
+		);
+
+		expect(error._tag).toBe("SessionNotFound");
+		expect(mockMessageRepo.getMessages).not.toHaveBeenCalled();
 	});
 
 	it("allows linked session owner to resume", async () => {

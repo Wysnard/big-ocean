@@ -1,4 +1,3 @@
-import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { ChatBubble } from "./ChatBubble";
 import { getHomepagePhaseConfig } from "./homepage-phase-config";
 
@@ -10,19 +9,20 @@ export function HomepageConversationPreview() {
 		<section
 			id={getHomepagePhaseConfig("conversation").sectionId}
 			data-homepage-phase="conversation"
-			className="homepage-conversation-surface min-h-[92svh] px-6 py-12 text-foreground sm:px-8 lg:min-h-screen lg:px-12 lg:py-16"
+			className="border-t border-border/60 bg-background px-6 py-16 text-foreground sm:px-8 sm:py-20 lg:px-12 lg:py-24"
 		>
-			<div className="mx-auto flex h-full max-w-4xl flex-col justify-center gap-8">
+			<div className="mx-auto flex max-w-4xl flex-col gap-8">
 				<div className="space-y-3">
-					<div className="flex items-center gap-3">
-						<OceanHieroglyphSet size={14} />
-						<p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
-							Conversation
-						</p>
-					</div>
-					<h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-foreground">
-						Recognition starts before anything is explained.
+					<p className="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
+						Conversation
+					</p>
+					<h2 className="max-w-2xl font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+						Friends know your story. The picture still stays in fragments.
 					</h2>
+					<p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+						A partner knows the version they need. Therapy has a direction. Books describe categories, not
+						you. It&apos;s easy to feel misread by others—and a little by yourself.
+					</p>
 				</div>
 				<div className="relative w-full max-w-[900px] pt-2 pb-1">
 					<div
@@ -31,10 +31,12 @@ export function HomepageConversationPreview() {
 						aria-hidden="true"
 					/>
 					<ChatBubble variant="nerin">
-						<p>I am here for whatever shows up — no performance, no right answers.</p>
+						<p>I am here for whatever shows up—no performance, no right answers.</p>
 					</ChatBubble>
 					<ChatBubble variant="user">
-						<p>I keep circling the same thing. Work, sleep, then the same worry on repeat.</p>
+						<p>
+							I can explain myself to everyone and still feel like nobody quite has the full shape of it.
+						</p>
 					</ChatBubble>
 					<ChatBubble variant="nerin">
 						<div className="mb-2 flex flex-wrap items-center gap-2">
@@ -43,17 +45,11 @@ export function HomepageConversationPreview() {
 							</span>
 						</div>
 						<p>
-							You described restlessness at work and again before bed — same texture, different scenes.
-							That repetition is not noise; it is the thread I am pulling gently on.
+							I don&apos;t quiz you. I listen, then name what is already running through your life—how you
+							think, how you decide, how you show up with people who matter.
 						</p>
 					</ChatBubble>
 				</div>
-				{/* In-section bleed (AC5): keeps entire block inside `data-homepage-phase` for DepthScrollProvider */}
-				<div
-					aria-hidden
-					data-testid="homepage-timeline-bleed-conversation-to-portrait"
-					className="homepage-bleed-conversation-to-portrait -mx-6 mt-12 h-20 shrink-0 sm:-mx-8 lg:-mx-12"
-				/>
 			</div>
 		</section>
 	);

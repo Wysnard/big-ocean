@@ -3,7 +3,7 @@
  *
  * Two middleware variants:
  * - AuthMiddleware (strict): Fails with Unauthorized when no session. Provides `AuthenticatedUser` (string).
- * - OptionalAuthMiddleware: Always succeeds. Provides `CurrentUser` (string | undefined).
+ * - OptionalAuthMiddleware: Always succeeds. Provides `CurrentUser` for public reads.
  *
  * Contract definitions only — implementations are in @workspace/api.
  *

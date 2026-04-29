@@ -15,10 +15,6 @@ const mockSessionRepo = {
 	getActiveSessionByUserId: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
-	findByToken: vi.fn(),
-	assignUserId: vi.fn(),
-	rotateToken: vi.fn(),
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
@@ -27,7 +23,6 @@ const mockSessionRepo = {
 const mockSession = {
 	id: "session_123",
 	userId: "user_456",
-	sessionToken: "mock_token",
 	createdAt: new Date("2026-02-01"),
 	updatedAt: new Date("2026-02-01"),
 	status: "finalizing",

@@ -154,29 +154,6 @@ describe("SignupForm", () => {
 		});
 	});
 
-	it("navigates to verify-email after successful signup with anonymousSessionId", async () => {
-		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
-
-		renderSignupForm({ anonymousSessionId: "session-456" });
-
-		fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Test" } });
-		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "securepassword1" },
-		});
-		fireEvent.change(screen.getByLabelText("Confirm Password"), {
-			target: { value: "securepassword1" },
-		});
-		fireEvent.submit(screen.getByRole("button", { name: "Create Account" }));
-
-		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({
-				to: "/verify-email",
-				search: { email: "test@example.com", error: undefined },
-			});
-		});
-	});
-
 	it("navigates to verify-email by default after signup", async () => {
 		mockSignUpEmail.mockResolvedValueOnce({ user: { id: "1" } });
 

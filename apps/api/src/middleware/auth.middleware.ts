@@ -2,7 +2,7 @@
  * Auth Middleware Implementations
  *
  * - AuthMiddlewareLive: Strict — fails with Unauthorized when no session.
- * - OptionalAuthMiddlewareLive: Lenient — returns undefined for anonymous users.
+ * - OptionalAuthMiddlewareLive: Lenient — returns undefined for public reads.
  */
 
 import { HttpServerRequest } from "@effect/platform";

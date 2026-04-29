@@ -11,17 +11,13 @@
  * Dependencies: ConversationRepository, AssessmentResultRepository, LoggerRepository
  */
 
-import type { EvidenceInput } from "@workspace/domain";
 import {
 	AppConfig,
 	AssessmentResultError,
 	AssessmentResultRepository,
 	BIG_FIVE_TRAITS,
-	ConversationEvidenceRepository,
 	ConversationRepository,
 	calculateConfidenceFromFacetScores,
-	computeAllFacetResults,
-	computeDomainCoverage,
 	computeTraitResults,
 	extract4LetterCode,
 	FACET_DESCRIPTIONS,
@@ -46,7 +42,7 @@ import { Effect } from "effect";
 
 export interface GetResultsInput {
 	readonly sessionId: string;
-	readonly authenticatedUserId?: string;
+	readonly authenticatedUserId: string;
 }
 
 export interface GetResultsOutput {
@@ -77,98 +73,9 @@ const mapScoreToLevel = (traitName: string, score: number): string => {
 };
 
 /**
- * Lazy finalization: scores computed inline on first GET /results.
- * Idempotent — skips if assessment_results already exists at stage "scored" or "completed".
- * Portrait generation is deferred until after purchase (Story 32-0).
- */
-const lazyFinalize = (sessionId: string, _userId: string | null) =>
-	Effect.gen(function* () {
-		const sessionRepo = yield* ConversationRepository;
-		const logger = yield* LoggerRepository;
-		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
-		const assessmentResultRepo = yield* AssessmentResultRepository;
-
-		// Idempotency: check if already scored/completed
-		const existingResult = yield* assessmentResultRepo.getBySessionId(sessionId);
-		if (existingResult?.stage === "completed" || existingResult?.stage === "scored") {
-			// Already done — just ensure session is marked completed
-			if (existingResult.stage === "scored") {
-				yield* assessmentResultRepo.updateStage(sessionId, "completed");
-				yield* sessionRepo.updateSession(sessionId, {
-					status: "completed",
-					finalizationProgress: "completed",
-				});
-			}
-			return;
-		}
-
-		// Acquire lock to prevent concurrent finalization
-		const lockAcquired = yield* sessionRepo.acquireSessionLock(sessionId).pipe(
-			Effect.map(() => true),
-			Effect.catchTag("ConcurrentMessageError", () => Effect.succeed(false)),
-		);
-
-		if (!lockAcquired) {
-			return yield* Effect.fail(
-				new AssessmentResultError({
-					message: "Results are being generated, please retry in a few seconds",
-				}),
-			);
-		}
-
-		yield* Effect.gen(function* () {
-			// Fetch conversation evidence
-			// Story 36-3: For extension sessions with authenticated users, use ALL user evidence
-			const session2 = yield* sessionRepo.getSession(sessionId);
-			const isExtension = session2.parentConversationId != null;
-			const hasAuthUser = session2.userId != null;
-			const conversationEvidence =
-				isExtension && hasAuthUser
-					? yield* conversationEvidenceRepo.findByUserId(session2.userId as string)
-					: yield* conversationEvidenceRepo.findBySession(sessionId);
-			const scoringInputs: EvidenceInput[] = conversationEvidence.map((ev) => ({
-				bigfiveFacet: ev.bigfiveFacet,
-				deviation: ev.deviation as -3 | -2 | -1 | 0 | 1 | 2 | 3,
-				strength: ev.strength,
-				confidence: ev.confidence,
-				domain: ev.domain,
-			}));
-
-			logger.info("Lazy finalization: scoring from conversation evidence", {
-				sessionId,
-				evidenceCount: conversationEvidence.length,
-			});
-
-			// Compute scores (no portrait at finalization — Story 32-0)
-			const facets = computeAllFacetResults(scoringInputs);
-			const traits = computeTraitResults(facets);
-			const domainCoverage = computeDomainCoverage(scoringInputs);
-
-			// Upsert assessment_results with scores only
-			yield* assessmentResultRepo.upsert({
-				assessmentSessionId: sessionId,
-				facets,
-				traits,
-				domainCoverage,
-				portrait: "",
-				stage: "scored",
-			});
-
-			// Mark completed
-			yield* assessmentResultRepo.updateStage(sessionId, "completed");
-			yield* sessionRepo.updateSession(sessionId, {
-				status: "completed",
-				finalizationProgress: "completed",
-			});
-
-			logger.info("Lazy finalization complete", { sessionId });
-		}).pipe(Effect.ensuring(sessionRepo.releaseSessionLock(sessionId).pipe(Effect.orDie)));
-	});
-
-/**
  * Get Assessment Results Use Case
  *
- * 1. Validates session exists and is completed (or lazily finalizes if "finalizing")
+ * 1. Validates session exists and is completed
  * 2. Reads persisted facet/trait scores from AssessmentResultRepository
  * 3. Generates OCEAN codes, looks up archetype
  * 4. Computes overall confidence (mean of all facet confidences)
@@ -186,7 +93,7 @@ export const getResults = (input: GetResultsInput) =>
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
 		// Ownership guard
-		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+		if (session.userId !== input.authenticatedUserId) {
 			return yield* Effect.fail(
 				new SessionNotFound({
 					sessionId: input.sessionId,
@@ -195,10 +102,7 @@ export const getResults = (input: GetResultsInput) =>
 			);
 		}
 
-		// 2. Lazy finalization: if session is "finalizing", compute scores + portrait inline
-		if (session.status === "finalizing") {
-			yield* lazyFinalize(input.sessionId, session.userId);
-		} else if (session.status !== "completed") {
+		if (session.status !== "completed") {
 			return yield* Effect.fail(
 				new SessionNotCompleted({
 					sessionId: input.sessionId,
@@ -282,19 +186,17 @@ export const getResults = (input: GetResultsInput) =>
 
 		// 10. Determine version status (Story 36-3, fail-open: default to latest on error)
 		let latestVersion = true;
-		if (input.authenticatedUserId) {
-			const latestResult = yield* resultRepo
-				.getLatestByUserId(input.authenticatedUserId)
-				.pipe(Effect.catchTag("AssessmentResultError", () => Effect.succeed(null)));
-			latestVersion = isLatestVersion(result.id, latestResult?.id ?? null);
-		}
+		const latestResult = yield* resultRepo
+			.getLatestByUserId(input.authenticatedUserId)
+			.pipe(Effect.catchTag("AssessmentResultError", () => Effect.succeed(null)));
+		latestVersion = isLatestVersion(result.id, latestResult?.id ?? null);
 
 		// 11. Ensure public profile exists for authenticated users (private by default)
 		let existingProfile = yield* profileRepo
 			.getProfileBySessionId(input.sessionId)
 			.pipe(Effect.catchAll(() => Effect.succeed(null)));
 
-		if (existingProfile === null && input.authenticatedUserId != null) {
+		if (existingProfile === null) {
 			existingProfile = yield* profileRepo
 				.createProfile({
 					sessionId: input.sessionId,

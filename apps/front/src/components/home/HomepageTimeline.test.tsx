@@ -57,13 +57,31 @@ describe("HomepageTimeline", () => {
 		expect(container.querySelectorAll("[data-slot='chat-bubble']")).toHaveLength(3);
 	});
 
-	it("includes in-section gradient bleeds between phases (no standalone gaps)", () => {
-		render(<HomepageTimeline />);
+	it("renders sections without forced viewport heights so content sets the size", () => {
+		const { container } = render(<HomepageTimeline />);
+
+		const phases = container.querySelectorAll("[data-homepage-phase]");
+		for (const phase of phases) {
+			expect(phase.className).not.toMatch(/min-h-screen|min-h-\[\d+svh\]/);
+		}
+	});
+
+	it("separates phases with a top divider instead of gradient bleed surfaces", () => {
+		const { container } = render(<HomepageTimeline />);
 
 		expect(
-			screen.getByTestId("homepage-timeline-bleed-conversation-to-portrait"),
-		).toBeInTheDocument();
-		expect(screen.getByTestId("homepage-timeline-bleed-portrait-to-world")).toBeInTheDocument();
-		expect(screen.getByTestId("homepage-timeline-bleed-world-to-reassurance")).toBeInTheDocument();
+			container.querySelector("[data-testid='homepage-timeline-bleed-conversation-to-portrait']"),
+		).toBeNull();
+		expect(
+			container.querySelector("[data-testid='homepage-timeline-bleed-portrait-to-world']"),
+		).toBeNull();
+		expect(
+			container.querySelector("[data-testid='homepage-timeline-bleed-world-to-reassurance']"),
+		).toBeNull();
+
+		const phases = container.querySelectorAll("[data-homepage-phase]");
+		for (const phase of phases) {
+			expect(phase.className).toMatch(/border-t/);
+		}
 	});
 });

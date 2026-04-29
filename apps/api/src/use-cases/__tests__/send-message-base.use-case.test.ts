@@ -34,6 +34,7 @@ describe("sendMessage Use Case", () => {
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "What do you do?",
+					userId: "user_456",
 				});
 
 				expect(result).toEqual({
@@ -63,7 +64,7 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should save messages with correct exchange linking (Story 23-3)", () =>
 			Effect.gen(function* () {
-				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test", userId: "user_456" });
 
 				// User message linked to previous (opener) exchange
 				expect(mockMessageRepo.saveMessage).toHaveBeenCalledWith(
@@ -85,7 +86,7 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should invoke Director and Actor (Story 43-5)", () =>
 			Effect.gen(function* () {
-				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test", userId: "user_456" });
 
 				// Actor receives actorPrompt + directorBrief (no conversation history)
 				expect(mockActorRepo.invoke).toHaveBeenCalledWith(
@@ -100,7 +101,7 @@ describe("sendMessage Use Case", () => {
 
 		it.effect("should increment message_count atomically", () =>
 			Effect.gen(function* () {
-				yield* sendMessage({ sessionId: "session_test_123", message: "Test" });
+				yield* sendMessage({ sessionId: "session_test_123", message: "Test", userId: "user_456" });
 
 				expect(mockSessionRepo.incrementMessageCount).toHaveBeenCalledWith("session_test_123");
 			}).pipe(Effect.provide(createTestLayer())),
@@ -156,6 +157,7 @@ describe("sendMessage Use Case", () => {
 				const exit = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Test",
+					userId: "user_456",
 				}).pipe(Effect.exit);
 
 				expect(exit._tag).toBe("Failure");
@@ -181,6 +183,7 @@ describe("sendMessage Use Case", () => {
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Threshold msg",
+					userId: "user_456",
 				});
 
 				expect(result.isFinalTurn).toBe(true);
@@ -202,6 +205,7 @@ describe("sendMessage Use Case", () => {
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Normal message",
+					userId: "user_456",
 				});
 
 				expect(result.isFinalTurn).toBe(false);

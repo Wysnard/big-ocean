@@ -26,7 +26,7 @@ import { Effect } from "effect";
 
 export interface ResumeSessionInput {
 	readonly sessionId: string;
-	readonly authenticatedUserId?: string;
+	readonly authenticatedUserId: string;
 }
 
 export interface ResumeSessionOutput {
@@ -61,8 +61,8 @@ export const resumeSession = (input: ResumeSessionInput) =>
 		// Get session (validates it exists)
 		const session = yield* sessionRepo.getSession(input.sessionId);
 
-		// Linked sessions are private to their owner.
-		if (session.userId != null && session.userId !== input.authenticatedUserId) {
+		// Sessions are private to their authenticated owner.
+		if (session.userId !== input.authenticatedUserId) {
 			return yield* Effect.fail(
 				new SessionNotFound({
 					sessionId: input.sessionId,

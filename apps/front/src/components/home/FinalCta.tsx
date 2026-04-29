@@ -8,10 +8,11 @@ export function FinalCta() {
 			className="mx-auto max-w-[900px] px-6 pb-32 pt-8 text-center sm:pb-40 min-[1200px]:max-w-[1000px] min-[1440px]:max-w-[1100px]"
 		>
 			<h2 className="mb-4 font-heading text-[clamp(1.8rem,4vw,2.8rem)] font-bold leading-tight text-foreground">
-				What&rsquo;s YOUR code?
+				A portrait you can return to.
 			</h2>
 			<p className="mx-auto mb-8 max-w-[480px] text-[1.05rem] leading-relaxed text-muted-foreground">
-				Discover it in a conversation with Nerin. ~30 minutes. Free. No wrong answers.
+				Spend one focused conversation with Nerin. Leave with a written portrait of who you are—and
+				somewhere steady to come back to as you grow.
 			</p>
 			<Link
 				to="/chat"

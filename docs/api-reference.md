@@ -19,14 +19,11 @@ The Big Ocean API is built on two layers:
 
 The API uses session-based authentication via Better Auth. Sessions are managed through HTTP-only cookies.
 
-**Authentication Header:** For endpoints requiring authentication, include the session cookie or pass `x-user-id` header for internal requests.
-
-**Optional Authentication:** Some endpoints accept an optional `userId` parameter to associate actions with authenticated users while still allowing anonymous access.
+**Authentication Header:** For endpoints requiring authentication, include the Better Auth session cookie.
 
 ### Rate Limiting
 
 - **Authenticated users:** 1 new assessment per day (unlimited message resumption)
-- **Anonymous users:** No rate limiting on assessment creation
 - **Daily cost budget:** $75 per user (enforced via Redis)
 
 ---
@@ -60,22 +57,20 @@ Check API service health status.
 
 ---
 
-### Assessment
+### Conversation
 
-Endpoints for managing personality assessment sessions and conversations.
+Endpoints for managing authenticated Nerin assessment conversations.
 
-#### POST /api/assessment/start
+#### POST /api/conversation/start
 
-Start a new assessment session.
+Start a new authenticated conversation.
 
-**Authentication:** Optional (pass `userId` to associate with authenticated user)
+**Authentication:** Required
 
 **Request Body:**
 
 ```json
-{
-  "userId": "string (optional)"
-}
+{}
 ```
 
 **Response:**
@@ -83,7 +78,14 @@ Start a new assessment session.
 ```json
 {
   "sessionId": "uuid-string",
-  "createdAt": "2026-02-12T10:30:00Z"
+  "createdAt": "2026-02-12T10:30:00Z",
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "Opening greeting",
+      "timestamp": "2026-02-12T10:30:00Z"
+    }
+  ]
 }
 ```
 
@@ -92,7 +94,8 @@ Start a new assessment session.
 | Code | Description |
 |------|-------------|
 | 200  | Session created successfully |
-| 429  | Rate limit exceeded (authenticated users only, 1/day) |
+| 401  | Authentication required |
+| 429  | Rate limit exceeded (1/day) |
 | 500  | Database error |
 
 **Errors:**
@@ -101,11 +104,11 @@ Start a new assessment session.
 
 ---
 
-#### POST /api/assessment/message
+#### POST /api/conversation/message
 
 Send a message to the assessment conversation and receive a response from the Nerin agent.
 
-**Authentication:** None required
+**Authentication:** Required
 
 **Request Body:**
 
@@ -121,13 +124,7 @@ Send a message to the assessment conversation and receive a response from the Ne
 ```json
 {
   "response": "Nerin's conversational response",
-  "confidence": {
-    "openness": 0.75,
-    "conscientiousness": 0.82,
-    "extraversion": 0.68,
-    "agreeableness": 0.71,
-    "neuroticism": 0.65
-  }
+  "isFinalTurn": false
 }
 ```
 
@@ -136,7 +133,9 @@ Send a message to the assessment conversation and receive a response from the Ne
 | Code | Description |
 |------|-------------|
 | 200  | Message processed successfully |
+| 401  | Authentication required |
 | 404  | Session not found |
+| 409  | Concurrent message or completed session |
 | 500  | Database error |
 | 503  | Agent invocation failed |
 
@@ -148,11 +147,13 @@ Send a message to the assessment conversation and receive a response from the Ne
 
 ---
 
-#### GET /api/assessment/:sessionId/results
+#### GET /api/conversation/:sessionId/results
 
 Get complete assessment results including archetype, traits, and facets.
 
-**Authentication:** None required
+**Authentication:** Required
+
+This endpoint is read-only. It returns results only after Assessment Finalization has completed.
 
 **Path Parameters:**
 
@@ -195,16 +196,18 @@ Get complete assessment results including archetype, traits, and facets.
 | Code | Description |
 |------|-------------|
 | 200  | Results retrieved successfully |
+| 401  | Authentication required |
 | 404  | Session not found |
+| 409  | Session not completed |
 | 500  | Database error |
 
 ---
 
-#### GET /api/assessment/:sessionId/resume
+#### GET /api/conversation/:sessionId/resume
 
 Resume an existing assessment session with conversation history and current confidence scores.
 
-**Authentication:** None required
+**Authentication:** Required
 
 **Path Parameters:**
 
@@ -243,6 +246,7 @@ Resume an existing assessment session with conversation history and current conf
 | Code | Description |
 |------|-------------|
 | 200  | Session resumed successfully |
+| 401  | Authentication required |
 | 404  | Session not found |
 | 500  | Database error |
 

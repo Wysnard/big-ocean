@@ -32,7 +32,7 @@ describe("getResults Use Case", () => {
 				Effect.succeed({
 					id: TEST_SESSION_ID,
 					sessionId: TEST_SESSION_ID,
-					userId: null,
+					userId: "owner_user",
 					createdAt: new Date(),
 					updatedAt: new Date(),
 					status: "active",
@@ -41,22 +41,22 @@ describe("getResults Use Case", () => {
 			);
 
 			const error = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer()), Effect.flip),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+					Effect.flip,
+				),
 			);
 
 			expect(error._tag).toBe("SessionNotCompleted");
 			expect(mockResultRepo.getBySessionId).not.toHaveBeenCalled();
 		});
 
-		it("should trigger lazy finalization when session is finalizing", async () => {
-			// Lazy finalization requires additional dependencies (ConversationEvidenceRepository, etc.)
-			// which are not in the basic test layer. This is covered by integration tests.
-			// Here we just verify that "finalizing" status does NOT produce SessionNotCompleted.
+		it("should fail with SessionNotCompleted when session is finalizing", async () => {
 			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
 				Effect.succeed({
 					id: TEST_SESSION_ID,
 					sessionId: TEST_SESSION_ID,
-					userId: null,
+					userId: "owner_user",
 					createdAt: new Date(),
 					updatedAt: new Date(),
 					status: "finalizing",
@@ -64,18 +64,15 @@ describe("getResults Use Case", () => {
 				}),
 			);
 
-			const exit = await Effect.runPromiseExit(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+			const error = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+					Effect.flip,
+				),
 			);
 
-			// Should NOT be SessionNotCompleted — it attempts lazy finalization
-			// (which fails due to missing deps in this test, but the important thing
-			// is that it doesn't short-circuit with SessionNotCompleted)
-			if (exit._tag === "Failure") {
-				const cause = exit.cause;
-				const errorStr = JSON.stringify(cause);
-				expect(errorStr).not.toContain("SessionNotCompleted");
-			}
+			expect(error._tag).toBe("SessionNotCompleted");
+			expect(mockResultRepo.getBySessionId).not.toHaveBeenCalled();
 		});
 
 		it("should fail with SessionNotFound when linked session is accessed by non-owner", async () => {
@@ -156,7 +153,7 @@ describe("getResults Use Case", () => {
 			);
 
 			const error = await Effect.runPromise(
-				getResults({ sessionId: "nonexistent_session" }).pipe(
+				getResults({ sessionId: "nonexistent_session", authenticatedUserId: "owner_user" }).pipe(
 					Effect.provide(createTestLayer()),
 					Effect.flip,
 				),

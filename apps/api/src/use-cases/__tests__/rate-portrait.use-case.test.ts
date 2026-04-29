@@ -24,9 +24,7 @@ const mockSessionRepo = {
 	getActiveSessionByUserId: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	updateSession: vi.fn(),
-	claimAnonymousSession: vi.fn(),
 	acquireProcessingLock: vi.fn(),
-	createAnonymousSession: vi.fn(),
 };
 
 const mockRatingRepo = {
@@ -54,7 +52,6 @@ const mockSession = {
 	messageCount: 25,
 	createdAt: new Date(),
 	updatedAt: new Date(),
-	sessionToken: null,
 	finalizationProgress: null,
 };
 

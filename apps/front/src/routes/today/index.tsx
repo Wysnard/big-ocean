@@ -8,7 +8,7 @@ export const Route = createFileRoute("/today/")({
 	beforeLoad: async () => {
 		const { data: session } = await getSession();
 		if (!session?.user) {
-			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+			throw redirect({ to: "/login", search: { redirectTo: undefined } });
 		}
 	},
 	component: TodayPage,

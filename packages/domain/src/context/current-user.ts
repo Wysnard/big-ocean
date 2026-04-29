@@ -1,17 +1,15 @@
 /**
  * CurrentUser Context Tag
  *
- * Provides the authenticated user ID (or undefined for anonymous users)
+ * Provides the authenticated user ID, or undefined where an Interface
+ * intentionally allows unauthenticated reads.
  * via Effect dependency injection. Populated by AuthMiddleware.
  *
  * Domain layer definition (port) — middleware implementation is in @workspace/api.
  *
  * @example
  * ```typescript
- * const userId = yield* CurrentUser;
- * if (!userId) {
- *   return yield* Effect.fail(new Unauthorized({ message: "Authentication required" }));
- * }
+ * const userId = yield* AuthenticatedUser;
  * ```
  */
 import { Context } from "effect";

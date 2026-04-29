@@ -24,10 +24,6 @@ export const mockConversationRepo = {
 	updateSession: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
-	findByToken: vi.fn(),
-	assignUserId: vi.fn(),
-	rotateToken: vi.fn(),
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
@@ -175,7 +171,7 @@ export const createTestLayer = () =>
 export function setupDefaultMocks() {
 	saveMessageCallCount = 0;
 
-	mockConversationRepo.createSession.mockImplementation((userId?: string) =>
+	mockConversationRepo.createSession.mockImplementation((userId: string) =>
 		Effect.succeed({
 			sessionId: "session_new_789",
 			userId,
@@ -187,17 +183,6 @@ export function setupDefaultMocks() {
 	mockConversationRepo.findSessionByUserId.mockImplementation(() => Effect.succeed(null));
 	mockConversationRepo.getSession.mockImplementation(() => Effect.succeed(undefined));
 	mockConversationRepo.updateSession.mockImplementation(() => Effect.succeed(undefined));
-	mockConversationRepo.createAnonymousSession.mockImplementation(() =>
-		Effect.succeed({
-			sessionId: "session_anon_123",
-			sessionToken: "mock_token_abc123def456",
-		}),
-	);
-	mockConversationRepo.findByToken.mockImplementation(() => Effect.succeed(null));
-	mockConversationRepo.assignUserId.mockImplementation(() => Effect.succeed(undefined));
-	mockConversationRepo.rotateToken.mockImplementation(() =>
-		Effect.succeed({ sessionToken: "new_token" }),
-	);
 	mockConversationRepo.incrementMessageCount.mockImplementation(() => Effect.succeed(1));
 	mockConversationRepo.acquireSessionLock.mockImplementation(() => Effect.succeed(undefined));
 	mockConversationRepo.releaseSessionLock.mockImplementation(() => Effect.succeed(undefined));

@@ -70,7 +70,7 @@ export const Route = createFileRoute("/me/")({
 
 		const { data: session } = await getSession();
 		if (!session?.user) {
-			throw redirect({ to: "/login", search: { sessionId: undefined, redirectTo: undefined } });
+			throw redirect({ to: "/login", search: { redirectTo: undefined } });
 		}
 
 		const { sessions } = await context.queryClient.fetchQuery(listConversationsQueryOptions());

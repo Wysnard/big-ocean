@@ -56,6 +56,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "I work in tech",
+					userId: "user_456",
 				});
 
 				const nerinCall = mockDirectorRepo.generateBrief.mock.calls[0][0];
@@ -72,6 +73,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Hello",
+					userId: "user_456",
 				});
 
 				const nerinCall = mockDirectorRepo.generateBrief.mock.calls[0][0];
@@ -106,6 +108,7 @@ describe("sendMessage Use Case", () => {
 					yield* sendMessage({
 						sessionId: "session_test_123",
 						message: "I work in tech",
+						userId: "user_456",
 					});
 
 					const saveMessageCalls = mockMessageRepo.saveMessage.mock.calls;
@@ -151,6 +154,7 @@ describe("sendMessage Use Case", () => {
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "I work in tech",
+					userId: "user_456",
 				});
 
 				// Nerin still gets territory prompt even though conversanalyzer failed
@@ -217,6 +221,7 @@ describe("sendMessage Use Case", () => {
 					const result = yield* sendMessage({
 						sessionId: "session_test_123",
 						message: "I play guitar",
+						userId: "user_456",
 					});
 
 					expect(result.response).toBeDefined();

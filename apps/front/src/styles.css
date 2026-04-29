@@ -61,101 +61,10 @@
 	}
 }
 
-.homepage-hero-surface {
-	--homepage-clear-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--tertiary) 8%, var(--homepage-clear-base)) 0%,
-		color-mix(in srgb, var(--primary) 5%, var(--homepage-clear-base)) 56%,
-		color-mix(in srgb, var(--background) 72%, var(--homepage-clear-base)) 100%
-	);
-}
-
-.homepage-conversation-surface {
-	--homepage-clear-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--tertiary) 16%, var(--homepage-clear-base)) 0%,
-		color-mix(in srgb, var(--primary) 8%, var(--homepage-clear-base)) 58%,
-		color-mix(in srgb, var(--secondary) 6%, var(--homepage-clear-base)) 100%
-	);
-}
-
-.homepage-portrait-surface {
-	--homepage-clear-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--secondary) 6%, var(--homepage-clear-base)) 0%,
-		color-mix(in srgb, var(--background) 58%, var(--homepage-clear-base)) 58%,
-		color-mix(in srgb, var(--tertiary) 10%, var(--homepage-clear-base)) 100%
-	);
-}
-
-.homepage-world-surface {
-	--homepage-clear-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--tertiary) 12%, var(--homepage-clear-base)) 0%,
-		color-mix(in srgb, var(--background) 54%, var(--homepage-clear-base)) 52%,
-		color-mix(in srgb, var(--primary) 8%, var(--homepage-clear-base)) 100%
-	);
-}
-
-.homepage-reassurance-surface {
-	--homepage-clear-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--primary) 8%, var(--homepage-clear-base)) 0%,
-		color-mix(in srgb, var(--tertiary) 5%, var(--homepage-clear-base)) 100%
-	);
-}
-
 .homepage-card-surface {
 	background: color-mix(in srgb, #ffffff 92%, var(--background));
 }
 
 .dark .homepage-card-surface {
 	background: color-mix(in srgb, var(--card) 88%, black);
-}
-
-.dark .homepage-hero-surface,
-.dark .homepage-conversation-surface,
-.dark .homepage-portrait-surface,
-.dark .homepage-world-surface,
-.dark .homepage-reassurance-surface {
-	--homepage-clear-base: var(--background);
-}
-
-.homepage-bleed-conversation-to-portrait {
-	--homepage-bleed-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		transparent 0%,
-		color-mix(in srgb, var(--secondary) 3%, var(--homepage-bleed-base)) 58%,
-		color-mix(in srgb, var(--secondary) 6%, var(--homepage-bleed-base)) 100%
-	);
-}
-
-.homepage-bleed-portrait-to-world {
-	--homepage-bleed-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		transparent 0%,
-		color-mix(in srgb, var(--tertiary) 12%, var(--homepage-bleed-base)) 100%
-	);
-}
-
-.homepage-bleed-world-to-reassurance {
-	--homepage-bleed-base: #ffffff;
-	background: linear-gradient(
-		180deg,
-		transparent 0%,
-		color-mix(in srgb, var(--primary) 8%, var(--homepage-bleed-base)) 100%
-	);
-}
-
-.dark .homepage-bleed-conversation-to-portrait,
-.dark .homepage-bleed-portrait-to-world,
-.dark .homepage-bleed-world-to-reassurance {
-	--homepage-bleed-base: var(--background);
 }

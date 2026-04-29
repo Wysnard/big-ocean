@@ -14,11 +14,11 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 		/**
 		 * Create a new assessment session
 		 *
-		 * @param userId - Optional user ID (NULL for anonymous sessions)
+		 * @param userId - Authenticated user ID
 		 * @returns Effect with session entity (including empty messages array)
 		 */
 		readonly createSession: (
-			userId?: string,
+			userId: string,
 		) => Effect.Effect<{ sessionId: string }, DatabaseError, never>;
 
 		/**
@@ -95,49 +95,6 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 			DatabaseError,
 			never
 		>;
-
-		/**
-		 * Create an anonymous session with a cryptographic token (Story 9.1)
-		 *
-		 * @returns Effect with sessionId and sessionToken
-		 */
-		readonly createAnonymousSession: () => Effect.Effect<
-			{ sessionId: string; sessionToken: string },
-			DatabaseError,
-			never
-		>;
-
-		/**
-		 * Find a session by its anonymous session token (Story 9.1)
-		 *
-		 * @param token - Session token from httpOnly cookie
-		 * @returns Effect with session entity or null if token invalid
-		 */
-		readonly findByToken: (
-			token: string,
-		) => Effect.Effect<ConversationEntity | null, DatabaseError, never>;
-
-		/**
-		 * Assign a user ID to an anonymous session (Story 9.4)
-		 *
-		 * @param sessionId - Session to assign
-		 * @param userId - User ID to assign
-		 * @returns Effect with updated session entity
-		 */
-		readonly assignUserId: (
-			sessionId: string,
-			userId: string,
-		) => Effect.Effect<ConversationEntity, DatabaseError, never>;
-
-		/**
-		 * Rotate the session token (for auth transition security, Story 9.4)
-		 *
-		 * @param sessionId - Session to rotate token for
-		 * @returns Effect with new token
-		 */
-		readonly rotateToken: (
-			sessionId: string,
-		) => Effect.Effect<{ sessionToken: string }, DatabaseError, never>;
 
 		/**
 		 * Atomically increment message_count and return the new value (Story 9.2)

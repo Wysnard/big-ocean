@@ -22,13 +22,12 @@ import { useState } from "react";
 import { AuthError, useAuth } from "../../hooks/use-auth";
 
 interface LoginFormProps {
-	anonymousSessionId?: string;
 	redirectTo?: string;
 	/** `embed` = compact block for homepage sticky panel; `page` = full `/login` route */
 	variant?: "page" | "embed";
 }
 
-export function LoginForm({ anonymousSessionId, redirectTo, variant = "page" }: LoginFormProps) {
+export function LoginForm({ redirectTo, variant = "page" }: LoginFormProps) {
 	const isEmbed = variant === "embed";
 	const { signIn, isPending } = useAuth();
 	const navigate = useNavigate();
@@ -58,15 +57,10 @@ export function LoginForm({ anonymousSessionId, redirectTo, variant = "page" }: 
 			setIsLoading(true);
 
 			try {
-				await signIn.email(value.email, value.password, anonymousSessionId);
+				await signIn.email(value.email, value.password);
 
 				if (redirectTo?.startsWith("/")) {
 					await navigate({ to: redirectTo });
-				} else if (anonymousSessionId) {
-					await navigate({
-						to: "/me/$conversationSessionId",
-						params: { conversationSessionId: anonymousSessionId },
-					});
 				} else {
 					await navigate({ to: "/today" });
 				}
@@ -98,7 +92,6 @@ export function LoginForm({ anonymousSessionId, redirectTo, variant = "page" }: 
 
 	const formMarkup = (
 		<>
-			{isEmbed && <p className="mb-3 text-sm font-semibold text-foreground">Log in</p>}
 			<form
 				data-testid={isEmbed ? "login-form-embed" : undefined}
 				noValidate
@@ -210,7 +203,6 @@ export function LoginForm({ anonymousSessionId, redirectTo, variant = "page" }: 
 					<Link
 						to="/signup"
 						search={{
-							sessionId: anonymousSessionId,
 							redirectTo,
 						}}
 						className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-transparent text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"

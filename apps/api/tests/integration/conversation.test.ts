@@ -1,486 +1,210 @@
 /**
  * Conversation Flow Integration Tests
  *
- * Validates conversation start, message, and resume endpoints against the Dockerized API.
- * Uses real HTTP requests and validates responses against contract schemas.
- *
- * Key validations:
- * - POST /api/assessment/start creates a conversation session
- * - POST /api/assessment/message processes a conversation message and returns a response
- * - Responses match @workspace/contracts schemas exactly
- * - Database persistence works (sessions and messages saved)
- *
- * Reference: Story 2.8 - Docker Setup for Integration Testing
+ * Validates the authenticated conversation HTTP stack against the Dockerized API.
+ * Uses Better Auth cookies and real HTTP requests, with mock LLM adapters from index.e2e.ts.
  */
 
+import { randomUUID } from "node:crypto";
 import {
+	FinalizationStatusResponseSchema,
 	GetResultsResponseSchema,
+	ListSessionsResponseSchema,
+	ResumeSessionResponseSchema,
 	SendMessageResponseSchema,
 	StartConversationResponseSchema,
 } from "@workspace/contracts";
 import { TRAIT_LETTER_MAP } from "@workspace/domain";
+import bcrypt from "bcryptjs";
 import { Schema } from "effect";
 import pg from "pg";
 import { describe, expect, test } from "vitest";
 
-// API URL from environment (set by vitest.config.integration.ts)
 const API_URL = process.env.API_URL || "http://localhost:4001";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
-
-// Test DB config — matches compose.test.yaml postgres-test service
 const TEST_DB_URL = "postgresql://test_user:test_password@localhost:5433/bigocean_test";
 
-/**
- * Story 11.1: Preserve a session in "finalizing" via direct DB update.
- * Used in integration tests where generate-results requires auth
- * but anonymous result retrieval relies on GET /results lazy finalization.
- */
-async function completeSessionViaDb(sessionId: string): Promise<void> {
+async function postJson(path: string, body: unknown, cookie?: string): Promise<Response> {
+	return fetch(`${API_URL}${path}`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			...(cookie ? { Cookie: cookie } : {}),
+		},
+		body: JSON.stringify(body),
+	});
+}
+
+async function getJson(path: string, cookie?: string): Promise<Response> {
+	return fetch(`${API_URL}${path}`, {
+		headers: {
+			...(cookie ? { Cookie: cookie } : {}),
+		},
+	});
+}
+
+function extractCookie(response: Response): string {
+	const setCookies = response.headers.getSetCookie();
+	const cookie = setCookies
+		.map((header) => header.split(";")[0])
+		.find((header) => header.includes("session_token"));
+	if (!cookie) {
+		throw new Error(`Expected Better Auth session cookie, got: ${setCookies.join(", ")}`);
+	}
+	return cookie;
+}
+
+async function createVerifiedCredentialUser(email: string, password: string): Promise<void> {
 	const pool = new pg.Pool({ connectionString: TEST_DB_URL });
 	try {
+		const userId = `user_${randomUUID()}`;
+		const passwordHash = await bcrypt.hash(password, 12);
 		await pool.query(
-			`UPDATE conversations SET status = 'finalizing', finalization_progress = 'analyzing', updated_at = NOW() WHERE id = $1`,
-			[sessionId],
+			`INSERT INTO "user" (id, name, email, email_verified, created_at, updated_at)
+			 VALUES ($1, $2, $3, TRUE, NOW(), NOW())`,
+			[userId, "Integration User", email],
+		);
+		await pool.query(
+			`INSERT INTO account (id, account_id, provider_id, user_id, password, created_at, updated_at)
+			 VALUES ($1, $2, 'credential', $3, $4, NOW(), NOW())`,
+			[`account_${randomUUID()}`, userId, userId, passwordHash],
 		);
 	} finally {
 		await pool.end();
 	}
 }
 
-/**
- * Helper to make JSON POST requests
- */
-async function postJson(path: string, body: unknown): Promise<Response> {
-	return fetch(`${API_URL}${path}`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(body),
+async function createAuthenticatedCookie(): Promise<string> {
+	const id = randomUUID();
+	const email = `conversation-${id}@example.com`;
+	const password = `B!gOcean-${id}-secure-password`;
+
+	await createVerifiedCredentialUser(email, password);
+
+	const signInResponse = await postJson("/api/auth/sign-in/email", {
+		email,
+		password,
 	});
+	expect(signInResponse.status).toBeLessThan(300);
+
+	return extractCookie(signInResponse);
 }
 
-describe("POST /api/assessment/start", () => {
-	test("creates session with valid response schema", async () => {
-		// Start conversation (anonymous - no userId to avoid UUID type issues)
-		// In production, userId would come from authenticated session with valid UUID
-		const response = await postJson("/api/assessment/start", {});
+async function startConversation(cookie: string): Promise<string> {
+	const response = await postJson("/api/conversation/start", {}, cookie);
+	expect(response.status).toBe(200);
 
-		// Assert HTTP status
-		expect(response.status).toBe(200);
-		expect(response.headers.get("content-type")).toContain("application/json");
+	const decoded = Schema.decodeUnknownSync(StartConversationResponseSchema)(await response.json());
+	expect(decoded.sessionId).toBeDefined();
+	expect(decoded.messages.length).toBeGreaterThan(0);
+	return decoded.sessionId;
+}
 
-		// Parse response
-		const data = await response.json();
+async function sendMessage(cookie: string, sessionId: string, message: string): Promise<boolean> {
+	const response = await postJson("/api/conversation/message", { sessionId, message }, cookie);
+	expect(response.status).toBe(200);
 
-		// Validate against contract schema (throws if invalid)
-		const decoded = Schema.decodeUnknownSync(StartConversationResponseSchema)(data);
+	const decoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(await response.json());
+	expect(decoded.response.length).toBeGreaterThan(0);
+	return decoded.isFinalTurn;
+}
 
-		// Assert sessionId format (generated UUID pattern)
-		expect(decoded.sessionId).toBeDefined();
-		expect(typeof decoded.sessionId).toBe("string");
-		expect(decoded.sessionId.length).toBeGreaterThan(0);
-
-		// Assert createdAt is a valid timestamp (recent - within last minute)
-		expect(decoded.createdAt).toBeDefined();
-		const createdDate = new Date(decoded.createdAt.epochMillis);
-		const now = new Date();
-		const diffMs = Math.abs(now.getTime() - createdDate.getTime());
-		expect(diffMs).toBeLessThan(60_000); // Within 1 minute
+describe("Authenticated conversation flow", () => {
+	test("requires authentication to start a conversation", async () => {
+		const response = await postJson("/api/conversation/start", {});
+		expect(response.status).toBe(401);
 	});
 
-	test("creates session without userId (anonymous)", async () => {
-		// Start conversation without userId
-		const response = await postJson("/api/assessment/start", {});
+	test("starts, sends messages, resumes, finalizes, and returns results for the owner", async () => {
+		const cookie = await createAuthenticatedCookie();
+		const sessionId = await startConversation(cookie);
 
-		expect(response.status).toBe(200);
+		expect(
+			await sendMessage(
+				cookie,
+				sessionId,
+				"I love exploring new creative ideas and imagining possibilities.",
+			),
+		).toBe(false);
+		expect(
+			await sendMessage(
+				cookie,
+				sessionId,
+				"I tend to be organized and like making plans ahead of time.",
+			),
+		).toBe(false);
+		expect(
+			await sendMessage(cookie, sessionId, "I enjoy social gatherings and meeting new people."),
+		).toBe(true);
 
-		const data = await response.json();
-		const decoded = Schema.decodeUnknownSync(StartConversationResponseSchema)(data);
-
-		expect(decoded.sessionId).toBeDefined();
-	});
-
-	test("validates database persistence - session is retrievable", async () => {
-		// Create anonymous session
-		const createResponse = await postJson("/api/assessment/start", {});
-
-		expect(createResponse.status).toBe(200);
-		const createData = await createResponse.json();
-		const sessionId = createData.sessionId;
-
-		// Try to resume session (validates it was persisted to database)
-		const resumeResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/resume`);
-
-		// Should find the session (even if empty messages)
+		const resumeResponse = await getJson(`/api/conversation/${sessionId}/resume`, cookie);
 		expect(resumeResponse.status).toBe(200);
-	});
-});
-
-describe("POST /api/assessment/message", () => {
-	test("processes message and returns valid response schema", async () => {
-		// First, create an anonymous session
-		const startResponse = await postJson("/api/assessment/start", {});
-		expect(startResponse.status).toBe(200);
-
-		const { sessionId } = await startResponse.json();
-
-		// Send a message that triggers conscientiousness pattern in mock
-		const messageResponse = await postJson("/api/assessment/message", {
-			sessionId,
-			message: "I like to organize my work and plan my day carefully.",
-		});
-
-		// Assert HTTP status
-		expect(messageResponse.status).toBe(200);
-		expect(messageResponse.headers.get("content-type")).toContain("application/json");
-
-		// Parse response
-		const data = await messageResponse.json();
-
-		// Validate against contract schema (throws if invalid)
-		const decoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(data);
-
-		// Assert response text is present
-		expect(decoded.response).toBeDefined();
-		expect(typeof decoded.response).toBe("string");
-		expect(decoded.response.length).toBeGreaterThan(0);
-
-		// Story 7.18: Assert isFinalTurn is false for normal messages
-		expect(decoded.isFinalTurn).toBe(false);
-
-		// Story 2.11: Confidence removed from send-message lean response
-		// Confidence is only available via resume endpoint
-	});
-
-	test("returns 404 for non-existent session", async () => {
-		const response = await postJson("/api/assessment/message", {
-			sessionId: "non-existent-session-id",
-			message: "Hello",
-		});
-
-		expect(response.status).toBe(404);
-	});
-
-	test("validates mock LLM is being used (deterministic response)", async () => {
-		// Create session
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
-
-		// Send a message with creativity keywords (should trigger openness pattern)
-		const messageResponse = await postJson("/api/assessment/message", {
-			sessionId,
-			message: "I love exploring new creative ideas and imagining different possibilities.",
-		});
-
-		expect(messageResponse.status).toBe(200);
-		const data = await messageResponse.json();
-
-		// Mock should return a response containing creativity-related text
-		expect(data.response).toBeDefined();
-		expect(data.response.length).toBeGreaterThan(0);
-
-		// Validate schema compliance
-		Schema.decodeUnknownSync(SendMessageResponseSchema)(data);
-	});
-
-	test("validates database persistence - messages are saved", async () => {
-		// Create session
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
-
-		// Send a message
-		const message1 = "Hello, I'm here to learn about myself.";
-		await postJson("/api/assessment/message", {
-			sessionId,
-			message: message1,
-		});
-
-		// Resume session to verify message was persisted
-		const resumeResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/resume`);
-		expect(resumeResponse.status).toBe(200);
-
-		const resumeData = await resumeResponse.json();
-
-		// Should have at least the user message and assistant response
-		expect(resumeData.messages).toBeDefined();
-		expect(Array.isArray(resumeData.messages)).toBe(true);
-		expect(resumeData.messages.length).toBeGreaterThanOrEqual(2); // User + Assistant
-
-		// Verify user message content
-		const userMessage = resumeData.messages.find(
-			(m: { role: string; content: string }) => m.role === "user",
+		const resumed = Schema.decodeUnknownSync(ResumeSessionResponseSchema)(
+			await resumeResponse.json(),
 		);
-		expect(userMessage).toBeDefined();
-		expect(userMessage.content).toBe(message1);
-	});
-});
+		expect(resumed.messages.length).toBeGreaterThanOrEqual(6);
+		expect(resumed.status).toBe("finalizing");
 
-describe("GET /api/assessment/:sessionId/resume", () => {
-	test("returns session with messages and confidence", async () => {
-		// Create session and send a message
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
+		const prematureResults = await getJson(`/api/conversation/${sessionId}/results`, cookie);
+		expect(prematureResults.status).toBe(409);
+		expect((await prematureResults.json())._tag).toBe("SessionNotCompleted");
 
-		await postJson("/api/assessment/message", {
-			sessionId,
-			message: "I enjoy helping others and working in teams.",
-		});
+		const statusResponse = await getJson(
+			`/api/conversation/${sessionId}/finalization-status`,
+			cookie,
+		);
+		expect(statusResponse.status).toBe(200);
+		Schema.decodeUnknownSync(FinalizationStatusResponseSchema)(await statusResponse.json());
 
-		// Resume session
-		const resumeResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/resume`);
+		const finalizeResponse = await postJson(
+			`/api/conversation/${sessionId}/generate-results`,
+			{},
+			cookie,
+		);
+		expect(finalizeResponse.status).toBe(200);
 
-		expect(resumeResponse.status).toBe(200);
-		const data = await resumeResponse.json();
-
-		// Validate structure
-		expect(data.messages).toBeDefined();
-		expect(Array.isArray(data.messages)).toBe(true);
-		expect(data.confidence).toBeDefined();
-		expect(typeof data.confidence.openness).toBe("number");
-	});
-
-	test("returns 404 for non-existent session", async () => {
-		const response = await fetch(`${API_URL}/api/assessment/fake-session-id/resume`);
-		expect(response.status).toBe(404);
-	});
-});
-
-describe("GET /api/assessment/:sessionId/results", () => {
-	test("returns 200 with valid GetResultsResponseSchema", async () => {
-		// Create session and send enough messages to populate scores
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
-
-		// Send 3 messages to reach the test-only 3-turn assessment threshold.
-		// The 3rd user turn returns isFinalTurn: true.
-		await postJson("/api/assessment/message", {
-			sessionId,
-			message: "I love exploring new creative ideas and imagining possibilities.",
-		});
-		await postJson("/api/assessment/message", {
-			sessionId,
-			message: "I tend to be organized and like making plans ahead of time.",
-		});
-		const thirdMsgResponse = await postJson("/api/assessment/message", {
-			sessionId,
-			message: "I enjoy social gatherings and meeting new people.",
-		});
-		// The 3rd user turn triggers isFinalTurn: true.
-		expect(thirdMsgResponse.status).toBe(200);
-		const thirdMsgData = await thirdMsgResponse.json();
-		const thirdDecoded = Schema.decodeUnknownSync(SendMessageResponseSchema)(thirdMsgData);
-		expect(thirdDecoded.isFinalTurn).toBe(true);
-
-		// Story 11.1: generate-results requires auth, so for this anonymous
-		// integration test we keep the session in "finalizing" via direct DB update.
-		await completeSessionViaDb(sessionId);
-
-		// Fetch results
-		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
-
+		const resultsResponse = await getJson(`/api/conversation/${sessionId}/results`, cookie);
 		expect(resultsResponse.status).toBe(200);
-		expect(resultsResponse.headers.get("content-type")).toContain("application/json");
+		const results = Schema.decodeUnknownSync(GetResultsResponseSchema)(await resultsResponse.json());
 
-		const data = await resultsResponse.json();
+		expect(results.oceanCode5).toHaveLength(5);
+		expect(results.oceanCode4).toHaveLength(4);
+		expect(results.archetypeName.length).toBeGreaterThan(0);
+		expect(results.archetypeColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
+		expect(typeof results.isLatestVersion).toBe("boolean");
 
-		// Validate against contract schema (throws if invalid)
-		const decoded = Schema.decodeUnknownSync(GetResultsResponseSchema)(data);
-
-		// OCEAN codes
-		expect(typeof decoded.oceanCode5).toBe("string");
-		expect(decoded.oceanCode5).toHaveLength(5);
-		expect(typeof decoded.oceanCode4).toBe("string");
-		expect(decoded.oceanCode4).toHaveLength(4);
-
-		// Archetype
-		expect(decoded.archetypeName).toBeDefined();
-		expect(decoded.archetypeName.length).toBeGreaterThan(0);
-		expect(decoded.archetypeColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
-		expect(typeof decoded.isCurated).toBe("boolean");
-
-		// Traits — levels are trait-specific letters (e.g., P/G/O for openness, not H/M/L)
-		const VALID_TRAIT_LEVELS = new Set(Object.values(TRAIT_LETTER_MAP).flat());
-		expect(decoded.traits).toHaveLength(5);
-		for (const trait of decoded.traits) {
-			expect(typeof trait.name).toBe("string");
+		const validTraitLevels = new Set(Object.values(TRAIT_LETTER_MAP).flat());
+		expect(results.traits).toHaveLength(5);
+		for (const trait of results.traits) {
 			expect(trait.score).toBeGreaterThanOrEqual(0);
 			expect(trait.score).toBeLessThanOrEqual(120);
-			expect(VALID_TRAIT_LEVELS.has(trait.level)).toBe(true);
-			expect(trait.confidence).toBeGreaterThanOrEqual(0);
-			expect(trait.confidence).toBeLessThanOrEqual(100);
+			expect(validTraitLevels.has(trait.level)).toBe(true);
 		}
+		expect(results.facets).toHaveLength(30);
+		expect(results.overallConfidence).toBeGreaterThanOrEqual(0);
+		expect(results.overallConfidence).toBeLessThanOrEqual(100);
 
-		// Facets
-		expect(decoded.facets).toHaveLength(30);
-		for (const facet of decoded.facets) {
-			expect(typeof facet.name).toBe("string");
-			expect(typeof facet.traitName).toBe("string");
-			expect(facet.score).toBeGreaterThanOrEqual(0);
-			expect(facet.score).toBeLessThanOrEqual(20);
-			expect(facet.confidence).toBeGreaterThanOrEqual(0);
-			expect(facet.confidence).toBeLessThanOrEqual(100);
-		}
-
-		// Overall confidence
-		expect(decoded.overallConfidence).toBeGreaterThanOrEqual(0);
-		expect(decoded.overallConfidence).toBeLessThanOrEqual(100);
+		const sessionsResponse = await getJson("/api/conversation/sessions", cookie);
+		expect(sessionsResponse.status).toBe(200);
+		const sessions = Schema.decodeUnknownSync(ListSessionsResponseSchema)(
+			await sessionsResponse.json(),
+		);
+		expect(sessions.sessions.some((session) => session.id === sessionId)).toBe(true);
 	});
 
-	test("returns 404 for non-existent session", async () => {
-		const response = await fetch(`${API_URL}/api/assessment/nonexistent-session-id/results`);
+	test("does not allow another authenticated user to read a conversation", async () => {
+		const ownerCookie = await createAuthenticatedCookie();
+		const otherCookie = await createAuthenticatedCookie();
+		const sessionId = await startConversation(ownerCookie);
+
+		const response = await getJson(`/api/conversation/${sessionId}/resume`, otherCookie);
 		expect(response.status).toBe(404);
-
-		const data = await response.json();
-		expect(data._tag).toBe("SessionNotFound");
-	});
-
-	test("returns 409 SessionNotCompleted for non-completed session (Story 11.1)", async () => {
-		// Story 11.1: get-results is read-only — only works on completed sessions
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
-
-		const resultsResponse = await fetch(`${API_URL}/api/assessment/${sessionId}/results`);
-
-		expect(resultsResponse.status).toBe(409);
-		const data = await resultsResponse.json();
-		expect(data._tag).toBe("SessionNotCompleted");
 	});
 });
 
-describe("Anonymous session cookie (Story 9.1)", () => {
-	/**
-	 * Helper: extract the assessment_token Set-Cookie header from a response.
-	 * Returns the raw header string or null.
-	 */
-	function getAssessmentCookie(response: Response): string | null {
-		// getSetCookie() returns all Set-Cookie headers as an array
-		const cookies = response.headers.getSetCookie();
-		return cookies.find((c) => c.startsWith("assessment_token=")) ?? null;
-	}
-
-	/**
-	 * Helper: extract just the cookie value (for forwarding in subsequent requests).
-	 */
-	function extractCookieValue(setCookieHeader: string): string {
-		// "assessment_token=abc123; HttpOnly; Secure; ..."
-		const match = setCookieHeader.match(/^assessment_token=([^;]+)/);
-		return match?.[1] ?? "";
-	}
-
-	test("anonymous start sets httpOnly cookie with correct attributes", async () => {
-		const response = await postJson("/api/assessment/start", {});
-		expect(response.status).toBe(200);
-
-		const cookie = getAssessmentCookie(response);
-		expect(cookie).not.toBeNull();
-
-		// Verify cookie attributes (case-insensitive check)
-		const lowerCookie = cookie?.toLowerCase();
-		expect(lowerCookie).toContain("httponly");
-		expect(lowerCookie).toContain("secure");
-		expect(lowerCookie).toContain("samesite=lax");
-		expect(lowerCookie).toContain("path=/api/assessment");
-		expect(lowerCookie).toContain("max-age=");
-
-		// Verify token is a non-empty cryptographic string
-		const tokenValue = extractCookieValue(cookie!);
-		expect(tokenValue.length).toBeGreaterThanOrEqual(32);
-	});
-
-	test("cookie-based session resumption returns same session", async () => {
-		// Step 1: Create anonymous session
-		const startResponse = await postJson("/api/assessment/start", {});
-		expect(startResponse.status).toBe(200);
-
-		const startData = await startResponse.json();
-		const originalSessionId = startData.sessionId;
-
-		// Extract the cookie from Set-Cookie header
-		const cookie = getAssessmentCookie(startResponse);
-		expect(cookie).not.toBeNull();
-		const tokenValue = extractCookieValue(cookie!);
-
-		// Step 2: Call start again WITH the cookie — should resume, not create new
-		const resumeResponse = await fetch(`${API_URL}/api/assessment/start`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: `assessment_token=${tokenValue}`,
-			},
-			body: JSON.stringify({}),
-		});
-
-		expect(resumeResponse.status).toBe(200);
-
-		const resumeData = await resumeResponse.json();
-
-		// Same session is returned
-		expect(resumeData.sessionId).toBe(originalSessionId);
-
-		// Should also refresh the cookie
-		const refreshedCookie = getAssessmentCookie(resumeResponse);
-		expect(refreshedCookie).not.toBeNull();
-		expect(refreshedCookie?.toLowerCase()).toContain("httponly");
-	});
-
-	test("cookie-based resumption preserves greeting messages", async () => {
-		// Step 1: Create anonymous session
-		const startResponse = await postJson("/api/assessment/start", {});
-		const startData = await startResponse.json();
-		const originalMessages = startData.messages;
-
-		// Extract cookie
-		const cookie = getAssessmentCookie(startResponse);
-		const tokenValue = extractCookieValue(cookie!);
-
-		// Step 2: Resume via cookie
-		const resumeResponse = await fetch(`${API_URL}/api/assessment/start`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: `assessment_token=${tokenValue}`,
-			},
-			body: JSON.stringify({}),
-		});
-
-		const resumeData = await resumeResponse.json();
-
-		// Greeting messages should be returned on resume
-		expect(resumeData.messages).toBeDefined();
-		expect(resumeData.messages.length).toBe(originalMessages.length);
-		// Content should match
-		for (let i = 0; i < originalMessages.length; i++) {
-			expect(resumeData.messages[i].content).toBe(originalMessages[i].content);
-			expect(resumeData.messages[i].role).toBe("assistant");
-		}
-	});
-
-	test("invalid cookie creates a new session instead of failing", async () => {
-		// Send request with a bogus cookie — should not 500, should create fresh session
-		const response = await fetch(`${API_URL}/api/assessment/start`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: "assessment_token=invalid-token-that-does-not-exist",
-			},
-			body: JSON.stringify({}),
-		});
-
-		expect(response.status).toBe(200);
-
-		const data = await response.json();
-		expect(data.sessionId).toBeDefined();
-
-		// Should set a new valid cookie
-		const cookie = getAssessmentCookie(response);
-		expect(cookie).not.toBeNull();
-	});
-});
-
-describe("CORS - Assessment endpoints", () => {
-	test("includes CORS headers on POST /api/assessment/start", async () => {
-		const response = await fetch(`${API_URL}/api/assessment/start`, {
+describe("CORS - conversation endpoints", () => {
+	test("includes CORS headers on unauthenticated POST /api/conversation/start", async () => {
+		const response = await fetch(`${API_URL}/api/conversation/start`, {
 			method: "POST",
 			headers: {
 				Origin: FRONTEND_URL,
@@ -489,64 +213,25 @@ describe("CORS - Assessment endpoints", () => {
 			body: JSON.stringify({}),
 		});
 
-		// Verify CORS headers
+		expect(response.status).toBe(401);
 		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
 		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
 	});
 
-	test("includes CORS headers on POST /api/assessment/message", async () => {
-		// Create session first
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
-
-		// Send message with Origin header
-		const response = await fetch(`${API_URL}/api/assessment/message`, {
+	test("includes CORS headers on unauthenticated POST /api/conversation/message", async () => {
+		const response = await fetch(`${API_URL}/api/conversation/message`, {
 			method: "POST",
 			headers: {
 				Origin: FRONTEND_URL,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
-				sessionId,
+				sessionId: "session_test",
 				message: "Test message",
 			}),
 		});
 
-		// Verify CORS headers
-		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
-		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
-	});
-
-	test("includes CORS headers on GET /api/assessment/:sessionId/resume", async () => {
-		// Create session
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
-
-		// Resume with Origin header
-		const response = await fetch(`${API_URL}/api/assessment/${sessionId}/resume`, {
-			headers: {
-				Origin: FRONTEND_URL,
-			},
-		});
-
-		// Verify CORS headers
-		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
-		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
-	});
-
-	test("includes CORS headers on GET /api/assessment/:sessionId/results", async () => {
-		// Create session
-		const startResponse = await postJson("/api/assessment/start", {});
-		const { sessionId } = await startResponse.json();
-
-		// Fetch results with Origin header
-		const response = await fetch(`${API_URL}/api/assessment/${sessionId}/results`, {
-			headers: {
-				Origin: FRONTEND_URL,
-			},
-		});
-
-		// Verify CORS headers
+		expect(response.status).toBe(401);
 		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(FRONTEND_URL);
 		expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
 	});

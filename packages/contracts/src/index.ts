@@ -49,5 +49,3 @@ export { AuthMiddleware, OptionalAuthMiddleware } from "./middleware/auth";
 // Shared Schemas & Types
 export * from "./schemas/evidence";
 export * from "./schemas/ocean-code";
-// Conversation Token Security (Story 9.1)
-export { ConversationTokenSecurity } from "./security/conversation-token";

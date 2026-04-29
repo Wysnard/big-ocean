@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 
-import { render, screen, within } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockUseReducedMotion = vi.hoisted(() => vi.fn(() => false));
@@ -14,16 +13,7 @@ vi.mock("motion/react", async () => {
 	};
 });
 
-vi.mock("@tanstack/react-router", () => ({
-	Link: ({ children, to, ...props }: Record<string, unknown>) => (
-		<a href={String(to)} {...props}>
-			{children as ReactNode}
-		</a>
-	),
-}));
-
 import { HomepageDynamicHook } from "./HomepageDynamicHook";
-import { MobileHero } from "./MobileHero";
 
 describe("HomepageDynamicHook", () => {
 	beforeEach(() => {
@@ -31,10 +21,10 @@ describe("HomepageDynamicHook", () => {
 	});
 
 	it.each([
-		["conversation", "A conversation thatSEESyou.", "SEES", "from-primary"],
-		["portrait", "Words you've beenCARRYINGwithout knowing.", "CARRYING", "from-secondary"],
-		["worldAfter", "A place thatSTAYS.", "STAYS", "from-tertiary"],
-		["reassurance", "YOURS.", "YOURS.", "from-primary"],
+		["conversation", "A conversation that SEES you.", "SEES", "from-primary"],
+		["portrait", "Words you've been CARRYING without knowing.", "CARRYING", "from-secondary"],
+		["worldAfter", "A place that STAYS", "STAYS", "from-tertiary"],
+		["reassurance", "YOURS", "YOURS", "from-primary"],
 	] as const)("renders the exact hook copy and gradient for %s", (phase, expectedText, expectedKeyword, expectedGradient) => {
 		render(<HomepageDynamicHook phase={phase} />);
 
@@ -48,7 +38,9 @@ describe("HomepageDynamicHook", () => {
 		render(<HomepageDynamicHook />);
 
 		expect(screen.getByTestId("homepage-dynamic-hook")).toHaveAttribute("data-phase", "conversation");
-		expect(screen.getByTestId("homepage-hook-text")).toHaveTextContent("A conversation thatSEESyou.");
+		expect(screen.getByTestId("homepage-hook-text")).toHaveTextContent(
+			"A conversation that SEES you.",
+		);
 	});
 
 	it("keeps the content correct and marks reduced-motion state", () => {
@@ -65,27 +57,14 @@ describe("HomepageDynamicHook", () => {
 			"true",
 		);
 		expect(screen.getByTestId("homepage-hook-text")).toHaveTextContent(
-			"Words you've beenCARRYINGwithout knowing.",
+			"Words you've been CARRYING without knowing.",
 		);
 	});
 
-	it("pins the mobile hero to the conversation hook", () => {
-		render(<MobileHero />);
-
-		const mobileHero = screen.getByTestId("mobile-homepage-hero");
-		expect(within(mobileHero).getByTestId("homepage-dynamic-hook")).toHaveAttribute(
-			"data-phase",
-			"conversation",
-		);
-		expect(within(mobileHero).getByTestId("homepage-hook-text")).toHaveTextContent(
-			"A conversation thatSEESyou.",
-		);
-	});
-
-	it("uses dark text on lightBackground so copy stays visible when the app theme is dark", () => {
-		render(<HomepageDynamicHook phase="conversation" lightBackground />);
+	it("renders as the supplied element via the `as` prop (e.g. h2 in the sticky auth card)", () => {
+		render(<HomepageDynamicHook phase="conversation" as="h2" />);
 
 		const root = screen.getByTestId("homepage-dynamic-hook");
-		expect(root.className).toContain("text-[#1a1a2e]");
+		expect(root.tagName).toBe("H2");
 	});
 });

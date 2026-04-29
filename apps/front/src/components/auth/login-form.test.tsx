@@ -133,25 +133,6 @@ describe("LoginForm", () => {
 		});
 	});
 
-	it("navigates to /me/:sessionId when anonymousSessionId is provided", async () => {
-		mockSignInEmail.mockResolvedValueOnce({ user: { id: "1" } });
-
-		renderLoginForm({ anonymousSessionId: "session-456" });
-
-		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
-		fireEvent.change(screen.getByLabelText("Password"), {
-			target: { value: "securepassword1" },
-		});
-		fireEvent.submit(screen.getByRole("button", { name: "Sign In" }));
-
-		await waitFor(() => {
-			expect(mockNavigate).toHaveBeenCalledWith({
-				to: "/me/$conversationSessionId",
-				params: { conversationSessionId: "session-456" },
-			});
-		});
-	});
-
 	it("navigates to /today by default after login", async () => {
 		mockSignInEmail.mockResolvedValueOnce({ user: { id: "1" } });
 
@@ -251,7 +232,6 @@ describe("LoginForm", () => {
 		expect(screen.getByTestId("login-form-embed")).toBeInTheDocument();
 		expect(screen.queryByText(/Welcome/)).not.toBeInTheDocument();
 		expect(screen.queryByText(/New here\? Create account/)).not.toBeInTheDocument();
-		expect(screen.getByText("Log in")).toBeInTheDocument();
 		expect(container.querySelector('[data-slot="card"]')).not.toBeInTheDocument();
 	});
 });

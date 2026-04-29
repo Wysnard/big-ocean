@@ -91,12 +91,15 @@ tests/integration/
 - `/health` endpoint returns correct schema
 
 #### `conversation.test.ts`
-- `POST /api/assessment/start` creates session
-- `POST /api/assessment/message` processes message
+- Better Auth cookie setup for authenticated conversation requests
+- `POST /api/conversation/start` creates an owned conversation
+- `POST /api/conversation/message` processes messages
+- `GET /api/conversation/:sessionId/results` remains read-only until finalization
+- `POST /api/conversation/:sessionId/generate-results` finalizes the assessment
 - Response schemas match contracts exactly
 - Database persistence (sessions and messages saved)
 - Mock LLM responds appropriately
-- Error handling (404 for non-existent sessions)
+- Error handling (401 for unauthenticated requests, 404 for non-owner access)
 
 ## Environment Variables
 

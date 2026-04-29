@@ -31,15 +31,13 @@ import {
 	SubscriptionRequired,
 	Unauthorized,
 } from "../../errors";
-import { OptionalAuthMiddleware } from "../../middleware/auth";
+import { AuthMiddleware } from "../../middleware/auth";
 import { OceanCode4Schema, OceanCode5Schema } from "../../schemas/ocean-code";
 
 /**
  * Start Conversation Request Schema
  */
-export const StartConversationRequestSchema = S.Struct({
-	userId: S.optional(S.String),
-});
+export const StartConversationRequestSchema = S.Struct({});
 
 /**
  * Start Conversation Response Schema
@@ -307,7 +305,7 @@ export const ConversationGroup = HttpApiGroup.make("conversation")
 			.addError(Unauthorized, { status: 401 })
 			.addError(DatabaseError, { status: 500 }),
 	)
-	.middleware(OptionalAuthMiddleware)
+	.middleware(AuthMiddleware)
 	.prefix("/conversation");
 
 // Export TypeScript types for frontend use

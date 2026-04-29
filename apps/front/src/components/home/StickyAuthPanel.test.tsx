@@ -28,10 +28,6 @@ vi.mock("@/hooks/use-auth", () => ({
 	}),
 }));
 
-vi.mock("@workspace/ui/components/ocean-hieroglyph-set", () => ({
-	OceanHieroglyphSet: () => <span data-testid="ocean-hieroglyphs" />,
-}));
-
 vi.mock("@workspace/ui/components/field", () => ({
 	Field: ({ children, ...props }: { children?: ReactNode }) => <div {...props}>{children}</div>,
 	FieldLabel: ({ children, htmlFor }: { children?: ReactNode; htmlFor?: string }) => (
@@ -78,10 +74,10 @@ describe("StickyAuthPanel", () => {
 		expect(card.querySelector('[data-slot="card-footer"]')).toBeInTheDocument();
 	});
 
-	it("renders the brand mark with OceanHieroglyphSet", () => {
+	it("does not duplicate the global brand wordmark — the global header carries it", () => {
 		render(<StickyAuthPanel />);
-		expect(screen.getByText("big-")).toBeInTheDocument();
-		expect(screen.getByTestId("ocean-hieroglyphs")).toBeInTheDocument();
+		expect(screen.queryByText("big-")).not.toBeInTheDocument();
+		expect(screen.queryByTestId("ocean-hieroglyphs")).not.toBeInTheDocument();
 	});
 
 	it("renders the HomepageDynamicHook component", () => {

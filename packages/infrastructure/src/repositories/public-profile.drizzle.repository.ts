@@ -89,7 +89,7 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						return yield* Effect.fail(new ProfileError({ message: "Failed to create public profile" }));
 					}
 
-					// Fetch user's display name — userId is always present (anonymous users can't create profiles)
+					// Fetch user's display name — userId is always present for created profiles.
 					const users = yield* db
 						.select({ name: user.name })
 						.from(user)

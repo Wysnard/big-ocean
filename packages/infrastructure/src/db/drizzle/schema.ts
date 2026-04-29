@@ -180,8 +180,9 @@ export const conversation = pgTable(
 	"conversations",
 	{
 		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-		userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
-		sessionToken: text("session_token"),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
 		status: text("status").notNull().default("active"),
 		finalizationProgress: text("finalization_progress"),
 		messageCount: integer("message_count").default(0).notNull(),
@@ -203,9 +204,6 @@ export const conversation = pgTable(
 			.where(
 				sql`user_id IS NOT NULL AND parent_conversation_id IS NULL AND status IN ('finalizing', 'completed')`,
 			),
-		uniqueIndex("conversation_token_unique")
-			.on(table.sessionToken)
-			.where(sql`session_token IS NOT NULL`),
 		index("conversation_parent_id_idx").on(table.parentConversationId),
 	],
 );

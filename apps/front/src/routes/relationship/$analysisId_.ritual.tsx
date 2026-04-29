@@ -27,7 +27,7 @@ export const Route = createFileRoute("/relationship/$analysisId_/ritual")({
 		if (!session?.user) {
 			throw redirect({
 				to: "/login",
-				search: { sessionId: undefined, redirectTo: undefined },
+				search: { redirectTo: undefined },
 			});
 		}
 	},

@@ -21,7 +21,6 @@ export const Route = createFileRoute("/relationship/qr/$token")({
 			throw redirect({
 				to: "/login",
 				search: {
-					sessionId: undefined,
 					redirectTo: `/relationship/qr/${params.token}`,
 				},
 			});

@@ -5,26 +5,19 @@
  * Handles HTTP request/response transformation only.
  * Business logic lives in use cases.
  *
- * Story 9.2: sendMessage supports dual auth (anonymous cookie + Better Auth).
+ * Conversations require Better Auth; ownership is resolved from the authenticated user.
  */
 
 import { HttpApiBuilder } from "@effect/platform";
-import {
-	BigOceanApi,
-	ConversationTokenSecurity,
-	DatabaseError,
-	Unauthorized,
-} from "@workspace/contracts";
+import { BigOceanApi, DatabaseError } from "@workspace/contracts";
 import {
 	type AssessmentResultError,
-	ConversationRepository,
-	CurrentUser,
+	AuthenticatedUser,
 	extract4LetterCode,
 	type FacetEvidencePersistenceError,
 	lookupArchetype,
-	MessageRepository,
 } from "@workspace/domain";
-import { DateTime, Effect, Redacted } from "effect";
+import { DateTime, Effect } from "effect";
 import { activateConversationExtension } from "../use-cases/activate-conversation-extension.use-case";
 import {
 	generateResults,
@@ -34,76 +27,16 @@ import {
 	listUserSessions,
 	resumeSession,
 	sendMessage,
-	startAnonymousConversation,
 	startAuthenticatedConversation,
 } from "../use-cases/index";
 
 export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversation", (handlers) =>
 	Effect.gen(function* () {
 		return handlers
-			.handle("start", ({ payload }) =>
+			.handle("start", () =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* CurrentUser;
-					const userId = authenticatedUserId ?? payload.userId;
-
-					// Story 9.1: If anonymous (no userId), check for existing session via cookie
-					if (!userId) {
-						const token = yield* HttpApiBuilder.securityDecode(ConversationTokenSecurity).pipe(
-							Effect.map((redacted) => Redacted.value(redacted)),
-							Effect.catchAll(() => Effect.succeed("")),
-						);
-
-						if (token) {
-							const sessionRepo = yield* ConversationRepository;
-							const session = yield* sessionRepo.findByToken(token);
-
-							if (session) {
-								const messageRepo = yield* MessageRepository;
-								const messages = yield* messageRepo.getMessages(session.id);
-
-								// Refresh cookie on successful resumption
-								yield* HttpApiBuilder.securitySetCookie(
-									ConversationTokenSecurity,
-									session.sessionToken ?? token,
-									{
-										httpOnly: true,
-										secure: true,
-										sameSite: "lax",
-										path: "/api/conversation",
-										maxAge: "30 days",
-									},
-								);
-
-								return {
-									sessionId: session.id,
-									createdAt: DateTime.unsafeMake(session.createdAt.getTime()),
-									messages: messages.map((msg) => ({
-										role: msg.role as "user" | "assistant",
-										content: msg.content,
-										timestamp: DateTime.unsafeMake(msg.createdAt.getTime()),
-									})),
-								};
-							}
-						}
-					}
-
-					// Call use case - dispatch to authenticated or anonymous path
-					const result = userId
-						? yield* startAuthenticatedConversation({ userId })
-						: yield* startAnonymousConversation();
-
-					// Set httpOnly cookie for anonymous sessions (Story 9.1)
-					const sessionToken =
-						"sessionToken" in result ? (result as { sessionToken: string }).sessionToken : undefined;
-					if (sessionToken) {
-						yield* HttpApiBuilder.securitySetCookie(ConversationTokenSecurity, sessionToken, {
-							httpOnly: true,
-							secure: true,
-							sameSite: "lax",
-							path: "/api/conversation",
-							maxAge: "30 days",
-						});
-					}
+					const userId = yield* AuthenticatedUser;
+					const result = yield* startAuthenticatedConversation({ userId });
 
 					// Format HTTP response
 					return {
@@ -119,13 +52,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 			)
 			.handle("listSessions", () =>
 				Effect.gen(function* () {
-					const userId = yield* CurrentUser;
-					if (!userId) {
-						return yield* Effect.fail(
-							new Unauthorized({ message: "Authentication required to list sessions" }),
-						);
-					}
-
+					const userId = yield* AuthenticatedUser;
 					const result = yield* listUserSessions({ userId });
 
 					return {
@@ -158,28 +85,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 			)
 			.handle("sendMessage", ({ payload }) =>
 				Effect.gen(function* () {
-					// Story 9.2: Dual auth — try anonymous cookie first, fall back to Better Auth
-					const token = yield* HttpApiBuilder.securityDecode(ConversationTokenSecurity).pipe(
-						Effect.map((redacted) => Redacted.value(redacted)),
-						Effect.catchAll(() => Effect.succeed("")),
-					);
-
-					const authenticatedUserId = yield* CurrentUser;
-
-					// Determine userId for ownership guard
-					let userId: string | undefined = authenticatedUserId ?? undefined;
-
-					// For anonymous sessions, validate token belongs to the requested session
-					if (token && !authenticatedUserId) {
-						const sessionRepo = yield* ConversationRepository;
-						const tokenSession = yield* sessionRepo.findByToken(token);
-						if (!tokenSession || tokenSession.id !== payload.sessionId) {
-							return yield* Effect.fail(new DatabaseError({ message: "Session not found" }));
-						}
-						// Anonymous sessions have no userId — pass undefined
-						userId = tokenSession.userId ?? undefined;
-					}
-
+					const userId = yield* AuthenticatedUser;
 					const result = yield* sendMessage({
 						sessionId: payload.sessionId,
 						message: payload.message,
@@ -195,7 +101,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 			)
 			.handle("getResults", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* CurrentUser;
+					const authenticatedUserId = yield* AuthenticatedUser;
 
 					// Call use case - map infrastructure errors to contract errors
 					const result = yield* getResults({ sessionId, authenticatedUserId }).pipe(
@@ -203,13 +109,6 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 							Effect.fail(
 								new DatabaseError({
 									message: `Result retrieval failed: ${error.message}`,
-								}),
-							),
-						),
-						Effect.catchTag("ConversationEvidenceError", (error) =>
-							Effect.fail(
-								new DatabaseError({
-									message: `Finalization failed: ${error.message}`,
 								}),
 							),
 						),
@@ -249,34 +148,19 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 			)
 			.handle("generateResults", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* CurrentUser;
-					if (!authenticatedUserId) {
-						return yield* Effect.fail(
-							new Unauthorized({ message: "Authentication required to generate results" }),
-						);
-					}
+					const authenticatedUserId = yield* AuthenticatedUser;
 					return yield* generateResults({ sessionId, authenticatedUserId });
 				}),
 			)
 			.handle("getFinalizationStatus", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* CurrentUser;
-					if (!authenticatedUserId) {
-						return yield* Effect.fail(
-							new Unauthorized({ message: "Authentication required to check finalization status" }),
-						);
-					}
+					const authenticatedUserId = yield* AuthenticatedUser;
 					return yield* getFinalizationStatus({ sessionId, authenticatedUserId });
 				}),
 			)
 			.handle("getTranscript", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* CurrentUser;
-					if (!authenticatedUserId) {
-						return yield* Effect.fail(
-							new Unauthorized({ message: "Authentication required to view transcript" }),
-						);
-					}
+					const authenticatedUserId = yield* AuthenticatedUser;
 					const result = yield* getTranscript({ sessionId, authenticatedUserId });
 					return {
 						messages: result.messages.map((msg) => ({
@@ -290,13 +174,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 			)
 			.handle("activateExtension", () =>
 				Effect.gen(function* () {
-					const userId = yield* CurrentUser;
-					if (!userId) {
-						return yield* Effect.fail(
-							new Unauthorized({ message: "Authentication required to activate extension" }),
-						);
-					}
-
+					const userId = yield* AuthenticatedUser;
 					const result = yield* activateConversationExtension({ userId });
 
 					return {
@@ -313,7 +191,7 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 			)
 			.handle("resumeSession", ({ path: { sessionId } }) =>
 				Effect.gen(function* () {
-					const authenticatedUserId = yield* CurrentUser;
+					const authenticatedUserId = yield* AuthenticatedUser;
 
 					// Call use case - map infrastructure errors to contract errors
 					const result = yield* resumeSession({ sessionId, authenticatedUserId }).pipe(

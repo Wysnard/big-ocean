@@ -41,6 +41,7 @@ describe("sendMessage Use Case", () => {
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "I work in tech",
+					userId: "user_456",
 				});
 
 				expect(result.response).toBeDefined();
@@ -59,6 +60,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "Hello",
+					userId: "user_456",
 				});
 
 				// ConversAnalyzer evidence extraction should be called even during cold start
@@ -84,6 +86,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "More",
+					userId: "user_456",
 				});
 
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
@@ -103,6 +106,7 @@ describe("sendMessage Use Case", () => {
 					const result = yield* sendMessage({
 						sessionId: "session_test_123",
 						message: "I work in tech",
+						userId: "user_456",
 					});
 
 					// Nerin should still respond normally
@@ -155,6 +159,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "I work in tech",
+					userId: "user_456",
 				});
 
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
@@ -178,6 +183,7 @@ describe("sendMessage Use Case", () => {
 				const result = yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "ok thanks",
+					userId: "user_456",
 				});
 
 				expect(result.response).toBeDefined();
@@ -189,8 +195,8 @@ describe("sendMessage Use Case", () => {
 		it.effect("should pass correct domain distribution to conversanalyzer (AC: #4)", () =>
 			Effect.gen(function* () {
 				mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(postColdStartMessages));
-				// Existing evidence in session
-				mockEvidenceRepo.findBySession.mockReturnValue(
+				// Existing evidence across the authenticated user's conversations.
+				mockEvidenceRepo.findByUserId.mockReturnValue(
 					Effect.succeed([
 						{
 							id: "e1",
@@ -218,6 +224,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "I work in tech",
+					userId: "user_456",
 				});
 
 				// Evidence extraction receives correct domain distribution
@@ -249,6 +256,7 @@ describe("sendMessage Use Case", () => {
 				yield* sendMessage({
 					sessionId: "session_test_123",
 					message: "I work in tech",
+					userId: "user_456",
 				});
 
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];

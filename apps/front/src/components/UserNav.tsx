@@ -11,7 +11,6 @@ import {
 } from "@workspace/ui/components/dropdown-menu";
 import { LogOut, Settings, Sun } from "lucide-react";
 import { useAuth } from "../hooks/use-auth";
-import { getActiveAssessmentSessionId } from "../lib/auth-session-linking";
 
 function UserInitial({ name }: { name: string }) {
 	const initial = name.charAt(0).toUpperCase();
@@ -25,21 +24,7 @@ function UserInitial({ name }: { name: string }) {
 export function UserNav() {
 	const { user, isAuthenticated, isPending, signOut } = useAuth();
 	const authLinkSearch = useRouterState({
-		select: (state) => {
-			const sessionId = getActiveAssessmentSessionId(
-				state.location.pathname,
-				state.location.search as Record<string, unknown>,
-			);
-
-			if (!sessionId) {
-				return undefined;
-			}
-
-			return {
-				sessionId,
-				redirectTo: state.location.pathname,
-			};
-		},
+		select: (state) => ({ redirectTo: state.location.pathname }),
 	});
 
 	if (isPending) {
@@ -57,7 +42,6 @@ export function UserNav() {
 					<Link
 						to="/login"
 						search={{
-							sessionId: authLinkSearch?.sessionId,
 							redirectTo: authLinkSearch?.redirectTo,
 						}}
 					>
@@ -68,7 +52,6 @@ export function UserNav() {
 					<Link
 						to="/signup"
 						search={{
-							sessionId: authLinkSearch?.sessionId,
 							redirectTo: authLinkSearch?.redirectTo,
 						}}
 					>

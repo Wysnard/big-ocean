@@ -45,7 +45,7 @@ export function TimelinePlaceholder() {
 				<div className="flex flex-wrap items-center gap-3 lg:hidden">
 					<Link
 						to="/signup"
-						search={{ sessionId: undefined, redirectTo: undefined }}
+						search={{ redirectTo: undefined }}
 						data-testid="hero-cta"
 						className="inline-flex min-h-[44px] items-center gap-[10px] rounded-xl bg-gradient-to-r from-primary to-secondary px-[34px] py-[15px] font-heading text-[.95rem] font-semibold text-white transition-[transform,box-shadow] duration-200 hover:translate-y-[-2px] hover:shadow-[0_8px_28px_rgba(255,0,128,.28)]"
 					>

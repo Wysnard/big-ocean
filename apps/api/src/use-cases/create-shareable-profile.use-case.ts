@@ -83,7 +83,7 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 		// 5. Validate session has userId
 		if (!session.userId) {
 			return yield* Effect.fail(
-				new ProfileError({ message: "Cannot create a public profile for an anonymous session" }),
+				new ProfileError({ message: "Cannot create a public profile for an unowned session" }),
 			);
 		}
 

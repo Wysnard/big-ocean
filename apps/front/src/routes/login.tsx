@@ -12,7 +12,6 @@ import { getServerSession } from "../lib/auth.server";
 
 export const Route = createFileRoute("/login")({
 	validateSearch: (search: Record<string, unknown>) => ({
-		sessionId: typeof search.sessionId === "string" ? search.sessionId : undefined,
 		redirectTo: typeof search.redirectTo === "string" ? search.redirectTo : undefined,
 	}),
 	beforeLoad: async () => {
@@ -25,7 +24,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-	const { sessionId, redirectTo } = Route.useSearch();
+	const { redirectTo } = Route.useSearch();
 
 	return (
 		<PageMain
@@ -33,7 +32,7 @@ function LoginPage() {
 			className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-background"
 		>
 			<div className="w-full max-w-md">
-				<LoginForm anonymousSessionId={sessionId} redirectTo={redirectTo} />
+				<LoginForm redirectTo={redirectTo} />
 			</div>
 		</PageMain>
 	);

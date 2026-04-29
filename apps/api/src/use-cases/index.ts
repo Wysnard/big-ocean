@@ -101,7 +101,6 @@ export {
 export {
 	type StartConversationInput,
 	type StartConversationOutput,
-	startAnonymousConversation,
 	startAuthenticatedConversation,
 	startConversation,
 } from "./start-conversation.use-case";

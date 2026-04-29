@@ -43,7 +43,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			expect(result.oceanCode5).toBe("OCEAN");
@@ -69,7 +71,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			expect(result.oceanCode5).toBe("OFBAR");
@@ -90,7 +94,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			// With persisted facet confidence 60, mean is 60
@@ -111,7 +117,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			expect(result.traits).toHaveLength(5);
@@ -131,7 +139,9 @@ describe("getResults Use Case", () => {
 			// Use default result (score 10 per facet)
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			expect(result.facets).toHaveLength(30);
@@ -170,7 +180,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			const traitMap = Object.fromEntries(result.traits.map((t) => [t.name, t]));
@@ -179,19 +191,6 @@ describe("getResults Use Case", () => {
 			expect(traitMap.extraversion.level).toBe("B");
 			expect(traitMap.agreeableness.level).toBe("A");
 			expect(traitMap.neuroticism.level).toBe("N");
-		});
-
-		it("should return null profile fields for anonymous users", async () => {
-			// Use default result
-
-			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
-			);
-
-			expect(result.publicProfileId).toBeNull();
-			expect(result.shareableUrl).toBeNull();
-			expect(result.isPublic).toBeNull();
-			expect(mockProfileRepo.createProfile).not.toHaveBeenCalled();
 		});
 
 		it("should eagerly create profile for authenticated users when none exists", async () => {
@@ -279,7 +278,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			expect(result.oceanCode4).toBe("OCEA");
@@ -294,7 +295,9 @@ describe("getResults Use Case", () => {
 			// Default result has score 10 per facet, confidence 0
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			expect(result.oceanCode5).toBe("MSBPV");
@@ -318,7 +321,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			// Check imagination facet (openness): score 5 → Low code "OP"
@@ -347,7 +352,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			// Check imagination facet (openness): score 15 → High code "OV"
@@ -377,7 +384,9 @@ describe("getResults Use Case", () => {
 			);
 
 			const result = await Effect.runPromise(
-				getResults({ sessionId: TEST_SESSION_ID }).pipe(Effect.provide(createTestLayer())),
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+				),
 			);
 
 			// imagination (openness): 10 → Low code "OP"

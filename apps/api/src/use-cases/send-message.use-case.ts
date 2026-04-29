@@ -24,7 +24,7 @@ import { runNerinPipeline } from "./nerin-pipeline";
 export interface SendMessageInput {
 	readonly sessionId: string;
 	readonly message: string;
-	readonly userId?: string;
+	readonly userId: string;
 }
 
 export interface SendMessageOutput {
@@ -65,8 +65,8 @@ export const sendMessage = (input: SendMessageInput) =>
 				// 2. Resolve session (inside lock to prevent TOCTOU race on status)
 				const session = yield* sessionRepo.getSession(input.sessionId);
 
-				// 3. Ownership guard — linked sessions are private to their owner
-				if (session.userId != null && session.userId !== input.userId) {
+				// 3. Ownership guard — sessions are private to their authenticated owner.
+				if (session.userId !== input.userId) {
 					return yield* Effect.fail(
 						new SessionNotFound({
 							sessionId: input.sessionId,
@@ -86,8 +86,7 @@ export const sendMessage = (input: SendMessageInput) =>
 					);
 				}
 
-				// 4a. Cost key: userId if authenticated, sessionId for anonymous
-				const costKey = input.userId ?? input.sessionId;
+				const costKey = input.userId;
 
 				// 4b. Budget check removed from send-message (Story 31-6)
 				// Per FR56/NFR18, cost guard never blocks mid-session.

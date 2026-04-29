@@ -70,7 +70,11 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 					}),
 				);
 
-				yield* sendMessage({ sessionId: "session_test_123", message: "I work in tech" });
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "I work in tech",
+					userId: "user_456",
+				});
 
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
@@ -151,7 +155,11 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 					}),
 				);
 
-				yield* sendMessage({ sessionId: "session_test_123", message: "I work in tech" });
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "I work in tech",
+					userId: "user_456",
+				});
 
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
@@ -186,7 +194,7 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 					}),
 				);
 
-				yield* sendMessage({ sessionId: "session_test_123", message: "ok" });
+				yield* sendMessage({ sessionId: "session_test_123", message: "ok", userId: "user_456" });
 
 				expect(mockEvidenceRepo.save).toHaveBeenCalledTimes(1);
 				const savedRecords = mockEvidenceRepo.save.mock.calls[0][0];
@@ -214,7 +222,11 @@ describe("sendMessage — Evidence quality-based filtering", () => {
 					),
 				);
 
-				yield* sendMessage({ sessionId: "session_test_123", message: "I work in tech" });
+				yield* sendMessage({
+					sessionId: "session_test_123",
+					message: "I work in tech",
+					userId: "user_456",
+				});
 
 				expect(mockConversanalyzerRepo.analyzeEvidence).toHaveBeenCalledTimes(1);
 			}).pipe(Effect.provide(createTestLayer())),

@@ -42,7 +42,6 @@ const mockSessionRepo = {
 	updateMessageCount: vi.fn(),
 	updateUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
 	getByAnonymousToken: vi.fn(),
 	updateOceanCodeAndArchetype: vi.fn(),
 	getSessionsByUserId: vi.fn(),

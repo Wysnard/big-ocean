@@ -61,7 +61,6 @@ describe("Pacing pipeline resume (Story 31-5)", () => {
 				Effect.succeed({
 					id: "session_test_123",
 					userId: "user_456",
-					sessionToken: "mock_token",
 					createdAt: new Date("2026-02-01"),
 					updatedAt: new Date("2026-02-01"),
 					status: "active",

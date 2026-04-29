@@ -50,13 +50,7 @@ export function HomepageSignupForm() {
 			setIsLoading(true);
 
 			try {
-				await signUp.email(
-					value.email,
-					value.password,
-					value.name,
-					undefined,
-					`${window.location.origin}/today`,
-				);
+				await signUp.email(value.email, value.password, value.name, `${window.location.origin}/today`);
 
 				await navigate({
 					to: "/verify-email",

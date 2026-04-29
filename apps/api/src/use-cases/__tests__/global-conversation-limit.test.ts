@@ -12,10 +12,7 @@ import { LoggerRepository, RedisOperationError, WaitlistRepository } from "@work
 import { DateTime, Effect, Exit, Layer } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { joinWaitlist } from "../join-waitlist.use-case";
-import {
-	startAnonymousConversation,
-	startAuthenticatedConversation,
-} from "../start-conversation.use-case";
+import { startAuthenticatedConversation } from "../start-conversation.use-case";
 import {
 	createTestLayer,
 	mockConversationRepo,
@@ -62,41 +59,6 @@ describe("Global Conversation Limit (Story 15.3)", () => {
 			);
 
 			// Should succeed despite Redis failure (fail-open)
-			expect(result.sessionId).toBeDefined();
-		});
-	});
-
-	describe("startAnonymousConversation — global limit propagation", () => {
-		it("should propagate GlobalAssessmentLimitReached error unchanged", async () => {
-			setupDefaultMocks();
-			mockCostGuardRepo.checkAndRecordGlobalAssessmentStart.mockReturnValue(
-				Effect.fail(
-					new GlobalAssessmentLimitReached({
-						message: "Limit reached",
-						resumeAfter: DateTime.unsafeFromDate(new Date("2026-02-26T00:00:00Z")),
-					}),
-				),
-			);
-
-			const testLayer = createTestLayer();
-			const exit = await Effect.runPromiseExit(
-				startAnonymousConversation().pipe(Effect.provide(testLayer)),
-			);
-
-			expect(Exit.isFailure(exit)).toBe(true);
-		});
-
-		it("should fail-open when Redis is unavailable for global check", async () => {
-			setupDefaultMocks();
-			mockCostGuardRepo.checkAndRecordGlobalAssessmentStart.mockReturnValue(
-				Effect.fail(new RedisOperationError("Connection refused")),
-			);
-
-			const testLayer = createTestLayer();
-			const result = await Effect.runPromise(
-				startAnonymousConversation().pipe(Effect.provide(testLayer)),
-			);
-
 			expect(result.sessionId).toBeDefined();
 		});
 	});

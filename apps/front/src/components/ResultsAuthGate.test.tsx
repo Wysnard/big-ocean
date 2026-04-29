@@ -29,9 +29,7 @@ describe("ResultsAuthGate", () => {
 	});
 
 	it("renders gate CTA with required data slots", () => {
-		render(
-			<ResultsAuthGate sessionId="session-123" onAuthSuccess={() => {}} onStartFresh={() => {}} />,
-		);
+		render(<ResultsAuthGate onAuthSuccess={() => {}} onStartFresh={() => {}} />);
 
 		expect(screen.getByText("Your Personality Profile is Ready!")).toBeTruthy();
 		expect(screen.getByText("Sign Up to See Your Results").getAttribute("data-slot")).toBe(
@@ -43,9 +41,7 @@ describe("ResultsAuthGate", () => {
 	});
 
 	it("validates sign-up fields inline", async () => {
-		render(
-			<ResultsAuthGate sessionId="session-123" onAuthSuccess={() => {}} onStartFresh={() => {}} />,
-		);
+		render(<ResultsAuthGate onAuthSuccess={() => {}} onStartFresh={() => {}} />);
 
 		fireEvent.click(screen.getByText("Sign Up to See Your Results"));
 		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "invalid-email" } });
@@ -78,9 +74,7 @@ describe("ResultsAuthGate", () => {
 	});
 
 	it("marks results auth fields as required and links inline errors", async () => {
-		render(
-			<ResultsAuthGate sessionId="session-123" onAuthSuccess={() => {}} onStartFresh={() => {}} />,
-		);
+		render(<ResultsAuthGate onAuthSuccess={() => {}} onStartFresh={() => {}} />);
 
 		fireEvent.click(screen.getByText("Sign Up to See Your Results"));
 		const email = screen.getByLabelText("Email");
@@ -106,16 +100,10 @@ describe("ResultsAuthGate", () => {
 		expect(email.getAttribute("aria-describedby")).toContain("results-signup-email-error");
 	});
 
-	it("submits sign-up with anonymous session linking", async () => {
+	it("submits sign-up and calls auth success", async () => {
 		const onAuthSuccess = vi.fn();
 
-		render(
-			<ResultsAuthGate
-				sessionId="session-123"
-				onAuthSuccess={onAuthSuccess}
-				onStartFresh={() => {}}
-			/>,
-		);
+		render(<ResultsAuthGate onAuthSuccess={onAuthSuccess} onStartFresh={() => {}} />);
 
 		fireEvent.click(screen.getByText("Sign Up to See Your Results"));
 		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
@@ -129,7 +117,6 @@ describe("ResultsAuthGate", () => {
 				"test@example.com",
 				"long-enough-password",
 				undefined,
-				"session-123",
 				expect.any(String),
 			);
 		});
@@ -140,13 +127,7 @@ describe("ResultsAuthGate", () => {
 	it("submits sign-in and calls auth success", async () => {
 		const onAuthSuccess = vi.fn();
 
-		render(
-			<ResultsAuthGate
-				sessionId="session-abc"
-				onAuthSuccess={onAuthSuccess}
-				onStartFresh={() => {}}
-			/>,
-		);
+		render(<ResultsAuthGate onAuthSuccess={onAuthSuccess} onStartFresh={() => {}} />);
 
 		fireEvent.click(screen.getByText("Already have an account? Sign In"));
 		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
@@ -156,11 +137,7 @@ describe("ResultsAuthGate", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Sign In and Reveal Results" }));
 
 		await waitFor(() => {
-			expect(mockSignInEmail).toHaveBeenCalledWith(
-				"test@example.com",
-				"long-enough-password",
-				"session-abc",
-			);
+			expect(mockSignInEmail).toHaveBeenCalledWith("test@example.com", "long-enough-password");
 		});
 		expect(mockRefreshSession).toHaveBeenCalled();
 		expect(onAuthSuccess).toHaveBeenCalled();
@@ -169,29 +146,15 @@ describe("ResultsAuthGate", () => {
 	it("renders expired state with start fresh action", () => {
 		const onStartFresh = vi.fn();
 
-		render(
-			<ResultsAuthGate
-				sessionId="session-expired"
-				expired
-				onAuthSuccess={() => {}}
-				onStartFresh={onStartFresh}
-			/>,
-		);
+		render(<ResultsAuthGate expired onAuthSuccess={() => {}} onStartFresh={onStartFresh} />);
 
 		expect(screen.getByText("This Results Unlock Window Expired")).toBeTruthy();
 		fireEvent.click(screen.getByRole("button", { name: "Start Fresh Assessment" }));
 		expect(onStartFresh).toHaveBeenCalled();
 	});
 
-	it("omits anonymous session linking on expired sign-up", async () => {
-		render(
-			<ResultsAuthGate
-				sessionId="session-expired"
-				expired
-				onAuthSuccess={() => {}}
-				onStartFresh={() => {}}
-			/>,
-		);
+	it("submits expired sign-up without a conversation session", async () => {
+		render(<ResultsAuthGate expired onAuthSuccess={() => {}} onStartFresh={() => {}} />);
 
 		fireEvent.click(screen.getByRole("button", { name: "Sign Up to Start Fresh" }));
 		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
@@ -205,21 +168,13 @@ describe("ResultsAuthGate", () => {
 				"test@example.com",
 				"long-enough-password",
 				undefined,
-				undefined,
 				expect.any(String),
 			);
 		});
 	});
 
-	it("omits anonymous session linking on expired sign-in", async () => {
-		render(
-			<ResultsAuthGate
-				sessionId="session-expired"
-				expired
-				onAuthSuccess={() => {}}
-				onStartFresh={() => {}}
-			/>,
-		);
+	it("submits expired sign-in without a conversation session", async () => {
+		render(<ResultsAuthGate expired onAuthSuccess={() => {}} onStartFresh={() => {}} />);
 
 		fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
 		fireEvent.change(screen.getByLabelText("Email"), { target: { value: "test@example.com" } });
@@ -229,11 +184,7 @@ describe("ResultsAuthGate", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Sign In and Reveal Results" }));
 
 		await waitFor(() => {
-			expect(mockSignInEmail).toHaveBeenCalledWith(
-				"test@example.com",
-				"long-enough-password",
-				undefined,
-			);
+			expect(mockSignInEmail).toHaveBeenCalledWith("test@example.com", "long-enough-password");
 		});
 	});
 });

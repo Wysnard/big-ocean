@@ -386,7 +386,6 @@ function ResultsSessionPage() {
 		return (
 			<PageMain className="bg-background">
 				<ResultsAuthGate
-					sessionId={conversationSessionId}
 					expired={isGateExpired}
 					onAuthSuccess={handleAuthSuccess}
 					onStartFresh={handleStartFresh}

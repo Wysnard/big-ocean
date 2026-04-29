@@ -22,7 +22,7 @@ import { LoggerRepository } from "@workspace/domain/repositories/logger.reposito
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { haveIBeenPwned } from "better-auth/plugins";
-import { and, desc, eq, isNull, or } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Context, Effect, Layer, Queue, Redacted } from "effect";
 import pg from "pg";
@@ -105,60 +105,6 @@ export const BetterAuthLive = Layer.effect(
 
 		// Determine if using HTTPS for secure cookies
 		const isHttps = config.betterAuthUrl.startsWith("https");
-
-		const getAnonymousSessionId = (
-			context: { body?: unknown } | null | undefined,
-		): string | undefined => {
-			const body = context?.body;
-
-			if (typeof body !== "object" || body === null || !("anonymousSessionId" in body)) {
-				return undefined;
-			}
-
-			const anonymousSessionId = (body as Record<string, unknown>).anonymousSessionId;
-			return typeof anonymousSessionId === "string" ? anonymousSessionId : undefined;
-		};
-
-		const linkAnonymousAssessmentSession = async (
-			userId: string,
-			anonymousSessionId: string,
-			source: "signup" | "signin",
-		): Promise<void> => {
-			try {
-				await plainDb.transaction(async (tx) => {
-					// Allow first-time linking and idempotent relinking by the same user only.
-					const [linkedSession] = await tx
-						.update(authSchema.conversation)
-						.set({ userId, sessionToken: null, updatedAt: new Date() })
-						.where(
-							and(
-								eq(authSchema.conversation.id, anonymousSessionId),
-								or(isNull(authSchema.conversation.userId), eq(authSchema.conversation.userId, userId)),
-							),
-						)
-						.returning({ id: authSchema.conversation.id });
-
-					if (!linkedSession) {
-						logger.warn(
-							`Anonymous assessment session ${anonymousSessionId} not linked during ${source} (missing or owned by another user)`,
-						);
-						return;
-					}
-
-					// Story 23-3: userId column removed from assessment_message.
-					// User ownership is now derived from the session, not the message.
-				});
-
-				logger.info(
-					`Linked anonymous assessment session ${anonymousSessionId} to user ${userId} during ${source}`,
-				);
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error);
-				logger.error(
-					`Failed to link anonymous assessment session ${anonymousSessionId} during ${source}: ${errorMessage}`,
-				);
-			}
-		};
 
 		// Create Resend SDK client for auth emails (verification + password reset)
 		// Same Promise-based pattern as Polar — Better Auth callbacks are async, not Effect
@@ -685,7 +631,7 @@ export const BetterAuthLive = Layer.effect(
 							}
 							return { data: user };
 						},
-						after: async (user, context) => {
+						after: async (user) => {
 							logger.info(`User created: ${user.id} (${user.email})`);
 
 							// Grant 1 free relationship credit (Story 14.1)
@@ -704,27 +650,15 @@ export const BetterAuthLive = Layer.effect(
 								const msg = error instanceof Error ? error.message : String(error);
 								logger.error(`Failed to grant free credit for user ${user.id}: ${msg}`);
 							}
-
-							const anonymousSessionId = getAnonymousSessionId(context);
-							if (anonymousSessionId) {
-								await linkAnonymousAssessmentSession(user.id, anonymousSessionId, "signup");
-							}
 						},
 					},
 				},
 				session: {
 					create: {
-						after: async (session, context) => {
+						after: async (_session, context) => {
 							if (typeof context?.path === "string" && context.path.includes("sign-up")) {
 								return;
 							}
-
-							const anonymousSessionId = getAnonymousSessionId(context);
-							const userId = typeof session.userId === "string" ? session.userId : undefined;
-
-							if (!anonymousSessionId || !userId) return;
-
-							await linkAnonymousAssessmentSession(userId, anonymousSessionId, "signin");
 
 							// Story 14.3: Accept invitation if invite_token cookie present
 						},

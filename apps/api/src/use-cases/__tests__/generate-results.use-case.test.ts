@@ -53,10 +53,6 @@ const mockSessionRepo = {
 	getActiveSessionByUserId: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
-	findByToken: vi.fn(),
-	assignUserId: vi.fn(),
-	rotateToken: vi.fn(),
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
@@ -90,7 +86,6 @@ const mockCostGuardRepo = {
 const mockFinalizingSession = {
 	id: "session_123",
 	userId: "user_456",
-	sessionToken: "mock_token",
 	createdAt: new Date("2026-02-01"),
 	updatedAt: new Date("2026-02-01"),
 	status: "finalizing",
@@ -605,7 +600,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 	});
 
 	describe("User summary (Story 7.1)", () => {
-		it.effect("skips UserSummary when session has no userId", () =>
+		it.effect("fails finalization when session has no userId", () =>
 			Effect.gen(function* () {
 				mockSessionRepo.getSession.mockReturnValue(
 					Effect.succeed({ ...mockFinalizingSession, userId: null }),
@@ -623,16 +618,15 @@ describe("generateResults Use Case (Story 18-4)", () => {
 				]);
 				seedConversationEvidence(evidence);
 
-				const result = yield* generateResults({
+				const exit = yield* generateResults({
 					sessionId: "session_123",
 					authenticatedUserId: "user_456",
-				});
+				}).pipe(Effect.exit);
 
-				expect(result).toEqual({ status: "completed" });
-				expect(mockLoggerRepo.info).toHaveBeenCalledWith(
-					"Generate results: skipping UserSummary (no userId on session)",
-					expect.objectContaining({ sessionId: "session_123" }),
-				);
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure") {
+					expect(String(exit.cause)).toContain("SessionNotFound");
+				}
 			}).pipe(Effect.provide(createTestLayer())),
 		);
 

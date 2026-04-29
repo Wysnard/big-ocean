@@ -37,10 +37,6 @@ const mockSessionRepo = {
 	getActiveSessionByUserId: vi.fn(),
 	getSessionsByUserId: vi.fn(),
 	findSessionByUserId: vi.fn(),
-	createAnonymousSession: vi.fn(),
-	findByToken: vi.fn(),
-	assignUserId: vi.fn(),
-	rotateToken: vi.fn(),
 	incrementMessageCount: vi.fn(),
 	acquireSessionLock: vi.fn(),
 	releaseSessionLock: vi.fn(),
@@ -336,7 +332,6 @@ function setupDefaultMocks() {
 		Effect.succeed({
 			id: "session_test_123",
 			userId: null,
-			sessionToken: null,
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			status: "active",
@@ -507,7 +502,6 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 					Effect.succeed({
 						id: "session_test_123",
 						userId: null,
-						sessionToken: null,
 						createdAt: new Date(),
 						updatedAt: new Date(),
 						status: "active",
@@ -568,7 +562,6 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 					Effect.succeed({
 						id: "session_test_123",
 						userId: null,
-						sessionToken: null,
 						createdAt: new Date(),
 						updatedAt: new Date(),
 						status: "active",
@@ -1094,26 +1087,6 @@ describe("User-level context loading (Story 36-2 refactor)", () => {
 			expect(directorCall?.messages).toHaveLength(5); // 3 parent + 1 extension + 1 current
 			expect(directorCall?.messages[0]?.content).toBe("Hi! I'm Nerin.");
 			expect(directorCall?.messages[1]?.content).toBe("I love painting on weekends");
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("falls back to session-scoped queries for anonymous users", () =>
-		Effect.gen(function* () {
-			// No userId — should use session-scoped queries
-			const result = yield* runNerinPipeline({
-				sessionId: "session_test_123",
-				userMessage: "Hello",
-			});
-
-			expect(result.response).toBeDefined();
-
-			// Verify session-scoped queries were used (not user-level)
-			expect(mockMessageRepo.getMessagesByUserId).not.toHaveBeenCalled();
-			expect(mockMessageRepo.getMessages).toHaveBeenCalledWith("session_test_123");
-			expect(mockEvidenceRepo.findByUserId).not.toHaveBeenCalled();
-			expect(mockEvidenceRepo.findBySession).toHaveBeenCalledWith("session_test_123");
-			expect(mockExchangeRepo.findByUserId).not.toHaveBeenCalled();
-			expect(mockExchangeRepo.findBySession).toHaveBeenCalledWith("session_test_123");
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 

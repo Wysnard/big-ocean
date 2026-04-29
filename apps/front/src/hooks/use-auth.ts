@@ -51,11 +51,10 @@ export function useAuth() {
 
 		// Auth actions
 		signIn: {
-			email: async (email: string, password: string, anonymousSessionId?: string) => {
+			email: async (email: string, password: string) => {
 				const result = await signIn.email({
 					email,
 					password,
-					...(anonymousSessionId && { anonymousSessionId }),
 				});
 
 				if (result.error) {
@@ -71,18 +70,11 @@ export function useAuth() {
 		},
 
 		signUp: {
-			email: async (
-				email: string,
-				password: string,
-				name?: string,
-				anonymousSessionId?: string,
-				callbackURL?: string,
-			) => {
+			email: async (email: string, password: string, name?: string, callbackURL?: string) => {
 				const result = await signUp.email({
 					email,
 					password,
 					name: name || email.split("@")[0],
-					...(anonymousSessionId && { anonymousSessionId }),
 					...(callbackURL !== undefined && { callbackURL }),
 				});
 
