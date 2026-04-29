@@ -10,6 +10,7 @@ export {
 	AgentInvocationError,
 	AnalyzerError,
 	AssessmentNotCompletedError,
+	AssessmentResultsNotReady,
 	ConcurrentMessageError,
 	ConversationAlreadyExists,
 	ConversationEvidenceError,
@@ -31,6 +32,7 @@ export {
 	ProfileError,
 	ProfileNotFound,
 	ProfilePrivate,
+	PublicProfileNotProvisioned,
 	QrTokenAlreadyAcceptedError,
 	QrTokenExpiredError,
 	QrTokenNotFoundError,
@@ -50,4 +52,4 @@ export {
 	UserAlreadyExists,
 	WebhookVerificationError,
 	WeeklyLetterNotFound,
-} from "@workspace/domain/errors/http.errors";
+} from "@workspace/domain";

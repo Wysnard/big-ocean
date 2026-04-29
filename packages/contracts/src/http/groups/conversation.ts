@@ -16,6 +16,7 @@ import {
 import { Schema as S } from "effect";
 import {
 	AgentInvocationError,
+	AssessmentResultsNotReady,
 	ConcurrentMessageError,
 	ConversationAlreadyExists,
 	ConversationEvidenceError,
@@ -24,6 +25,7 @@ import {
 	GlobalAssessmentLimitReached,
 	MessageRateLimitError,
 	ProfileError,
+	PublicProfileNotProvisioned,
 	RateLimitExceeded,
 	SessionCompletedError,
 	SessionNotCompleted,
@@ -102,9 +104,9 @@ export const GetResultsResponseSchema = S.Struct({
 	facets: S.Array(FacetResultSchema),
 	overallConfidence: S.Number,
 	messageCount: S.Number,
-	publicProfileId: S.NullOr(S.String),
-	shareableUrl: S.NullOr(S.String),
-	isPublic: S.NullOr(S.Boolean),
+	publicProfileId: S.String,
+	shareableUrl: S.String,
+	isPublic: S.Boolean,
 	/** Whether this result is the user's latest version (Story 36-3) */
 	isLatestVersion: S.Boolean,
 });
@@ -258,6 +260,8 @@ export const ConversationGroup = HttpApiGroup.make("conversation")
 			.addSuccess(GetResultsResponseSchema)
 			.addError(SessionNotFound, { status: 404 })
 			.addError(SessionNotCompleted, { status: 409 })
+			.addError(AssessmentResultsNotReady, { status: 409 })
+			.addError(PublicProfileNotProvisioned, { status: 500 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(

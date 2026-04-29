@@ -75,7 +75,7 @@ export function fetchResults(sessionId: string) {
 			const msg = e instanceof Error ? e.message : str;
 			const status = str.includes("SessionNotFound")
 				? 404
-				: str.includes("SessionNotCompleted")
+				: str.includes("SessionNotCompleted") || str.includes("AssessmentResultsNotReady")
 					? 409
 					: 500;
 			throw new ConversationApiError(status, msg, e);

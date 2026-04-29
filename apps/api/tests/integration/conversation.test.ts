@@ -183,6 +183,10 @@ describe("Authenticated conversation flow", () => {
 		expect(results.facets).toHaveLength(30);
 		expect(results.overallConfidence).toBeGreaterThanOrEqual(0);
 		expect(results.overallConfidence).toBeLessThanOrEqual(100);
+		expect(typeof results.publicProfileId).toBe("string");
+		expect(results.publicProfileId.length).toBeGreaterThan(0);
+		expect(results.shareableUrl).toContain(`/public-profile/${results.publicProfileId}`);
+		expect(typeof results.isPublic).toBe("boolean");
 
 		const sessionsResponse = await getJson("/api/conversation/sessions", cookie);
 		expect(sessionsResponse.status).toBe(200);

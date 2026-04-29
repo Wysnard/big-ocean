@@ -25,9 +25,9 @@ describe("selectRecommendedKeysFromResults", () => {
 		isCurated: true,
 		overallConfidence: 0.9,
 		messageCount: 12,
-		publicProfileId: null,
-		shareableUrl: null,
-		isPublic: null,
+		publicProfileId: "profile_test",
+		shareableUrl: "https://example.com/public-profile/profile_test",
+		isPublic: false,
 		isLatestVersion: true,
 	} satisfies Partial<GetResultsResponse>;
 

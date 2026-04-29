@@ -244,6 +244,7 @@ export function buildResultFromEvidence(
 		traits,
 		domainCoverage: {},
 		portrait: "",
+		stage: "completed",
 		createdAt: new Date(),
 	};
 }

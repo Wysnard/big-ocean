@@ -6,6 +6,10 @@
 
 export { extract4LetterCode, lookupArchetype } from "./archetype-lookup";
 export {
+	type AssessmentResultsView,
+	buildAssessmentResultsViewFromPersistedFacets,
+} from "./assessment-results-view";
+export {
 	type AssessmentSurfaceProjection,
 	buildFacetScoresMap,
 	deriveAssessmentSurfaceFromFacetScores,

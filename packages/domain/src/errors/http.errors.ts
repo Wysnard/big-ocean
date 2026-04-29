@@ -303,6 +303,33 @@ export class SessionNotCompleted extends S.TaggedError<SessionNotCompleted>()(
 ) {}
 
 /**
+ * Assessment results not ready (409)
+ * Strong read-path invariant: persisted assessment result exists but is not at `stage=completed`
+ * (or is missing entirely while the conversation session is already completed).
+ */
+export class AssessmentResultsNotReady extends S.TaggedError<AssessmentResultsNotReady>()(
+	"AssessmentResultsNotReady",
+	{
+		sessionId: S.String,
+		currentStage: S.NullOr(S.Literal("scored", "completed")),
+		message: S.String,
+	},
+) {}
+
+/**
+ * Public profile provisioning invariant violated (500)
+ * Completed assessment reads require the session's shareable `public_profiles` row to exist
+ * (created during Assessment Finalization). Missing row indicates data drift, not a normal UX state.
+ */
+export class PublicProfileNotProvisioned extends S.TaggedError<PublicProfileNotProvisioned>()(
+	"PublicProfileNotProvisioned",
+	{
+		sessionId: S.String,
+		message: S.String,
+	},
+) {}
+
+/**
  * Malformed evidence error (422)
  * JSON parsing or structure validation failure for analyzer output
  */

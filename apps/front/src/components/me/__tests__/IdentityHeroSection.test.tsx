@@ -86,8 +86,8 @@ const mockResults: GetResultsResponse = {
 	facets: [],
 	overallConfidence: 75, // 0-100 scale from the API
 	messageCount: 24,
-	publicProfileId: null,
-	shareableUrl: null,
+	publicProfileId: "profile-123",
+	shareableUrl: "https://bigocean.dev/public-profile/profile-123",
 	isPublic: false,
 	isLatestVersion: true,
 };

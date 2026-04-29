@@ -102,6 +102,7 @@ export {
 	AgentInvocationError,
 	AnalyzerError,
 	AssessmentNotCompletedError,
+	AssessmentResultsNotReady,
 	ConcurrentMessageError,
 	ConversationAlreadyExists,
 	CostLimitExceeded,
@@ -123,6 +124,7 @@ export {
 	ProfileError,
 	ProfileNotFound,
 	ProfilePrivate,
+	PublicProfileNotProvisioned,
 	QrTokenAlreadyAcceptedError,
 	QrTokenExpiredError,
 	QrTokenNotFoundError,
@@ -548,7 +550,9 @@ export {
 } from "./utils/formula";
 // Utility functions
 export {
+	type AssessmentResultsView,
 	type AssessmentSurfaceProjection,
+	buildAssessmentResultsViewFromPersistedFacets,
 	buildFacetScoresMap,
 	buildPortraitPrompt,
 	calculateConfidenceFromFacetScores,

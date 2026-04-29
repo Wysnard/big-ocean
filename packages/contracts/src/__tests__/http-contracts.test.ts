@@ -194,8 +194,8 @@ describe("Conversation Contracts", () => {
 				],
 				overallConfidence: 68,
 				messageCount: 24,
-				publicProfileId: null,
-				shareableUrl: null,
+				publicProfileId: "profile_test_123",
+				shareableUrl: "http://localhost:3000/public-profile/profile_test_123",
 				isPublic: false,
 				isLatestVersion: true,
 			};
@@ -224,8 +224,8 @@ describe("Conversation Contracts", () => {
 				facets: [],
 				overallConfidence: 50,
 				messageCount: 10,
-				publicProfileId: null,
-				shareableUrl: null,
+				publicProfileId: "profile_test_123",
+				shareableUrl: "http://localhost:3000/public-profile/profile_test_123",
 				isPublic: null,
 				isLatestVersion: false,
 			};

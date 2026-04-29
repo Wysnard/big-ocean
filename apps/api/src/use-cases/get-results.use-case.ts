@@ -13,6 +13,11 @@ import {
 	AppConfig,
 	type FacetResult,
 	LoggerRepository,
+	type OceanCode4,
+	OceanCode4Schema,
+	type OceanCode5,
+	OceanCode5Schema,
+	PublicProfileNotProvisioned,
 	PublicProfileRepository,
 	type TraitResult,
 } from "@workspace/domain";
@@ -26,8 +31,8 @@ export interface GetResultsInput {
 }
 
 export interface GetResultsOutput {
-	readonly oceanCode5: string;
-	readonly oceanCode4: string;
+	readonly oceanCode5: OceanCode5;
+	readonly oceanCode4: OceanCode4;
 	readonly archetypeName: string;
 	readonly archetypeDescription: string;
 	readonly archetypeColor: string;
@@ -36,9 +41,9 @@ export interface GetResultsOutput {
 	readonly facets: readonly FacetResult[];
 	readonly overallConfidence: number;
 	readonly messageCount: number;
-	readonly publicProfileId: string | null;
-	readonly shareableUrl: string | null;
-	readonly isPublic: boolean | null;
+	readonly publicProfileId: string;
+	readonly shareableUrl: string;
+	readonly isPublic: boolean;
 	readonly isLatestVersion: boolean;
 }
 
@@ -58,16 +63,13 @@ export const getResults = (input: GetResultsInput) =>
 			authenticatedUserId: input.authenticatedUserId,
 		});
 
-		const existingProfile = yield* profileRepo
-			.getProfileBySessionId(input.sessionId)
-			.pipe(Effect.catchAll(() => Effect.succeed(null)));
-
+		const existingProfile = yield* profileRepo.getProfileBySessionId(input.sessionId);
 		if (existingProfile === null) {
-			logger.warn(
-				"getResults: no public profile for completed session (expected after finalization)",
-				{
+			return yield* Effect.fail(
+				new PublicProfileNotProvisioned({
 					sessionId: input.sessionId,
-				},
+					message: "Public profile row missing after Assessment Finalization",
+				}),
 			);
 		}
 
@@ -80,8 +82,8 @@ export const getResults = (input: GetResultsInput) =>
 		});
 
 		return {
-			oceanCode5: assembled.oceanCode5,
-			oceanCode4: assembled.oceanCode4,
+			oceanCode5: OceanCode5Schema.make(assembled.oceanCode5),
+			oceanCode4: OceanCode4Schema.make(assembled.oceanCode4),
 			archetypeName: assembled.archetypeName,
 			archetypeDescription: assembled.archetypeDescription,
 			archetypeColor: assembled.archetypeColor,
@@ -90,11 +92,9 @@ export const getResults = (input: GetResultsInput) =>
 			facets: assembled.facets,
 			overallConfidence: assembled.overallConfidence,
 			messageCount: assembled.messageCount,
-			publicProfileId: existingProfile?.id ?? null,
-			shareableUrl: existingProfile
-				? `${config.frontendUrl}/public-profile/${existingProfile.id}`
-				: null,
-			isPublic: existingProfile?.isPublic ?? null,
+			publicProfileId: existingProfile.id,
+			shareableUrl: `${config.frontendUrl}/public-profile/${existingProfile.id}`,
+			isPublic: existingProfile.isPublic,
 			isLatestVersion: assembled.isLatestVersion,
 		} satisfies GetResultsOutput;
 	});

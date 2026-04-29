@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getResults } from "../get-results.use-case";
 import {
 	createTestLayer,
+	mockProfileRepo,
 	mockResultRepo,
 	mockSessionRepo,
 	setupDefaultMocks,
@@ -140,6 +141,57 @@ describe("getResults Use Case", () => {
 
 			expect(result.oceanCode5).toBeDefined();
 			expect(mockResultRepo.getBySessionId).toHaveBeenCalledWith(TEST_SESSION_ID);
+		});
+
+		it("should fail with AssessmentResultsNotReady when assessment result is missing", async () => {
+			mockResultRepo.getBySessionId.mockImplementation(() => Effect.succeed(null));
+
+			const error = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+					Effect.flip,
+				),
+			);
+
+			expect(error._tag).toBe("AssessmentResultsNotReady");
+			expect(mockResultRepo.getBySessionId).toHaveBeenCalledWith(TEST_SESSION_ID);
+		});
+
+		it("should fail with AssessmentResultsNotReady when assessment result is not stage=completed", async () => {
+			mockResultRepo.getBySessionId.mockImplementation(() =>
+				Effect.succeed({
+					id: "ar_test",
+					assessmentSessionId: TEST_SESSION_ID,
+					facets: {},
+					traits: {},
+					domainCoverage: {},
+					portrait: "",
+					stage: "scored",
+					createdAt: new Date(),
+				}),
+			);
+
+			const error = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+					Effect.flip,
+				),
+			);
+
+			expect(error._tag).toBe("AssessmentResultsNotReady");
+		});
+
+		it("should fail with PublicProfileNotProvisioned when profile row is missing", async () => {
+			mockProfileRepo.getProfileBySessionId.mockImplementation(() => Effect.succeed(null));
+
+			const error = await Effect.runPromise(
+				getResults({ sessionId: TEST_SESSION_ID, authenticatedUserId: "owner_user" }).pipe(
+					Effect.provide(createTestLayer()),
+					Effect.flip,
+				),
+			);
+
+			expect(error._tag).toBe("PublicProfileNotProvisioned");
 		});
 
 		it("should fail with SessionNotFound when session does not exist", async () => {
