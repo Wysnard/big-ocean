@@ -278,20 +278,27 @@ export function setupDefaultMocks() {
 		}),
 	);
 
-	mockProfileRepo.getProfileBySessionId.mockImplementation(() => Effect.succeed(null));
-	mockProfileRepo.createProfile.mockImplementation(
-		(input: { sessionId: string; userId: string; oceanCode5: string; oceanCode4: string }) =>
-			Effect.succeed({
-				id: `profile_${input.sessionId}`,
-				sessionId: input.sessionId,
-				userId: input.userId,
-				displayName: "Test User",
-				oceanCode5: input.oceanCode5,
-				oceanCode4: input.oceanCode4,
-				isPublic: false,
-				viewCount: 0,
-				createdAt: new Date(),
-			}),
+	mockProfileRepo.getProfileBySessionId.mockImplementation(() =>
+		Effect.succeed({
+			id: `profile_${TEST_SESSION_ID}`,
+			sessionId: TEST_SESSION_ID,
+			userId: "owner_user",
+			displayName: "Test User",
+			isPublic: false,
+			viewCount: 0,
+			createdAt: new Date(),
+		}),
+	);
+	mockProfileRepo.createProfile.mockImplementation((input: { sessionId: string; userId: string }) =>
+		Effect.succeed({
+			id: `profile_${input.sessionId}`,
+			sessionId: input.sessionId,
+			userId: input.userId,
+			displayName: "Test User",
+			isPublic: false,
+			viewCount: 0,
+			createdAt: new Date(),
+		}),
 	);
 
 	mockMessageRepo.getMessages.mockImplementation(() => Effect.succeed([]));

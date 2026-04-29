@@ -23,6 +23,7 @@ import {
 	DatabaseError,
 	GlobalAssessmentLimitReached,
 	MessageRateLimitError,
+	ProfileError,
 	RateLimitExceeded,
 	SessionCompletedError,
 	SessionNotCompleted,
@@ -277,6 +278,7 @@ export const ConversationGroup = HttpApiGroup.make("conversation")
 			.addError(AssessmentResultError, { status: 500 })
 			.addError(ConversationEvidenceError, { status: 500 })
 			.addError(DatabaseError, { status: 500 })
+			.addError(ProfileError, { status: 422 })
 			.addError(UserSummaryGenerationError, { status: 500 }),
 	)
 	.add(

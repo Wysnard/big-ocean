@@ -574,6 +574,8 @@ export {
 	type IsoWeekBounds,
 	isEntitledTo,
 	lookupArchetype,
+	type PersistedFacetScoresFragment,
+	projectAssessmentSurfaceFromPersistedFacets,
 	resolveIsoWeekBounds,
 	type TraitConfidence,
 	type TribeGroup,

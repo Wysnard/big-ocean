@@ -12,9 +12,8 @@ import {
 	buildFacetScoresMap,
 	ConversationRepository,
 	calculateConfidenceFromFacetScores,
-	deriveAssessmentSurfaceFromFacetScores,
-	type FacetScoresMap,
 	PurchaseEventRepository,
+	projectAssessmentSurfaceFromPersistedFacets,
 	QrTokenRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -75,9 +74,10 @@ export const getQrTokenDetails = (token: string, acceptorUserId: string) =>
 				.getBySessionId(initiatorSession.id)
 				.pipe(Effect.catchTag("AssessmentResultError", () => Effect.succeed(null)));
 
-			if (initiatorResult && Object.keys(initiatorResult.facets).length > 0) {
-				const facetScoresMap: FacetScoresMap = buildFacetScoresMap(initiatorResult.facets);
-				const projection = deriveAssessmentSurfaceFromFacetScores(facetScoresMap);
+			if (initiatorResult) {
+				const { facetScoresMap, projection } = projectAssessmentSurfaceFromPersistedFacets(
+					initiatorResult.facets,
+				);
 				const overallConfidence = calculateConfidenceFromFacetScores(facetScoresMap);
 
 				initiatorArchetype = {
@@ -102,9 +102,9 @@ export const getQrTokenDetails = (token: string, acceptorUserId: string) =>
 				.getBySessionId(acceptorSession.id)
 				.pipe(Effect.catchTag("AssessmentResultError", () => Effect.succeed(null)));
 
-			if (acceptorResult && Object.keys(acceptorResult.facets).length > 0) {
+			if (acceptorResult) {
 				hasCompletedAssessment = true;
-				const facetScoresMap: FacetScoresMap = buildFacetScoresMap(acceptorResult.facets);
+				const facetScoresMap = buildFacetScoresMap(acceptorResult.facets);
 				acceptorConfidence = Math.round(calculateConfidenceFromFacetScores(facetScoresMap) * 100);
 			}
 		}

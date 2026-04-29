@@ -2,7 +2,7 @@
  * Get Results Use Case Tests — Success scenarios + Default scores
  *
  * Tests the business logic for retrieving assessment results.
- * After Story 11.1, get-results is read-only — no lazy finalization or portrait generation.
+ * After Story 11.1, get-results is read-only for scores; shareable profile rows are created during Assessment Finalization.
  */
 
 import { BIG_FIVE_TRAITS } from "@workspace/domain";
@@ -193,7 +193,7 @@ describe("getResults Use Case", () => {
 			expect(traitMap.neuroticism.level).toBe("N");
 		});
 
-		it("should eagerly create profile for authenticated users when none exists", async () => {
+		it("should resolve share fields from profile row (provisioned at Assessment Finalization)", async () => {
 			mockSessionRepo.getSession.mockImplementation((_sessionId: string) =>
 				Effect.succeed({
 					id: TEST_SESSION_ID,
@@ -217,12 +217,8 @@ describe("getResults Use Case", () => {
 				`http://localhost:3000/public-profile/profile_${TEST_SESSION_ID}`,
 			);
 			expect(result.isPublic).toBe(false);
-			expect(mockProfileRepo.createProfile).toHaveBeenCalledWith(
-				expect.objectContaining({
-					sessionId: TEST_SESSION_ID,
-					userId: "owner_user",
-				}),
-			);
+			expect(mockProfileRepo.getProfileBySessionId).toHaveBeenCalledWith(TEST_SESSION_ID);
+			expect(mockProfileRepo.createProfile).not.toHaveBeenCalled();
 		});
 
 		it("should return existing profile without creating for authenticated users", async () => {

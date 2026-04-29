@@ -23,6 +23,7 @@ import {
 	LIFE_DOMAINS,
 	LoggerRepository,
 	PortraitJobQueue,
+	PublicProfileRepository,
 	TRAIT_NAMES,
 	UserSummaryGenerationError,
 	UserSummaryGeneratorRepository,
@@ -83,6 +84,24 @@ const mockCostGuardRepo = {
 	setFreeTierLlmPaused: vi.fn(() => Effect.void),
 };
 
+const mockProfileRepo = {
+	createProfile: vi.fn(() =>
+		Effect.succeed({
+			id: "profile_session_123",
+			sessionId: "session_123",
+			userId: "user_456",
+			displayName: "Test",
+			isPublic: false,
+			viewCount: 0,
+			createdAt: new Date(),
+		}),
+	),
+	getProfile: vi.fn(() => Effect.succeed(null)),
+	getProfileBySessionId: vi.fn(() => Effect.succeed(null)),
+	toggleVisibility: vi.fn(() => Effect.void),
+	incrementViewCount: vi.fn(() => Effect.void),
+};
+
 const mockFinalizingSession = {
 	id: "session_123",
 	userId: "user_456",
@@ -98,6 +117,7 @@ const createTestLayer = () =>
 		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
+		Layer.succeed(PublicProfileRepository, mockProfileRepo),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
 		UserSummaryDrizzleRepositoryLive,
@@ -110,6 +130,7 @@ const createTestLayerWithFailingUserSummaryGenerator = () =>
 		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
+		Layer.succeed(PublicProfileRepository, mockProfileRepo),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
 		UserSummaryDrizzleRepositoryLive,
@@ -167,6 +188,18 @@ describe("generateResults Use Case (Story 18-4)", () => {
 		mockSessionRepo.countCompletedExtensionSessionsExcluding.mockReturnValue(Effect.succeed(1));
 		mockLoggerRepo.info.mockImplementation(() => {});
 		mockLoggerRepo.warn.mockImplementation(() => {});
+		mockProfileRepo.getProfileBySessionId.mockReturnValue(Effect.succeed(null));
+		mockProfileRepo.createProfile.mockReturnValue(
+			Effect.succeed({
+				id: "profile_session_123",
+				sessionId: "session_123",
+				userId: "user_456",
+				displayName: "Test",
+				isPublic: false,
+				viewCount: 0,
+				createdAt: new Date(),
+			}),
+		);
 	});
 
 	describe("Session validation", () => {
@@ -204,37 +237,47 @@ describe("generateResults Use Case (Story 18-4)", () => {
 	});
 
 	describe("Idempotency: session already completed", () => {
-		it.effect("should return completed without side effects", () =>
-			Effect.gen(function* () {
-				mockSessionRepo.getSession.mockReturnValue(
-					Effect.succeed({ ...mockFinalizingSession, status: "completed" }),
-				);
+		it.effect(
+			"should return completed, ensure public profile, and not re-acquire finalization lock",
+			() =>
+				Effect.gen(function* () {
+					mockSessionRepo.getSession.mockReturnValue(
+						Effect.succeed({ ...mockFinalizingSession, status: "completed" }),
+					);
 
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
+					const result = yield* generateResults({
+						sessionId: "session_123",
+						authenticatedUserId: "user_456",
+					});
 
-				expect(result).toEqual({ status: "completed" });
-				expect(mockSessionRepo.acquireSessionLock).not.toHaveBeenCalled();
-				expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
-			}).pipe(Effect.provide(createTestLayer())),
+					expect(result).toEqual({ status: "completed" });
+					expect(mockSessionRepo.acquireSessionLock).not.toHaveBeenCalled();
+					expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
+					expect(mockProfileRepo.getProfileBySessionId).toHaveBeenCalledWith("session_123");
+					expect(mockProfileRepo.createProfile).toHaveBeenCalledWith({
+						sessionId: "session_123",
+						userId: "user_456",
+					});
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
 	describe("Idempotency: result at stage=completed", () => {
-		it.effect("should return immediately when result already at completed stage", () =>
-			Effect.gen(function* () {
-				seedResult("session_123", { stage: "completed" });
+		it.effect(
+			"should return immediately when result already at completed stage and ensure profile",
+			() =>
+				Effect.gen(function* () {
+					seedResult("session_123", { stage: "completed" });
 
-				const result = yield* generateResults({
-					sessionId: "session_123",
-					authenticatedUserId: "user_456",
-				});
+					const result = yield* generateResults({
+						sessionId: "session_123",
+						authenticatedUserId: "user_456",
+					});
 
-				expect(result).toEqual({ status: "completed" });
-				expect(mockSessionRepo.acquireSessionLock).not.toHaveBeenCalled();
-			}).pipe(Effect.provide(createTestLayer())),
+					expect(result).toEqual({ status: "completed" });
+					expect(mockSessionRepo.acquireSessionLock).not.toHaveBeenCalled();
+					expect(mockProfileRepo.getProfileBySessionId).toHaveBeenCalledWith("session_123");
+				}).pipe(Effect.provide(createTestLayer())),
 		);
 	});
 
@@ -326,6 +369,11 @@ describe("generateResults Use Case (Story 18-4)", () => {
 					});
 
 					expect(result).toEqual({ status: "completed" });
+
+					expect(mockProfileRepo.createProfile).toHaveBeenCalledWith({
+						sessionId: "session_123",
+						userId: "user_456",
+					});
 
 					// Assessment result created with scores but no portrait (Story 32-0)
 					const results = getStoredResults();

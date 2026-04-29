@@ -26,6 +26,7 @@ import {
 	SessionNotFound,
 } from "@workspace/domain";
 import { Effect, Queue } from "effect";
+import { ensurePublicProfileForSession } from "./ensure-public-profile-for-session";
 import { generateUserSummary } from "./generate-user-summary.use-case";
 
 export interface GenerateResultsInput {
@@ -57,6 +58,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 
 		// 2. Idempotency: already completed (session-level check)
 		if (session.status === "completed") {
+			yield* ensurePublicProfileForSession({ sessionId: input.sessionId, userId });
 			logger.info("Generate results: session already completed (idempotency)", {
 				sessionId: input.sessionId,
 			});
@@ -78,6 +80,7 @@ export const generateResults = (input: GenerateResultsInput) =>
 		const existingResult = yield* assessmentResultRepo.getBySessionId(input.sessionId);
 
 		if (existingResult?.stage === "completed") {
+			yield* ensurePublicProfileForSession({ sessionId: input.sessionId, userId });
 			logger.info("Generate results: result already at stage=completed (idempotency)", {
 				sessionId: input.sessionId,
 			});
@@ -229,6 +232,8 @@ export const generateResults = (input: GenerateResultsInput) =>
 				status: "completed",
 				finalizationProgress: "completed",
 			});
+
+			yield* ensurePublicProfileForSession({ sessionId: input.sessionId, userId });
 
 			const costGuard = yield* CostGuardRepository;
 			const totalSessionCents = yield* costGuard

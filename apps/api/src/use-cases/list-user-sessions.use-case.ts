@@ -8,7 +8,7 @@
  * Dependencies: ConversationRepository, AppConfig
  */
 
-import { buildFacetScoresMap, deriveAssessmentSurfaceFromFacetScores } from "@workspace/domain";
+import { projectAssessmentSurfaceFromPersistedFacets } from "@workspace/domain";
 import { AppConfig } from "@workspace/domain/config/app-config";
 import type { DatabaseError } from "@workspace/domain/errors/http.errors";
 import { AssessmentResultRepository } from "@workspace/domain/repositories/assessment-result.repository";
@@ -53,8 +53,8 @@ export const listUserSessions = (
 
 				let oceanCode5: string | null = null;
 				let archetypeName: string | null = null;
-				if (result && Object.keys(result.facets).length > 0) {
-					const projection = deriveAssessmentSurfaceFromFacetScores(buildFacetScoresMap(result.facets));
+				if (result) {
+					const { projection } = projectAssessmentSurfaceFromPersistedFacets(result.facets);
 					oceanCode5 = projection.oceanCode5;
 					archetypeName = projection.archetype.name;
 				}

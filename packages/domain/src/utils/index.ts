@@ -9,6 +9,8 @@ export {
 	type AssessmentSurfaceProjection,
 	buildFacetScoresMap,
 	deriveAssessmentSurfaceFromFacetScores,
+	type PersistedFacetScoresFragment,
+	projectAssessmentSurfaceFromPersistedFacets,
 } from "./assessment-surface-projection";
 export {
 	calculateConfidenceFromFacetScores,

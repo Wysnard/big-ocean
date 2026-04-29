@@ -5,20 +5,25 @@ Shared domain language for Big Ocean architecture discussions. This file records
 ## Language
 
 **Assessment Finalization**:
-The completion step that turns a finished Nerin conversation into persisted assessment results, a UserSummary, and queued portrait generation.
-_Avoid_: lazy finalization, result generation
+The completion step that turns a finished Nerin conversation into persisted assessment results, a UserSummary, queued portrait generation, and—before success is returned—the idempotent creation of the session’s shareable public profile row (private by default) so read paths such as `/results` only query profile metadata; they do not create that row.
+*Avoid*: lazy finalization, result generation
 
 **Authenticated Conversation**:
 A Nerin conversation owned by a signed-in user from its first turn.
-_Avoid_: anonymous session, guest session
+*Avoid*: anonymous session, guest session
 
 **UserSummary**:
 A persisted compressed representation of a user's personality evidence, themes, tensions, and quote bank for downstream Nerin-voiced surfaces.
-_Avoid_: summary blob, profile summary
+*Avoid*: summary blob, profile summary
 
 **Portrait**:
 The long-form Nerin-written personality letter generated from finalized assessment data.
-_Avoid_: result, report
+*Avoid*: result, report
+
+**Assessment surface**:
+The read-time personality summary derived from facet scores: the five-letter OCEAN code, its four-letter form, and the matched archetype metadata (name, description, color, curated flag). It is computed from the canonical facet map — never stored as a separate source of truth; storage holds facet-level scores only.
+*Avoid*: OCEAN row, stored archetype
+*Implementation*: `AssessmentSurfaceProjection` in `@workspace/domain`; hydrate persisted facets and derive the surface with `projectAssessmentSurfaceFromPersistedFacets`.
 
 ## Relationships
 
@@ -26,6 +31,8 @@ _Avoid_: result, report
 - An **Assessment Finalization** produces exactly one scored assessment result.
 - An **Assessment Finalization** requires a **UserSummary** before it can complete.
 - An **Assessment Finalization** queues **Portrait** generation after the result and UserSummary are ready.
+- An **Assessment Finalization** provisions the session’s shareable public profile row (private by default); `/results` reads that row and does not create it.
+- An **Assessment surface** is derived from the same facet scores that feed trait views and confidence; it does not replace **UserSummary** or **Portrait**.
 
 ## Example Dialogue
 

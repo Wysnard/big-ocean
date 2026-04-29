@@ -12,8 +12,6 @@
 import { ProfileNotFound, ProfilePrivate } from "@workspace/contracts/errors";
 import {
 	AssessmentResultRepository,
-	buildFacetScoresMap,
-	deriveAssessmentSurfaceFromFacetScores,
 	deriveTraitSummary,
 	type FacetScoresMap,
 	LoggerRepository,
@@ -21,6 +19,7 @@ import {
 	OceanCode5Schema,
 	ProfileAccessLogRepository,
 	PublicProfileRepository,
+	projectAssessmentSurfaceFromPersistedFacets,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
@@ -103,7 +102,7 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 
 		// 5. Read persisted facet scores from assessment_results
 		const result = yield* resultRepo.getBySessionId(profile.sessionId);
-		if (!result || Object.keys(result.facets).length === 0) {
+		if (!result) {
 			return yield* Effect.fail(
 				new ProfileNotFound({
 					publicProfileId: input.publicProfileId,
@@ -111,10 +110,11 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 				}),
 			);
 		}
-		const facets: FacetScoresMap = buildFacetScoresMap(result.facets);
+		const { facetScoresMap: facets, projection } = projectAssessmentSurfaceFromPersistedFacets(
+			result.facets,
+		);
 
-		// 6. Derive ocean codes from facet scores (single source of truth)
-		const projection = deriveAssessmentSurfaceFromFacetScores(facets);
+		// 6. Ocean codes + archetype from canonical facet map (derive-at-read)
 		const traitSummary = deriveTraitSummary(projection.oceanCode5);
 
 		logger.info(profile.isPublic ? "Public profile viewed" : "Private profile viewed by owner", {

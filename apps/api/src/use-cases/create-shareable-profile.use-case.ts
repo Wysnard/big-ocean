@@ -9,11 +9,10 @@ import { ProfileError } from "@workspace/contracts/errors";
 import {
 	AppConfig,
 	AssessmentResultRepository,
-	buildFacetScoresMap,
 	ConversationRepository,
-	deriveAssessmentSurfaceFromFacetScores,
 	LoggerRepository,
 	PublicProfileRepository,
+	projectAssessmentSurfaceFromPersistedFacets,
 } from "@workspace/domain";
 import { Effect } from "effect";
 
@@ -60,12 +59,12 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 
 		// 3. Read persisted facet scores from assessment_results
 		const result = yield* resultRepo.getBySessionId(input.sessionId);
-		if (!result || Object.keys(result.facets).length === 0) {
+		if (!result) {
 			return yield* Effect.fail(
 				new ProfileError({ message: "Assessment results not found for this session" }),
 			);
 		}
-		const projection = deriveAssessmentSurfaceFromFacetScores(buildFacetScoresMap(result.facets));
+		const { projection } = projectAssessmentSurfaceFromPersistedFacets(result.facets);
 
 		// 5. Validate session has userId
 		if (!session.userId) {
