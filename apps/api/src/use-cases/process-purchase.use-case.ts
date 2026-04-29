@@ -1,34 +1,28 @@
 /**
- * Process Purchase Use Case (Story 13.2, extended Story 13.3, extended Story 3.4)
+ * Process Purchase Use Case (Story 13.2, extended Story 3.4)
  *
  * Effect-based use-case that maps a Polar webhook order to a purchase event.
  * The actual webhook handler (createOnOrderPaidHandler) uses plain Drizzle
  * in Better Auth's async context; this use-case exists for unit-testable
  * business logic with Effect's DI.
  *
- * Story 13.3 adds:
- * - Two-phase idempotency for duplicate webhooks
- * - Portrait placeholder insertion in transaction
- * - forkDaemon for async portrait generation
+ * Portrait generation is owned by Assessment Finalization (queue + worker), not purchase flows.
+ * `portrait_unlocked` events may still be recorded for historical capability derivation.
  *
  * Story 3.4 adds:
  * - Free credit grant on first portrait purchase (FR33)
  *
- * Dependencies: PurchaseEventRepository, ConversationRepository,
- *               AssessmentResultRepository, PortraitRepository, AppConfig
+ * Dependencies: PurchaseEventRepository, AppConfig
  */
 
 import type { PurchaseEventType } from "@workspace/domain";
 import {
 	AppConfig,
-	ConversationRepository,
 	LoggerRepository,
-	PortraitRepository,
 	PurchaseEventRepository,
 	UnknownProductError,
 } from "@workspace/domain";
 import { Effect } from "effect";
-import { generateFullPortrait } from "./generate-full-portrait.use-case";
 
 export interface ProcessPurchaseInput {
 	readonly userId: string;
@@ -60,32 +54,17 @@ const mapProductToEventType = (
 };
 
 /**
- * Check if event type should trigger portrait generation
- */
-const shouldTriggerPortrait = (eventType: PurchaseEventType): boolean =>
-	eventType === "portrait_unlocked";
-
-/**
  * Process Purchase Use Case
  *
  * Two-phase idempotency pattern (Story 13.3):
  *
- * Phase 1: Idempotency check
- * - Check if checkout already processed via getByCheckoutId
- * - If duplicate webhook: check portrait state for re-trigger
- * - Re-trigger generation if portrait exists but not complete
- *
- * Phase 2: First-time insertion
- * - Find user's completed assessment
- * - Insert purchase event + portrait placeholder in transaction
- * - forkDaemon for async portrait generation
+ * Phase 1: Idempotency check — return existing event if checkout already processed
+ * Phase 2: First-time insertion — insert purchase event (+ optional free credit side-effect)
  */
 export const processPurchase = (input: ProcessPurchaseInput) =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
 		const purchaseRepo = yield* PurchaseEventRepository;
-		const sessionRepo = yield* ConversationRepository;
-		const portraitRepo = yield* PortraitRepository;
 		const logger = yield* LoggerRepository;
 
 		const eventType = mapProductToEventType(input.productId, config);
@@ -103,31 +82,11 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 		// ───────────────────────────────────────────────────────────────
 		const existingEvent = yield* purchaseRepo.getByCheckoutId(input.checkoutId);
 		if (existingEvent) {
-			logger.info("Duplicate webhook detected, checking portrait state", {
+			logger.info("Duplicate webhook detected, returning existing purchase event", {
 				checkoutId: input.checkoutId,
 				existingEventId: existingEvent.id,
 			});
 
-			// For portrait-triggering events, check if we should re-trigger generation
-			if (shouldTriggerPortrait(eventType)) {
-				// Find user's completed session to get portrait context
-				const session = yield* sessionRepo.findSessionByUserId(input.userId);
-				if (session && session.status === "completed") {
-					const portrait = yield* portraitRepo.getFullPortraitBySessionId(session.id);
-					// Re-trigger if portrait exists but not complete and retries remain
-					if (portrait && portrait.content === null && !portrait.failedAt) {
-						logger.info("Re-triggering portrait generation from duplicate webhook", {
-							portraitId: portrait.id,
-							sessionId: session.id,
-						});
-						yield* Effect.forkDaemon(
-							generateFullPortrait({ sessionId: session.id, userId: input.userId }),
-						);
-					}
-				}
-			}
-
-			// Return existing event (idempotent success)
 			return existingEvent;
 		}
 
@@ -144,22 +103,6 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 			currency: input.currency,
 			metadata: is5Pack ? { units: 5 } : null,
 		};
-
-		// Find user's completed assessment for portrait generation
-		let sessionId: string | null = null;
-
-		if (shouldTriggerPortrait(eventType)) {
-			const session = yield* sessionRepo.findSessionByUserId(input.userId);
-
-			if (session && session.status === "completed") {
-				sessionId = session.id;
-			} else {
-				logger.info("No completed assessment found, skipping portrait generation", {
-					userId: input.userId,
-					eventType,
-				});
-			}
-		}
 
 		// Insert purchase event
 		const insertResult = yield* purchaseRepo.insertEvent(eventInput);
@@ -186,13 +129,6 @@ export const processPurchase = (input: ProcessPurchaseInput) =>
 			}
 		}
 
-		// Spawn portrait generation daemon if portrait-triggering event
-		if (shouldTriggerPortrait(eventType) && sessionId) {
-			logger.info("Spawning portrait generation daemon", { sessionId });
-			yield* Effect.forkDaemon(generateFullPortrait({ sessionId, userId: input.userId }));
-		}
-
-		// ───────────────────────────────────────────────────────────────
 		if (eventType === "extended_conversation_unlocked") {
 			logger.info("Recorded extension purchase while extension remains disabled in MVP", {
 				userId: input.userId,

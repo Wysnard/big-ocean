@@ -24,6 +24,10 @@ A persisted compressed representation of a user's personality evidence, themes, 
 The long-form Nerin-written personality letter generated from finalized assessment data.
 *Avoid*: result, report
 
+**Portrait Pipeline**:
+The completed-assessment-to-**Portrait** lifecycle: **Assessment Finalization** enqueues work on the portrait job queue, the background worker runs portrait generation, and read paths derive status from the completed assessment result and portrait rows (not from purchase events). See [docs/portrait-pipeline.md](docs/portrait-pipeline.md).
+*Avoid*: purchase-triggered portrait generation, lazy portrait creation on share
+
 **Assessment surface**:
 The read-time personality summary derived from facet scores: the five-letter OCEAN code, its four-letter form, and the matched archetype metadata (name, description, color, curated flag). It is computed from the canonical facet map — never stored as a separate source of truth; storage holds facet-level scores only.
 *Avoid*: OCEAN row, stored archetype

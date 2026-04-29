@@ -87,14 +87,13 @@ const BaseServices = Layer.mergeAll(AppConfigLive, LoggerPinoRepositoryLive);
 // Database stack needs AppConfig
 const DatabaseServices = DatabaseStack.pipe(Layer.provide(AppConfigLive));
 
-// Portrait job queue — shared between webhook (offer) and worker fiber (take)
+// Portrait job queue — shared between finalization/retry (offer) and worker fiber (take)
 const PortraitJobQueueLive = Layer.effect(PortraitJobQueue, Queue.unbounded<PortraitJob>());
 
-// BetterAuth needs AppConfig, LoggerRepository, and PortraitJobQueue
+// BetterAuth needs AppConfig and LoggerRepository (plain pg pool for Better Auth queries)
 const AuthServices = BetterAuthLive.pipe(
 	Layer.provide(LoggerPinoRepositoryLive),
 	Layer.provide(AppConfigLive),
-	Layer.provide(PortraitJobQueueLive),
 );
 
 // Complete infrastructure layer - merge all services for consumers

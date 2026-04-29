@@ -1,17 +1,11 @@
 /**
  * Get Portrait Status Use Case Tests (queue-based architecture)
  *
- * Tests:
- * - deriveStatus pure function for all cases (none, generating, ready, failed)
- * - Read-only status polling (no reconciliation, no forkDaemon)
+ * Tests deriveStatus + read-only polling (assessment-result-driven generating signal).
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-	AssessmentResultRepository,
-	PortraitRepository,
-	PurchaseEventRepository,
-} from "@workspace/domain";
+import { AssessmentResultRepository, PortraitRepository } from "@workspace/domain";
 import type { Portrait } from "@workspace/domain/repositories/portrait.repository";
 import { Effect, Layer } from "effect";
 import { vi } from "vitest";
@@ -23,13 +17,6 @@ const mockPortraitRepo = {
 	deleteByResultIdAndTier: vi.fn(),
 	getByResultIdAndTier: vi.fn(),
 	getFullPortraitBySessionId: vi.fn(),
-};
-
-const mockPurchaseRepo = {
-	insertEvent: vi.fn(),
-	getEventsByUserId: vi.fn(),
-	getCapabilities: vi.fn(),
-	getByCheckoutId: vi.fn(),
 };
 
 const mockResultRepo = {
@@ -44,7 +31,6 @@ const mockResultRepo = {
 const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
-		Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 	);
 
@@ -59,42 +45,70 @@ const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
 	...overrides,
 });
 
-describe("deriveStatus Pure Function (queue-based)", () => {
-	it("returns 'none' when portrait is null and no purchase", () => {
-		expect(deriveStatus(null, false)).toBe("none");
+describe("deriveStatus (assessment-result-driven)", () => {
+	it("returns 'none' when portrait is null and result not completed", () => {
+		expect(
+			deriveStatus({
+				portrait: null,
+				assessmentResultStage: "scored",
+			}),
+		).toBe("none");
 	});
 
-	it("returns 'generating' when no portrait but purchase exists", () => {
-		expect(deriveStatus(null, true)).toBe("generating");
+	it("returns 'generating' when result completed but no portrait row yet", () => {
+		expect(
+			deriveStatus({
+				portrait: null,
+				assessmentResultStage: "completed",
+			}),
+		).toBe("generating");
 	});
 
 	it("returns 'ready' when portrait has content", () => {
 		const portrait = createMockPortrait({ content: "Your personality portrait..." });
-		expect(deriveStatus(portrait, true)).toBe("ready");
+		expect(
+			deriveStatus({
+				portrait,
+				assessmentResultStage: "completed",
+			}),
+		).toBe("ready");
 	});
 
 	it("returns 'failed' when portrait has failedAt", () => {
 		const portrait = createMockPortrait({ failedAt: new Date() });
-		expect(deriveStatus(portrait, true)).toBe("failed");
+		expect(
+			deriveStatus({
+				portrait,
+				assessmentResultStage: "completed",
+			}),
+		).toBe("failed");
 	});
 
-	it("returns 'none' when portrait is null and no purchase (explicit false)", () => {
-		expect(deriveStatus(null, false)).toBe("none");
+	it("returns 'none' when portrait is null and no assessment result stage", () => {
+		expect(
+			deriveStatus({
+				portrait: null,
+				assessmentResultStage: undefined,
+			}),
+		).toBe("none");
 	});
 });
 
-describe("getPortraitStatus Use Case (queue-based, read-only)", () => {
+describe("getPortraitStatus Use Case (read-only)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it.effect("returns 'none' when no portrait and no userId", () =>
+	it.effect("returns 'generating' when result completed and no portrait row", () =>
 		Effect.gen(function* () {
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			mockResultRepo.getBySessionId.mockReturnValue(
+				Effect.succeed({ id: "result_456", stage: "completed" as const }),
+			);
 
 			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
-			expect(result.status).toBe("none");
+			expect(result.status).toBe("generating");
 			expect(result.portrait).toBeNull();
 		}).pipe(Effect.provide(createTestLayer())),
 	);
@@ -106,6 +120,9 @@ describe("getPortraitStatus Use Case (queue-based, read-only)", () => {
 				modelUsed: "test-model",
 			});
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
+			mockResultRepo.getBySessionId.mockReturnValue(
+				Effect.succeed({ id: "result_456", stage: "completed" as const }),
+			);
 
 			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
@@ -114,29 +131,13 @@ describe("getPortraitStatus Use Case (queue-based, read-only)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("returns 'generating' when purchase exists for this result but no portrait", () =>
-		Effect.gen(function* () {
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
-			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
-			mockPurchaseRepo.getEventsByUserId.mockReturnValue(
-				Effect.succeed([
-					{ eventType: "portrait_unlocked", assessmentResultId: "result_456", createdAt: new Date() },
-				]),
-			);
-
-			const result = yield* getPortraitStatus({
-				sessionId: "session_123",
-				userId: "user_789",
-			});
-
-			expect(result.status).toBe("generating");
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
 	it.effect("returns 'failed' when portrait has failedAt", () =>
 		Effect.gen(function* () {
 			const portrait = createMockPortrait({ failedAt: new Date() });
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(portrait));
+			mockResultRepo.getBySessionId.mockReturnValue(
+				Effect.succeed({ id: "result_456", stage: "completed" as const }),
+			);
 
 			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
@@ -145,39 +146,14 @@ describe("getPortraitStatus Use Case (queue-based, read-only)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("returns 'none' when no purchase exists for this result", () =>
+	it.effect("returns 'none' when result exists but not completed yet", () =>
 		Effect.gen(function* () {
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
-			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
-			mockPurchaseRepo.getEventsByUserId.mockReturnValue(Effect.succeed([]));
-
-			const result = yield* getPortraitStatus({
-				sessionId: "session_123",
-				userId: "user_789",
-			});
-
-			expect(result.status).toBe("none");
-		}).pipe(Effect.provide(createTestLayer())),
-	);
-
-	it.effect("returns 'none' when only extension purchase events exist for this result", () =>
-		Effect.gen(function* () {
-			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
-			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
-			mockPurchaseRepo.getEventsByUserId.mockReturnValue(
-				Effect.succeed([
-					{
-						eventType: "extended_conversation_unlocked",
-						assessmentResultId: "result_456",
-						createdAt: new Date(),
-					},
-				]),
+			mockResultRepo.getBySessionId.mockReturnValue(
+				Effect.succeed({ id: "result_456", stage: "scored" as const }),
 			);
 
-			const result = yield* getPortraitStatus({
-				sessionId: "session_123",
-				userId: "user_789",
-			});
+			const result = yield* getPortraitStatus({ sessionId: "session_123" });
 
 			expect(result.status).toBe("none");
 		}).pipe(Effect.provide(createTestLayer())),

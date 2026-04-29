@@ -88,7 +88,12 @@ export const PortraitGeneratorClaudeRepositoryLive = Layer.effect(
 					const evidenceFormatted = formatEvidence(input.allEvidence);
 					const depthSignal = computeDepthSignal(input.scoringEvidence);
 
-					const userPrompt = `PERSONALITY DATA:
+					const userSummaryBlock =
+						input.userSummary !== undefined
+							? `USER SUMMARY (canonical compressed user-state — prioritize themes and verbatim quotes for voice and specificity):\n\n${input.userSummary.summaryText}\n\nTHEMES:\n${input.userSummary.themes.map((t) => `- ${t.theme}: ${t.description}`).join("\n")}\n\nQUOTE BANK (verbatim user language):\n${input.userSummary.quoteBank.map((q) => `- ${q.quote}`).join("\n")}\n\n---\n\n`
+							: "";
+
+					const userPrompt = `${userSummaryBlock}PERSONALITY DATA:
 
 FACET GLOSSARY (what each facet measures):
 ${FACET_GLOSSARY}

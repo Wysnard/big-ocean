@@ -2,7 +2,7 @@
  * Process Purchase Use Case Tests (Story 13.2 + 13.3)
  *
  * Verifies product mapping, event insertion, duplicate handling,
- * unknown product rejection, and portrait generation triggering.
+ * unknown product rejection. Portrait generation is owned by Assessment Finalization (queue + worker).
  */
 
 import { vi } from "vitest";
@@ -10,21 +10,8 @@ import { vi } from "vitest";
 vi.mock("@workspace/infrastructure/repositories/purchase-event.drizzle.repository");
 vi.mock("@workspace/domain/config/app-config");
 
-// Mock generateFullPortrait to verify forkDaemon calls
-vi.mock("../generate-full-portrait.use-case", () => ({
-	generateFullPortrait: vi.fn(() => Effect.succeed({ success: true })),
-}));
-
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-	AssessmentResultRepository,
-	ConversationRepository,
-	ExchangeRepository,
-	LoggerRepository,
-	MessageRepository,
-	PortraitRepository,
-	PurchaseEventRepository,
-} from "@workspace/domain";
+import { LoggerRepository, PurchaseEventRepository } from "@workspace/domain";
 import {
 	createTestAppConfigLayer,
 	mockAppConfig,
@@ -33,64 +20,6 @@ import { _resetMockState } from "@workspace/infrastructure/repositories/__mocks_
 import { PurchaseEventDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/purchase-event.drizzle.repository";
 import { Effect, Exit, Layer } from "effect";
 import { processPurchase } from "../process-purchase.use-case";
-
-// Mock repositories needed for portrait flow + extension activation (Story 36-1)
-const mockSessionRepo = {
-	createSession: vi.fn(),
-	getSession: vi.fn(),
-	updateSession: vi.fn(),
-	getActiveSessionByUserId: vi.fn(),
-	getSessionsByUserId: vi.fn(),
-	findSessionByUserId: vi.fn(),
-	incrementMessageCount: vi.fn(),
-	acquireSessionLock: vi.fn(),
-	releaseSessionLock: vi.fn(),
-	createExtensionSession: vi.fn(),
-	findCompletedSessionWithoutChild: vi.fn(),
-	hasExtensionSession: vi.fn(),
-	findExtensionSession: vi.fn(),
-	findDropOffSessions: vi.fn(),
-	markDropOffEmailSent: vi.fn(),
-};
-
-const mockMessageRepo = {
-	saveMessage: vi.fn(() =>
-		Effect.succeed({
-			id: "msg_mock",
-			sessionId: "session_mock",
-			role: "assistant",
-			content: "mock message",
-			createdAt: new Date(),
-		}),
-	),
-	getMessages: vi.fn(),
-};
-
-const mockExchangeRepo = {
-	create: vi.fn(() =>
-		Effect.succeed({ id: "exchange_mock", sessionId: "session_mock", turnNumber: 0 }),
-	),
-	getBySessionId: vi.fn(),
-	getBySessionIdAndTurn: vi.fn(),
-	update: vi.fn(),
-	getLastExchange: vi.fn(),
-};
-
-const mockResultsRepo = {
-	getBySessionId: vi.fn(),
-	getByUserId: vi.fn(),
-	upsert: vi.fn(),
-	getById: vi.fn(),
-	delete: vi.fn(),
-};
-
-const mockPortraitRepo = {
-	insertWithContent: vi.fn(),
-	insertFailed: vi.fn(),
-	deleteByResultIdAndTier: vi.fn(),
-	getByResultIdAndTier: vi.fn(),
-	getFullPortraitBySessionId: vi.fn(),
-};
 
 const mockLogger = {
 	info: vi.fn(),
@@ -102,12 +31,7 @@ const mockLogger = {
 const TestLayer = Layer.mergeAll(
 	PurchaseEventDrizzleRepositoryLive,
 	createTestAppConfigLayer(),
-	Layer.succeed(ConversationRepository, mockSessionRepo),
-	Layer.succeed(AssessmentResultRepository, mockResultsRepo),
-	Layer.succeed(PortraitRepository, mockPortraitRepo),
 	Layer.succeed(LoggerRepository, mockLogger),
-	Layer.succeed(MessageRepository, mockMessageRepo),
-	Layer.succeed(ExchangeRepository, mockExchangeRepo),
 );
 
 const baseInput = {
@@ -121,16 +45,6 @@ describe("processPurchase Use Case", () => {
 	beforeEach(() => {
 		_resetMockState();
 		vi.clearAllMocks();
-		// Default mocks: no existing session
-		mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(null));
-		mockSessionRepo.findCompletedSessionWithoutChild.mockReturnValue(Effect.succeed(null));
-		mockSessionRepo.hasExtensionSession.mockReturnValue(Effect.succeed(false));
-		mockSessionRepo.findExtensionSession.mockReturnValue(Effect.succeed(null));
-		mockSessionRepo.createExtensionSession.mockReturnValue(
-			Effect.succeed({ sessionId: "ext_session_mock" }),
-		);
-		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
-		mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 	});
 
 	it.effect("should record portrait_unlocked for portrait product", () =>
@@ -208,13 +122,11 @@ describe("processPurchase Use Case", () => {
 
 	it.effect("should return existing event on duplicate webhook (idempotent)", () =>
 		Effect.gen(function* () {
-			// First insert succeeds
 			const first = yield* processPurchase({
 				...baseInput,
 				productId: mockAppConfig.polarProductPortraitUnlock,
 			});
 
-			// Second insert with same checkoutId should return existing event (idempotent)
 			const second = yield* processPurchase({
 				...baseInput,
 				productId: mockAppConfig.polarProductPortraitUnlock,
@@ -222,149 +134,19 @@ describe("processPurchase Use Case", () => {
 
 			expect(second.id).toBe(first.id);
 			expect(mockLogger.info).toHaveBeenCalledWith(
-				"Duplicate webhook detected, checking portrait state",
+				"Duplicate webhook detected, returning existing purchase event",
 				expect.objectContaining({ checkoutId: "checkout_abc" }),
 			);
 		}).pipe(Effect.provide(TestLayer)),
 	);
-});
 
-describe("processPurchase Portrait Generation (Story 13.3)", () => {
-	beforeEach(() => {
-		_resetMockState();
-		vi.clearAllMocks();
-	});
-
-	const mockCompletedSession = {
-		id: "session_456",
-		userId: "user_123",
-		status: "completed",
-		createdAt: new Date(),
-		updatedAt: new Date(),
-		messageCount: 20,
-		finalizationProgress: null,
-	};
-
-	const mockResult = {
-		id: "result_789",
-		sessionId: "session_456",
-		userId: "user_123",
-		facets: {},
-		createdAt: new Date(),
-		updatedAt: new Date(),
-	};
-
-	it.effect("should spawn portrait generation when user has completed assessment", () =>
+	it.effect("does not spawn portrait generation from purchase flow", () =>
 		Effect.gen(function* () {
-			mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(mockCompletedSession));
-			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
-
 			yield* processPurchase({
 				...baseInput,
 				productId: mockAppConfig.polarProductPortraitUnlock,
 			});
 
-			// Verify portrait generation daemon was spawned
-			expect(mockLogger.info).toHaveBeenCalledWith(
-				"Spawning portrait generation daemon",
-				expect.objectContaining({ sessionId: "session_456" }),
-			);
-		}).pipe(Effect.provide(TestLayer)),
-	);
-
-	it.effect("should skip portrait generation when user has no completed assessment", () =>
-		Effect.gen(function* () {
-			// User has no completed session
-			mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(null));
-
-			const result = yield* processPurchase({
-				...baseInput,
-				productId: mockAppConfig.polarProductPortraitUnlock,
-			});
-
-			expect(result.eventType).toBe("portrait_unlocked");
-
-			// Verify logging about no completed assessment
-			expect(mockLogger.info).toHaveBeenCalledWith(
-				"No completed assessment found, skipping portrait generation",
-				expect.objectContaining({ userId: "user_123" }),
-			);
-		}).pipe(Effect.provide(TestLayer)),
-	);
-
-	it.effect("should keep extended_conversation_unlocked dormant in MVP", () =>
-		Effect.gen(function* () {
-			mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(mockCompletedSession));
-			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
-
-			yield* processPurchase({
-				...baseInput,
-				productId: mockAppConfig.polarProductExtendedConversation,
-			});
-
-			expect(mockLogger.info).not.toHaveBeenCalledWith(
-				"Spawning portrait generation daemon",
-				expect.anything(),
-			);
-			expect(mockSessionRepo.findCompletedSessionWithoutChild).not.toHaveBeenCalled();
-			expect(mockSessionRepo.createExtensionSession).not.toHaveBeenCalled();
-		}).pipe(Effect.provide(TestLayer)),
-	);
-
-	it.effect(
-		"should re-trigger portrait generation on duplicate webhook if portrait incomplete",
-		() =>
-			Effect.gen(function* () {
-				mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(mockCompletedSession));
-				mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
-
-				// First purchase
-				yield* processPurchase({
-					...baseInput,
-					productId: mockAppConfig.polarProductPortraitUnlock,
-				});
-
-				// Simulate incomplete portrait from first attempt
-				const incompletePortrait = {
-					id: "portrait_incomplete",
-					assessmentResultId: "result_789",
-					tier: "full" as const,
-					content: null, // Still generating
-
-					modelUsed: "claude-sonnet-4-6",
-					failedAt: null,
-					createdAt: new Date(),
-				};
-				mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(incompletePortrait));
-
-				// Duplicate webhook (retry)
-				yield* processPurchase({
-					...baseInput,
-					productId: mockAppConfig.polarProductPortraitUnlock,
-				});
-
-				// Verify re-trigger logging
-				expect(mockLogger.info).toHaveBeenCalledWith(
-					"Re-triggering portrait generation from duplicate webhook",
-					expect.objectContaining({
-						portraitId: "portrait_incomplete",
-						sessionId: "session_456",
-					}),
-				);
-			}).pipe(Effect.provide(TestLayer)),
-	);
-
-	it.effect("should NOT trigger portrait for credit_purchased events", () =>
-		Effect.gen(function* () {
-			mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(mockCompletedSession));
-			mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
-
-			yield* processPurchase({
-				...baseInput,
-				productId: mockAppConfig.polarProductRelationshipSingle,
-			});
-
-			// Portrait generation daemon should NOT be spawned
 			expect(mockLogger.info).not.toHaveBeenCalledWith(
 				"Spawning portrait generation daemon",
 				expect.anything(),
@@ -377,10 +159,6 @@ describe("processPurchase Free Credit Grant (Story 3.4)", () => {
 	beforeEach(() => {
 		_resetMockState();
 		vi.clearAllMocks();
-		// Default: no existing session (portrait flow not needed for credit tests)
-		mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(null));
-		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
-		mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
 	});
 
 	it.effect("should grant free_credit_granted on first portrait_unlocked", () =>
@@ -408,14 +186,12 @@ describe("processPurchase Free Credit Grant (Story 3.4)", () => {
 		Effect.gen(function* () {
 			const purchaseRepo = yield* PurchaseEventRepository;
 
-			// First purchase — gets free credit
 			yield* processPurchase({
 				...baseInput,
 				checkoutId: "checkout_first",
 				productId: mockAppConfig.polarProductPortraitUnlock,
 			});
 
-			// Second purchase — should NOT get another free credit
 			yield* processPurchase({
 				...baseInput,
 				checkoutId: "checkout_second",

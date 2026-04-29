@@ -83,13 +83,12 @@ const BaseServices = Layer.mergeAll(AppConfigLive, LoggerPinoRepositoryLive);
 
 const DatabaseServices = DatabaseStack.pipe(Layer.provide(AppConfigLive));
 
-// Portrait job queue — shared between webhook (offer) and worker fiber (take)
+// Portrait job queue — shared between finalization/retry (offer) and worker fiber (take)
 const PortraitJobQueueLive = Layer.effect(PortraitJobQueue, Queue.unbounded<PortraitJob>());
 
 const AuthServices = BetterAuthLive.pipe(
 	Layer.provide(LoggerPinoRepositoryLive),
 	Layer.provide(AppConfigLive),
-	Layer.provide(PortraitJobQueueLive),
 );
 
 const InfrastructureLayer = Layer.mergeAll(

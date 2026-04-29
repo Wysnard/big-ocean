@@ -1,10 +1,10 @@
 /**
  * Portrait Job Queue Service
  *
- * Effect Queue that bridges the Promise-based webhook (Better Auth)
- * with the Effect-based portrait generation worker.
+ * Effect Queue that bridges finalize/retry paths Promise-safe `Queue.offer` calls
+ * with the Effect-based portrait generation worker (ADR-7).
  *
- * Webhook → Queue.offer (Promise-safe) → Worker fiber → generateFullPortrait
+ * Producer examples: Assessment Finalization (`generate-results`), manual retry (`retry-portrait`).
  */
 
 import { Context, type Queue } from "effect";

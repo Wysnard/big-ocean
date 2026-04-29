@@ -5,6 +5,16 @@ import type { DomainMessage } from "../types/message";
 import type { ConversationEvidenceRecord } from "./conversation-evidence.repository";
 
 /**
+ * Canonical user-state slice passed into portrait generation (from persisted UserSummary).
+ * Keeps the portrait generator aligned with ADR-55 (compression layer) ahead of ADR-51 stages.
+ */
+export interface PortraitUserSummaryInput {
+	readonly summaryText: string;
+	readonly themes: readonly { readonly theme: string; readonly description: string }[];
+	readonly quoteBank: readonly { readonly quote: string }[];
+}
+
+/**
  * Input for portrait generation
  *
  * Pre-computed data from persisted assessment results — generator only produces text.
@@ -17,6 +27,8 @@ export interface PortraitGenerationInput {
 	/** v2 evidence for depth signal computation (Story 18-2) */
 	readonly scoringEvidence: ReadonlyArray<EvidenceInput>;
 	readonly messages: ReadonlyArray<DomainMessage>;
+	/** When set, folds structured UserSummary into the prompt (ADR-55); raw evidence remains for depth adaptation until ADR-51 split ships. */
+	readonly userSummary?: PortraitUserSummaryInput;
 }
 
 /**

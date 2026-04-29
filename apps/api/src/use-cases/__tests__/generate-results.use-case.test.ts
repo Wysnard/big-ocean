@@ -110,6 +110,7 @@ const mockFinalizingSession = {
 	status: "finalizing",
 	messageCount: 25,
 	finalizationProgress: null,
+	parentConversationId: null,
 };
 
 const createTestLayer = () =>
@@ -339,7 +340,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 
 	describe("Full pipeline: conversation evidence -> scores -> completed", () => {
 		it.effect(
-			"happy path: reads conversation evidence, computes scores, no portrait at finalization",
+			"happy path: reads conversation evidence, computes scores, queues initial free portrait job",
 			() =>
 				Effect.gen(function* () {
 					// Seed conversation evidence
@@ -375,7 +376,6 @@ describe("generateResults Use Case (Story 18-4)", () => {
 						userId: "user_456",
 					});
 
-					// Assessment result created with scores but no portrait (Story 32-0)
 					const results = getStoredResults();
 					expect(results.size).toBe(1);
 					const record = results.get("session_123");
@@ -385,7 +385,11 @@ describe("generateResults Use Case (Story 18-4)", () => {
 					expect(Object.keys(record?.traits ?? {})).toHaveLength(5);
 					expect(record?.portrait).toBe("");
 
-					// Lock released
+					const queue = yield* PortraitJobQueue;
+					const job = yield* Queue.take(queue);
+					expect(job.sessionId).toBe("session_123");
+					expect(job.userId).toBe("user_456");
+
 					expect(mockSessionRepo.releaseSessionLock).toHaveBeenCalledWith("session_123");
 				}).pipe(Effect.provide(createTestLayer())),
 		);

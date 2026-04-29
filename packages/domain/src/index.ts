@@ -246,6 +246,7 @@ export {
 	PortraitGenerationError,
 	type PortraitGenerationInput,
 	PortraitGeneratorRepository,
+	type PortraitUserSummaryInput,
 } from "./repositories/portrait-generator.repository";
 // Portrait rating repository (Story 19-2)
 export type { InsertPortraitRating } from "./repositories/portrait-rating.repository";

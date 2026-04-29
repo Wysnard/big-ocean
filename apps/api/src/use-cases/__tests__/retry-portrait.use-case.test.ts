@@ -96,7 +96,9 @@ describe("retryPortrait Use Case (Story 32-6, queue-based)", () => {
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(failedPortrait));
-			mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed({ id: "result_456" }));
+			mockResultRepo.getBySessionId.mockReturnValue(
+				Effect.succeed({ id: "result_456", stage: "completed" as const }),
+			);
 			mockPortraitRepo.deleteByResultIdAndTier.mockReturnValue(Effect.succeed(true));
 
 			const result = yield* retryPortrait({
@@ -124,6 +126,9 @@ describe("retryPortrait Use Case (Story 32-6, queue-based)", () => {
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(readyPortrait));
+			mockResultRepo.getBySessionId.mockReturnValue(
+				Effect.succeed({ id: "result_456", stage: "completed" as const }),
+			);
 
 			const result = yield* retryPortrait({
 				sessionId: "session_123",
@@ -141,13 +146,16 @@ describe("retryPortrait Use Case (Story 32-6, queue-based)", () => {
 				Effect.succeed({ id: "session_123", userId: "user_789", status: "completed" }),
 			);
 			mockPortraitRepo.getFullPortraitBySessionId.mockReturnValue(Effect.succeed(null));
+			mockResultRepo.getBySessionId.mockReturnValue(
+				Effect.succeed({ id: "result_456", stage: "completed" as const }),
+			);
 
-			yield* retryPortrait({
+			const out = yield* retryPortrait({
 				sessionId: "session_123",
 				userId: "user_789",
 			});
 
-			// No portrait → deriveStatus returns "generating" (purchase assumed since user is retrying)
+			expect(out.status).toBe("generating");
 			// No delete should happen
 			expect(mockPortraitRepo.deleteByResultIdAndTier).not.toHaveBeenCalled();
 		}).pipe(Effect.provide(createTestLayer())),

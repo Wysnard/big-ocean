@@ -40,18 +40,22 @@ export const retryPortrait = (input: RetryPortraitInput) =>
 			policy: "portrait-retry",
 		});
 
-		// 2. Get current portrait and check it's failed
 		const portrait = yield* portraitRepo.getFullPortraitBySessionId(input.sessionId);
-		const currentStatus = deriveStatus(portrait, true);
+		const assessmentResult = yield* resultRepo
+			.getBySessionId(input.sessionId)
+			.pipe(Effect.catchAll(() => Effect.succeed(null)));
+
+		const currentStatus = deriveStatus({
+			portrait,
+			assessmentResultStage: assessmentResult?.stage,
+		});
 
 		if (currentStatus !== "failed" || !portrait) {
 			return { status: currentStatus } satisfies RetryPortraitOutput;
 		}
 
-		// 3. Get assessment result to find the result ID for deletion
-		const result = yield* resultRepo
-			.getBySessionId(input.sessionId)
-			.pipe(Effect.catchAll(() => Effect.succeed(null)));
+		const result = assessmentResult;
+
 		if (!result) {
 			return { status: currentStatus } satisfies RetryPortraitOutput;
 		}

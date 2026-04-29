@@ -16,15 +16,15 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { checkout, polar, portal, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
-import type { AppConfigService, PortraitJob, PurchaseEventType } from "@workspace/domain";
-import { AppConfig, PortraitJobQueue } from "@workspace/domain";
+import type { AppConfigService, PurchaseEventType } from "@workspace/domain";
+import { AppConfig } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { haveIBeenPwned } from "better-auth/plugins";
 import { and, desc, eq } from "drizzle-orm";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
-import { Context, Effect, Layer, Queue, Redacted } from "effect";
+import { Context, Effect, Layer, Redacted } from "effect";
 import pg from "pg";
 import { Resend } from "resend";
 import * as authSchema from "../db/drizzle/schema";
@@ -91,11 +91,6 @@ export const BetterAuthLive = Layer.effect(
 		// Receive dependencies through DI during layer construction
 		const config = yield* AppConfig;
 		const logger = yield* LoggerRepository;
-		const portraitQueue = yield* PortraitJobQueue;
-
-		// Bridge Promise→Effect: Queue.offer is self-contained, no runtime needed
-		const offerPortraitJob = (job: PortraitJob): Promise<boolean> =>
-			Effect.runPromise(Queue.offer(portraitQueue, job));
 
 		// Create a plain node-postgres pool for Better Auth
 		// Better Auth's drizzle adapter calls `await db.insert().returning()` which
@@ -446,16 +441,6 @@ export const BetterAuthLive = Layer.effect(
 											assessmentResultId,
 										})
 										.onConflictDoNothing();
-
-									// Only portrait purchases queue full portrait generation in MVP.
-									if (eventType === "portrait_unlocked" && sessionId) {
-										await offerPortraitJob({ sessionId, userId });
-										logger.info("Polar webhook: queued portrait generation", {
-											sessionId,
-											userId,
-											assessmentResultId,
-										});
-									}
 
 									if (eventType === "extended_conversation_unlocked") {
 										logger.info(

@@ -220,6 +220,8 @@ export const generateResults = (input: GenerateResultsInput) =>
 				session.parentConversationId != null &&
 				(yield* sessionRepo.countCompletedExtensionSessionsExcluding(userId, input.sessionId)) === 0;
 
+			const shouldQueueFreePortraitOnCompletion = session.parentConversationId == null;
+
 			// Set stage=completed on assessment_results
 			yield* assessmentResultRepo.updateStage(input.sessionId, "completed");
 
@@ -242,16 +244,21 @@ export const generateResults = (input: GenerateResultsInput) =>
 				userId,
 			});
 
-			if (shouldQueueBundledPortrait) {
+			if (shouldQueueFreePortraitOnCompletion || shouldQueueBundledPortrait) {
 				const portraitQueue = yield* PortraitJobQueue;
 				yield* Queue.offer(portraitQueue, {
 					sessionId: input.sessionId,
 					userId,
 				});
-				logger.info("Generate results: queued bundled portrait for first extension completion", {
-					sessionId: input.sessionId,
-					userId,
-				});
+				logger.info(
+					shouldQueueBundledPortrait
+						? "Generate results: queued bundled portrait for first extension completion"
+						: "Generate results: queued initial free portrait on assessment completion",
+					{
+						sessionId: input.sessionId,
+						userId,
+					},
+				);
 			}
 
 			logger.info("Generate results: finalization complete", {

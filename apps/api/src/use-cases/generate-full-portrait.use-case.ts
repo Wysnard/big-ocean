@@ -1,14 +1,15 @@
 /**
  * Generate Full Portrait Use Case (Story 13.3, refactored for queue-based generation)
  *
- * Background generation of full personality portrait after purchase.
- * Called by the portrait generation worker fiber.
+ * Background generation of full personality portrait after Assessment Finalization enqueues a job.
+ * Called only by the portrait generation worker fiber.
  *
  * Flow:
- * 1. Load assessment result, evidence, messages
- * 2. Call LLM with Effect.retry (3 total attempts, exponential backoff)
- * 3. On success: insert portrait row with content
- * 4. On failure: insert portrait row with failedAt
+ * 1. Require authenticated worker identity (`userId`) and UserSummary for the assessment result
+ * 2. Load Living Personality Model–scoped evidence and messages
+ * 3. Call LLM with Effect.retry (3 total attempts, exponential backoff)
+ * 4. On success: insert portrait row with content
+ * 5. On failure: insert portrait row with failedAt
  */
 
 import {
@@ -22,6 +23,8 @@ import {
 	MessageRepository,
 	PortraitGeneratorRepository,
 	PortraitRepository,
+	type PortraitUserSummaryInput,
+	UserSummaryRepository,
 } from "@workspace/domain";
 import type { EvidenceInput } from "@workspace/domain/types/evidence";
 import { Effect, Schedule } from "effect";
@@ -34,8 +37,18 @@ import {
 
 export interface GenerateFullPortraitInput {
 	readonly sessionId: string;
-	readonly userId?: string;
+	readonly userId: string;
 }
+
+const toPortraitUserSummaryInput = (record: {
+	readonly summaryText: string;
+	readonly themes: readonly { readonly theme: string; readonly description: string }[];
+	readonly quoteBank: readonly { readonly quote: string }[];
+}): PortraitUserSummaryInput => ({
+	summaryText: record.summaryText,
+	themes: record.themes,
+	quoteBank: record.quoteBank.map((q) => ({ quote: q.quote })),
+});
 
 /**
  * Generate full portrait for a completed assessment.
@@ -49,13 +62,15 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 		const portraitRepo = yield* PortraitRepository;
 		const portraitGen = yield* PortraitGeneratorRepository;
 		const resultsRepo = yield* AssessmentResultRepository;
-		const conversationEvidenceRepo = yield* ConversationEvidenceRepository;
-		const messageRepo = yield* MessageRepository;
+		const _conversationEvidenceRepo = yield* ConversationEvidenceRepository;
+		const _messageRepo = yield* MessageRepository;
+		const userSummaryRepo = yield* UserSummaryRepository;
 		const logger = yield* LoggerRepository;
 		const config = yield* AppConfig;
 
 		logger.info("Starting full portrait generation", {
 			sessionId: input.sessionId,
+			userId: input.userId,
 		});
 
 		// 1. Load assessment result
@@ -72,28 +87,30 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			return;
 		}
 
-		// 2. Load conversation evidence (authoritative source — Story 18-6).
-		// Queued jobs pass userId, which lets extension sessions use the Living
-		// Personality Model; older direct callers preserve current-session scope.
-		const scopedConversation =
-			input.userId === undefined
-				? null
-				: yield* requireAuthenticatedConversation({
-						sessionId: input.sessionId,
-						authenticatedUserId: input.userId,
-						policy: "owned-session",
-					});
-		const scope = scopedConversation
-			? resolveAuthenticatedConversationScope(scopedConversation)
-			: null;
-		const conversationEvidence = scope
-			? yield* loadScopedConversationEvidence(scope)
-			: yield* conversationEvidenceRepo.findBySession(input.sessionId);
+		const userSummaryRow = yield* userSummaryRepo.getByAssessmentResultId(result.id);
+		if (!userSummaryRow) {
+			logger.error("UserSummary missing for portrait generation — cannot proceed", {
+				sessionId: input.sessionId,
+				assessmentResultId: result.id,
+			});
+			yield* portraitRepo.insertFailed({
+				assessmentResultId: result.id,
+				tier: "full",
+				failedAt: new Date(),
+			});
+			return;
+		}
+
+		const scopedConversation = yield* requireAuthenticatedConversation({
+			sessionId: input.sessionId,
+			authenticatedUserId: input.userId,
+			policy: "owned-session",
+		});
+		const scope = resolveAuthenticatedConversationScope(scopedConversation);
+		const conversationEvidence = yield* loadScopedConversationEvidence(scope);
 
 		// 3. Load messages for portrait context
-		const messages = scope
-			? yield* loadScopedMessages(scope)
-			: yield* messageRepo.getMessages(input.sessionId);
+		const messages = yield* loadScopedMessages(scope);
 
 		// 4. Build facet scores map from result
 		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
@@ -118,6 +135,8 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			domain: ev.domain,
 		}));
 
+		const portraitUserSummary = toPortraitUserSummaryInput(userSummaryRow);
+
 		// 7. Generate portrait with retry (3 total LLM attempts, exponential backoff)
 		const contentResult = yield* portraitGen
 			.generatePortrait({
@@ -126,6 +145,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 				traitScoresMap,
 				allEvidence: conversationEvidence,
 				scoringEvidence,
+				userSummary: portraitUserSummary,
 				messages: messages.map((m) => ({
 					id: m.id,
 					role: m.role,
@@ -149,7 +169,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 				),
 			);
 
-		// 9. Insert portrait row based on outcome
+		// 8. Insert portrait row based on outcome
 		if (contentResult._tag === "success") {
 			yield* portraitRepo.insertWithContent({
 				assessmentResultId: result.id,
