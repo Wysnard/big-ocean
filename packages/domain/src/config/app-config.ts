@@ -65,6 +65,23 @@ export interface AppConfigService {
 	/** Portrait generator temperature (0-1) */
 	readonly portraitTemperature: number;
 
+	// ─── Portrait pipeline — ADR-51 three-stage portrait ─────────────────────
+
+	/** Stage A: Spine Extractor model (Sonnet + extended thinking budget) */
+	readonly portraitSpineExtractorModelId: string;
+
+	/** Extended thinking budget tokens for Spine Extractor (Stage A) */
+	readonly portraitSpineThinkingBudgetTokens: number;
+
+	/** Stage B: Spine Verifier model (Haiku — mechanical checklist) */
+	readonly portraitSpineVerifierModelId: string;
+
+	/** Stage C: Prose Renderer model (Sonnet — brief-only rendering) */
+	readonly portraitProseRendererModelId: string;
+
+	/** Stage C: Prose Renderer sampling temperature */
+	readonly portraitProseRendererTemperature: number;
+
 	/** Nerin agent model ID */
 	readonly nerinModelId: string;
 

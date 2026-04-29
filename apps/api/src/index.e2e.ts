@@ -30,7 +30,7 @@ import {
 	FacetEvidenceDrizzleRepositoryLive,
 	LifecycleEmailDrizzleRepositoryLive,
 	PortraitDrizzleRepositoryLive,
-	PortraitGeneratorMockRepositoryLive,
+	PortraitProseRendererMockRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
@@ -42,6 +42,8 @@ import {
 	RelationshipAnalysisGeneratorMockRepositoryLive,
 	RelationshipSharedNoteDrizzleRepositoryLive,
 	ResendEmailResendRepositoryLive,
+	SpineExtractorMockRepositoryLive,
+	SpineVerifierMockRepositoryLive,
 	UserSummaryDrizzleRepositoryLive,
 	UserSummaryGeneratorMockRepositoryLive,
 	WaitlistDrizzleRepositoryLive,
@@ -117,7 +119,7 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
  * Layers swapped for E2E:
  * - NerinAgentMockRepositoryLive (was: NerinAgentAnthropicRepositoryLive) — mock
  * - ConversanalyzerMockRepositoryLive (was: ConversanalyzerAnthropicRepositoryLive) — mock
- * - PortraitGeneratorMockRepositoryLive (was: PortraitGeneratorClaudeRepositoryLive) — mock
+ * - SpineExtractorMockRepositoryLive / SpineVerifierMockRepositoryLive / PortraitProseRendererMockRepositoryLive — mock
  * - RelationshipAnalysisGeneratorMockRepositoryLive (was: ...AnthropicRepositoryLive) — mock
  * - ResendEmailResendRepositoryLive — LIVE (sandbox API key via .env.e2e)
  *
@@ -140,7 +142,9 @@ const RepositoryLayers = Layer.mergeAll(
 	NerinAgentMockRepositoryLive,
 	NerinDirectorMockRepositoryLive,
 	CostGuardLayer,
-	PortraitGeneratorMockRepositoryLive,
+	SpineExtractorMockRepositoryLive,
+	SpineVerifierMockRepositoryLive,
+	PortraitProseRendererMockRepositoryLive,
 	PortraitDrizzleRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
 	PurchaseEventDrizzleRepositoryLive,

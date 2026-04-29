@@ -64,6 +64,9 @@ export const PortraitDrizzleRepositoryLive = Layer.succeed(
 					tier: data.tier,
 					content: data.content,
 					modelUsed: data.modelUsed,
+					spineBrief: data.spineBrief,
+					spineVerification: data.spineVerification,
+					portraitPipelineModels: data.portraitPipelineModels,
 					failedAt: null,
 					createdAt: new Date(),
 				};
@@ -89,6 +92,9 @@ export const PortraitDrizzleRepositoryLive = Layer.succeed(
 					tier: data.tier,
 					content: null,
 					modelUsed: null,
+					spineBrief: null,
+					spineVerification: null,
+					portraitPipelineModels: null,
 					failedAt: data.failedAt,
 					createdAt: new Date(),
 				};

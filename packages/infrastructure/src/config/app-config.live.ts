@@ -56,6 +56,23 @@ const configSchema = Config.all({
 	portraitMaxTokens: Config.number("PORTRAIT_MAX_TOKENS").pipe(Config.withDefault(8000)),
 	portraitTemperature: Config.number("PORTRAIT_TEMPERATURE").pipe(Config.withDefault(0.7)),
 
+	// ADR-51 portrait pipeline (explicit env overrides; defaults align with ADR-51)
+	portraitSpineExtractorModelId: Config.string("PORTRAIT_SPINE_EXTRACTOR_MODEL_ID").pipe(
+		Config.withDefault("claude-sonnet-4-6"),
+	),
+	portraitSpineThinkingBudgetTokens: Config.number("PORTRAIT_SPINE_THINKING_BUDGET_TOKENS").pipe(
+		Config.withDefault(2048),
+	),
+	portraitSpineVerifierModelId: Config.string("PORTRAIT_SPINE_VERIFIER_MODEL_ID").pipe(
+		Config.withDefault("claude-haiku-4-5-20251001"),
+	),
+	portraitProseRendererModelId: Config.string("PORTRAIT_PROSE_RENDERER_MODEL_ID").pipe(
+		Config.withDefault("claude-sonnet-4-6"),
+	),
+	portraitProseRendererTemperature: Config.number("PORTRAIT_PROSE_RENDERER_TEMPERATURE").pipe(
+		Config.withDefault(0.5),
+	),
+
 	// Nerin agent configuration
 	nerinModelId: Config.string("NERIN_MODEL_ID").pipe(
 		Config.withDefault("claude-haiku-4-5-20251001"),

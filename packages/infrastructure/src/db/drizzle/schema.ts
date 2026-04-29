@@ -434,6 +434,12 @@ export const portraits = pgTable(
 		tier: text("tier").notNull().$type<"full">(),
 		content: text("content"),
 		modelUsed: text("model_used"),
+		/** ADR-51 Stage A output */
+		spineBrief: jsonb("spine_brief"),
+		/** ADR-51 Stage B output */
+		spineVerification: jsonb("spine_verification"),
+		/** ADR-51 model IDs used per stage */
+		portraitPipelineModels: jsonb("portrait_pipeline_models"),
 		failedAt: timestamp("failed_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

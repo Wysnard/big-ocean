@@ -512,6 +512,9 @@ importers:
 
   packages/infrastructure:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.74.0
+        version: 0.74.0(zod@4.3.6)
       '@better-auth/drizzle-adapter':
         specifier: 'catalog:'
         version: 1.5.0-beta.11(024622af9ec58fba04faf661fc83635b)

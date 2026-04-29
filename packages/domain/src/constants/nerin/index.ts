@@ -8,3 +8,13 @@
 
 // Portrait context — letter-writing instructions for portrait generation
 export { PORTRAIT_CONTEXT } from "./portrait-context";
+// ADR-51 three-stage portrait pipeline (prompt builders)
+export { buildPortraitProseUserPrompt } from "./portrait-prose-renderer-prompt";
+export {
+	buildSpineExtractorUserPrompt,
+	SPINE_EXTRACTOR_JSON_CONTRACT,
+} from "./spine-extractor-prompt";
+export {
+	buildSpineVerifierUserPrompt,
+	SPINE_VERIFIER_JSON_CONTRACT,
+} from "./spine-verifier-prompt";

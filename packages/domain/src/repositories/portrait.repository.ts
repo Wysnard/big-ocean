@@ -8,6 +8,8 @@
 
 import { Context, Effect } from "effect";
 import { DatabaseError } from "../errors/http.errors";
+import type { SpineBrief } from "../types/spine-brief";
+import type { SpineVerification } from "../types/spine-verification";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,12 +17,23 @@ export type PortraitTier = "full";
 
 export type PortraitStatus = "none" | "generating" | "ready" | "failed";
 
+/** Models used for ADR-51 audit trail (persisted JSON on success). */
+export interface PortraitPipelineModels {
+	readonly spineExtractorModelId: string;
+	readonly spineVerifierModelId: string;
+	readonly portraitProseRendererModelId: string;
+}
+
 export interface Portrait {
 	readonly id: string;
 	readonly assessmentResultId: string;
 	readonly tier: PortraitTier;
 	readonly content: string | null;
 	readonly modelUsed: string | null;
+	/** Final SpineBrief JSON from ADR-51 pipeline (success path). */
+	readonly spineBrief: SpineBrief | null;
+	readonly spineVerification: SpineVerification | null;
+	readonly portraitPipelineModels: PortraitPipelineModels | null;
 	readonly failedAt: Date | null;
 	readonly createdAt: Date;
 }
@@ -29,7 +42,11 @@ export interface InsertPortraitWithContent {
 	readonly assessmentResultId: string;
 	readonly tier: PortraitTier;
 	readonly content: string;
+	/** Prose renderer model ID (Stage C). */
 	readonly modelUsed: string;
+	readonly spineBrief: SpineBrief;
+	readonly spineVerification: SpineVerification;
+	readonly portraitPipelineModels: PortraitPipelineModels;
 }
 
 export interface InsertPortraitFailed {

@@ -31,6 +31,10 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 			tier: row.tier as PortraitTier,
 			content: row.content,
 			modelUsed: row.modelUsed,
+			spineBrief: (row.spineBrief as Portrait["spineBrief"]) ?? null,
+			spineVerification: (row.spineVerification as Portrait["spineVerification"]) ?? null,
+			portraitPipelineModels:
+				(row.portraitPipelineModels as Portrait["portraitPipelineModels"]) ?? null,
 			failedAt: row.failedAt,
 			createdAt: row.createdAt,
 		});
@@ -45,6 +49,9 @@ export const PortraitDrizzleRepositoryLive = Layer.effect(
 							tier: data.tier,
 							content: data.content,
 							modelUsed: data.modelUsed,
+							spineBrief: data.spineBrief,
+							spineVerification: data.spineVerification,
+							portraitPipelineModels: data.portraitPipelineModels,
 						})
 						.onConflictDoNothing()
 						.returning()

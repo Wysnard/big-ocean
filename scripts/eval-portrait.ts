@@ -32,17 +32,22 @@ import {
 	buildChatSystemPrompt,
 	type DomainMessage,
 	deriveTraitScores,
-	extract4LetterCode,
+	type FacetScoresMap,
 	generateOceanCode,
 	lookupArchetype,
-	type PortraitGenerationInput,
-	PortraitGeneratorRepository,
+	PortraitProseRendererRepository,
+	type PortraitUserSummaryInput,
 	type SavedFacetEvidence,
+	SpineExtractorRepository,
+	SpineVerifierRepository,
 } from "@workspace/domain";
 import {
 	AnalyzerClaudeRepositoryLive,
+	defaultTestConfig,
 	LoggerPinoRepositoryLive,
-	PortraitGeneratorClaudeRepositoryLive,
+	PortraitProseRendererAnthropicRepositoryLive,
+	SpineExtractorAnthropicRepositoryLive,
+	SpineVerifierAnthropicRepositoryLive,
 } from "@workspace/infrastructure";
 import { Effect, Layer, Redacted } from "effect";
 
@@ -80,31 +85,12 @@ CONVERSATION STYLE:
 
 // ─── AppConfig Layer Factory ─────────────────────────────────────
 
-const baseConfig: AppConfigService = {
-	anthropicApiKey: Redacted.make(process.env.ANTHROPIC_API_KEY ?? ""),
-	betterAuthSecret: Redacted.make("placeholder"),
-	databaseUrl: "placeholder",
-	redisUrl: "placeholder",
-	betterAuthUrl: "placeholder",
-	frontendUrl: "placeholder",
-	port: 0,
-	nodeEnv: "development",
-	analyzerModelId: HAIKU_MODEL,
-	analyzerMaxTokens: 16000,
-	analyzerTemperature: 0,
-	portraitModelId: "OVERRIDDEN_PER_RUN",
-	portraitMaxTokens: 16000,
-	portraitTemperature: 0.7,
-	nerinModelId: HAIKU_MODEL,
-	nerinMaxTokens: 1024,
-	nerinTemperature: 0.7,
-	dailyCostLimit: 75,
-	assessmentTurnCount: 15,
-	shareMinConfidence: 70,
-};
-
 function makeAppConfigLayer(overrides?: Partial<AppConfigService>) {
-	return Layer.succeed(AppConfig, { ...baseConfig, ...overrides });
+	return Layer.succeed(AppConfig, {
+		...defaultTestConfig,
+		...overrides,
+		anthropicApiKey: Redacted.make(process.env.ANTHROPIC_API_KEY ?? ""),
+	});
 }
 
 // ─── Step 1: Generate Conversation ──────────────────────────────
@@ -272,15 +258,33 @@ function writeIntermediateData(
 	console.log(`  Written to ${filePath}`);
 }
 
-// ─── Step 5: Generate Portraits ─────────────────────────────────
+function buildEvalUserSummary(messages: DomainMessage[]): PortraitUserSummaryInput {
+	const quotes = messages
+		.filter((m) => m.role === "user")
+		.slice(0, 10)
+		.map((m) => ({
+			quote: m.content.length > 280 ? `${m.content.slice(0, 280)}…` : m.content,
+		}));
+	return {
+		summaryText:
+			"Eval script synthetic UserSummary — creative-director persona from scripted dialogue. Canonical compressed state for ADR-51 Stage A.",
+		themes: [
+			{ theme: "Designing under ambiguity", description: "Maps options before committing" },
+			{ theme: "Selective depth", description: "Invests in one-to-one signal over breadth" },
+		],
+		quoteBank: quotes.length > 0 ? quotes : [{ quote: "(no user quotes)" }],
+	};
+}
+
+// ─── Step 5: Generate Portraits (ADR-51 three-stage pipeline) ────────
 
 async function generatePortraits(
 	outputDir: string,
 	messages: DomainMessage[],
-	evidence: SavedFacetEvidence[],
+	_evidence: SavedFacetEvidence[],
 	scores: ReturnType<typeof computeScores>,
 ) {
-	console.log("\n━━━ Step 5: Generating portraits ━━━");
+	console.log("\n━━━ Step 5: Generating portraits (ADR-51 pipeline) ━━━");
 
 	const models = [
 		{ id: HAIKU_MODEL, name: "haiku-4-5" },
@@ -288,38 +292,66 @@ async function generatePortraits(
 		{ id: OPUS_MODEL, name: "opus-4-6" },
 	];
 
-	const portraitInput: PortraitGenerationInput = {
-		sessionId: crypto.randomUUID(),
-		facetScoresMap: scores.facetScores,
-		traitScoresMap: scores.traitScores,
-		allEvidence: evidence,
-		scoringEvidence: evidence.map((e) => ({
-			bigfiveFacet: e.bigfiveFacet,
-			deviation: e.deviation as -3 | -2 | -1 | 0 | 1 | 2 | 3,
-			strength: e.strength,
-			confidence: e.confidence,
-			domain: e.domain,
-		})),
-		messages,
-	};
+	const sessionId = crypto.randomUUID();
+	const userSummary = buildEvalUserSummary(messages);
+	const facetScoresMap = scores.facetScores as FacetScoresMap;
 
 	await Promise.all(
 		models.map(async (model) => {
-			console.log(`\n  Generating portrait with ${model.name}...`);
+			console.log(`\n  Generating portrait with ${model.name} (prose model override)...`);
 			const startTime = Date.now();
 
 			try {
-				const portraitLayer = PortraitGeneratorClaudeRepositoryLive.pipe(
+				const pipelineLayer = Layer.mergeAll(
+					SpineExtractorAnthropicRepositoryLive,
+					SpineVerifierAnthropicRepositoryLive,
+					PortraitProseRendererAnthropicRepositoryLive,
+				).pipe(
 					Layer.provide(
-						Layer.mergeAll(LoggerPinoRepositoryLive, makeAppConfigLayer({ portraitModelId: model.id })),
+						Layer.mergeAll(
+							LoggerPinoRepositoryLive,
+							makeAppConfigLayer({ portraitProseRendererModelId: model.id }),
+						),
 					),
 				);
 
 				const portrait = await Effect.runPromise(
 					Effect.gen(function* () {
-						const generator = yield* PortraitGeneratorRepository;
-						return yield* generator.generatePortrait(portraitInput);
-					}).pipe(Effect.provide(portraitLayer)),
+						const extractor = yield* SpineExtractorRepository;
+						const verifier = yield* SpineVerifierRepository;
+						const prose = yield* PortraitProseRendererRepository;
+
+						let brief = yield* extractor.extractSpineBrief({
+							sessionId,
+							userSummary,
+							facetScoresMap,
+							traitScoresMap: scores.traitScores,
+						});
+
+						let verification = yield* verifier.verifySpineBrief({
+							sessionId,
+							brief,
+						});
+
+						if (!verification.passed) {
+							brief = yield* extractor.extractSpineBrief({
+								sessionId,
+								userSummary,
+								facetScoresMap,
+								traitScoresMap: scores.traitScores,
+								gapFeedback: verification.gapFeedback,
+							});
+							verification = yield* verifier.verifySpineBrief({
+								sessionId,
+								brief,
+							});
+						}
+
+						return yield* prose.renderPortraitProse({
+							sessionId,
+							brief,
+						});
+					}).pipe(Effect.provide(pipelineLayer)),
 				);
 
 				const filePath = path.join(outputDir, `portrait-${model.name}.md`);

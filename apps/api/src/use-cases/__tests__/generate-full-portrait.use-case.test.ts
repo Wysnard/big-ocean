@@ -1,12 +1,5 @@
 /**
- * Generate Full Portrait Use Case Tests (queue-based architecture)
- *
- * Tests:
- * - Successful generation inserts portrait with content
- * - Missing result inserts failed portrait
- * - Missing UserSummary inserts failed portrait
- * - LLM failure inserts failed portrait
- * - Correct input shape to generator (including UserSummary)
+ * Generate Full Portrait Use Case Tests (ADR-51 three-stage pipeline)
  */
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
@@ -16,12 +9,16 @@ import {
 	ConversationEvidenceRepository,
 	ConversationRepository,
 	LoggerRepository,
-	MessageRepository,
 	PortraitGenerationError,
-	PortraitGeneratorRepository,
+	PortraitProseRendererRepository,
 	PortraitRepository,
+	SpineExtractorRepository,
+	SpineVerifierRepository,
 	UserSummaryRepository,
 } from "@workspace/domain";
+import type { SpineBrief } from "@workspace/domain/types/spine-brief";
+import type { SpineVerification } from "@workspace/domain/types/spine-verification";
+import { defaultTestConfig } from "@workspace/infrastructure";
 import { Effect, Fiber, Layer, TestClock, TestContext } from "effect";
 import { vi } from "vitest";
 import { generateFullPortrait } from "../generate-full-portrait.use-case";
@@ -34,8 +31,79 @@ const mockPortraitRepo = {
 	getFullPortraitBySessionId: vi.fn(),
 };
 
-const mockPortraitGen = {
-	generatePortrait: vi.fn(),
+const mockExtractor = {
+	extractSpineBrief: vi.fn(),
+};
+
+const mockVerifier = {
+	verifySpineBrief: vi.fn(),
+};
+
+const mockProse = {
+	renderPortraitProse: vi.fn(),
+};
+
+const MOCK_SPINE_BRIEF: SpineBrief = {
+	insight: {
+		surfaceObservation: "s",
+		underneathReading: "u",
+		bridge: "b",
+		falsifiable: true,
+	},
+	thread: "t",
+	lens: "l",
+	arc: {
+		wonder: {
+			focus: "w",
+			openingDirection: "o",
+			keyMaterial: ["k"],
+			endState: "e",
+		},
+		recognition: {
+			focus: "w",
+			openingDirection: "o",
+			keyMaterial: ["k"],
+			endState: "e",
+		},
+		tension: {
+			focus: "w",
+			openingDirection: "o",
+			keyMaterial: ["k"],
+			endState: "e",
+		},
+		embrace: {
+			focus: "w",
+			openingDirection: "o",
+			keyMaterial: ["k"],
+			endState: "e",
+		},
+		reframe: {
+			focus: "w",
+			openingDirection: "o",
+			keyMaterial: ["k"],
+			endState: "e",
+		},
+		compulsion: {
+			focus: "w",
+			openingDirection: "o",
+			keyMaterial: ["k"],
+			endState: "e",
+		},
+	},
+	coinedPhraseTargets: [
+		{ phrase: "one", rationale: "r", echoesIn: ["wonder", "recognition"] },
+		{ phrase: "two", rationale: "r2", echoesIn: ["tension", "embrace"] },
+	],
+	ordinaryMomentAnchors: [{ moment: "m", useIn: "wonder", supportsInsight: true }],
+	unresolvedCost: { description: "cost" },
+};
+
+const MOCK_VERIFICATION_OK: SpineVerification = {
+	passed: true,
+	missingFields: [],
+	shallowAreas: [],
+	overallScore: 1,
+	gapFeedback: "",
 };
 
 const mockResultsRepo = {
@@ -51,15 +119,6 @@ const mockConversationEvidenceRepo = {
 	findBySession: vi.fn(),
 	findByUserId: vi.fn(),
 	countByMessage: vi.fn(),
-};
-
-const mockMessageRepo = {
-	saveMessage: vi.fn(),
-	getMessages: vi.fn(),
-	getMessagesByUserId: vi.fn(),
-	getLastNMessages: vi.fn(),
-	deleteMessages: vi.fn(),
-	updateAnalysisState: vi.fn(),
 };
 
 const mockConversationRepo = {
@@ -82,14 +141,18 @@ const mockLogger = {
 const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
-		Layer.succeed(PortraitGeneratorRepository, mockPortraitGen),
+		Layer.succeed(SpineExtractorRepository, mockExtractor),
+		Layer.succeed(SpineVerifierRepository, mockVerifier),
+		Layer.succeed(PortraitProseRendererRepository, mockProse),
 		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
 		Layer.succeed(ConversationEvidenceRepository, mockConversationEvidenceRepo),
-		Layer.succeed(MessageRepository, mockMessageRepo),
 		Layer.succeed(ConversationRepository, mockConversationRepo),
 		Layer.succeed(UserSummaryRepository, mockUserSummaryRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
-		Layer.succeed(AppConfig, { portraitModelId: "test-model" } as unknown as AppConfig),
+		Layer.succeed(AppConfig, {
+			...defaultTestConfig,
+			portraitProseRendererModelId: "test-prose-model",
+		}),
 	);
 
 const mockResult = {
@@ -97,43 +160,43 @@ const mockResult = {
 	sessionId: "session_123",
 	userId: "user_789",
 	facets: {
-		imagination: { score: 15, confidence: 0.8 },
-		artistic_interests: { score: 12, confidence: 0.7 },
-		emotionality: { score: 18, confidence: 0.9 },
-		adventurousness: { score: 10, confidence: 0.6 },
-		intellect: { score: 14, confidence: 0.8 },
-		liberalism: { score: 16, confidence: 0.7 },
-		self_efficacy: { score: 12, confidence: 0.7 },
-		orderliness: { score: 10, confidence: 0.6 },
-		dutifulness: { score: 11, confidence: 0.7 },
-		achievement_striving: { score: 13, confidence: 0.7 },
-		self_discipline: { score: 9, confidence: 0.6 },
-		cautiousness: { score: 10, confidence: 0.7 },
-		friendliness: { score: 10, confidence: 0.6 },
-		gregariousness: { score: 8, confidence: 0.5 },
-		assertiveness: { score: 9, confidence: 0.6 },
-		activity_level: { score: 11, confidence: 0.6 },
-		excitement_seeking: { score: 7, confidence: 0.5 },
-		cheerfulness: { score: 10, confidence: 0.6 },
-		trust: { score: 12, confidence: 0.7 },
-		morality: { score: 13, confidence: 0.7 },
-		altruism: { score: 11, confidence: 0.7 },
-		cooperation: { score: 12, confidence: 0.7 },
-		modesty: { score: 10, confidence: 0.6 },
-		sympathy: { score: 14, confidence: 0.7 },
-		anxiety: { score: 8, confidence: 0.5 },
-		anger: { score: 6, confidence: 0.5 },
-		depression: { score: 7, confidence: 0.5 },
-		self_consciousness: { score: 9, confidence: 0.5 },
-		immoderation: { score: 5, confidence: 0.4 },
-		vulnerability: { score: 7, confidence: 0.5 },
+		imagination: { score: 15, confidence: 80 },
+		artistic_interests: { score: 12, confidence: 70 },
+		emotionality: { score: 18, confidence: 90 },
+		adventurousness: { score: 10, confidence: 60 },
+		intellect: { score: 14, confidence: 80 },
+		liberalism: { score: 16, confidence: 70 },
+		self_efficacy: { score: 12, confidence: 70 },
+		orderliness: { score: 10, confidence: 60 },
+		dutifulness: { score: 11, confidence: 70 },
+		achievement_striving: { score: 13, confidence: 70 },
+		self_discipline: { score: 9, confidence: 60 },
+		cautiousness: { score: 10, confidence: 70 },
+		friendliness: { score: 10, confidence: 60 },
+		gregariousness: { score: 8, confidence: 50 },
+		assertiveness: { score: 9, confidence: 60 },
+		activity_level: { score: 11, confidence: 60 },
+		excitement_seeking: { score: 7, confidence: 50 },
+		cheerfulness: { score: 10, confidence: 60 },
+		trust: { score: 12, confidence: 70 },
+		morality: { score: 13, confidence: 70 },
+		altruism: { score: 11, confidence: 70 },
+		cooperation: { score: 12, confidence: 70 },
+		modesty: { score: 10, confidence: 60 },
+		sympathy: { score: 14, confidence: 70 },
+		anxiety: { score: 8, confidence: 50 },
+		anger: { score: 6, confidence: 50 },
+		depression: { score: 7, confidence: 50 },
+		self_consciousness: { score: 9, confidence: 50 },
+		immoderation: { score: 5, confidence: 40 },
+		vulnerability: { score: 7, confidence: 50 },
 	},
 	traits: {
-		openness: { score: 85, confidence: 0.75 },
-		conscientiousness: { score: 60, confidence: 0.7 },
-		extraversion: { score: 50, confidence: 0.6 },
-		agreeableness: { score: 70, confidence: 0.7 },
-		neuroticism: { score: 40, confidence: 0.5 },
+		openness: { score: 85, confidence: 75 },
+		conscientiousness: { score: 60, confidence: 70 },
+		extraversion: { score: 50, confidence: 60 },
+		agreeableness: { score: 70, confidence: 70 },
+		neuroticism: { score: 40, confidence: 50 },
 	},
 	createdAt: new Date(),
 	updatedAt: new Date(),
@@ -152,11 +215,6 @@ const mockConversationEvidence = [
 		note: "Shows vivid creative thinking when describing projects",
 		createdAt: new Date(),
 	},
-];
-
-const mockMessages = [
-	{ id: "msg_1", role: "user" as const, content: "Hello" },
-	{ id: "msg_2", role: "assistant" as const, content: "Hi there!" },
 ];
 
 const mockOwnedSession = {
@@ -182,7 +240,7 @@ const mockUserSummaryRecord = {
 	updatedAt: new Date(),
 };
 
-describe("generateFullPortrait Use Case (queue-based)", () => {
+describe("generateFullPortrait Use Case (ADR-51 pipeline)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
@@ -194,8 +252,9 @@ describe("generateFullPortrait Use Case (queue-based)", () => {
 		mockConversationEvidenceRepo.findBySession.mockReturnValue(
 			Effect.succeed(mockConversationEvidence),
 		);
-		mockMessageRepo.getMessages.mockReturnValue(Effect.succeed(mockMessages));
-		mockPortraitGen.generatePortrait.mockReturnValue(
+		mockExtractor.extractSpineBrief.mockReturnValue(Effect.succeed(MOCK_SPINE_BRIEF));
+		mockVerifier.verifySpineBrief.mockReturnValue(Effect.succeed(MOCK_VERIFICATION_OK));
+		mockProse.renderPortraitProse.mockReturnValue(
 			Effect.succeed("Your full personality portrait..."),
 		);
 		mockPortraitRepo.insertWithContent.mockReturnValue(
@@ -206,27 +265,39 @@ describe("generateFullPortrait Use Case (queue-based)", () => {
 		);
 	});
 
-	it.effect("should generate portrait and insert with content on success", () =>
+	it.effect("should run pipeline and insert with artifacts on success", () =>
 		Effect.gen(function* () {
 			yield* generateFullPortrait({ sessionId: "session_123", userId: "user_789" });
 
-			expect(mockPortraitGen.generatePortrait).toHaveBeenCalledWith(
+			expect(mockExtractor.extractSpineBrief).toHaveBeenCalledWith(
 				expect.objectContaining({
 					sessionId: "session_123",
 					userSummary: expect.objectContaining({
 						summaryText: mockUserSummaryRecord.summaryText,
 					}),
-					messages: expect.arrayContaining([
-						expect.objectContaining({ role: "user", content: "Hello" }),
-					]),
 				}),
 			);
+			expect(mockExtractor.extractSpineBrief).not.toHaveBeenCalledWith(
+				expect.objectContaining({ messages: expect.anything() }),
+			);
+
+			expect(mockProse.renderPortraitProse).toHaveBeenCalledWith({
+				sessionId: "session_123",
+				brief: MOCK_SPINE_BRIEF,
+			});
 
 			expect(mockPortraitRepo.insertWithContent).toHaveBeenCalledWith({
 				assessmentResultId: "result_456",
 				tier: "full",
 				content: "Your full personality portrait...",
-				modelUsed: "test-model",
+				modelUsed: "test-prose-model",
+				spineBrief: MOCK_SPINE_BRIEF,
+				spineVerification: MOCK_VERIFICATION_OK,
+				portraitPipelineModels: {
+					spineExtractorModelId: defaultTestConfig.portraitSpineExtractorModelId,
+					spineVerifierModelId: defaultTestConfig.portraitSpineVerifierModelId,
+					portraitProseRendererModelId: "test-prose-model",
+				},
 			});
 
 			expect(mockLogger.info).toHaveBeenCalledWith(
@@ -262,20 +333,21 @@ describe("generateFullPortrait Use Case (queue-based)", () => {
 				tier: "full",
 				failedAt: expect.any(Date),
 			});
-			expect(mockPortraitGen.generatePortrait).not.toHaveBeenCalled();
+			expect(mockExtractor.extractSpineBrief).not.toHaveBeenCalled();
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.scoped("should insert failed portrait when LLM generation fails after 3 attempts", () =>
+	it.scoped("should insert failed portrait when pipeline fails after 3 attempts", () =>
 		Effect.gen(function* () {
-			let llmExecCount = 0;
-			mockPortraitGen.generatePortrait.mockReturnValue(
+			let pipelineRuns = 0;
+			mockExtractor.extractSpineBrief.mockImplementation(() =>
 				Effect.suspend(() => {
-					llmExecCount++;
+					pipelineRuns++;
 					return Effect.fail(
 						new PortraitGenerationError({
 							sessionId: "session_123",
 							message: "LLM error",
+							stage: "extract",
 						}),
 					);
 				}),
@@ -288,7 +360,7 @@ describe("generateFullPortrait Use Case (queue-based)", () => {
 			yield* TestClock.adjust("10 seconds");
 			yield* Fiber.join(fiber);
 
-			expect(llmExecCount).toBe(3);
+			expect(pipelineRuns).toBe(3);
 			expect(mockPortraitRepo.insertFailed).toHaveBeenCalledWith({
 				assessmentResultId: "result_456",
 				tier: "full",
@@ -298,22 +370,45 @@ describe("generateFullPortrait Use Case (queue-based)", () => {
 		}).pipe(Effect.provide(Layer.merge(createTestLayer(), TestContext.TestContext))),
 	);
 
-	it.effect("should call portrait generator without archetype surface fields", () =>
+	it.effect("should re-extract once when verifier fails then succeeds", () =>
 		Effect.gen(function* () {
+			const brief2: SpineBrief = { ...MOCK_SPINE_BRIEF, thread: "retry-thread" };
+			mockVerifier.verifySpineBrief
+				.mockReturnValueOnce(
+					Effect.succeed({
+						passed: false,
+						missingFields: [],
+						shallowAreas: [],
+						overallScore: 0.3,
+						gapFeedback: "Add depth to arc.wonder",
+					}),
+				)
+				.mockReturnValueOnce(Effect.succeed(MOCK_VERIFICATION_OK));
+			mockExtractor.extractSpineBrief
+				.mockReturnValueOnce(Effect.succeed(MOCK_SPINE_BRIEF))
+				.mockReturnValueOnce(Effect.succeed(brief2));
+
 			yield* generateFullPortrait({ sessionId: "session_123", userId: "user_789" });
 
-			const callArg = mockPortraitGen.generatePortrait.mock.calls[0]?.[0];
-			expect(callArg).not.toHaveProperty("archetypeName");
-			expect(callArg).not.toHaveProperty("oceanCode5");
+			expect(mockExtractor.extractSpineBrief).toHaveBeenCalledTimes(2);
+			expect(mockExtractor.extractSpineBrief).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({
+					gapFeedback: "Add depth to arc.wonder",
+				}),
+			);
+			expect(mockProse.renderPortraitProse).toHaveBeenCalledWith({
+				sessionId: "session_123",
+				brief: brief2,
+			});
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should load conversation evidence by session for base assessment scope", () =>
+	it.effect("should load conversation evidence by session for scope guard", () =>
 		Effect.gen(function* () {
 			yield* generateFullPortrait({ sessionId: "session_123", userId: "user_789" });
 
 			expect(mockConversationEvidenceRepo.findBySession).toHaveBeenCalledWith("session_123");
-			expect(mockMessageRepo.getMessages).toHaveBeenCalledWith("session_123");
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 });

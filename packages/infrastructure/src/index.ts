@@ -55,9 +55,13 @@ export { NerinDirectorAnthropicRepositoryLive } from "./repositories/nerin-direc
 export { NerinDirectorMockRepositoryLive } from "./repositories/nerin-director.mock.repository";
 // Portrait repository implementation (Story 13.3)
 export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
-// Portrait generator repository implementations
-export { PortraitGeneratorClaudeRepositoryLive } from "./repositories/portrait-generator.claude.repository";
-export { PortraitGeneratorMockRepositoryLive } from "./repositories/portrait-generator.mock.repository";
+export {
+	PortraitProseRendererMockRepositoryLive,
+	SpineExtractorMockRepositoryLive,
+	SpineVerifierMockRepositoryLive,
+} from "./repositories/portrait-pipeline.mock.repository";
+// ADR-51 portrait pipeline (three-stage Anthropic adapters + mocks)
+export { PortraitProseRendererAnthropicRepositoryLive } from "./repositories/portrait-prose-renderer.anthropic.repository";
 // Portrait rating repository implementation (Story 19-2)
 export { PortraitRatingDrizzleRepositoryLive } from "./repositories/portrait-rating.drizzle.repository";
 // Profile access log repository implementation (Story 15.1)
@@ -81,6 +85,8 @@ export { RelationshipSharedNoteDrizzleRepositoryLive } from "./repositories/rela
 export { ResendEmailMockRepositoryLive } from "./repositories/resend-email.mock.repository";
 // Resend email repository implementations (Story 31-7)
 export { ResendEmailResendRepositoryLive } from "./repositories/resend-email.resend.repository";
+export { SpineExtractorAnthropicRepositoryLive } from "./repositories/spine-extractor.anthropic.repository";
+export { SpineVerifierAnthropicRepositoryLive } from "./repositories/spine-verifier.anthropic.repository";
 // User account repository implementation (Story 30-2)
 export { UserAccountDrizzleRepositoryLive } from "./repositories/user-account.drizzle.repository";
 export { UserSummaryDrizzleRepositoryLive } from "./repositories/user-summary.drizzle.repository";

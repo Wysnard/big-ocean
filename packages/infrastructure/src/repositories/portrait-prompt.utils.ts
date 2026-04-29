@@ -5,7 +5,7 @@
  * portrait generator to build LLM prompts from personality data.
  *
  * Extracted to avoid duplication between:
- * - portrait-generator.claude.repository.ts (full portrait)
+ * - portrait-pipeline Adapters (full flow uses UserSummary; Opening may use scores only)
  * - teaser-portrait.anthropic.repository.ts (Opening section)
  */
 

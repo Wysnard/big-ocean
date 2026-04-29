@@ -25,15 +25,17 @@ All active jobs go through `PortraitJobQueue` → `portrait-generation.worker.ts
 2. **Worker** runs `generateFullPortrait` with mandatory `userId`, authenticated session scope, UserSummary required before LLM; persists portrait success or failure rows.
 3. **Status (read path)** derives `generating` from `assessment_results.stage === "completed"` and absence of a terminal portrait row, not from purchase events.
 
-## ADR-51 stage split (forward plan)
+## ADR-51 three-stage module (live)
 
-Current production still uses a single `PortraitGeneratorRepository.generatePortrait` call with depth adaptation. ADR-51 prescribes:
+Production uses **Spine Extractor → Spine Verifier → Prose Renderer** (separate `Context.Tag` Adapters, direct `@anthropic-ai/sdk` per ADR-53). There is no single-shot portrait generator or feature flag.
 
-1. UserSummary persisted (already required before portrait LLM).
-2. Spine Extractor → Spine Verifier → Prose Renderer (separate Adapters, direct SDK per ADR-53).
-3. Prose Renderer input: `SpineBrief` + craft context only — no raw conversation in Stage C.
+1. **Stage A (Spine Extractor)** input: persisted `UserSummary` + facet/trait score maps only — no raw messages or evidence objects in the LLM call.
+2. **Stage B (Spine Verifier)** input: `SpineBrief` JSON only.
+3. **Stage C (Prose Renderer)** input: `SpineBrief` + `NERIN_PERSONA` + `PORTRAIT_CONTEXT` — no `UserSummary`, messages, or evidence.
 
-Implement stage-specific Adapters and orchestration inside the worker use-case after lifecycle triggers are stable.
+On success, `portraits` rows persist `spine_brief`, `spine_verification`, and `portrait_pipeline_models` (JSON) alongside `content` and `model_used` (prose model id). On failure, a row with `failed_at` is inserted (artifacts null).
+
+Orchestration: `apps/api/src/use-cases/generate-full-portrait.use-case.ts` (worker: `portrait-generation.worker.ts`).
 
 ## Test matrix (regression targets)
 
@@ -46,3 +48,5 @@ Implement stage-specific Adapters and orchestration inside the worker use-case a
 | `getPortraitStatus` | `generating` when result `completed` and no portrait row; not tied to `portrait_unlocked`. |
 | Purchase / webhook | No queue offer for portrait from purchase handlers. |
 | `retryPortrait` | Failed row deleted, job re-queued. |
+| ADR-51 Stage A/C seams | Stage A prompt has UserSummary + scores, not raw transcript arrays; Stage C prompt has no UserSummary block (`portrait-pipeline.matrix.test.ts`). |
+| Persisted artifacts | Success inserts include `spine_brief`, `spine_verification`, pipeline model audit JSON. |

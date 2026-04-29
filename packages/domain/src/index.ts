@@ -45,6 +45,13 @@ export {
 	LifeDomainSchema,
 	STEERABLE_DOMAINS,
 } from "./constants/life-domain";
+export {
+	buildPortraitProseUserPrompt,
+	buildSpineExtractorUserPrompt,
+	buildSpineVerifierUserPrompt,
+	SPINE_EXTRACTOR_JSON_CONTRACT,
+	SPINE_VERIFIER_JSON_CONTRACT,
+} from "./constants/nerin/index";
 // Nerin character bible — live modules (portrait context)
 export { PORTRAIT_CONTEXT } from "./constants/nerin/portrait-context";
 // Nerin Actor prompt (Story 43-4, ADR-DM-3)
@@ -238,16 +245,16 @@ export {
 	type InsertPortraitFailed,
 	type InsertPortraitWithContent,
 	type Portrait,
+	type PortraitPipelineModels,
 	PortraitRepository,
 	type PortraitStatus,
 	type PortraitTier,
 } from "./repositories/portrait.repository";
+export { PortraitGenerationError } from "./repositories/portrait-pipeline.errors";
 export {
-	PortraitGenerationError,
-	type PortraitGenerationInput,
-	PortraitGeneratorRepository,
-	type PortraitUserSummaryInput,
-} from "./repositories/portrait-generator.repository";
+	type PortraitProseRendererInput,
+	PortraitProseRendererRepository,
+} from "./repositories/portrait-prose-renderer.repository";
 // Portrait rating repository (Story 19-2)
 export type { InsertPortraitRating } from "./repositories/portrait-rating.repository";
 export { PortraitRatingRepository } from "./repositories/portrait-rating.repository";
@@ -305,6 +312,14 @@ export {
 	ResendEmailRepository,
 	type SendEmailInput,
 } from "./repositories/resend-email.repository";
+export {
+	type SpineExtractorInput,
+	SpineExtractorRepository,
+} from "./repositories/spine-extractor.repository";
+export {
+	type SpineVerifierInput,
+	SpineVerifierRepository,
+} from "./repositories/spine-verifier.repository";
 // User account repository (Story 30-2)
 export {
 	type ScheduleFirstDailyPromptOutcome,
@@ -495,6 +510,7 @@ export {
 	PORTRAIT_RATINGS,
 	PORTRAIT_TYPES,
 } from "./types/portrait-rating.types";
+export type { PortraitUserSummaryInput } from "./types/portrait-user-summary-input";
 export type {
 	EntitlementFeature,
 	PolarWebhookEvent,
@@ -519,6 +535,12 @@ export type {
 export { QR_TOKEN_TTL_HOURS } from "./types/relationship.types";
 // Session types
 export type { MessageRole, Session, SessionStatus } from "./types/session";
+export type {
+	MovementBeat,
+	MovementName,
+	SpineBrief,
+} from "./types/spine-brief";
+export type { SpineVerification } from "./types/spine-verification";
 // Trait types (Big Five)
 export type { BigFiveTrait, TraitConfidenceScores } from "./types/trait";
 export { BIG_FIVE_TRAITS } from "./types/trait";

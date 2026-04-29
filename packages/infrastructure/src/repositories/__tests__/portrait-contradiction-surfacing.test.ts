@@ -1,35 +1,22 @@
 /**
- * Portrait Generator Contradiction-Surfacing Tests (Story 22-3)
+ * Portrait pipeline prompt regression (Story 22-3 fingerprint block superseded by ADR-51).
  *
- * Verifies that the contradiction-surfacing instruction was added to the
- * full portrait generator prompt.
- *
- * PORTRAIT_CONTEXT was extracted from infrastructure to domain (portrait-context.ts).
- * Tests now import the constant directly rather than reading source files.
+ * Contradiction / rare-combination spine discovery is no longer inlined in `PORTRAIT_CONTEXT`
+ * — Stage A produces a structured `SpineBrief`; Stage C renders brief-only.
  */
 
-import { PORTRAIT_CONTEXT } from "@workspace/domain";
+import { PORTRAIT_CONTEXT, SPINE_EXTRACTOR_JSON_CONTRACT } from "@workspace/domain";
 import { describe, expect, it } from "vitest";
 
-describe("Story 22-3: Contradiction-Surfacing in Portrait Generator", () => {
-	const portraitSource = PORTRAIT_CONTEXT;
-
-	it("full portrait prompt contains fingerprint principle (contradictions + rare combinations)", () => {
-		expect(portraitSource).toContain("CONTRADICTIONS: Two traits that seemingly oppose each other");
-		expect(portraitSource).toContain("RARE COMBINATIONS: Unusual alliances between traits");
-		expect(portraitSource).toContain(
-			"Surface both as discoveries you're genuinely fascinated by, not diagnoses",
-		);
+describe("Portrait pipeline prompts (ADR-51)", () => {
+	it("PORTRAIT_CONTEXT instructs Stage C brief-only rendering", () => {
+		expect(PORTRAIT_CONTEXT).toContain("ADR-51 — BRIEF-ONLY RENDERING (STAGE C)");
+		expect(PORTRAIT_CONTEXT).toContain("You do **not** receive the raw conversation");
+		expect(PORTRAIT_CONTEXT).toContain("SpineBrief JSON in the user message");
 	});
 
-	it("fingerprint principle is placed in the BEFORE YOU WRITE section", () => {
-		// The instruction should appear between "BEFORE YOU WRITE" header and "Step 1:"
-		const beforeWriteIdx = portraitSource.indexOf("BEFORE YOU WRITE");
-		const fingerprintIdx = portraitSource.indexOf("CONTRADICTIONS: Two traits");
-		const step1Idx = portraitSource.indexOf("Step 1: Identify");
-
-		expect(beforeWriteIdx).toBeGreaterThan(-1);
-		expect(fingerprintIdx).toBeGreaterThan(beforeWriteIdx);
-		expect(fingerprintIdx).toBeLessThan(step1Idx);
+	it("Spine Extractor JSON contract still defines structured brief shape", () => {
+		expect(SPINE_EXTRACTOR_JSON_CONTRACT).toContain("MovementBeat");
+		expect(SPINE_EXTRACTOR_JSON_CONTRACT).toContain("coinedPhraseTargets");
 	});
 });
