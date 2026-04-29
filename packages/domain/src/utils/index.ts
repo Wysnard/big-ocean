@@ -6,6 +6,11 @@
 
 export { extract4LetterCode, lookupArchetype } from "./archetype-lookup";
 export {
+	type AssessmentSurfaceProjection,
+	buildFacetScoresMap,
+	deriveAssessmentSurfaceFromFacetScores,
+} from "./assessment-surface-projection";
+export {
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
 	createInitialFacetScoresMap,

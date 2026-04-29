@@ -13,9 +13,7 @@ import { BigOceanApi, DatabaseError } from "@workspace/contracts";
 import {
 	type AssessmentResultError,
 	AuthenticatedUser,
-	extract4LetterCode,
 	type FacetEvidencePersistenceError,
-	lookupArchetype,
 } from "@workspace/domain";
 import { DateTime, Effect } from "effect";
 import { activateConversationExtension } from "../use-cases/activate-conversation-extension.use-case";
@@ -56,29 +54,15 @@ export const ConversationGroupLive = HttpApiBuilder.group(BigOceanApi, "conversa
 					const result = yield* listUserSessions({ userId });
 
 					return {
-						sessions: result.sessions.map((s) => {
-							// Derive archetype name from oceanCode5 if available
-							let archetypeName: string | null = null;
-							if (s.oceanCode5) {
-								try {
-									const code4 = extract4LetterCode(s.oceanCode5);
-									const archetype = lookupArchetype(code4);
-									archetypeName = archetype.name;
-								} catch {
-									// Invalid code — leave archetypeName null
-								}
-							}
-
-							return {
-								id: s.id,
-								createdAt: DateTime.unsafeMake(s.createdAt.getTime()),
-								updatedAt: DateTime.unsafeMake(s.updatedAt.getTime()),
-								status: s.status as "active" | "paused" | "finalizing" | "completed" | "archived",
-								messageCount: s.messageCount,
-								oceanCode5: s.oceanCode5,
-								archetypeName,
-							};
-						}),
+						sessions: result.sessions.map((s) => ({
+							id: s.id,
+							createdAt: DateTime.unsafeMake(s.createdAt.getTime()),
+							updatedAt: DateTime.unsafeMake(s.updatedAt.getTime()),
+							status: s.status as "active" | "paused" | "finalizing" | "completed" | "archived",
+							messageCount: s.messageCount,
+							oceanCode5: s.oceanCode5,
+							archetypeName: s.archetypeName,
+						})),
 						assessmentTurnCount: result.assessmentTurnCount,
 					};
 				}),

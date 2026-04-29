@@ -55,8 +55,7 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 
 		/**
 		 * Get all assessment sessions for a user, ordered by creation date descending.
-		 * Includes computed messageCount from assessment_message table and optional
-		 * archetype data from public_profile join.
+		 * Includes computed messageCount from assessment_message table.
 		 *
 		 * @param userId - Authenticated user ID
 		 * @returns Effect with array of session summaries (empty array if none)
@@ -68,8 +67,6 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 				updatedAt: Date;
 				status: string;
 				messageCount: number;
-				oceanCode5: string | null;
-				archetypeName: string | null;
 			}>,
 			DatabaseError,
 			never
@@ -89,8 +86,6 @@ export class ConversationRepository extends Context.Tag("ConversationRepository"
 				updatedAt: Date;
 				status: string;
 				messageCount: number;
-				oceanCode5: string | null;
-				archetypeName: string | null;
 			} | null,
 			DatabaseError,
 			never

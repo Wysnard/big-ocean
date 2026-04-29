@@ -12,13 +12,11 @@
 import { ProfileNotFound, ProfilePrivate } from "@workspace/contracts/errors";
 import {
 	AssessmentResultRepository,
+	buildFacetScoresMap,
+	deriveAssessmentSurfaceFromFacetScores,
 	deriveTraitSummary,
-	extract4LetterCode,
-	type FacetName,
 	type FacetScoresMap,
-	generateOceanCode,
 	LoggerRepository,
-	lookupArchetype,
 	type OceanCode5,
 	OceanCode5Schema,
 	ProfileAccessLogRepository,
@@ -113,30 +111,22 @@ export const getPublicProfile = (input: GetPublicProfileInput) =>
 				}),
 			);
 		}
-		const facets: FacetScoresMap = {} as FacetScoresMap;
-		for (const [facetName, data] of Object.entries(result.facets)) {
-			facets[facetName as FacetName] = {
-				score: data.score,
-				confidence: data.confidence,
-			};
-		}
+		const facets: FacetScoresMap = buildFacetScoresMap(result.facets);
 
 		// 6. Derive ocean codes from facet scores (single source of truth)
-		const oceanCode5 = generateOceanCode(facets);
-		const oceanCode4 = extract4LetterCode(oceanCode5);
-		const archetype = lookupArchetype(oceanCode4);
-		const traitSummary = deriveTraitSummary(oceanCode5);
+		const projection = deriveAssessmentSurfaceFromFacetScores(facets);
+		const traitSummary = deriveTraitSummary(projection.oceanCode5);
 
 		logger.info(profile.isPublic ? "Public profile viewed" : "Private profile viewed by owner", {
 			profileId: profile.id,
-			archetypeName: archetype.name,
+			archetypeName: projection.archetype.name,
 		});
 
 		return {
-			archetypeName: archetype.name,
-			oceanCode: OceanCode5Schema.make(oceanCode5),
-			description: archetype.description,
-			color: archetype.color,
+			archetypeName: projection.archetype.name,
+			oceanCode: OceanCode5Schema.make(projection.oceanCode5),
+			description: projection.archetype.description,
+			color: projection.archetype.color,
 			displayName: profile.displayName,
 			traitSummary,
 			facets,

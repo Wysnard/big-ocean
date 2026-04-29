@@ -9,13 +9,11 @@
 
 import {
 	AssessmentResultRepository,
+	buildFacetScoresMap,
 	ConversationRepository,
 	calculateConfidenceFromFacetScores,
-	extract4LetterCode,
-	type FacetName,
+	deriveAssessmentSurfaceFromFacetScores,
 	type FacetScoresMap,
-	generateOceanCode,
-	lookupArchetype,
 	PurchaseEventRepository,
 	QrTokenRepository,
 } from "@workspace/domain";
@@ -78,28 +76,17 @@ export const getQrTokenDetails = (token: string, acceptorUserId: string) =>
 				.pipe(Effect.catchTag("AssessmentResultError", () => Effect.succeed(null)));
 
 			if (initiatorResult && Object.keys(initiatorResult.facets).length > 0) {
-				const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
-				for (const [facetName, data] of Object.entries(initiatorResult.facets)) {
-					if (typeof data === "object" && data !== null && "score" in data && "confidence" in data) {
-						facetScoresMap[facetName as FacetName] = {
-							score: data.score,
-							confidence: data.confidence,
-						};
-					}
-				}
-
-				const oceanCode5 = generateOceanCode(facetScoresMap);
-				const oceanCode4 = extract4LetterCode(oceanCode5);
-				const archetype = lookupArchetype(oceanCode4);
+				const facetScoresMap: FacetScoresMap = buildFacetScoresMap(initiatorResult.facets);
+				const projection = deriveAssessmentSurfaceFromFacetScores(facetScoresMap);
 				const overallConfidence = calculateConfidenceFromFacetScores(facetScoresMap);
 
 				initiatorArchetype = {
-					archetypeName: archetype.name,
-					oceanCode4: archetype.code4,
-					oceanCode5,
-					description: archetype.description,
-					color: archetype.color,
-					isCurated: archetype.isCurated,
+					archetypeName: projection.archetype.name,
+					oceanCode4: projection.oceanCode4,
+					oceanCode5: projection.oceanCode5,
+					description: projection.archetype.description,
+					color: projection.archetype.color,
+					isCurated: projection.archetype.isCurated,
 					overallConfidence: Math.round(overallConfidence * 100),
 				};
 			}
@@ -117,15 +104,7 @@ export const getQrTokenDetails = (token: string, acceptorUserId: string) =>
 
 			if (acceptorResult && Object.keys(acceptorResult.facets).length > 0) {
 				hasCompletedAssessment = true;
-				const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
-				for (const [facetName, data] of Object.entries(acceptorResult.facets)) {
-					if (typeof data === "object" && data !== null && "score" in data && "confidence" in data) {
-						facetScoresMap[facetName as FacetName] = {
-							score: data.score,
-							confidence: data.confidence,
-						};
-					}
-				}
+				const facetScoresMap: FacetScoresMap = buildFacetScoresMap(acceptorResult.facets);
 				acceptorConfidence = Math.round(calculateConfidenceFromFacetScores(facetScoresMap) * 100);
 			}
 		}

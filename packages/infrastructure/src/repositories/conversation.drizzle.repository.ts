@@ -22,13 +22,7 @@ import { RedisRepository } from "@workspace/domain/repositories/redis.repository
 import { Database } from "@workspace/infrastructure/context/database";
 import { and, count, eq, isNotNull, isNull, lt, ne, sql } from "drizzle-orm";
 import { Effect, Layer, Schema } from "effect";
-import {
-	exchange as assessmentExchange,
-	conversation,
-	message,
-	publicProfile,
-	user,
-} from "../db/drizzle/schema";
+import { exchange as assessmentExchange, conversation, message, user } from "../db/drizzle/schema";
 
 /**
  * Session Repository Layer - Receives database, logger, and Redis through DI
@@ -337,12 +331,9 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 							updatedAt: conversation.updatedAt,
 							status: conversation.status,
 							messageCount: sql<number>`COALESCE("msg_counts"."message_count", 0)`.mapWith(Number),
-							oceanCode5: publicProfile.oceanCode5,
-							archetypeName: sql<string | null>`NULL`.as("archetype_name"),
 						})
 						.from(conversation)
 						.leftJoin(messageCountSubquery, eq(conversation.id, messageCountSubquery.sessionId))
-						.leftJoin(publicProfile, eq(conversation.id, publicProfile.conversationId))
 						.where(eq(conversation.userId, userId))
 						.orderBy(sql`${conversation.createdAt} DESC`)
 						.limit(1)
@@ -374,8 +365,6 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 						updatedAt: row.updatedAt,
 						status: row.status,
 						messageCount: Number(row.messageCount),
-						oceanCode5: row.oceanCode5 ?? null,
-						archetypeName: row.archetypeName ?? null,
 					};
 				}),
 
@@ -400,12 +389,9 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 							updatedAt: conversation.updatedAt,
 							status: conversation.status,
 							messageCount: sql<number>`COALESCE("msg_counts"."message_count", 0)`.mapWith(Number),
-							oceanCode5: publicProfile.oceanCode5,
-							archetypeName: sql<string | null>`NULL`.as("archetype_name"),
 						})
 						.from(conversation)
 						.leftJoin(messageCountSubquery, eq(conversation.id, messageCountSubquery.sessionId))
-						.leftJoin(publicProfile, eq(conversation.id, publicProfile.conversationId))
 						.where(eq(conversation.userId, userId))
 						.orderBy(sql`${conversation.createdAt} DESC`)
 						.pipe(
@@ -433,8 +419,6 @@ export const ConversationDrizzleRepositoryLive = Layer.effect(
 						updatedAt: row.updatedAt,
 						status: row.status,
 						messageCount: Number(row.messageCount),
-						oceanCode5: row.oceanCode5 ?? null,
-						archetypeName: row.archetypeName ?? null,
 					}));
 				}),
 

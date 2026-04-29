@@ -79,8 +79,6 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 					updatedAt: Date;
 					status: string;
 					messageCount: number;
-					oceanCode5: string | null;
-					archetypeName: string | null;
 				}> = [];
 
 				for (const session of sessions.values()) {
@@ -91,8 +89,6 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 							updatedAt: session.updatedAt as Date,
 							status: session.status as string,
 							messageCount: (session.messageCount as number) ?? 0,
-							oceanCode5: (session.oceanCode5 as string) ?? null,
-							archetypeName: (session.archetypeName as string) ?? null,
 						});
 					}
 				}
@@ -110,8 +106,6 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 					updatedAt: Date;
 					status: string;
 					messageCount: number;
-					oceanCode5: string | null;
-					archetypeName: string | null;
 				}> = [];
 
 				for (const session of sessions.values()) {
@@ -122,8 +116,6 @@ export const ConversationDrizzleRepositoryLive = Layer.succeed(
 							updatedAt: session.updatedAt as Date,
 							status: session.status as string,
 							messageCount: (session.messageCount as number) ?? 0,
-							oceanCode5: (session.oceanCode5 as string) ?? null,
-							archetypeName: (session.archetypeName as string) ?? null,
 						});
 					}
 				}

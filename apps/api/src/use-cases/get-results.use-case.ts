@@ -16,21 +16,20 @@ import {
 	AssessmentResultError,
 	AssessmentResultRepository,
 	BIG_FIVE_TRAITS,
+	buildFacetScoresMap,
 	ConversationRepository,
 	calculateConfidenceFromFacetScores,
 	computeTraitResults,
-	extract4LetterCode,
+	deriveAssessmentSurfaceFromFacetScores,
 	FACET_DESCRIPTIONS,
 	FACET_LEVEL_LABELS,
 	FACET_TO_TRAIT,
 	type FacetName,
 	type FacetResult,
 	type FacetScoresMap,
-	generateOceanCode,
 	getFacetLevel,
 	isLatestVersion,
 	LoggerRepository,
-	lookupArchetype,
 	MessageRepository,
 	PublicProfileRepository,
 	SessionNotCompleted,
@@ -126,23 +125,13 @@ export const getResults = (input: GetResultsInput) =>
 		}
 
 		// Extract FacetScoresMap (score + confidence)
-		const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
-		for (const [facetName, data] of Object.entries(result.facets)) {
-			facetScoresMap[facetName as FacetName] = {
-				score: data.score,
-				confidence: data.confidence,
-			};
-		}
+		const facetScoresMap: FacetScoresMap = buildFacetScoresMap(result.facets);
 
 		// Recompute trait scores from facets (single source of truth)
 		const computedTraits = computeTraitResults(facetScoresMap);
 
-		// 5. Generate OCEAN codes
-		const oceanCode5 = generateOceanCode(facetScoresMap);
-		const oceanCode4 = extract4LetterCode(oceanCode5);
-
-		// 6. Lookup archetype
-		const archetype = lookupArchetype(oceanCode4);
+		// 5. Derive OCEAN codes + archetype
+		const projection = deriveAssessmentSurfaceFromFacetScores(facetScoresMap);
 
 		// 7. Compute overall confidence (mean of all 30 facet confidences, 0-1 scale)
 		const overallConfidence =
@@ -201,27 +190,25 @@ export const getResults = (input: GetResultsInput) =>
 				.createProfile({
 					sessionId: input.sessionId,
 					userId: input.authenticatedUserId,
-					oceanCode5,
-					oceanCode4,
 				})
 				.pipe(Effect.catchAll(() => Effect.succeed(null)));
 		}
 
 		logger.info("Assessment results retrieved", {
 			sessionId: input.sessionId,
-			oceanCode5,
-			oceanCode4,
-			archetypeName: archetype.name,
+			oceanCode5: projection.oceanCode5,
+			oceanCode4: projection.oceanCode4,
+			archetypeName: projection.archetype.name,
 			overallConfidence,
 		});
 
 		return {
-			oceanCode5,
-			oceanCode4,
-			archetypeName: archetype.name,
-			archetypeDescription: archetype.description,
-			archetypeColor: archetype.color,
-			isCurated: archetype.isCurated,
+			oceanCode5: projection.oceanCode5,
+			oceanCode4: projection.oceanCode4,
+			archetypeName: projection.archetype.name,
+			archetypeDescription: projection.archetype.description,
+			archetypeColor: projection.archetype.color,
+			isCurated: projection.archetype.isCurated,
 			traits,
 			facets,
 			overallConfidence,

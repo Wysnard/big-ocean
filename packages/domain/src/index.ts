@@ -548,6 +548,8 @@ export {
 } from "./utils/formula";
 // Utility functions
 export {
+	type AssessmentSurfaceProjection,
+	buildFacetScoresMap,
 	buildPortraitPrompt,
 	calculateConfidenceFromFacetScores,
 	calculateOverallConfidence,
@@ -556,6 +558,7 @@ export {
 	DEFAULT_FACET_CONFIDENCE,
 	DEFAULT_FACET_SCORE,
 	DEFAULT_TRAIT_SCORE,
+	deriveAssessmentSurfaceFromFacetScores,
 	deriveCapabilities,
 	deriveTraitSummary,
 	extract4LetterCode,

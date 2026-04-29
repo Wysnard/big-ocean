@@ -9,13 +9,10 @@ import { ProfileError } from "@workspace/contracts/errors";
 import {
 	AppConfig,
 	AssessmentResultRepository,
+	buildFacetScoresMap,
 	ConversationRepository,
-	extract4LetterCode,
-	type FacetName,
-	type FacetScoresMap,
-	generateOceanCode,
+	deriveAssessmentSurfaceFromFacetScores,
 	LoggerRepository,
-	lookupArchetype,
 	PublicProfileRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -68,17 +65,7 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 				new ProfileError({ message: "Assessment results not found for this session" }),
 			);
 		}
-		const facetScores: FacetScoresMap = {} as FacetScoresMap;
-		for (const [facetName, data] of Object.entries(result.facets)) {
-			facetScores[facetName as FacetName] = {
-				score: data.score,
-				confidence: data.confidence,
-			};
-		}
-
-		// 4. Generate OCEAN code from facet scores
-		const oceanCode5 = generateOceanCode(facetScores);
-		const oceanCode4 = extract4LetterCode(oceanCode5);
+		const projection = deriveAssessmentSurfaceFromFacetScores(buildFacetScoresMap(result.facets));
 
 		// 5. Validate session has userId
 		if (!session.userId) {
@@ -91,16 +78,12 @@ export const createShareableProfile = (input: CreateShareableProfileInput) =>
 		const profile = yield* profileRepo.createProfile({
 			sessionId: input.sessionId,
 			userId: session.userId,
-			oceanCode5,
-			oceanCode4,
 		});
-
-		const archetype = lookupArchetype(oceanCode4);
 		logger.info("Public profile created", {
 			sessionId: input.sessionId,
 			profileId: profile.id,
-			oceanCode5,
-			archetypeName: archetype.name,
+			oceanCode5: projection.oceanCode5,
+			archetypeName: projection.archetype.name,
 		});
 
 		return {

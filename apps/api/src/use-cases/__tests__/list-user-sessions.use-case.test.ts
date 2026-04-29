@@ -4,7 +4,13 @@
  * Verifies session listing for authenticated users.
  */
 
-import { AppConfig, ConversationRepository } from "@workspace/domain";
+import {
+	ALL_FACETS,
+	AppConfig,
+	AssessmentResultRepository,
+	ConversationRepository,
+	type FacetName,
+} from "@workspace/domain";
 import { Effect, Layer, Redacted } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listUserSessions } from "../list-user-sessions.use-case";
@@ -19,9 +25,28 @@ const mockSessionRepo = {
 	getSessionsByUserId: vi.fn(),
 };
 
+const mockResultRepo = {
+	create: vi.fn(),
+	getBySessionId: vi.fn(),
+	getById: vi.fn(),
+	update: vi.fn(),
+	upsert: vi.fn(),
+	updateStage: vi.fn(),
+	getLatestByUserId: vi.fn(),
+};
+
+const buildAllHighFacetScores = () => {
+	const facets = {} as Record<FacetName, { score: number; confidence: number }>;
+	for (const facetName of ALL_FACETS) {
+		facets[facetName] = { score: 20, confidence: 0.9 };
+	}
+	return facets;
+};
+
 const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(ConversationRepository, mockSessionRepo),
+		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(AppConfig, {
 			databaseUrl: "postgres://test:test@localhost:5432/test",
 			redisUrl: "redis://localhost:6379",
@@ -46,6 +71,7 @@ const createTestLayer = () =>
 describe("listUserSessions Use Case", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockResultRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
 	});
 
 	it("should return sessions for a user with assessments", async () => {
@@ -56,8 +82,6 @@ describe("listUserSessions Use Case", () => {
 				updatedAt: new Date("2026-02-15"),
 				status: "active",
 				messageCount: 5,
-				oceanCode5: null,
-				archetypeName: null,
 			},
 			{
 				id: "session-2",
@@ -65,12 +89,26 @@ describe("listUserSessions Use Case", () => {
 				updatedAt: new Date("2026-02-14"),
 				status: "active",
 				messageCount: 15,
-				oceanCode5: "OCEAR",
-				archetypeName: null,
 			},
 		];
 
 		mockSessionRepo.getSessionsByUserId.mockReturnValue(Effect.succeed(mockSessions));
+		mockResultRepo.getBySessionId.mockImplementation((sessionId: string) =>
+			Effect.succeed(
+				sessionId === "session-2"
+					? {
+							id: "result-2",
+							assessmentSessionId: "session-2",
+							facets: buildAllHighFacetScores(),
+							traits: {},
+							domainCoverage: {},
+							portrait: "",
+							stage: "completed",
+							createdAt: new Date(),
+						}
+					: null,
+			),
+		);
 
 		const result = await Effect.runPromise(
 			listUserSessions({ userId: TEST_USER_ID }).pipe(Effect.provide(createTestLayer())),
@@ -79,7 +117,9 @@ describe("listUserSessions Use Case", () => {
 		expect(result.sessions).toHaveLength(2);
 		expect(result.sessions[0]?.id).toBe("session-1");
 		expect(result.sessions[0]?.messageCount).toBe(5);
-		expect(result.sessions[1]?.oceanCode5).toBe("OCEAR");
+		expect(result.sessions[0]?.oceanCode5).toBeNull();
+		expect(result.sessions[1]?.oceanCode5).toBe("OCEAN");
+		expect(result.sessions[1]?.archetypeName).toBeDefined();
 		expect(result.assessmentTurnCount).toBe(15);
 		expect(mockSessionRepo.getSessionsByUserId).toHaveBeenCalledWith(TEST_USER_ID);
 	});
@@ -113,6 +153,7 @@ describe("listUserSessions Use Case", () => {
 
 		const customLayer = Layer.mergeAll(
 			Layer.succeed(ConversationRepository, mockSessionRepo),
+			Layer.succeed(AssessmentResultRepository, mockResultRepo),
 			Layer.succeed(AppConfig, {
 				databaseUrl: "postgres://test:test@localhost:5432/test",
 				redisUrl: "redis://localhost:6379",

@@ -26,14 +26,7 @@ import { publicProfile, user } from "../db/drizzle/schema";
 const mapProfileRecord = (
 	profile: Pick<
 		typeof publicProfile.$inferSelect,
-		| "id"
-		| "conversationId"
-		| "userId"
-		| "oceanCode5"
-		| "oceanCode4"
-		| "isPublic"
-		| "viewCount"
-		| "createdAt"
+		"id" | "conversationId" | "userId" | "isPublic" | "viewCount" | "createdAt"
 	>,
 	displayName: string,
 ) => ({
@@ -41,8 +34,6 @@ const mapProfileRecord = (
 	sessionId: profile.conversationId,
 	userId: profile.userId as string,
 	displayName,
-	oceanCode5: profile.oceanCode5,
-	oceanCode4: profile.oceanCode4,
 	isPublic: profile.isPublic,
 	viewCount: profile.viewCount,
 	createdAt: profile.createdAt,
@@ -67,8 +58,6 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						.values({
 							conversationId: input.sessionId,
 							userId: input.userId,
-							oceanCode5: input.oceanCode5,
-							oceanCode4: input.oceanCode4,
 						})
 						.returning()
 						.pipe(
@@ -120,8 +109,6 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 							id: publicProfile.id,
 							conversationId: publicProfile.conversationId,
 							userId: publicProfile.userId,
-							oceanCode5: publicProfile.oceanCode5,
-							oceanCode4: publicProfile.oceanCode4,
 							isPublic: publicProfile.isPublic,
 							viewCount: publicProfile.viewCount,
 							createdAt: publicProfile.createdAt,
@@ -159,8 +146,6 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 							id: publicProfile.id,
 							conversationId: publicProfile.conversationId,
 							userId: publicProfile.userId,
-							oceanCode5: publicProfile.oceanCode5,
-							oceanCode4: publicProfile.oceanCode4,
 							isPublic: publicProfile.isPublic,
 							viewCount: publicProfile.viewCount,
 							createdAt: publicProfile.createdAt,

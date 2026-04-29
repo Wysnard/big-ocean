@@ -17,8 +17,6 @@ import { DatabaseError, ProfileError, ProfileNotFound, Unauthorized } from "../e
 export interface CreatePublicProfileInput {
 	readonly sessionId: string;
 	readonly userId: string;
-	readonly oceanCode5: string;
-	readonly oceanCode4: string;
 }
 
 export interface PublicProfileData {
@@ -26,8 +24,6 @@ export interface PublicProfileData {
 	readonly sessionId: string;
 	readonly userId: string;
 	readonly displayName: string;
-	readonly oceanCode5: string;
-	readonly oceanCode4: string;
 	readonly isPublic: boolean;
 	readonly viewCount: number;
 	readonly createdAt: Date;

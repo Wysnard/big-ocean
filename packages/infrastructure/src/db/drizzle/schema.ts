@@ -341,8 +341,6 @@ export const publicProfile = pgTable(
 			onDelete: "cascade",
 		}),
 		userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
-		oceanCode5: text("ocean_code_5").notNull(),
-		oceanCode4: text("ocean_code_4").notNull(),
 		isPublic: boolean("is_public").default(false).notNull(),
 		viewCount: integer("view_count").default(0).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),

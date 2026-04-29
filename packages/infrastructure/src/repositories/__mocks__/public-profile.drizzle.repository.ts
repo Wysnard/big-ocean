@@ -31,8 +31,6 @@ export const PublicProfileDrizzleRepositoryLive = Layer.succeed(
 					sessionId: input.sessionId,
 					userId: input.userId,
 					displayName: input.userId,
-					oceanCode5: input.oceanCode5,
-					oceanCode4: input.oceanCode4,
 					isPublic: false,
 					viewCount: 0,
 					createdAt: new Date(),
