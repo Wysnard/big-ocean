@@ -12,6 +12,7 @@ import {
 	ProfileError,
 	ProfileNotFound,
 	ProfilePrivate,
+	PublicProfileNotProvisioned,
 	SessionNotFound,
 	Unauthorized,
 } from "../../errors";
@@ -82,7 +83,7 @@ export const ToggleVisibilityResponseSchema = S.Struct({
  * Profile API Group
  *
  * Routes:
- * - POST /api/public-profile/share - Create shareable profile
+ * - POST /api/public-profile/share - Resolve shareable profile link (row must exist from finalization)
  * - GET /api/public-profile/:publicProfileId - View public profile
  * - PATCH /api/public-profile/:publicProfileId/visibility - Toggle privacy
  */
@@ -94,6 +95,7 @@ export const ProfileGroup = HttpApiGroup.make("profile")
 			.addError(SessionNotFound, { status: 404 })
 			.addError(ProfileError, { status: 422 })
 			.addError(Unauthorized, { status: 401 })
+			.addError(PublicProfileNotProvisioned, { status: 500 })
 			.addError(DatabaseError, { status: 500 }),
 	)
 	.add(

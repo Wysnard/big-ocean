@@ -49,8 +49,8 @@ const ALL_FACETS = Object.keys(FACET_TO_TRAIT);
 // ── API helpers ─────────────────────────────────────────────────────────
 
 /**
- * Start a new conversation session via the API.
- * If the APIRequestContext has auth cookies, the session is owned by that user.
+ * Start a new conversation session via the API (requires an authenticated
+ * `APIRequestContext` — unauthenticated calls receive 401).
  */
 export async function createAssessmentSession(api: APIRequestContext): Promise<string> {
 	const res = await api.post("/api/conversation/start", { data: {} });
@@ -210,8 +210,8 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			};
 		}
 		const resultRow = await client.query(
-			`INSERT INTO assessment_results (conversation_id, facets, traits, domain_coverage, portrait)
-			 VALUES ($1, $2, $3, $4, $5)
+			`INSERT INTO assessment_results (conversation_id, facets, traits, domain_coverage, portrait, stage)
+			 VALUES ($1, $2, $3, $4, $5, 'completed')
 			 RETURNING id`,
 			[
 				sessionId,
@@ -223,7 +223,17 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 		);
 		const _resultId: string = resultRow.rows[0].id;
 
-		// 4. Insert conversation_evidence rows (needed by portrait/relationship analysis)
+		// 4. Mirror Assessment Finalization invariant: completed results have a public_profile row.
+		await client.query(
+			`INSERT INTO public_profile (conversation_id, user_id, is_public, view_count)
+			 SELECT id, user_id, false, 0
+			 FROM conversations
+			 WHERE id = $1 AND user_id IS NOT NULL
+			   AND NOT EXISTS (SELECT 1 FROM public_profile WHERE conversation_id = $1)`,
+			[sessionId],
+		);
+
+		// 5. Insert conversation_evidence rows (needed by portrait/relationship analysis)
 		for (let i = 0; i < facetScores.length; i++) {
 			const { facet, score, confidence } = facetScores[i];
 			const domain = domains[i % domains.length];
@@ -240,7 +250,7 @@ export async function seedSessionForResults(sessionId: string): Promise<void> {
 			);
 		}
 
-		// 5. Update session to completed with message_count >= 2
+		// 6. Update session to completed with message_count >= 2
 		await client.query(
 			`UPDATE conversations
 			 SET status = 'completed', message_count = 2, updated_at = NOW()
@@ -271,6 +281,29 @@ export async function linkSessionToUser(sessionId: string, userId: string): Prom
 			userId,
 			sessionId,
 		]);
+	} finally {
+		client.release();
+		await pool.end();
+	}
+}
+
+/**
+ * Ensure a `public_profile` row exists for the session (mirrors Assessment Finalization).
+ * E2E must call this before POST `/api/public-profile/share`; production rows come from `generate-results` only.
+ */
+export async function ensurePublicProfileRowForE2e(
+	sessionId: string,
+	userId: string,
+): Promise<void> {
+	const pool = new Pool(TEST_DB_CONFIG);
+	const client = await pool.connect();
+	try {
+		await client.query(
+			`INSERT INTO public_profile (conversation_id, user_id, is_public, view_count)
+			 SELECT $1::uuid, $2, false, 0
+			 WHERE NOT EXISTS (SELECT 1 FROM public_profile WHERE conversation_id = $1::uuid)`,
+			[sessionId, userId],
+		);
 	} finally {
 		client.release();
 		await pool.end();

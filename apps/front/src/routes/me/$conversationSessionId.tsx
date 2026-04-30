@@ -29,6 +29,7 @@ import {
 import { useActivateExtension } from "@/hooks/use-activate-extension";
 import { useAuth } from "@/hooks/use-auth";
 import {
+	generateResultsForSession,
 	getResultsQueryOptions,
 	isConversationApiError,
 	useGetResults,
@@ -64,10 +65,21 @@ export const Route = createFileRoute("/me/$conversationSessionId")({
 	},
 	loader: async ({ params, context }) => {
 		if (!context.isAuthenticated) return;
+		const queryOptions = getResultsQueryOptions(params.conversationSessionId);
 		try {
-			await context.queryClient.ensureQueryData(getResultsQueryOptions(params.conversationSessionId));
+			await context.queryClient.ensureQueryData(queryOptions);
 		} catch (error) {
 			if (isConversationApiError(error) && error.status === 404) throw notFound();
+			if (isConversationApiError(error) && error.status === 409) {
+				try {
+					await generateResultsForSession(params.conversationSessionId);
+					await context.queryClient.fetchQuery(queryOptions);
+				} catch (finalizationError) {
+					if (isConversationApiError(finalizationError) && finalizationError.status === 404) {
+						throw notFound();
+					}
+				}
+			}
 			// Graceful degradation: client-side useGetResults will retry
 		}
 	},

@@ -28,7 +28,7 @@ test.describe("Homepage & Acquisition Funnel", () => {
 	test("desktop split layout shows auth panel with signup link @smoke", async ({ page }) => {
 		await test.step("load homepage and verify split layout", async () => {
 			await page.goto("/");
-			await page.locator("[data-slot='sticky-auth-panel']").waitFor({ state: "visible" });
+			await page.getByTestId("sticky-auth-panel").waitFor({ state: "visible" });
 
 			// Desktop: sticky auth panel with signup and login links
 			await expect(page.getByRole("link", { name: /start yours/i })).toBeVisible();

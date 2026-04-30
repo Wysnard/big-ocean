@@ -84,6 +84,55 @@ test.describe("Conversation Lifecycle", () => {
 			await page.waitForURL(/\/me\//, { timeout: 15_000 });
 		});
 
+		await test.step("finalize assessment results", async () => {
+			const api = await createApiContext();
+			const signIn = await api.post("/api/auth/sign-in/email", {
+				data: { email: LIFECYCLE_USER.email, password: LIFECYCLE_USER.password },
+			});
+			expect(signIn.ok()).toBeTruthy();
+
+			// The transition CTA can render before the first send-message request has
+			// fully released its session lock; give the backend a beat before driving
+			// any remaining turns via API.
+			await page.waitForTimeout(1_000);
+
+			let finalized = false;
+			for (let attempt = 0; attempt < 20; attempt++) {
+				const finalizeRes = await api.post(`/api/conversation/${sessionId}/generate-results`);
+				if (finalizeRes.ok()) {
+					finalized = true;
+					break;
+				}
+
+				const body = (await finalizeRes.json()) as { currentStatus?: string; message?: string };
+				if (finalizeRes.status() !== 409 || body.currentStatus !== "active") {
+					throw new Error(`Generate results failed (${finalizeRes.status()}): ${JSON.stringify(body)}`);
+				}
+
+				const messageRes = await api.post("/api/conversation/message", {
+					data: {
+						sessionId,
+						message: `Additional lifecycle evidence turn ${attempt + 1}.`,
+					},
+				});
+				if (!messageRes.ok()) {
+					const text = await messageRes.text();
+					if (messageRes.status() === 409 && text.includes("ConcurrentMessageError")) {
+						await page.waitForTimeout(500);
+						continue;
+					}
+					throw new Error(`Additional lifecycle message failed (${messageRes.status()}): ${text}`);
+				}
+			}
+
+			if (!finalized) {
+				throw new Error("Generate results did not complete after additional lifecycle turns");
+			}
+
+			await api.dispose();
+			await page.goto(`/me/${sessionId}`);
+		});
+
 		await test.step("results page renders with OCEAN code and archetype", async () => {
 			// Lazy finalization may still be in progress — use a generous timeout
 			await expect(page.getByTestId("archetype-hero-section")).toBeVisible({ timeout: 30_000 });

@@ -165,10 +165,6 @@ export {
 	buildWeeklySummaryPrompt,
 	type WeeklySummaryPromptParts,
 } from "./prompts/weekly-summary.prompt";
-export {
-	type AnalysisTarget,
-	AnalyzerRepository,
-} from "./repositories/analyzer.repository";
 // Assessment result repository (Story 11.2)
 export {
 	AssessmentResultError,
@@ -227,12 +223,6 @@ export {
 	type NerinActorInvokeOutput,
 	NerinActorRepository,
 } from "./repositories/nerin-actor.repository";
-// Backward compat re-exports (consumers migrating in Story 43-5)
-export {
-	NerinAgentRepository,
-	type NerinInvokeInput,
-	type NerinInvokeOutput,
-} from "./repositories/nerin-agent.repository";
 // Nerin Director repository (Story 43-3)
 export {
 	NerinDirectorError,

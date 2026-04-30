@@ -1,9 +1,8 @@
 import {
 	createAssessmentSession,
 	createShareableProfile,
-	getSessionUserId,
+	ensurePublicProfileRowForE2e,
 	getUserByEmail,
-	linkSessionToUser,
 	seedSessionForResults,
 	toggleProfileVisibility,
 } from "../factories/conversation.factory.js";
@@ -40,22 +39,11 @@ test("anonymous user views public profile with traits and facets", async ({ page
 	let profilePath = "";
 
 	await test.step("seed user, session, evidence, and public profile via API", async () => {
-		// 1. Create anonymous session
+		// Conversation start is auth-only, so sign in before creating the session.
+		await createUser(apiContext, PROFILE_USER);
 		const sessionId = await createAssessmentSession(apiContext);
-
-		// 2. Sign up user and link session (cookies auto-captured by apiContext)
-		await createUser(apiContext, {
-			...PROFILE_USER,
-			anonymousSessionId: sessionId,
-		});
-
-		// 3. Verify session linked, fallback to direct DB if needed
-		const linkedUserId = await getSessionUserId(sessionId);
-		if (!linkedUserId) {
-			const user = await getUserByEmail(PROFILE_USER.email);
-			if (!user) throw new Error("Profile test user not found after sign-up");
-			await linkSessionToUser(sessionId, user.id);
-		}
+		const ownerUser = await getUserByEmail(PROFILE_USER.email);
+		if (!ownerUser) throw new Error("Profile test user not found after sign-up");
 
 		// 4. Seed evidence data so profile has real scores
 		// Non-fatal: facet_evidence table may not exist in Phase 2 schema (Epic 10+)
@@ -67,10 +55,13 @@ test("anonymous user views public profile with traits and facets", async ({ page
 			);
 		}
 
-		// 5. Create shareable profile (apiContext has auth cookies from step 2)
+		// 5. Public profile row (same invariant as Assessment Finalization)
+		await ensurePublicProfileRowForE2e(sessionId, ownerUser.id);
+
+		// 6. Resolve share link (read-only when row exists)
 		const shareData = await createShareableProfile(apiContext, sessionId);
 
-		// 6. Toggle profile to public
+		// 7. Toggle profile to public
 		await toggleProfileVisibility(apiContext, shareData.publicProfileId, true);
 
 		profilePath = `/public-profile/${shareData.publicProfileId}`;

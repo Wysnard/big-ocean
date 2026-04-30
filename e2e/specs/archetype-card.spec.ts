@@ -1,9 +1,8 @@
 import {
 	createAssessmentSession,
 	createShareableProfile,
-	getSessionUserId,
+	ensurePublicProfileRowForE2e,
 	getUserByEmail,
-	linkSessionToUser,
 	seedSessionForResults,
 	toggleProfileVisibility,
 } from "../factories/conversation.factory.js";
@@ -39,19 +38,10 @@ test("archetype share card and OG image route @smoke", async ({ page, request, a
 	let profileId = "";
 
 	await test.step("seed user, session, evidence, and public profile", async () => {
+		await createUser(apiContext, CARD_USER);
 		sessionId = await createAssessmentSession(apiContext);
-
-		await createUser(apiContext, {
-			...CARD_USER,
-			anonymousSessionId: sessionId,
-		});
-
-		const linkedUserId = await getSessionUserId(sessionId);
-		if (!linkedUserId) {
-			const user = await getUserByEmail(CARD_USER.email);
-			if (!user) throw new Error("Card test user not found after sign-up");
-			await linkSessionToUser(sessionId, user.id);
-		}
+		const ownerUser = await getUserByEmail(CARD_USER.email);
+		if (!ownerUser) throw new Error("Card test user not found after sign-up");
 
 		try {
 			await seedSessionForResults(sessionId);
@@ -60,6 +50,8 @@ test("archetype share card and OG image route @smoke", async ({ page, request, a
 				`[archetype-card] Skipping evidence seed: ${err instanceof Error ? err.message : err}`,
 			);
 		}
+
+		await ensurePublicProfileRowForE2e(sessionId, ownerUser.id);
 
 		const shareData = await createShareableProfile(apiContext, sessionId);
 		await toggleProfileVisibility(apiContext, shareData.publicProfileId, true);

@@ -35,8 +35,7 @@
 		"test:e2e:critical": "playwright test --grep @critical",
 		"test:e2e:smoke": "playwright test --grep @smoke",
 		"test:e2e:ui": "pnpm --filter=@workspace/e2e test:e2e:ui",
-		"test:e2e:headed": "pnpm --filter=@workspace/e2e test:e2e:headed",
-		"eval:portrait": "tsx scripts/eval-portrait.ts"
+		"test:e2e:headed": "pnpm --filter=@workspace/e2e test:e2e:headed"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "./.githooks/pre-commit",

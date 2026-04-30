@@ -23,15 +23,7 @@ export const ProfileGroupLive = HttpApiBuilder.group(BigOceanApi, "profile", (ha
 				Effect.gen(function* () {
 					const result = yield* createShareableProfile({
 						sessionId: payload.sessionId,
-					}).pipe(
-						Effect.catchTag("AssessmentResultError", (error: AssessmentResultError) =>
-							Effect.fail(
-								new DatabaseError({
-									message: `Result retrieval failed: ${error.message}`,
-								}),
-							),
-						),
-					);
+					});
 
 					return {
 						publicProfileId: result.publicProfileId,

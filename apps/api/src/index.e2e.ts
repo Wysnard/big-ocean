@@ -55,7 +55,6 @@ import { ConversationDrizzleRepositoryLive } from "@workspace/infrastructure/rep
 import { LoggerPinoRepositoryLive } from "@workspace/infrastructure/repositories/logger.pino.repository";
 import { MessageDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/message.drizzle.repository";
 import { NerinActorMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-actor.mock.repository";
-import { NerinAgentMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-agent.mock.repository";
 import { NerinDirectorMockRepositoryLive } from "@workspace/infrastructure/repositories/nerin-director.mock.repository";
 import { RedisIoRedisRepositoryLive } from "@workspace/infrastructure/repositories/redis.ioredis.repository";
 import { UserAccountDrizzleRepositoryLive } from "@workspace/infrastructure/repositories/user-account.drizzle.repository";
@@ -117,7 +116,7 @@ const CostGuardLayer = CostGuardRedisRepositoryLive.pipe(
  * Repository Layers
  *
  * Layers swapped for E2E:
- * - NerinAgentMockRepositoryLive (was: NerinAgentAnthropicRepositoryLive) — mock
+ * - NerinDirectorMockRepositoryLive / NerinActorMockRepositoryLive — mocks
  * - ConversanalyzerMockRepositoryLive (was: ConversanalyzerAnthropicRepositoryLive) — mock
  * - SpineExtractorMockRepositoryLive / SpineVerifierMockRepositoryLive / PortraitProseRendererMockRepositoryLive — mock
  * - RelationshipAnalysisGeneratorMockRepositoryLive (was: ...AnthropicRepositoryLive) — mock
@@ -139,7 +138,6 @@ const RepositoryLayers = Layer.mergeAll(
 	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
 	NerinActorMockRepositoryLive,
-	NerinAgentMockRepositoryLive,
 	NerinDirectorMockRepositoryLive,
 	CostGuardLayer,
 	SpineExtractorMockRepositoryLive,
@@ -260,7 +258,7 @@ const logStartup = (port: number, frontendUrl: string) =>
 		logger.info(`Starting Big Ocean API server on port ${port} [E2E MODE]`);
 		logger.info("");
 		logger.info("E2E layers:");
-		logger.info("  - Nerin Agent (mock)");
+		logger.info("  - Nerin Director + Actor (mock)");
 		logger.info("  - ConversAnalyzer (mock)");
 		logger.info("  - Portrait Generator (mock)");
 		logger.info("  - Relationship Analysis Generator (mock)");

@@ -15,9 +15,6 @@
 import { execSync } from "node:child_process";
 import {
 	createAssessmentSession,
-	getSessionUserId,
-	getUserByEmail,
-	linkSessionToUser,
 	seedSessionForResults,
 } from "../factories/conversation.factory.js";
 import { createUser } from "../factories/user.factory.js";
@@ -47,17 +44,8 @@ test.describe("Invitation System", () => {
 	}) => {
 		// ── Setup: create user with completed assessment ──
 		await test.step("seed user with completed assessment", async () => {
+			await createUser(apiContext, INVITE_USER);
 			sessionId = await createAssessmentSession(apiContext);
-			await createUser(apiContext, {
-				...INVITE_USER,
-				anonymousSessionId: sessionId,
-			});
-
-			const linkedUserId = await getSessionUserId(sessionId);
-			if (!linkedUserId) {
-				const user = await getUserByEmail(INVITE_USER.email);
-				if (user) await linkSessionToUser(sessionId, user.id);
-			}
 
 			try {
 				await seedSessionForResults(sessionId);

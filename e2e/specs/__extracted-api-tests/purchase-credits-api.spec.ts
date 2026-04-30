@@ -12,9 +12,6 @@
 import { execSync } from "node:child_process";
 import {
 	createAssessmentSession,
-	getSessionUserId,
-	getUserByEmail,
-	linkSessionToUser,
 	seedSessionForResults,
 } from "../../factories/conversation.factory.js";
 import { createUser } from "../../factories/user.factory.js";
@@ -45,29 +42,16 @@ test.describe("Purchase Credits API", () => {
 	test("free credit granted on signup and credits endpoint returns correct state", async ({
 		apiContext,
 	}) => {
-		let sessionId: string;
+		let sessionId = "";
 
-		await test.step("create anonymous session", async () => {
+		await test.step("sign up user and create owned session", async () => {
+			await createUser(apiContext, CREDITS_USER);
 			sessionId = await createAssessmentSession(apiContext);
 		});
 
-		await test.step("sign up user (triggers free credit grant)", async () => {
-			await createUser(apiContext, {
-				...CREDITS_USER,
-				anonymousSessionId: sessionId!,
-			});
-		});
-
-		await test.step("link session and seed results", async () => {
-			const linkedUserId = await getSessionUserId(sessionId!);
-			if (!linkedUserId) {
-				const user = await getUserByEmail(CREDITS_USER.email);
-				if (!user) throw new Error("Credits test user not found");
-				await linkSessionToUser(sessionId!, user.id);
-			}
-
+		await test.step("seed results", async () => {
 			try {
-				await seedSessionForResults(sessionId!);
+				await seedSessionForResults(sessionId);
 			} catch (err) {
 				console.warn(
 					`[purchase-credits] Skipping evidence seed: ${err instanceof Error ? err.message : err}`,

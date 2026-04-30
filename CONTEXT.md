@@ -4,6 +4,10 @@ Shared domain language for Big Ocean architecture discussions. This file records
 
 ## Language
 
+**Intimacy Principle**:
+Authenticated and social surfaces avoid crowd mechanics: no people search or directory, no follower semantics, and no growth or view counts as primary UI.
+*Avoid*: treating the public knowledge library like a people-discovery surface
+
 **Assessment Finalization**:
 The completion step that turns a finished Nerin conversation into persisted assessment results, a UserSummary, queued portrait generation, and—before success is returned—the idempotent creation of the session’s shareable public profile row (private by default) so **Completed Assessment Session Read (Me)** paths only query profile metadata; they do not create that row.
 *Avoid*: lazy finalization, result generation
@@ -11,6 +15,14 @@ The completion step that turns a finished Nerin conversation into persisted asse
 **Authenticated Conversation**:
 A Nerin conversation owned by a signed-in user from its first turn.
 *Avoid*: anonymous session, guest session
+
+**Unfinalized extension session**:
+A subscriber-only continuation of the Nerin thread (+15 exchanges) that has started but not yet completed **Assessment Finalization** for that session. Routine authenticated entry remains **`/today`** after the user’s **first** **Assessment Finalization**; the product must surface an explicit **continue-extension** affordance (see PRD FR101a) so the work-in-progress is never invisible.
+*Avoid*: reusing initial-onboarding “home → `/chat`” routing for extensions
+
+**ExtensionResumeHint**:
+The compact FR101a variant on **session-scoped Me** when **`/me/$conversationSessionId` shows a completed session that is not** the active **unfinalized extension** session: one Nerin-voiced line plus a **primary** text link to **`/me/$extensionSessionId`** (the extension’s session-scoped Me — identity context before opening chat). **`/chat`** resume is not the hint’s primary target; use **`ExtensionContinueModule`** on **`/today`**, hub **`/me`**, or extension-matching session Me for that.
+*Avoid*: duplicating the full Today-style module on historical session pages; deep-linking the hint straight to **`/chat`** as the default
 
 **Living Personality Model**:
 The evolving cross-session personality state for an authenticated user, built from their accumulated Nerin conversation evidence and used by downstream Nerin surfaces when an **Authenticated Conversation** extends prior context.
@@ -51,6 +63,7 @@ The persisted `public_profiles` record for a completed assessment session (priva
 - A **Completed Assessment Session Read (Me)** requires both `assessment_results.stage=completed` and an existing **Public profile row (shareable)** for the same session.
 - An **Assessment surface** is derived from the same facet scores that feed trait views and confidence; it does not replace **UserSummary** or **Portrait**.
 - A conversation extension contributes to the user’s **Living Personality Model** by default; callers may deliberately request a narrower current-session scope when the product surface needs it.
+- An **Unfinalized extension session** is discoverable in-product via the **continue-extension** affordance (PRD FR101a); it does not change default authenticated landing after the **first** **Assessment Finalization**.
 
 ## Example Dialogue
 
@@ -62,3 +75,9 @@ The persisted `public_profiles` record for a completed assessment session (priva
 - "results generation" has been used for both scoring and the whole completion workflow. Resolved: use **Assessment Finalization** for the whole workflow and "scoring" for facet/trait computation.
 - Historical migrations may still mention legacy conversation tokens. Resolved: active product flow uses **Authenticated Conversation** only.
 - **Completed Assessment Results Read** vs **Me** URLs: Resolved — use **Completed Assessment Session Read (Me)**; canonical route `/me/$conversationSessionId`; `/results/*` is legacy redirect-only, not primary product language.
+- Public **Personality Atlas** / knowledge library vs “no search”: Resolved for MVP — curated shelves, indexes, and in-page navigation only; no on-site search or query UI. The **Intimacy Principle** targets people- and circle-scale discovery, not editorial article browsing.
+- Authenticated “home” vs **Assessment Finalization**: Resolved — until the **first** **Assessment Finalization** (initial assessment), authenticated entry resolves to **`/chat`**; after the post-assessment **Me** sequence, **`/today`** is the primary daily surface on routine opens. **Unfinalized extension session**s do not change default entry; they require a **continue-extension** affordance (FR101a).
+- **Me hub** identity hero vs **unfinalized extension**: Resolved (grill Q8) — on **`/me`**, the **identity hero** stays the **latest finalized** assessment; **`ExtensionContinueModule`** alone surfaces the open extension thread until that session’s **Assessment Finalization** (copy must read as **in-flight Nerin conversation**, not a second hero).
+- **`ExtensionContinueModule` links (MVP):** Resolved (grill Q9-B) — on **`/today`** and hub **`/me`**, **primary** **`/chat`** + **required secondary** text link to **`/me/$extensionSessionId`**; on **`/me/$extensionSessionId`** when that id **is** the extension session, **primary `/chat` only** (no self-link).
+- **Subscription lapse during unfinalized extension:** Resolved (grill Q10-B, **FR101b**) — user may finish **`/chat`**, **Assessment Finalization**, and bundled extension outcomes (e.g. **FR23** portrait); **new** extension starts require active subscription (**FR49**). **Grill Q11-C:** **`ExtensionContinueModule`** may add **one** **Nerin-voiced** line acknowledging lapse while the thread stays open — **no** price or checkout **inside** that module. **`ExtensionResumeHint`** may weave the same idea into its **single** line (**FR101b**).
+- **Second extension during cancel window:** Resolved (grill **Q12-C**) — MVP allows **at most one** successful **`activate-conversation-extension`** per account; Polar **cancelled_active** (or other period-end perks like **FR92(c)** weekly letter continuity) does **not** unlock a **second** activation. **FR101b** only covers **completing** an extension session already opened.

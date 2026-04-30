@@ -83,6 +83,19 @@ export function fetchResults(sessionId: string) {
 }
 
 /**
+ * Trigger finalization for a conversation that has reached the finalizing state.
+ *
+ * This is intentionally a non-hook helper so route loaders can finish the
+ * assessment before rendering the Me page.
+ */
+export function generateResultsForSession(sessionId: string) {
+	return Effect.gen(function* () {
+		const client = yield* makeApiClient;
+		return yield* client.conversation.generateResults({ path: { sessionId } });
+	}).pipe(Effect.runPromise);
+}
+
+/**
  * Query options for conversation results
  *
  * Shared between useGetResults hook and route loader to ensure consistent

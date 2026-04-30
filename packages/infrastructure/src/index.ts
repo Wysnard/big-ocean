@@ -20,9 +20,6 @@ export { BetterAuthLive, BetterAuthService } from "./context/better-auth";
 export { Database, DatabaseStack } from "./context/database";
 // Database schema (for Better Auth adapter and migrations)
 export * as dbSchema from "./db/drizzle/schema";
-// Analyzer repository implementations
-export { AnalyzerClaudeRepositoryLive } from "./repositories/analyzer.claude.repository";
-export { AnalyzerMockRepositoryLive } from "./repositories/analyzer.mock.repository";
 // Assessment result repository implementation (Story 11.2)
 export { AssessmentResultDrizzleRepositoryLive } from "./repositories/assessment-result.drizzle.repository";
 // Conversanalyzer repository implementations (Story 10.2)
@@ -47,9 +44,6 @@ export { MessageDrizzleRepositoryLive } from "./repositories/message.drizzle.rep
 // Nerin Actor repository implementations (Story 43-4, ADR-DM-3)
 export { NerinActorAnthropicRepositoryLive } from "./repositories/nerin-actor.anthropic.repository";
 export { NerinActorMockRepositoryLive } from "./repositories/nerin-actor.mock.repository";
-// Nerin agent repository implementations — backward compat (removed in Story 43-5)
-export { NerinAgentAnthropicRepositoryLive } from "./repositories/nerin-agent.anthropic.repository";
-export { NerinAgentMockRepositoryLive } from "./repositories/nerin-agent.mock.repository";
 // Nerin Director repository implementations (Story 43-3, ADR-DM-1)
 export { NerinDirectorAnthropicRepositoryLive } from "./repositories/nerin-director.anthropic.repository";
 export { NerinDirectorMockRepositoryLive } from "./repositories/nerin-director.mock.repository";

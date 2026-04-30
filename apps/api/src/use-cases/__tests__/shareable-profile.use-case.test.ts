@@ -137,12 +137,14 @@ describe("createShareableProfile Use Case", () => {
 	});
 
 	describe("Success scenarios", () => {
-		it.effect("should create a profile from a valid session with high confidence", () =>
+		it.effect("should return share link when public profile row already exists", () =>
 			Effect.gen(function* () {
 				const sessionRepo = yield* ConversationRepository;
+				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 				const { facets, traits } = buildFacetsAndTraits(15, 85);
 				_seedResult(sessionId, { facets, traits });
+				yield* profileRepo.createProfile({ sessionId, userId: "user_123" });
 
 				const result = yield* createShareableProfile({ sessionId });
 
@@ -156,15 +158,15 @@ describe("createShareableProfile Use Case", () => {
 		it.effect("should return existing profile for same session (idempotent)", () =>
 			Effect.gen(function* () {
 				const sessionRepo = yield* ConversationRepository;
+				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 				const { facets, traits } = buildFacetsAndTraits(15, 85);
 				_seedResult(sessionId, { facets, traits });
+				yield* profileRepo.createProfile({ sessionId, userId: "user_123" });
 
-				// Create profile twice
 				const result1 = yield* createShareableProfile({ sessionId });
 				const result2 = yield* createShareableProfile({ sessionId });
 
-				// Should return the same profile
 				expect(result1.publicProfileId).toBe(result2.publicProfileId);
 			}).pipe(Effect.provide(HighConfidenceTestLayer)),
 		);
@@ -172,13 +174,33 @@ describe("createShareableProfile Use Case", () => {
 		it.effect("should generate shareable URL with frontend base URL", () =>
 			Effect.gen(function* () {
 				const sessionRepo = yield* ConversationRepository;
+				const profileRepo = yield* PublicProfileRepository;
 				const { sessionId } = yield* sessionRepo.createSession("user_123");
 				const { facets, traits } = buildFacetsAndTraits(15, 85);
 				_seedResult(sessionId, { facets, traits });
+				yield* profileRepo.createProfile({ sessionId, userId: "user_123" });
 
 				const result = yield* createShareableProfile({ sessionId });
 
 				expect(result.shareableUrl).toMatch(/^http:\/\/localhost:3000\/public-profile\/[0-9a-f-]+$/);
+			}).pipe(Effect.provide(HighConfidenceTestLayer)),
+		);
+	});
+
+	describe("Error scenarios", () => {
+		it.effect("should fail with PublicProfileNotProvisioned when no profile row exists", () =>
+			Effect.gen(function* () {
+				const sessionRepo = yield* ConversationRepository;
+				const { sessionId } = yield* sessionRepo.createSession("user_123");
+				const { facets, traits } = buildFacetsAndTraits(15, 85);
+				_seedResult(sessionId, { facets, traits });
+
+				const exit = yield* Effect.exit(createShareableProfile({ sessionId }));
+
+				expect(exit._tag).toBe("Failure");
+				if (exit._tag === "Failure" && exit.cause._tag === "Fail") {
+					expect(exit.cause.error).toHaveProperty("_tag", "PublicProfileNotProvisioned");
+				}
 			}).pipe(Effect.provide(HighConfidenceTestLayer)),
 		);
 	});
@@ -207,8 +229,6 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAV",
-					oceanCode4: "OCBA",
 				});
 
 				// Make it public
@@ -237,8 +257,6 @@ describe("getPublicProfile Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAV",
-					oceanCode4: "OCBA",
 				});
 
 				const exit = yield* Effect.exit(
@@ -288,8 +306,6 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAV",
-					oceanCode4: "OCBA",
 				});
 
 				const result = yield* toggleProfileVisibility({
@@ -317,8 +333,6 @@ describe("toggleProfileVisibility Use Case", () => {
 				const profile = yield* profileRepo.createProfile({
 					sessionId,
 					userId: "user_123",
-					oceanCode5: "OCBAV",
-					oceanCode4: "OCBA",
 				});
 
 				const exit = yield* Effect.exit(

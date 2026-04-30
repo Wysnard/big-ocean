@@ -3,10 +3,10 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 lastStep: 8
 status: 'complete'
 completedAt: '2026-03-15'
-lastUpdated: '2026-04-18'
-lastConsolidated: '2026-04-05 — unified all satellite architecture docs into this single authoritative file'
-lastDeltaUpdate: '2026-04-18 — synced latest PRD changes. ADR-49 now treats `/library` as the public Personality Atlas browse surface (FR83a), with atlas-first hero, recommended path, complete shelves, facet link exposure, accessibility anchors, and no duplicate route-path modules. Updated NFR alignment for accessibility, cost-guard boundaries, retry measurement, session resumability, and configuration-driven LLM provider selection. Preserved ADR count at 56 because this is a refinement to ADR-49/validation text, not a new architectural decision.'
-adrsTotal: 56
+lastUpdated: '2026-04-30'
+lastConsolidated: '2026-04-30 — counts/paths verified against repo (use-cases, infrastructure repos); ADR total includes ADR-57'
+lastDeltaUpdate: '2026-04-30 — ADR-43 + FR101a Q6–Q9; ADR-47 **FR101b** Q10-B grace + Q11-C; **FR10/FR49** grill Q12-C MVP second-extension cap in activate-conversation-extension + ADR-47 pseudocode. Earlier routing + library deltas unchanged in substance.'
+adrsTotal: 57
 adrsAdded:
   - 'ADR-22 through ADR-30 (post-completion)'
   - 'ADR-31 through ADR-38 (Director Model, consolidated from architecture-director-model.md)'
@@ -14,6 +14,7 @@ adrsAdded:
   - 'ADR-43 through ADR-50 (2026-04-11 PRD delta — three-space nav, silent journal, weekly letter, focused reading, MVP subscription billing, Nerin output grammar, knowledge library SSR, cost ceiling)'
   - 'ADR-51 through ADR-54 (2026-04-12 portrait pipeline rework — three-stage Spine Extractor → Verifier → Prose Renderer, UserSummary at assessment completion with quote bank, direct Anthropic SDK carve-out for portrait calls, portrait observability + quality rubric skill)'
   - 'ADR-55 through ADR-56 (2026-04-12 UserSummary lifecycle — rolling regeneration with recency decay as canonical user-state input for all Nerin surfaces, subscriber 15-turn Nerin chat sessions with portrait + summary refresh)'
+  - 'ADR-57 (2026-04-30 legacy seam removal — AnalyzerRepository + NerinAgentRepository + scripts/eval-portrait.ts deleted)'
 adrsSuperseded:
   - 'ADR-5, ADR-17, ADR-18, ADR-19, ADR-21 → Director Model (ADR-30 through ADR-38)'
   - 'ADR-23 (Dashboard/Profile Consolidation) → ADR-43 (Three-Space Navigation, 2026-04-11)'
@@ -33,7 +34,7 @@ date: '2026-04-11'
 
 # big-ocean System Architecture
 
-_This document is the single authoritative architecture reference for the big-ocean platform. All architectural decisions, patterns, and technical specifications are consolidated here. Last consolidated: 2026-04-05. No satellite architecture documents exist — everything is in this file._
+_This document is the single authoritative architecture reference for the big-ocean platform. All architectural decisions, patterns, and technical specifications are consolidated here. Last consolidated: 2026-04-30. No satellite architecture documents exist — everything is in this file._
 
 ## Document Map
 
@@ -57,6 +58,7 @@ This is a self-contained architecture document. All content from previously sepa
   - ADR-52: UserSummary at Assessment Completion (quote-bank compression, cross-cutting asset)
   - ADR-53: Direct Anthropic SDK for Portrait (LangChain carve-out)
   - ADR-54: Portrait Observability + Quality Rubric Skill
+- **Legacy seam removal (2026-04-30):** ADR-57 — deletes pre-Director `AnalyzerRepository` and leftover `NerinAgentRepository` (+ offline `eval-portrait.ts`); live chat LLM ports are ConversAnalyzer, Nerin Director, Nerin Actor only; portrait quality measurement stays ADR-54 (rubric), not a standalone script.
 - **UserSummary lifecycle & subscriber chat (added 2026-04-12):** ADR-55 through ADR-56
   - ADR-55: UserSummary as Living Cross-Cutting Asset (rolling regeneration, recency decay, versioning, monthly check-in aggregation)
   - ADR-56: Subscriber Nerin Chat Sessions (15-turn Director/Actor sessions with UserSummary injection, triggers portrait + summary refresh)
@@ -579,7 +581,9 @@ type SubscriptionFeature =
 - **Subsequent extensions — portrait regeneration (FR23a, Post-MVP Phase 2a):** Mechanism deferred. Likely bundled per-extension or quota-based. When implemented, lives in ADR-74 (portrait gallery).
 - **Relationship letters are NOT re-generated on extension** in MVP — they remain free and the MVP ships a single letter per relationship (FR35). Prior letters become "previous version" via derive-at-read but no new letter is generated. Post-MVP annual regeneration (FR35a) is orthogonal to conversation extension.
 
-**New use-case:** `activate-conversation-extension` — verifies `isEntitledTo(userId, "conversation_extension")` via subscription derive-at-read (ADR-9, ADR-47), creates new session with parent link. No per-extension purchase event needed — entitlement is subscription-scoped.
+**New use-case:** `activate-conversation-extension` — (1) **MVP one-extension cap (FR10/FR49, grill Q12-C):** if the user already has **any** extension `assessment_session` (child row via `parent_session_id` / ADR-39 naming) from a prior successful activation, **reject** — no second activation in MVP, **independent** of Polar `cancelled_active` or other period-end subscriber perks (e.g. weekly letter tier). (2) Else verify `isEntitledTo(userId, "conversation_extension")` via subscription derive-at-read (ADR-9, ADR-47), then create new session with parent link. No per-extension purchase event needed — entitlement is subscription-scoped for the **first** activation only.
+
+**Subscription lapse mid-extension (PRD FR101b, grill Q10-B):** Once an extension `assessment_session` row exists, **`sendMessage`** and the completion / **Assessment Finalization** path for **that** session remain authorized until finalization — even if Polar later emits `subscription_cancelled` / `subscription_expired` before the 15 extension exchanges finish. Opening a **second** extension via **`activate-conversation-extension`** remains **blocked** by the MVP cap (Q12-C) after the first extension exists; **FR101b** does **not** waive that cap. Bundled first-extension portrait enqueue (FR23) still runs off **finalization** of that in-flight session. **Grill Q11-C:** UI surfaces lapse with **one** extra **Nerin-voiced** line inside **`ExtensionContinueModule`** only — **no** in-module pricing or checkout (product copy contract in FR101b).
 
 ### ADR-12: Email Infrastructure (Resend)
 
@@ -1032,8 +1036,8 @@ big-ocean/                                    # Monorepo root
 ├── vitest.workspace.ts                       # Vitest workspace (multi-project)
 ├── scripts/
 │   ├── dev.sh / dev-stop.sh / dev-reset.sh   # Docker dev lifecycle
+│   ├── check-skills.ts                       # Validates bundled Claude Code skills (optional CI/dev)
 │   ├── seed-completed-assessment.ts          # Test data seeder (creates exchange rows)
-│   ├── eval-portrait.ts                      # Portrait quality evaluation
 │   └── seed-helpers/
 │       └── exchange-builder.ts               # Builds exchange sequence using real pipeline functions
 │
@@ -1060,10 +1064,10 @@ big-ocean/                                    # Monorepo root
 │   │   │   │   ├── relationship.ts           # /api/relationship/*
 │   │   │   │   ├── waitlist.ts               # /api/waitlist/*
 │   │   │   │   └── __tests__/                # Handler-level tests
-│   │   │   └── use-cases/                    # Business logic (29 use-cases)
+│   │   │   └── use-cases/                    # Business logic (57 *.use-case.ts + nerin-pipeline/helpers; ~65 .ts modules tree-wide)
 │   │   │       ├── nerin-pipeline.ts         # Orchestrates live runtime: Evidence → Coverage Analyzer → Nerin Director → Nerin Actor
 │   │   │       ├── send-message.use-case.ts  # Per-message pipeline
-│   │   │       ├── start-assessment.use-case.ts
+│   │   │       ├── start-conversation.use-case.ts
 │   │   │       ├── generate-results.use-case.ts
 │   │   │       ├── generate-full-portrait.use-case.ts
 │   │   │       ├── process-purchase.use-case.ts
@@ -1073,10 +1077,10 @@ big-ocean/                                    # Monorepo root
 │   │   │       ├── refuse-qr-invitation.use-case.ts
 │   │   │       ├── list-relationship-analyses.use-case.ts
 │   │   │       ├── activate-conversation-extension.use-case.ts
-│   │   │       ├── reconcile-portrait-purchase.use-case.ts
-│   │   │       ├── ... (24 more use-cases)
+│   │   │       ├── create-shareable-profile.use-case.ts
+│   │   │       ├── ... (remaining *.use-case.ts + nested assemblers under get-results/, authenticated-conversation/)
 │   │   │       ├── index.ts                  # Barrel export
-│   │   │       └── __tests__/                # Unit tests (36 test files)
+│   │   │       └── __tests__/                # Unit tests (~61 *.test.ts)
 │   │   │           ├── __fixtures__/          # Shared test data
 │   │   │           └── *.use-case.test.ts
 │   │   ├── tests/integration/                # Docker-based integration tests
@@ -1164,24 +1168,22 @@ big-ocean/                                    # Monorepo root
 │   │   │   ├── index.ts                      # Barrel export
 │   │   │   ├── config/
 │   │   │   │   └── app-config.ts             # AppConfig Context.Tag + defaults
-│   │   │   ├── repositories/                 # 24 repository interfaces (Context.Tag)
-│   │   │   │   ├── assessment-session.repository.ts
-│   │   │   │   ├── assessment-message.repository.ts
-│   │   │   │   ├── assessment-exchange.repository.ts  # Exchange state (coverage_targets + director_output)
+│   │   │   ├── repositories/                 # 36 repository interfaces (Context.Tag)
+│   │   │   │   ├── conversation.repository.ts         # assessment sessions (incl. extension + subscriber chat)
+│   │   │   │   ├── message.repository.ts
+│   │   │   │   ├── exchange.repository.ts             # Exchange state (coverage_targets + director_output)
 │   │   │   │   ├── conversation-evidence.repository.ts
 │   │   │   │   ├── conversanalyzer.repository.ts      # Evidence-only extraction: analyze (strict) + analyzeLenient
 │   │   │   │   ├── nerin-director.repository.ts
 │   │   │   │   ├── nerin-actor.repository.ts
-│   │   │   │   ├── nerin-agent.repository.ts         # Legacy/shared adapter surface retained during migration
 │   │   │   │   ├── assessment-result.repository.ts
-│   │   │   │   ├── portrait-generator.repository.ts
 │   │   │   │   ├── portrait.repository.ts
 │   │   │   │   ├── purchase-event.repository.ts
 │   │   │   │   ├── relationship-qr-token.repository.ts
 │   │   │   │   ├── resend-email.repository.ts
 │   │   │   │   ├── public-profile.repository.ts
 │   │   │   │   ├── cost-guard.repository.ts
-│   │   │   │   ├── ... (12 more)
+│   │   │   │   ├── ... (22 more)
 │   │   │   │   └── __tests__/
 │   │   │   ├── constants/                    # Domain constants
 │   │   │   │   ├── big-five.ts               # BIG_FIVE_TRAITS, ALL_FACETS
@@ -1290,16 +1292,16 @@ big-ocean/                                    # Monorepo root
 │   │   │   ├── db/drizzle/
 │   │   │   │   ├── schema.ts                 # Complete Drizzle schema (all tables incl. assessment_exchange)
 │   │   │   │   └── __tests__/
-│   │   │   ├── repositories/                 # 24 implementations + 5 dev mocks
-│   │   │   │   ├── *.drizzle.repository.ts   # PostgreSQL implementations (14, incl. assessment-exchange)
-│   │   │   │   ├── *.anthropic.repository.ts # Anthropic LLM implementations (4, ConversAnalyzer has v2 dual extraction)
-│   │   │   │   ├── *.claude.repository.ts    # Claude LLM implementations (2)
-│   │   │   │   ├── *.redis.repository.ts + *.ioredis.repository.ts  # Redis implementations (2)
-│   │   │   │   ├── *.polar.repository.ts     # Polar implementation (1)
-│   │   │   │   ├── *.pino.repository.ts      # Logger implementation (1)
-│   │   │   │   ├── *.mock.repository.ts      # Dev/test mock implementations (5)
-│   │   │   │   ├── portrait-prompt.utils.ts  # Portrait prompt formatting
-│   │   │   │   ├── __mocks__/                # 23 in-memory test mocks
+│   │   │   ├── repositories/                 # Drizzle + Anthropic (+ co-located __mocks__), standalone *.mock.repository.ts, Redis, Resend, Web Push, Pino — verify counts in-repo
+│   │   │   │   ├── *.drizzle.repository.ts   # PostgreSQL (live adapters here; Drizzle mirrors under __mocks__/)
+│   │   │   │   ├── *.anthropic.repository.ts # Anthropic Messages API (ConversAnalyzer, Nerin Director/Actor, portrait stages, generators)
+│   │   │   │   ├── *.redis.repository.ts + *.ioredis.repository.ts  # Redis (incl. cost-guard)
+│   │   │   │   ├── *.resend.repository.ts    # Resend email
+│   │   │   │   ├── *.fetch.repository.ts     # Web Push HTTP client
+│   │   │   │   ├── *.pino.repository.ts      # Logger implementation
+│   │   │   │   ├── *.mock.repository.ts      # Layer.succeed doubles (ConversAnalyzer, Nerin, portrait chunk, Resend, generators)
+│   │   │   │   ├── portrait-prompt.utils.ts, portrait-spine-json.ts  # Portrait pipeline helpers
+│   │   │   │   ├── __mocks__/                # vi.mock harness mirrors for Drizzle + other adapters
 │   │   │   │   └── __tests__/
 │   │   │   └── utils/test/
 │   │   │       └── app-config.testing.ts     # Test config helper
@@ -1403,8 +1405,8 @@ _`/dashboard` and the `Dashboard*Card` component family are removed (ADR-23 supe
 |------|------------------|---------------------------|----------|
 | **1-4: Assessment Engine** | `start-assessment`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, useTherapistChat | domain/utils/formula.ts, domain/utils/coverage-analyzer.ts, domain/constants/nerin-director-prompt.ts, domain/constants/nerin-actor-prompt.ts |
 | **9-11: Results & Finalization** | `generate-results`, `get-results`, `get-finalization-status`, `get-facet-evidence`, `get-message-evidence`, `get-transcript` | `/me/$id` → ProfileView, TraitCard, ArchetypeCard, EvidencePanel, DetailZone | domain/utils/ocean-code-generator.ts, scoring, archetype-lookup |
-| **11-12: Portraits** | `generate-full-portrait`, `get-portrait-status`, `rate-portrait` | PersonalPortrait, PortraitReadingView, PortraitUnlockButton, PortraitWaitScreen | infrastructure/portrait-generator.claude.repository.ts |
-| **13: Monetization** | `process-purchase`, `get-credits` | polar-checkout.ts, RelationshipCreditsSection | infrastructure/payment-gateway.polar.repository.ts, better-auth.ts (Polar plugin) |
+| **11-12: Portraits** | `generate-full-portrait`, `get-portrait-status`, `rate-portrait` | PersonalPortrait, PortraitReadingView, PortraitUnlockButton, PortraitWaitScreen | `infrastructure/spine-extractor.anthropic.repository.ts`, `spine-verifier.anthropic.repository.ts`, `portrait-prose-renderer.anthropic.repository.ts`, `portrait.drizzle.repository.ts` |
+| **13: Monetization** | `process-purchase`, `get-credits` | polar-checkout.ts, RelationshipCreditsSection | `infrastructure/context/better-auth.ts` (Polar plugin), `purchase-event.drizzle.repository.ts` |
 | **14: Relationships** | `generate-qr-token`, `get-qr-token-status`, `accept-qr-invitation`, `refuse-qr-invitation`, `list-relationship-analyses`, `get-relationship-analysis`, `generate-relationship-analysis` | `/relationship/qr/$token`, `/relationship/$id`, RelationshipCard | domain/prompts/relationship-analysis.prompt.ts |
 | **15: Growth** | `create-shareable-profile`, `toggle-profile-visibility`, `join-waitlist` | `/public-profile.$id`, sharing/*, waitlist/* | front/lib/archetype-card.server.ts (Satori) |
 
@@ -1429,10 +1431,10 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 | Service | Integration Point | Protocol |
 |---------|------------------|----------|
-| Anthropic Claude | `infrastructure/repositories/*.anthropic.repository.ts` + `*.claude.repository.ts` (6 files) | REST via @anthropic-ai/sdk |
+| Anthropic Claude | `infrastructure/repositories/*.anthropic.repository.ts` (portrait stages, ConversAnalyzer, Nerin Director/Actor, generators; no separate `*.claude.repository.ts` layer) | REST via @anthropic-ai/sdk (+ LangChain on non-portrait surfaces per ADR-53) |
 | PostgreSQL | `infrastructure/context/database.ts` → Drizzle ORM | TCP (pg driver) |
-| Redis | `infrastructure/repositories/redis.ioredis.repository.ts` | TCP (ioredis) |
-| Polar.sh | `infrastructure/context/better-auth.ts` (plugin) + `infrastructure/repositories/payment-gateway.polar.repository.ts` | REST (webhook + checkout) |
+| Redis | `infrastructure/repositories/redis.ioredis.repository.ts`, `cost-guard.redis.repository.ts` | TCP (ioredis) |
+| Polar.sh | `infrastructure/context/better-auth.ts` (Polar plugin + webhooks) | REST (webhook + checkout) |
 | Better Auth | `infrastructure/context/better-auth.ts` | Internal (middleware) |
 | Resend | `infrastructure/repositories/resend-email.resend.repository.ts` | REST (Resend API) |
 
@@ -1585,9 +1587,9 @@ _Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs
 
 ### Coherence Validation
 
-**Decision Compatibility:** All 56 ADRs are coherent when read as an evolution. The live conversation runtime is the Director model (ADR-30 + ADR-31 through ADR-38), while ADR-5/17-19/21 are marked `[SUPERSEDED]` and retained as historical context. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the live LLM agents (ADR-3) from business logic. The evidence model (ADR-4/27) feeds both derive-at-read scoring (ADR-6) and Director coverage targeting (ADR-30) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11/56) creates continuation sessions linked to prior state. Email infrastructure (ADR-12) adds Resend for transactional email and fallback delivery. Portrait reconciliation (ADR-13) covers the generation-received-but-no-placeholder edge case. MVP product-world ADRs (43-50), portrait pipeline ADRs (51-54), and UserSummary lifecycle ADRs (55-56) align with the latest PRD edits. No contradictory live-runtime decisions found.
+**Decision Compatibility:** All 57 ADRs are coherent when read as an evolution. The live conversation runtime is the Director model (ADR-30 + ADR-31 through ADR-38), while ADR-5/17-19/21 are marked `[SUPERSEDED]` and retained as historical context. The hexagonal architecture (ADR-1) with Effect-ts Context.Tag cleanly separates the live LLM agents (ADR-3) from business logic. The evidence model (ADR-4/27) feeds both derive-at-read scoring (ADR-6) and Director coverage targeting (ADR-30) without conflict. Better Auth + Polar plugin (ADR-8) and append-only events (ADR-9) work together. QR token model (ADR-10) replaces invitation links with ephemeral tokens and updates relationship_analyses FKs. Conversation extension (ADR-11/56) creates continuation sessions linked to prior state. Email infrastructure (ADR-12) adds Resend for transactional email and fallback delivery. Portrait reconciliation (ADR-13) covers the generation-received-but-no-placeholder edge case. MVP product-world ADRs (43-50), portrait pipeline ADRs (51-54), UserSummary lifecycle ADRs (55-56), and legacy seam removal (ADR-57) align with the latest PRD edits. No contradictory live-runtime decisions found.
 
-**Pattern Consistency:** Naming conventions are uniform: `kebab-case` files, `PascalCase` exports, `camelCase` properties, `UPPER_SNAKE_CASE` constants. The repository interface → implementation → mock triplet follows the same pattern across all 24 repositories. Test patterns (vi.mock + local TestLayer) are consistent. Error architecture (three locations, no remapping) is applied uniformly. Director model patterns (Director + Actor prompt separation, coverage-analyzer pure function, exchange persistence) are consistent with the hexagonal architecture.
+**Pattern Consistency:** Naming conventions are uniform: `kebab-case` files, `PascalCase` exports, `camelCase` properties, `UPPER_SNAKE_CASE` constants. The repository interface → implementation → mock triplet follows the same pattern across Domain ports and their Drizzle / Anthropic / other adapters. Test patterns (vi.mock + local TestLayer) are consistent. Error architecture (three locations, no remapping) is applied uniformly. Director model patterns (Director + Actor prompt separation, coverage-analyzer pure function, exchange persistence) are consistent with the hexagonal architecture.
 
 **Structure Alignment:** Project structure maps directly to architectural layers — `packages/domain` = ports, `packages/infrastructure` = adapters, `apps/api/src/use-cases` = business logic, `apps/api/src/handlers` = HTTP adapters. The live conversation pure functions center on `domain/src/utils/coverage-analyzer.ts` and `domain/src/utils/formula.ts`, with Director/Actor prompt contracts in `domain/src/constants/`. The orchestrator (`nerin-pipeline.ts`) lives in `apps/api/src/use-cases/`. The `__mocks__/` co-location supports the testing strategy. Contract groups mirror handler groups 1:1. This is a fully self-contained architecture document — no satellite files required.
 
@@ -1624,7 +1626,7 @@ _Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs
 
 ### Implementation Readiness Validation
 
-**Decision Completeness:** All 56 ADRs document the decision, rationale, and implementation location. The live Director runtime is fully specified in ADR-30 through ADR-38. MVP product-world decisions are covered by ADR-43 through ADR-50, portrait pipeline decisions by ADR-51 through ADR-54, and UserSummary/subscriber chat decisions by ADR-55 through ADR-56. Historical pacing ADRs (superseded) are retained for lineage context. Code examples provided for all major patterns.
+**Decision Completeness:** All 57 ADRs document the decision, rationale, and implementation location. The live Director runtime is fully specified in ADR-30 through ADR-38. MVP product-world decisions are covered by ADR-43 through ADR-50, portrait pipeline decisions by ADR-51 through ADR-54, UserSummary/subscriber chat decisions by ADR-55 through ADR-56, and legacy Analyzer/Nerin-agent seam removal by ADR-57. Historical pacing ADRs (superseded) are retained for lineage context. Code examples provided for all major patterns.
 
 **Structure Completeness:** Full directory tree with every handler, use-case, repository interface, implementation, and mock file listed. The live conversation file map highlights `nerin-pipeline.ts`, `coverage-analyzer.ts`, Director/Actor prompt contracts, and the simplified result-shape persistence. Director model file creation/deletion scope specified in ADR-37. All routes, component directories, hooks, and lib files are accounted for.
 
@@ -1654,7 +1656,7 @@ _Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs
 - [x] Cross-cutting concerns mapped (cost, auth, errors, derive-at-read, consent)
 
 **Architectural Decisions**
-- [x] 56 ADRs documented with implementation details (platform, Director model, MVP product world, portrait pipeline, UserSummary lifecycle, and subscriber chat)
+- [x] 57 ADRs documented with implementation details (platform, Director model, MVP product world, portrait pipeline, UserSummary lifecycle, subscriber chat, legacy seam removal)
 - [x] Technology stack fully specified (brownfield, all choices established)
 - [x] Integration patterns defined (Better Auth plugin, Polar webhook, LLM agents, Director runtime)
 - [x] Performance considerations addressed (Director/Actor latency tradeoff, advisory locks, fail-open evidence extraction)
@@ -2105,7 +2107,7 @@ No changes needed to the email test flow beyond verifying the e2e server sends r
 
 **What stays the same:**
 - All `__mocks__/*.ts` files — vitest unit/integration tests use them unchanged via `vi.mock()`
-- LLM agent mocks in `index.e2e.ts` — still mocked (`NerinAgentMockRepositoryLive`, etc.)
+- LLM agent mocks in `index.e2e.ts` — still mocked (`NerinDirectorMockRepositoryLive`, `NerinActorMockRepositoryLive`, `ConversanalyzerMockRepositoryLive`, portrait-pipeline mocks, etc.; see ADR-57 — legacy `NerinAgent` mock layer removed)
 - All existing e2e fixtures, factories, `global-setup.ts` — unchanged
 - Frontend code — zero awareness of test mode
 - `payment-gateway.mock.repository.ts` and `resend-email.mock.repository.ts` — kept in codebase (other tests or future use), just no longer wired in `index.e2e.ts`
@@ -2627,9 +2629,10 @@ _Consolidated from ADR-DM-7 (architecture-director-model.md, 2026-04-03)._
 - `nerin-pipeline.ts` — rewrite to 4-step pipeline
 - `schema.ts` — exchange table column changes
 - `seed-completed-assessment.ts` + `exchange-builder.ts` — rewrite for Director exchange shape
-- `nerin-agent.repository.ts` → renamed to `nerin-actor.repository.ts`
-- `nerin-agent.anthropic.repository.ts` → renamed to `nerin-actor.anthropic.repository.ts`
-- Related mocks and integration tests
+- Nerin split: new `nerin-director.repository.ts` / `nerin-actor.repository.ts` (+ Anthropic adapters and mocks) replace the old single-call Nerin surface
+- **Post-ADR-37 cleanup (ADR-57, 2026-04-30):** leftover `nerin-agent.*` and pre-Director `analyzer.*` repository tags/adapters deleted entirely — they were unwired dead code; not synonymous with Director/Actor
+
+**Supplement — ADR-57 (2026-04-30):** See **ADR-57** for the formal decision record on removing `AnalyzerRepository`, `NerinAgentRepository`, and `scripts/eval-portrait.ts`.
 
 **Created (~8 files):**
 - `domain/src/utils/coverage-analyzer.ts` — pure function
@@ -2948,7 +2951,7 @@ _Added 2026-04-11. Source: PRD revision 2026-04-11 (design-thinking 2026-04-09 a
 ### ADR-43: Three-Space Navigation Model
 
 **Supersedes:** ADR-23 (Dashboard/Profile Consolidation).
-**Source:** PRD FR19, FR101, FR102, FR103, Innovation #10.
+**Source:** PRD FR19, FR101, FR101a, FR102, FR103, Innovation #10.
 
 **Decision:** The authenticated product is organized around three spaces — **Today** (ephemeral daily companion), **Me** (persistent identity), and **Circle** (people you care about) — plus a thin `/settings` route for account admin. `/dashboard` and all `Dashboard*Card` components are deleted. `/chat` is an onboarding tunnel outside the three-space world.
 
@@ -2956,27 +2959,28 @@ _Added 2026-04-11. Source: PRD revision 2026-04-11 (design-thinking 2026-04-09 a
 
 | Route | Purpose | Landing rule |
 |-------|---------|--------------|
-| `/today` | Daily companion — silent check-in (ADR-44), 7-day mood grid, weekly-letter inline card (ADR-45) | Default landing after first post-assessment visit |
-| `/me` | Persistent identity — portrait, identity hero, radar, scores, Public Face control, subscription pitch, Circle preview, mood calendar, portrait versions (FR73) | Landing for the **first** post-assessment visit (portrait reveal) |
+| `/today` | Daily companion — silent check-in (ADR-44), 7-day mood grid, weekly-letter inline card (ADR-45), **`ExtensionContinueModule`** when FR101a | Primary daily landing **after** the user's **first** **Assessment Finalization**; shows FR101a when a subscriber extension is unfinalized |
+| `/me` | Persistent identity — portrait, identity hero (**latest finalized** assessment; **not** swapped to unfinalized extension session per FR101a Q8), radar, scores, Public Face control, subscription pitch, Circle preview, mood calendar, portrait versions (FR73), **`ExtensionContinueModule`** when FR101a | Landing for the **first** post-assessment visit (portrait reveal); FR101a continuation zone when extension open |
 | `/circle` | People you care about — relationship letters, invite ceremony. Intimacy Principle enforced | On-demand |
 | `/settings` | Account admin — email, password, data export, delete, ongoing-consent revocation. Accessed via gear icon on `/me` | On-demand |
-| `/chat` | Onboarding tunnel — pre-assessment, 15-exchange conversation, resume, extension entry. NOT part of the three-space bottom nav | On-demand (post-signup + verification redirect) |
+| `/chat` | Onboarding tunnel — pre-assessment, 15-exchange conversation, resume, **subscriber extension** thread. NOT part of the three-space bottom nav | Forced resume for **initial** assessment until first **Assessment Finalization**; otherwise entered from onboarding, deep links, or **FR101a** (extension does not hijack authenticated home) |
 | `/me/$sessionId?view=portrait` | Focused portrait reading (ADR-46) | From `/chat` post-assessment (FR93); legacy `/results/...?view=portrait` redirects here |
-| `/me/$sessionId` | Session-scoped Me / full identity surface | From focused-reading "There's more to see →" (FR95), direct link, or `/me` index routing; legacy `/results/...` redirects here |
+| `/me/$sessionId` | Session-scoped Me / full identity surface. **FR101a:** full `ExtensionContinueModule` when `$sessionId` is the unfinalized extension session; else `ExtensionResumeHint` when another session is shown but an extension is open | From focused-reading "There's more to see →" (FR95), direct link, or `/me` index routing; legacy `/results/...` redirects here |
 | `/today/week/$weekId` | Weekly letter focused reading (ADR-45, ADR-46) | From push notification / inline card tap |
 
 **Landing logic (TanStack Router `beforeLoad`):**
 
 ```text
-beforeLoad on authenticated root:
+beforeLoad on authenticated root (conceptual — exact predicates follow PRD FR101/FR102):
   if !session → /login?redirectTo=...
   if !emailVerified → /verify-email
-  if !hasCompletedAssessment → /chat
+  if !initialAssessmentFinalized → redirect generic “home” navigation to /chat  (initial 15-exchange session only)
   if arriving from assessment completion / focused reading → /me  (portrait reveal, FR93-96)
+  else if generic “home” after initialAssessmentFinalized → /today  (primary daily surface; FR101a is a Today/Me component, not a redirect)
   else → allow requested authenticated route
 ```
 
-There is no persistent Today-space route gate after the reveal. Any first-visit state retained on the user record is for UI concerns like `ReturnSeedSection` visibility, not for blocking `/today`, `/today/calendar`, or `/today/week/$weekId`.
+There is no persistent Today-space route gate after the reveal. Any first-visit state retained on the user record is for UI concerns like `ReturnSeedSection` visibility, not for blocking `/today`, `/today/calendar`, or `/today/week/$weekId`. **Unfinalized subscriber extension** visibility is **`ExtensionContinueModule`** (FR101a), not a second home-route hijack to `/chat`.
 
 **Deleted components:** `DashboardIdentityCard`, `DashboardInProgressCard`, `DashboardRelationshipsCard`, `DashboardCreditsCard`, `DashboardEmptyState`, `DashboardPortraitCard`, `use-profile.ts` hook (if it had been revived for dashboard).
 
@@ -3198,6 +3202,11 @@ Both are pure functions over the event stream. No DB state. Consistent with ADR-
 // activate-conversation-extension.use-case.ts
 export const activateConversationExtension = (input) =>
   Effect.gen(function* () {
+    const sessionsRepo = yield* AssessmentSessionRepository
+    if (yield* sessionsRepo.hasAnyExtensionSession(input.userId)) {
+      // FR10/FR49 — grill Q12-C: second activation blocked in MVP regardless of billing window
+      return yield* Effect.fail(new MvpExtensionCapExceeded())
+    }
     const eventsRepo = yield* PurchaseEventRepository
     const events = yield* eventsRepo.findByUserId(input.userId)
     if (!isEntitledTo(events, "conversation_extension")) {
@@ -3213,7 +3222,7 @@ export const activateConversationExtension = (input) =>
 
 **What stays unchanged from ADR-42:** The design of event types, polar_subscription_id correlation, materialized-view performance note. The only change is timing — ADR-42 said "design now, build later"; ADR-47 says "build now, MVP."
 
-**Error type:** `SubscriptionRequired` added to `contracts/src/errors.ts` as `Schema.TaggedError`. Frontend catches this and surfaces the subscription pitch (Me page `/me` subscription section).
+**Error types:** `SubscriptionRequired` and **`MvpExtensionCapExceeded`** (FR10/FR49, grill Q12-C) in `contracts/src/errors.ts` as `Schema.TaggedError`. Frontend catches `SubscriptionRequired` for the subscription pitch (Me page `/me` subscription section); **`MvpExtensionCapExceeded`** surfaces a calm “one extension per journey in this release” message (copy UX-owned), not a checkout.
 
 ### ADR-48: Nerin Output Grammar — Three Visual Registers
 
@@ -3522,12 +3531,12 @@ Compared to the pre-rework observed $0.30–$0.40/portrait: ~50–60% reduction.
 - `packages/domain/src/constants/nerin/spine-extractor-prompt.ts` — Stage A prompt (inferential-depth framing)
 - `packages/domain/src/constants/nerin/spine-verifier-prompt.ts` — Stage B prompt (brief-only input, mechanical checklist)
 - `packages/domain/src/constants/nerin/prose-renderer-prompt.ts` — Stage C prompt ("brief as constraint, not script")
-- `packages/infrastructure/src/repositories/spine-extractor.claude.repository.ts` — direct SDK, Sonnet + thinking
-- `packages/infrastructure/src/repositories/spine-verifier.claude.repository.ts` — direct SDK, Haiku, structured output
+- `packages/infrastructure/src/repositories/spine-extractor.anthropic.repository.ts` — direct SDK, Sonnet + thinking
+- `packages/infrastructure/src/repositories/spine-verifier.anthropic.repository.ts` — direct SDK, Haiku, structured output
 
 **Implementation files (edited):**
 
-- `packages/infrastructure/src/repositories/portrait-generator.claude.repository.ts` — refactored into pure Prose Renderer (brief-only input), direct SDK (ADR-53)
+- `packages/infrastructure/src/repositories/portrait-prose-renderer.anthropic.repository.ts` — Stage C prose only (brief-only input), direct SDK (ADR-53); superseded the monolithic `portrait-generator` adapter
 - `apps/api/src/use-cases/generate-full-portrait.use-case.ts` — orchestrates the full three-stage pipeline with bounded retry; reads pre-computed `UserSummary` from assessment result
 - `packages/domain/src/constants/nerin/portrait-context.ts` — trim "FIND YOUR THREAD" section and spine-discovery instructions
 
@@ -3591,13 +3600,13 @@ interface UserSummary {
 **Implementation files (new):**
 - `packages/domain/src/types/user-summary.ts` — `UserSummary` type
 - `packages/domain/src/repositories/user-summary-generator.repository.ts` — Effect `Context.Tag`
-- `packages/infrastructure/src/repositories/user-summary-generator.claude.repository.ts` — Haiku 4.5 via direct SDK (ADR-53); prompt instructs over-preservation of the quote bank
+- `packages/infrastructure/src/repositories/user-summary-generator.anthropic.repository.ts` — Haiku 4.5 via direct SDK (ADR-53); prompt instructs over-preservation of the quote bank
 - `packages/infrastructure/src/db/drizzle/schema.ts` + new migration — persist `user_summary` on `assessment_result`
 
 **Implementation files (edited):**
 - `apps/api/src/use-cases/complete-assessment.use-case.ts` (or equivalent) — generate `UserSummary` before portrait kickoff
 - `apps/api/src/use-cases/generate-full-portrait.use-case.ts` — read pre-computed summary; fail fast if missing
-- `packages/infrastructure/src/repositories/portrait-generator.claude.repository.ts` — no longer reads raw conversation
+- `packages/infrastructure/src/repositories/portrait-prose-renderer.anthropic.repository.ts` — reads only SpineBrief + portrait context (no raw conversation)
 
 **Rollback:** Feature flag for raw-messages code path for one release cycle. Any rubric dimension dropping > 0.5 points triggers rollback.
 
@@ -3632,7 +3641,7 @@ This is a deliberate **mixed-client repository layout**, not a migration. LangCh
 **Implementation pattern (new repos in `packages/infrastructure/src/repositories/`):**
 
 ```typescript
-// spine-extractor.claude.repository.ts (illustrative shape)
+// spine-extractor.anthropic.repository.ts (illustrative shape)
 import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ apiKey });
@@ -3662,11 +3671,10 @@ const response = await client.messages.create({
 
 **Feature flag for one-release-cycle rollback:** `PortraitGeneratorLangchainRepositoryLive` kept alongside the new direct-SDK implementation. On rollback, re-pin the layer. The legacy path is deleted after one clean release cycle — no perpetual dual maintenance.
 
-**Dead code removed in the same changeset** (surfaced during root cause verification):
-1. `portrait-generator.claude.repository.ts:59` — stale comment "with adaptive extended thinking" that contradicts actual code
-2. `portrait-generator.claude.repository.ts:42–54, 129–136` — vestigial `extractTextContent` helper and empty-content guard from a previous thinking-enabled mode
-3. `app-config.live.ts:57` — `portraitTemperature: 0.7` defined but never passed to `ChatAnthropic` (temperature was effectively the LangChain default). Wire up the config to the new direct-SDK call, default to 0.5
-4. `app-config.live.ts:82–84` — duplicate `portraitGeneratorModelId` config shadowing `portraitModelId` at line 55. Remove duplicate.
+**Dead code removed during the portrait carve-out** (historical root-cause notes — monolithic portrait adapter predating spine-extractor / verifier / prose-renderer split):
+1. Stale extended-thinking commentary and vestigial helpers on the old single-file portrait adapter (addressed when splitting Stage A/B/C).
+2. `app-config.live.ts:57` — `portraitTemperature: 0.7` defined but never passed to `ChatAnthropic` (temperature was effectively the LangChain default). Wire up the config to the new direct-SDK call, default to 0.5
+3. `app-config.live.ts:82–84` — duplicate `portraitGeneratorModelId` config shadowing `portraitModelId` at line 55. Remove duplicate.
 
 **Interaction with CLAUDE.md frontend API rule:** The frontend-rule "always use typed Effect `HttpApiClient`" (CLAUDE.md) is about frontend → backend calls. It is **not** affected by this ADR, which governs backend → Anthropic calls.
 
@@ -3925,7 +3933,7 @@ All versions are retained for audit and personality-drift research. The "current
 - `packages/domain/src/types/user-summary.ts` — extended `UserSummary` type with `version`, `refreshSource`, `themeAge`
 - `packages/domain/src/repositories/user-summary.repository.ts` — `getUserSummary(userId)`, `saveUserSummaryVersion(userId, summary)`, `getUserSummaryHistory(userId)`
 - `packages/infrastructure/src/repositories/user-summary.drizzle.repository.ts` — Drizzle implementation against `user_summary_versions`
-- `packages/infrastructure/src/repositories/user-summary-generator.claude.repository.ts` — updated to accept optional previous summary; regeneration prompt with decay rules
+- `packages/infrastructure/src/repositories/user-summary-generator.anthropic.repository.ts` — updated to accept optional previous summary; regeneration prompt with decay rules
 - New migration: `user_summary_versions` table (replaces the `user_summary` column on `assessment_result` from ADR-52)
 
 **Implementation files (edited):**
@@ -4012,6 +4020,21 @@ Subscriber chat turn 15 (or user ends early)
 - Coverage analyzer — no code change needed (already facet-first and history-aware)
 
 **Interaction with ADR-40 (Agent Type Architecture):** Subscriber chat is NOT a separate agent type — it uses the same Nerin Director/Actor pipeline as assessment. It is a conversation type, not an agent type. Future agents (Coach, Journal, Career per ADR-40) are architecturally distinct pipelines with their own prompts and behaviors. Subscriber chat is "more Nerin" — the same personality, the same voice, deeper relationship.
+
+### ADR-57: Legacy Analyzer + Nerin-agent Repository Removal
+
+**Status:** accepted (2026-04-30)
+
+**Decision:** Remove pre-Director LLM adapter seams that were no longer part of the live runtime:
+
+- **`AnalyzerRepository`** — old batch/single-message facet analyzer returning `FacetEvidence` scores (pre–ADR-27/ADR-4 polarity flow). Removed: domain port, `AnalyzerClaudeRepositoryLive`, `AnalyzerMockRepositoryLive`, `__mocks__/analyzer.claude.repository.ts`, and co-located tests.
+- **`NerinAgentRepository`** — monolithic "single Nerin" invoke left over after **ADR-31–38** split into Director + Actor. Removed: domain port, `NerinAgentAnthropicRepositoryLive`, `NerinAgentMockRepositoryLive`, `__mocks__/nerin-agent.anthropic.repository.ts`, and wiring from `apps/api/src/index.ts` and `apps/api/src/index.e2e.ts`.
+
+**Offline tooling:** Removed **`scripts/eval-portrait.ts`** and the root **`pnpm eval:portrait`** script. It depended on `AnalyzerRepository`; portrait quality evaluation is **ADR-54** (`/portrait-rubric` skill, frozen baseline corpus), not a standalone script.
+
+**Rationale:** Story 43-5 completed the Director pipeline in code, but dead **Context.Tag** layers and exports lingered — misleading for navigation and duplicating `TokenUsage`-shaped types next to `NerinActorRepository`. **Deletion test:** no use-case yielded these tags; E2E already mocked Director/Actor/Conversanalyzer.
+
+**Consequences:** External scripts must use **`ConversanalyzerRepository`** and current evidence schemas (**ADR-27**). Document map and project tree updated to match.
 
 ---
 

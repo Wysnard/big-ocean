@@ -13,9 +13,6 @@
 import { execSync } from "node:child_process";
 import {
 	createAssessmentSession,
-	getSessionUserId,
-	getUserByEmail,
-	linkSessionToUser,
 	seedSessionForResults,
 } from "../factories/conversation.factory.js";
 import { createUser, signInUser } from "../factories/user.factory.js";
@@ -51,17 +48,8 @@ test.describe
 		test("setup: create inviter with completed assessment and QR token @critical", async ({
 			apiContext,
 		}) => {
+			await createUser(apiContext, INVITER);
 			inviterSessionId = await createAssessmentSession(apiContext);
-			await createUser(apiContext, {
-				...INVITER,
-				anonymousSessionId: inviterSessionId,
-			});
-
-			const linkedUserId = await getSessionUserId(inviterSessionId);
-			if (!linkedUserId) {
-				const user = await getUserByEmail(INVITER.email);
-				if (user) await linkSessionToUser(inviterSessionId, user.id);
-			}
 
 			try {
 				await seedSessionForResults(inviterSessionId);
@@ -85,17 +73,8 @@ test.describe
 
 		test("invitee with completed assessment accepts QR token @critical", async ({ apiContext }) => {
 			// Create invitee with completed assessment
+			await createUser(apiContext, INVITEE);
 			inviteeSessionId = await createAssessmentSession(apiContext);
-			await createUser(apiContext, {
-				...INVITEE,
-				anonymousSessionId: inviteeSessionId,
-			});
-
-			const linkedUserId = await getSessionUserId(inviteeSessionId);
-			if (!linkedUserId) {
-				const user = await getUserByEmail(INVITEE.email);
-				if (user) await linkSessionToUser(inviteeSessionId, user.id);
-			}
 
 			try {
 				await seedSessionForResults(inviteeSessionId);

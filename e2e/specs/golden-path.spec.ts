@@ -16,12 +16,11 @@ const goldenPassword = "OceanDepth#Nerin42xQ";
  */
 test("golden path: landing → signup → chat → results → share → public profile → today @critical", async ({
 	page,
-	apiContext,
 }) => {
 	test.setTimeout(90_000); // Long journey — multiple API calls, auth, navigation
 	await test.step("navigate to landing page and verify split layout", async () => {
 		await page.goto("/");
-		await page.locator("[data-slot='sticky-auth-panel']").waitFor({ state: "visible" });
+		await page.getByTestId("sticky-auth-panel").waitFor({ state: "visible" });
 		// Desktop shows the sticky auth panel with signup link
 		await expect(page.getByRole("link", { name: /start yours/i })).toBeVisible();
 	});

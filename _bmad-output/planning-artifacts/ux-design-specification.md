@@ -1,8 +1,44 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-lastEdited: '2026-04-18'
+lastEdited: '2026-04-30'
 lastStep: 14
 editHistory:
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs Q12-C — MVP second extension blocked'
+    summary: 'Journey table “Multiple extensions”: one activation per subscriber; second blocked in cancel window; FR101b = finish in-flight only. §10.4 row aligned.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs Q11-C — lapse copy in ExtensionContinueModule'
+    summary: 'FR101b UI: one extra Nerin line when subscription lapsed mid-extension; no price/checkout in module. §15.1.1 module rows + §10.4 error row.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs Q10-B — FR101b lapse mid-extension'
+    summary: 'Journey 4 §10.4 Error Recovery: subscription lapses mid-extension — user can still complete chat + finalization; new extension blocked until resubscribe.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs Q9-B — ExtensionContinueModule links'
+    summary: 'Module on `/today` + hub `/me`: primary `/chat` + required secondary → `/me/$extensionSessionId`. Matching session-scoped extension Me: primary `/chat` only (no self-link). §15.1.1 module rows + §11.5 tables.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs Q8 — Me hub hero vs extension'
+    summary: 'Hub `/me`: identity hero = latest finalized assessment; `ExtensionContinueModule` only foregrounds unfinalized extension (Nerin-thread copy). MePage §11.5 row + Key Design #3.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs Q7 — ExtensionResumeHint link'
+    summary: 'Primary link on `ExtensionResumeHint` → `/me/$extensionSessionId` only (not `/chat`). §15.1.2 + §11.5 Session-scoped Me row aligned with PRD FR101a.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs Q6 — session-scoped Me + FR101a'
+    summary: 'FR101a split: full `ExtensionContinueModule` on `/today`, `/me`, and `/me/$id` when id matches extension session; `ExtensionResumeHint` (one line + link) on other session-scoped Me URLs. §11.5 route table, authenticated landing, roadmap Me row.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs — extension vs initial landing (FR101a)'
+    summary: 'After first Assessment Finalization, `/today` stays default even with unfinalized subscriber extension; PRD FR101a — above-fold Today module + Me placement to resume `/chat`. Mermaid gate renamed to initial-finalization; Journey 4 + re-engagement tables aligned.'
+  - date: '2026-04-30'
+    type: 'revision'
+    source: 'Grill-with-docs — authenticated landing vs assessment'
+    summary: 'Until Assessment Finalization, authenticated entry resolves to `/chat` (resume); `/today` remains primary daily surface only after post-assessment sequence. Updated §Executive Key Design #3, Journey 1 decision points, Journey 2 entry + mermaid, §11.5 route table + authenticated landing behavior, §15.1 purpose, §15.4 default landing row.'
   - date: '2026-04-18'
     type: 'revision'
     source: 'Stakeholder decision - knowledge library landing redesign'
@@ -121,7 +157,7 @@ The length is a deliberate differentiator and audience filter — "how can you k
 
 2. **Conversational trust through Nerin's observations** — The UI environment, pacing, and visual treatment must frame Nerin as a compelling conversation partner worth opening up to. Surface-level responses produce poor assessments — the UX should encourage depth without feeling demanding. Nerin's mid-conversation observations ("I notice that when you talk about creativity, your energy shifts") are the primary trust-building and retention mechanism. These are conversational reflections, never assessment reveals.
 
-3. **Three-space navigation cognitive model** — Today / Me / Circle is a departure from standard "dashboard + profile" IA. Users must instantly grasp that Today is ephemeral (come back tomorrow), Me is persistent identity, and Circle is the few people you care about. The bottom nav must carry this model without a tutorial. Assessment completion redirects once to `/me` for the reveal; after that, users can navigate freely across the three spaces, with `/today` acting as the primary daily return surface rather than a forced default. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. `/settings` is a thin admin route accessed via gear icon on Me, not a fourth tab.
+3. **Three-space navigation cognitive model** — Today / Me / Circle is a departure from standard "dashboard + profile" IA. Users must instantly grasp that Today is ephemeral (come back tomorrow), Me is persistent identity, and Circle is the few people you care about. The bottom nav must carry this model without a tutorial. Until the **first** **Assessment Finalization** (initial assessment), authenticated entry resolves to **`/chat`** so that conversation is never stranded behind an empty Today. **Subscriber extensions** (+15) that are paused do **not** take over default entry — **`/today`** stays the routine home after first finalization; **FR101a** surfaces **`ExtensionContinueModule`** on **`/today`** and **Me hub** **`/me`** (hub **identity hero** stays the **latest finalized** assessment; the module alone carries the **unfinalized extension** thread in **Nerin-conversation** framing — grill Q8), full module on **`/me/$conversationSessionId` only when that id is the extension session**, and a compact **`ExtensionResumeHint`** on other session-scoped Me pages (see §11.5, §15.1.1). Assessment completion redirects once to `/me` for the reveal; after that, users can navigate freely across the three spaces, with `/today` acting as the primary daily return surface rather than a forced default. Assessment (`/chat`) sits outside the three-space world as an onboarding tunnel. `/settings` is a thin admin route accessed via gear icon on Me, not a fourth tab.
 
 4. **The post-assessment transition is the emotional peak** — The transition from conversation close to first portrait read is the single most valuable moment in the product. It must use focused reading, not a cluttered Me page (full chrome). Flow: closing exchange → "Show me what you found →" button (user-voiced) → navigate to `PortraitReadingView` in a "generating" state with OceanSpinner and the line *"Nerin is writing your letter..."* → letter fades in full-screen, distraction-free, max-width 720px → warm "There's more to see →" link at the bottom → full Me page with identity hero, inline portrait, return seed, and notification permission request in Nerin's voice. The emotional weight of the first read must not be diluted by navigation or chrome.
 
@@ -1633,7 +1669,7 @@ flowchart TD
 4. **Mid-conversation drop-off** — Session auto-saves. Last conversation topic stored as simple string. Re-engagement email templates in the topic (per FR76). Logged-in prompt appears on return. One email only — respect silence.
 5. **Closing exchange → focused reading** — The button is user-voiced ("Show me what you found") and navigates directly to `/me/$conversationSessionId?view=portrait` (NOT to the full Me page first). The focused reading container exists to protect the emotional weight of the first read.
 6. **Portrait read is FREE** — No PWYW, no modal, no paywall. The portrait is the "feel seen" moment that powers everything downstream. Gating it destroys trust before the daily return loop even begins.
-7. **Return seed permission outcome** — Permission granted → schedule Day 1 notification. Permission denied → no lock-in, daily loop still works via organic return. Either way, Day 1 the user lands on `/today` by default.
+7. **Return seed permission outcome** — Permission granted → schedule Day 1 notification. Permission denied → no lock-in, daily loop still works via organic return. After the **first** **Assessment Finalization**, Day 1 daily habit entry is **`/today`** (not `/me` by default); if the **initial** assessment is still in progress, authenticated entry continues to resolve to **`/chat`** until that finalization. **Unfinalized extension** uses FR101a, not forced `/chat` entry.
 8. **Sharing vs invite** — Sharing the archetype card (broad viral) and the invite ceremony (deep dyadic) are two different paths; both are revealed on scroll below the identity hero, neither blocks the other.
 
 #### Error Recovery
@@ -1661,14 +1697,14 @@ flowchart TD
 6. **Portrait is free** — No PWYW. The portrait is the acquisition engine, not the revenue engine. Revenue lives in the Sunday weekly letter at Week 3+ (Journey 8).
 7. **End-of-letter link is warm** — "There's more to see →" rather than "Continue" or "Next". Carries the letter's emotional register into the full Me page.
 8. **Return seed in Nerin's voice, NOT system voice** — "I'd like to check in with you tomorrow. Mind if I send a quiet note?" The notification permission request is framed as Nerin asking, which is the highest-converting permission copy in the product.
-9. **Day 1 default landing is `/today`** — After the first visit, the user never lands on `/me` by default again. Me becomes the low-frequency identity space; Today becomes the daily habit.
+9. **Day 1 default landing is `/today`** — After the **first** **Assessment Finalization** and the post-assessment **Me** sequence, the user never lands on `/me` by default on routine opens; Me stays the low-frequency identity space and Today the daily habit. The **initial** in-progress assessment overrides: entry is **`/chat`** until that session’s finalization. **Unfinalized extension** is called out on Today/Me (FR101a), not via default route hijack.
 10. **Sharing + invite + subscription pitch coexist** — None of them blocks the others. The user can share, invite, and subscribe in any order, at any time, without feeling funneled.
 
 ### 10.2 Journey 2: Daily Silent Journal Flow
 
 **Goal:** Daily return → silent mood + note deposit → mood calendar entry → week-so-far dots update → quiet anticipation line reminds of Sunday weekly letter → user closes app within ~10 seconds on quiet days, 5 minutes on deep days.
 
-**Entry point:** Either a quiet Nerin-voiced notification ("Nerin is wondering how you're doing") or organic app open. Default landing after the first post-assessment visit is always `/today`.
+**Entry point:** Either a quiet Nerin-voiced notification ("Nerin is wondering how you're doing") or organic app open. After the **first** **Assessment Finalization**, default landing on routine opens is **`/today`**; if the **initial** assessment is still in progress, authenticated entry resolves to **`/chat`** instead. **Unfinalized extension** → user still lands on **`/today`**, with FR101a module visible.
 
 **Principle:** BeReal philosophy. One daily action. Content gated behind the user's own deposit. Static after check-in — no feed, no scrolling through yesterday. Silence in the free tier is a feature, not a limitation.
 
@@ -1681,15 +1717,19 @@ flowchart TD
     A -->|Quiet Nerin notification| B["Day 1+ quiet push notification
     (Nerin's voice, not system voice)
     'Nerin is wondering how you're doing'
-    Tap → /today"]
+    Tap → /chat if initial assessment incomplete, else /today"]
     A -->|Organic return| C["User opens app on their own
-    Default authenticated landing: /today"]
+    /chat if initial assessment incomplete
+    else /today (FR101a if extension open)"]
     A -->|Post-assessment Day 0| D["First arrival via return seed
     notification permission accepted on Me page"]
 
-    %% Arrive on /today
-    B --> E["/today — pre-check-in state"]
-    C --> E
+    B --> Q{First Assessment Finalization complete?}
+    C --> Q
+    Q -->|No| CHAT["/chat — resume initial conversation
+    BottomNav hidden"]
+    Q -->|Yes| E["/today — pre-check-in state
+    (+ ExtensionContinueModule if FR101a)"]
     D --> E
 
     %% Pre-check-in state
@@ -2143,7 +2183,7 @@ ahead.
 
 ### 10.4 Journey 4: Returning User Flow (Three-Space Return)
 
-**Goal:** Returning user (not first-visit) → lands on `/today` by default → completes their daily check-in → optionally explores Me or Circle → leaves without friction
+**Goal:** Returning user (not first-visit) → if the **initial** assessment is still in progress, lands on **`/chat`**; otherwise lands on **`/today`** by default (with **ExtensionContinueModule** when FR101a applies) → completes their daily check-in → optionally explores Me or Circle → leaves without friction
 
 **Entry points:**
 - Quiet Nerin-voiced daily notification ("Nerin is wondering how you're doing")
@@ -2153,7 +2193,7 @@ ahead.
 - Via friend's public profile or shared archetype card
 - Drop-off re-engagement email (per FR76) for users who didn't complete the assessment
 
-**Principle:** Returning user default landing is always `/today`, never `/me`. Me is a low-frequency, high-emotion identity space — not a hub. Today is the return habit.
+**Principle:** After the **first** **Assessment Finalization**, returning user default landing on routine opens is **`/today`**, never `/me` (Me stays low-frequency, high-emotion). The **initial** in-progress assessment overrides: **`/chat`** until that session’s finalization. **Unfinalized extension** does not override default landing (FR101a).
 
 #### Flow Diagram
 
@@ -2244,7 +2284,7 @@ flowchart TD
 |------|--------|---------------|---------|
 | Daily notification | Notification tray | Nerin-voiced copy, not system voice | Emotional hook, not promotional |
 | Sunday weekly letter notification | Notification tray | "Your week with Nerin is ready" — possessive, personal | Journey 3 entry point |
-| Returning user default landing | `/today` | Bottom nav visible, pre-check-in or post-check-in state based on day | Daily habit reinforcement |
+| Returning user default landing | `/chat` if **initial** assessment incomplete; else `/today` (+ ExtensionContinueModule when extension unfinalized) | Bottom nav visible on `/today` (pre/post check-in); `/chat` hides bottom nav | Resume initial onboarding vs daily habit + extension visibility |
 | Me page visit | `/me` | Identity Hero, re-read portrait, public face, Circle preview, subscription CTA | Identity sanctuary — re-read the letter, share, manage |
 | Circle visit | `/circle` | Full-width person cards, "last shared" signals, invite ceremony card | Relational intimacy scroll |
 | Relationship letter visit | Relationship letter page | Section A letter + Section B real-time data grid + letter history | Living relational space |
@@ -2254,12 +2294,12 @@ flowchart TD
 
 | Trigger | Details |
 |---------|---------|
-| Daily notification (post-permission) | Fires at profile-appropriate time (MVP: default 7pm; post-MVP: personality-typed). Nerin-voiced copy. Tapping navigates to `/today`. Skippable; permission revocable in settings. |
+| Daily notification (post-permission) | Fires at profile-appropriate time (MVP: default 7pm; post-MVP: personality-typed). Nerin-voiced copy. Tapping navigates to **`/chat`** only while the **initial** assessment awaits **Assessment Finalization**; after first finalization, tap → **`/today`** (FR101a visible if extension open). Skippable; permission revocable in settings. |
 | Sunday weekly letter notification | Fires Sunday 7pm local time when the weekly letter is generated. "Your week with Nerin is ready." Email fallback. Inline card on /today as third channel. |
 | Relationship letter notification | Fires on annual regeneration (Year 1+ anniversary of QR accept). "Your [Year] letter from Nerin is ready." Notification, not approval request. |
 | Drop-off recapture (FR76) | Triggered for users who didn't complete the assessment. Referenced the last conversation topic. Templated, no LLM call. Email captured upfront so this works for every started user. |
 | Friend's public profile | User visits a friend's `/public-profile/$id`. If logged in, the profile shows a "You've already done this — see your own Me page" link back to `/me`. |
-| Organic return | User opens app on their own. Default landing is always `/today`. |
+| Organic return | User opens app on their own. **`/chat`** until the **first** **Assessment Finalization** for the **initial** assessment; then **`/today`** on routine opens, with **ExtensionContinueModule** when a subscriber extension is unfinalized (FR101a). |
 
 #### Conversation Extension (MVP Subscription Perk — FR23, FR25)
 
@@ -2271,7 +2311,7 @@ flowchart TD
 | Context preservation | Nerin references themes and patterns from prior 15 exchanges, not specific exchanges. Matches how humans recall conversations. |
 | Director model | Starts with prior 15 exchanges of evidence. Deeper territories, higher confidence for feel-seen moments. |
 | Depth meter | Resets for extension segment. New milestones at 25/50/75% of the new 15 exchanges. |
-| Multiple extensions | **Post-MVP.** MVP ships one extension per subscriber with bundled regen. Subsequent extensions deferred pending subscription engagement data. |
+| Multiple extensions | **Post-MVP.** MVP ships **one** `activate-conversation-extension` per subscriber (FR10/FR49); a **second** activation is blocked even during a cancelled-but-still-billed Polar window (Q12-C). **FR101b** only allows **finishing** an already-open extension thread. Subsequent extensions deferred pending subscription engagement data. |
 | Entry point | From Me page subscription section, or from subscription conversion moment inside the Sunday weekly letter (Journey 8). |
 
 #### Evolution Framing (Extension Results)
@@ -2304,10 +2344,11 @@ flowchart TD
 | Extension conversation interrupted | Session saved with extension flag; resume works the same as initial assessment |
 | Archetype changes dramatically on extension | Evolution framing preserves old archetype in history; new portrait explicitly references the change |
 | User unsubscribes before using extension | Extension still available until end of billing period; after that, returns to standard free-tier Today/Me/Circle experience |
+| Subscription **lapses** (cancelled/expired) **after** extension session **started** but **before** **Assessment Finalization** (**FR101b**) | User **still** completes **`/chat`**, finalization, and bundled extension outcomes (e.g. portrait per **FR23**); **no** paywall. **`ExtensionContinueModule`:** add **Q11-C** Nerin acknowledgment line (no € / checkout in-module). A **second** `activate-conversation-extension` is **blocked** in MVP (**Q12-C**) even if Polar still shows an active billing period — **FR101b** is **finish in-flight** only |
 
 #### Flow Optimizations
 
-1. **Three-space world is the return hub, not a dashboard** — `/today` by default. Me and Circle are lateral moves via bottom nav, not separate return destinations.
+1. **Three-space world is the return hub, not a dashboard** — After the **first** **Assessment Finalization**, `/today` by default on routine opens; **`/chat`** only while the **initial** assessment is unfinished. **ExtensionContinueModule** (FR101a) handles paused extensions without route hijack. Me and Circle are lateral moves via bottom nav, not separate return destinations.
 2. **Daily notification in Nerin's voice, not system voice** — "Nerin is wondering how you're doing" — consistent with the permission request in Journey 1's return seed.
 3. **Sunday weekly letter is the retention spike** — It's the single biggest re-engagement event of the week and also the primary subscription conversion moment.
 4. **Annual relationship letter is a scheduled ritual** — Once a year per relationship, automatic regeneration, notification not approval. Creates predictable anticipation like Spotify Wrapped.
@@ -4185,11 +4226,11 @@ Page layouts that compose library components with data-fetching concerns. Live i
 | **HomePage** | `/` | HeroSection, ConversationFlow, ChatBubble, ComparisonCard, ResultPreviewEmbed, TraitStackEmbed, Nerin preview (FR63), portrait excerpt (FR62) — load-bearing because anonymous path is removed |
 | **ChatPage** | `/chat` | ChatConversation, DepthMeter + DepthMeterMilestones, NerinMessage, ChatInputBarShell, EvidenceCard. Authenticated from turn 1. `BottomNav` hidden. |
 | **PortraitReadingView route** | `/me/$conversationSessionId?view=portrait` | `PortraitReadingView` (extended with generating state) + end-of-letter link. First portrait read destination. `BottomNav` hidden. |
-| **Session-scoped Me (first visit)** | `/me/$conversationSessionId` | Identity hero (ArchetypeHeroSection + GeometricSignature + OceanCodeStrand + PersonalityRadarChart) + inline PersonalPortrait + Your Public Face section + invite ceremony card + subscription pitch + **ReturnSeedSection** (first visit only). `BottomNav` visible. |
-| **TodayPage** | `/today` | BottomNav + CheckInForm (pre-check-in) or JournalEntry + MoodDotsWeek + QuietAnticipationLine + LibraryArticleCard (rate-limited) + WeeklyLetterCard (Sundays). Default authenticated landing. |
+| **Session-scoped Me** | `/me/$conversationSessionId` | Same identity stack as hub Me for that session + **ReturnSeedSection** when first visit applies. **FR101a:** if `$conversationSessionId` equals the **unfinalized extension** session id → **`ExtensionContinueModule`** (**primary `/chat` only** — omit secondary self-link to this URL; Q9-B); else when an unfinalized extension exists for another session → **`ExtensionResumeHint`** only (one Nerin line + **primary** link to **`/me/$extensionSessionId`**). `BottomNav` visible. |
+| **TodayPage** | `/today` | BottomNav + **ExtensionContinueModule** (FR101a: **primary** `/chat` + **secondary** link to **`/me/$extensionSessionId`** — both required on `/today`; Q9-B) + CheckInForm (pre-check-in) or JournalEntry + MoodDotsWeek + QuietAnticipationLine + LibraryArticleCard (rate-limited) + WeeklyLetterCard (Sundays). Primary daily landing after **first** **Assessment Finalization** (see authenticated landing behavior below). |
 | **MoodCalendarView** | `/today/calendar` | Focused route shell + MoodCalendarView component. Separate view for looking back; outside BottomNav. |
 | **WeeklyLetterReadingView route** | `/today/week/$weekId` | `WeeklyLetterReadingView` with tier-aware rendering. `BottomNav` hidden. Focused reading. |
-| **MePage** | `/me` | BottomNav + MePageSection ×7: Identity Hero, Your Portrait (inline re-read), Your Growth (conditional), Your Public Face (ProfileVisibilityToggle + share card), Your Circle (preview with View all →), SubscriptionPitchSection or SubscriptionValueSummary, Account (gear → `/settings`) |
+| **MePage** | `/me` | BottomNav + **`ExtensionContinueModule`** when FR101a (same **primary `/chat` + secondary → `/me/$extensionSessionId`** contract as **`/today`**; Q9-B; hub always full module, not `ExtensionResumeHint`) + MePageSection ×7: Identity Hero (**latest finalized** assessment only — **do not** swap hero to the extension session; grill Q8), Your Portrait (inline re-read), Your Growth (conditional), Your Public Face (ProfileVisibilityToggle + share card), Your Circle (preview with View all →), SubscriptionPitchSection or SubscriptionValueSummary, Account (gear → `/settings`). Place the module in the **subscription / continuation** zone so it reads as **open Nerin thread**, not a second identity dashboard. |
 | **CirclePage** | `/circle` | BottomNav + CirclePersonCard (full-width, one per connected person) + InviteCeremonyCard (always at bottom). Empty state: "Big Ocean is made for the few people you care about." |
 | **RelationshipLetterPage** | `/circle/$personId` | RelationshipLetterRitualGate (first visit only) + Section A (`RelationshipLetterSectionA`) + Section B + Section C + Section D (post-MVP) + Section E + Section F. `BottomNav` hidden during ritual, visible after. |
 | **InviteLandingPage** | `/invite/$inviteId` | Inviter framing + ceremony explanation + QR consent contract + Accept / Not now buttons. No auth gate — renders for all visitors; Accept flow handles auth routing. |
@@ -4199,7 +4240,7 @@ Page layouts that compose library components with data-fetching concerns. Live i
 
 **Hidden BottomNav routes:** `/chat`, `/me/$conversationSessionId?view=portrait`, `/today/week/$weekId`, `/circle/$personId?ritual=true`, `/public-profile/$id`, unauthenticated routes.
 
-**Authenticated landing behavior:** Assessment completion / focused-reading flow redirects to `/me` for the reveal. After that, authenticated users can navigate freely; `/today` is the primary daily return surface. Any server-side first-visit marker is for `ReturnSeedSection` visibility only.
+**Authenticated landing behavior:** While the **initial** 15-exchange session exists and **Assessment Finalization** has not completed for it, authenticated entry (`/` after login, “open app” targets that expect home, etc.) resolves to **`/chat`** to resume. Assessment completion / focused-reading flow redirects to `/me` for the reveal. After **first** **Assessment Finalization** and that sequence, authenticated users can navigate freely; **`/today`** is the primary daily return surface even if a **subscriber extension** session is open and unfinalized — surface **`ExtensionContinueModule`** on **`/today`** (above check-in) and on **Me hub `/me`** (FR101a). On **`/me/$conversationSessionId`**, use **full module vs `ExtensionResumeHint`** per FR101a (match extension session id vs not). Any server-side first-visit marker is for `ReturnSeedSection` visibility only.
 
 ### 11.6 Implementation Roadmap
 
@@ -4209,8 +4250,8 @@ Page layouts that compose library components with data-fetching concerns. Live i
 | **2: Assessment onboarding tunnel (mostly built)** | ChatConversation, DepthMeter + DepthMeterMilestones, NerinMessage, ChatInputBarShell, EvidenceCard | Assessment Journey 1 | High — core experience |
 | **3: Post-assessment transition** | `PortraitReadingView` extension (generating state), end-of-letter link, `ReturnSeedSection` | Journey 1 ending + Phase 5→6 bridge | **Highest — load-bearing for retention** |
 | **4: Three-space nav shell** | `BottomNav`, `/today` / `/me` / `/circle` route composition, routing default-landing logic | Entire three-space product shell | Highest — foundational |
-| **5: Today page** | `CheckInForm`, `MoodDotsWeek`, `JournalEntry`, `QuietAnticipationLine`, `LibraryArticleCard`, `WeeklyLetterCard` | Journey 2 Daily Silent Journal | High — retention engine |
-| **6: Me page** | `MePageSection`, `SubscriptionPitchSection` / `SubscriptionValueSummary`, inline `PersonalPortrait` re-read, public face controls | Me page (low-frequency identity space) | High — post-assessment identity sanctuary |
+| **5: Today page** | `ExtensionContinueModule`, `CheckInForm`, `MoodDotsWeek`, `JournalEntry`, `QuietAnticipationLine`, `LibraryArticleCard`, `WeeklyLetterCard` | Journey 2 Daily Silent Journal + FR101a extension visibility | High — retention engine |
+| **6: Me page** | `ExtensionContinueModule`, `ExtensionResumeHint`, `MePageSection`, `SubscriptionPitchSection` / `SubscriptionValueSummary`, inline `PersonalPortrait` re-read, public face controls | Me hub + session-scoped Me (FR101a split) | High — post-assessment identity sanctuary |
 | **7: Circle page + invite ceremony** | `CirclePersonCard`, `InviteCeremonyCard`, `InviteCeremonyDialog`, `InviteLandingPage` route | Journey 7 Invite Ceremony + Circle | High — viral flywheel |
 | **8: Weekly letter** | `WeeklyLetterReadingView`, Sunday 6pm generation job, push notification wiring, conversion copy component | Journey 3 Weekly Letter + Journey 8 Subscription Conversion | **Highest — primary revenue path** |
 | **9: Relationship letter** | `RelationshipLetterPage` route, Section A/B/C/E/F components, ritual gate | Journey 6 Relationship Letter Flow | Medium — viral deepening |
@@ -4881,7 +4922,7 @@ Carries emotional weight, not just action description.
 
 ### 15.1 Today Page Specification (`/today`)
 
-**Purpose:** Daily ephemeral companion page. The default landing for every authenticated visit after the first post-assessment visit. Low-friction daily habit surface. BeReal philosophy: one daily action, content gated behind the user's own deposit, static after check-in.
+**Purpose:** Daily ephemeral companion page. After the **first** **Assessment Finalization**, the primary landing for routine authenticated visits (the **initial** in-progress assessment still resumes via **`/chat`** on entry instead of Today). When a **subscriber extension** is unfinalized, **`ExtensionContinueModule`** (FR101a) appears **above** the check-in flow so the thread is visible without stealing default landing. BeReal philosophy: one daily action, content gated behind the user's own deposit, static after check-in.
 
 **Not a dashboard. Not a feed.** Today is ephemeral — yesterday's state doesn't live here; the mood calendar is a separate view (`/today/calendar`).
 
@@ -4891,24 +4932,30 @@ Carries emotional weight, not just action description.
 
 | Order | Element | Component | Details |
 |-------|---------|-----------|---------|
-| 1 | Nerin-voiced prompt | `CheckInForm` header | MVP: one default prompt. Post-MVP: personality-typed per user |
-| 2 | Mood selection | `CheckInForm` body | 5 mood options rendered as large tappable emojis |
-| 3 | Optional note field | `CheckInForm` body | `Textarea` with placeholder "One note, if you want" |
-| 4 | Save button | `CheckInForm` footer | Disabled until mood selected |
-| 5 | Week-so-far dots | `MoodDotsWeek` | 7 dots, today empty, past days filled from check-in history |
-| 6 | Bottom nav | `BottomNav` | Persistent Today / Me / Circle tabs |
+| 1 | Unfinalized extension resume (conditional) | `ExtensionContinueModule` | **FR101a / Q9-B** — only when a subscriber extension session exists and **Assessment Finalization** is incomplete for that session. Nerin-voiced one line + **primary** → **`/chat`** + **required secondary** text link → **`/me/$extensionSessionId`**. **FR101b + Q11-C:** if subscription has **lapsed** mid-flight, add **one** additional **Nerin-voiced** line that the paid relationship ended but this thread can still be finished (example tone in PRD); **no** €, SKUs, or checkout CTA **inside** the module. **Above** `CheckInForm`. No streaks, no countdown pressure, no “X exchanges left” counts (Intimacy Principle). |
+| 2 | Nerin-voiced prompt | `CheckInForm` header | MVP: one default prompt. Post-MVP: personality-typed per user |
+| 3 | Mood selection | `CheckInForm` body | 5 mood options rendered as large tappable emojis |
+| 4 | Optional note field | `CheckInForm` body | `Textarea` with placeholder "One note, if you want" |
+| 5 | Save button | `CheckInForm` footer | Disabled until mood selected |
+| 6 | Week-so-far dots | `MoodDotsWeek` | 7 dots, today empty, past days filled from check-in history |
+| 7 | Bottom nav | `BottomNav` | Persistent Today / Me / Circle tabs |
 
 **Post-check-in state (user has checked in today) — FREE TIER:**
 
 | Order | Element | Component | Details |
 |-------|---------|-----------|---------|
-| 1 | User's entry (journal format) | `JournalEntry` | Mood emoji + note text on a shared page, NOT a chat bubble |
-| 2 | Week-so-far dots (today filled) | `MoodDotsWeek` | 7 dots, today now filled |
-| 3 | Quiet anticipation line | `QuietAnticipationLine` | *"Nerin will write you a letter about your week on Sunday."* |
-| 4 | Library article slot (rate-limited) | `LibraryArticleCard` | 2-3/week max, never on Sundays |
-| 5 | Ghost subscriber section (post-MVP) | Faint outline of `NerinMarginNote` + mini-dialogue entry | Visible but not clickable for free users |
-| 6 | Sunday weekly letter inline card (Sundays only) | `WeeklyLetterCard` | Top of page on Sundays, auto-dismisses after read |
-| 7 | Bottom nav | `BottomNav` | Persistent |
+| 1 | Unfinalized extension resume (conditional) | `ExtensionContinueModule` | Same **FR101a / Q9-B** + **FR101b / Q11-C** lapse-copy rules as pre-check-in — remains visible at **top** until extension **Assessment Finalization** completes |
+| 2 | User's entry (journal format) | `JournalEntry` | Mood emoji + note text on a shared page, NOT a chat bubble |
+| 3 | Week-so-far dots (today filled) | `MoodDotsWeek` | 7 dots, today now filled |
+| 4 | Quiet anticipation line | `QuietAnticipationLine` | *"Nerin will write you a letter about your week on Sunday."* |
+| 5 | Library article slot (rate-limited) | `LibraryArticleCard` | 2-3/week max, never on Sundays |
+| 6 | Ghost subscriber section (post-MVP) | Faint outline of `NerinMarginNote` + mini-dialogue entry | Visible but not clickable for free users |
+| 7 | Sunday weekly letter inline card (Sundays only) | `WeeklyLetterCard` | Top of page on Sundays, auto-dismisses after read |
+| 8 | Bottom nav | `BottomNav` | Persistent |
+
+#### 15.1.2 `ExtensionResumeHint` (session-scoped Me only)
+
+When FR101a applies **and** the user is on **`/me/$conversationSessionId`** where **`$conversationSessionId` is not** the extension session id, render **`ExtensionResumeHint`** in the subscription / continuation zone (same vertical band as the hub’s **`ExtensionContinueModule`**): one Nerin-voiced line (default: “You and Nerin still have an open conversation…”) + **primary** text link to **`/me/$extensionSessionId`** only (session-scoped Me for the extension — user reaches **`/chat`** from **`ExtensionContinueModule`** on that page, on **`/today`**, or on hub **`/me`**). **FR101b + Q11-C:** when subscription has lapsed mid-flight, that **single** line may also acknowledge lapse — still **no** € or checkout. **No** full-width card, **no** duplicate of the Today module, **no** default deep link from the hint to **`/chat`**. Omit entirely if no unfinalized extension exists.
 
 **Post-check-in state — PAID TIER (post-MVP, not MVP):**
 
@@ -4923,19 +4970,20 @@ Carries emotional weight, not just action description.
 | 7 | Sunday weekly letter card | `WeeklyLetterCard` |
 | 8 | Bottom nav | `BottomNav` |
 
-#### 15.1.2 State-Dependent Behavior
+#### 15.1.3 State-Dependent Behavior
 
 | User State | Today Page Shows |
 |-----------|------------------|
 | No assessment started | Redirect to `/chat` (authenticated user without assessment shouldn't be on /today) |
-| Assessment in progress | Redirect to `/chat?sessionId=...` with "Pick up where you left off" |
+| **Initial** assessment in progress (pre–**first** **Assessment Finalization**) | Redirect to `/chat?sessionId=...` with "Pick up where you left off" |
+| **Initial** complete; subscriber **extension** unfinalized | Pre-check-in or post-check-in state **plus** **`ExtensionContinueModule`** at top (FR101a) — **no** forced redirect to `/chat` on `/today` |
 | Assessment complete, no check-in today, weekday | Pre-check-in state |
 | Assessment complete, checked in today, weekday | Post-check-in state (free tier) |
 | Assessment complete, checked in today, Sunday + weekly letter ready | Post-check-in state + `WeeklyLetterCard` at top |
 | Assessment complete, no check-ins this week (Mon-Sun), Sunday | Pre-check-in state (still offered) + reminder that weekly letter needs ≥3 check-ins |
 | Subscribed (post-MVP) | Paid tier journal format with `NerinMarginNote` + mini-dialogue |
 
-#### 15.1.3 Flow Diagram
+#### 15.1.4 Flow Diagram
 
 ```mermaid
 flowchart TD
@@ -4966,7 +5014,7 @@ flowchart TD
     Q -->|No| S[Static state, user closes app]
 ```
 
-#### 15.1.4 Loading & Skeleton States
+#### 15.1.5 Loading & Skeleton States
 
 | Section | Skeleton |
 |---------|----------|
@@ -4978,7 +5026,7 @@ flowchart TD
 
 All skeletons use `animate-pulse` with `bg-muted`. Skeleton renders during TanStack Query initial load.
 
-#### 15.1.5 Error States
+#### 15.1.6 Error States
 
 | Section | Error Display | Recovery |
 |---------|--------------|----------|
@@ -4990,7 +5038,7 @@ All skeletons use `animate-pulse` with `bg-muted`. Skeleton renders during TanSt
 
 Error boundaries per section — one section crashing never takes down Today.
 
-#### 15.1.6 Animation & Transitions
+#### 15.1.7 Animation & Transitions
 
 | Element | Animation | Duration | Trigger |
 |---------|-----------|----------|---------|
@@ -5003,7 +5051,7 @@ Error boundaries per section — one section crashing never takes down Today.
 
 All animations gated by `prefers-reduced-motion: no-preference`. No aggressive animations — Today is a calm surface.
 
-#### 15.1.7 Responsive Behavior
+#### 15.1.8 Responsive Behavior
 
 | Viewport | Layout |
 |----------|--------|
@@ -5011,7 +5059,7 @@ All animations gated by `prefers-reduced-motion: no-preference`. No aggressive a
 | Tablet (640-1024px) | Single column, centered, max-width 640px. BottomNav remains at bottom |
 | Desktop (≥ 1024px) | Single column, centered, max-width 720px (same as letter reading view). BottomNav replaced with top nav tabs (Today / Me / Circle) — desktop variant of BottomNav |
 
-#### 15.1.8 Data Model
+#### 15.1.9 Data Model
 
 The Today page composes data from multiple TanStack Query hooks:
 
@@ -5032,7 +5080,7 @@ The Today page composes data from multiple TanStack Query hooks:
 - `GET /api/today/prompt?date=:date` — fetch personalized prompt
 - `GET /api/today/library-article` — fetch matched library article
 
-#### 15.1.9 Implementation Notes
+#### 15.1.10 Implementation Notes
 
 - **Default landing is `/today`** for all authenticated users after their first post-assessment visit. First-visit flag stored server-side on user record.
 - **Redirect `/dashboard` → `/today`** — single 301 redirect route.
@@ -5273,12 +5321,12 @@ No competitive animations (heart counts, activity indicators). Calm scroll.
 |------|---------|--------|---------------|
 | Dashboard route | `/dashboard` exists with DashboardIdentityCard etc | Retired | Delete route + all dashboard components + update nav |
 | Profile route | `/profile` exists | Retired | Delete route + profile components |
-| Today page | Doesn't exist | `/today` is default authenticated landing | New route + CheckInForm, MoodDotsWeek, JournalEntry, QuietAnticipationLine, LibraryArticleCard, WeeklyLetterCard components |
+| Today page | Doesn't exist | `/today` after **first** finalization; `/chat` on home entry only until **initial** finalization; **ExtensionContinueModule** for unfinalized extension | New route + CheckInForm, MoodDotsWeek, JournalEntry, QuietAnticipationLine, LibraryArticleCard, WeeklyLetterCard, ExtensionContinueModule |
 | Me page | Overlaps with dashboard identity card | Full 7-section scroll + ReturnSeedSection first-visit | New `/me` route composition; mostly reuses existing ArchetypeHeroSection, PersonalPortrait, ProfileVisibilityToggle |
 | Circle page | Doesn't exist | `/circle` with CirclePersonCard list + invite ceremony card | New route + CirclePersonCard, InviteCeremonyCard, InviteCeremonyDialog components |
 | Settings route | Partial — some settings in user menu | `/settings` with account admin | Consolidate existing account actions + add notification permission control |
 | Bottom nav | Doesn't exist | BottomNav persistent on /today, /me, /circle | New BottomNav component + layout integration |
-| Default landing | `/dashboard` after login | `/today` (or `/me` first visit) | Redirect logic in auth routing |
+| Default landing | `/dashboard` after login | `/chat` until **first** **Assessment Finalization** of **initial** assessment; then `/today` for routine opens; FR101a for extension visibility (post-assessment **Me** flow unchanged) | Redirect logic in auth routing + ExtensionContinueModule |
 | Notification permission | Not collected | Collected via ReturnSeedSection in Nerin's voice | New permission request flow tied to browser API |
 | Mood calendar | Doesn't exist | `/today/calendar` | New MoodCalendarView component |
 
@@ -6508,7 +6556,7 @@ This specification consolidates content from:
 - §9.3 — Portrait spine structure
 - §9.4 — Chart and data visualization direction
 - **§10.1 — Journey 1 First-Timer Flow** (post-assessment transition, closing button, focused reading, end-of-letter link, return seed)
-- **§10.4 — Journey 4 Returning User Flow** (three-space return, default landing on /today)
+- **§10.4 — Journey 4 Returning User Flow** (three-space return; `/chat` until **initial** finalization, then default `/today` + FR101a)
 - **§15.2 — Me Page Specification** (same identity sanctuary as §18; canonical URLs in §18.17)
 - §11.4 — Component specs (`PortraitReadingView` extended with generating state, `ReturnSeedSection`, `SubscriptionPitchSection`, `SubscriptionValueSummary`, inline `PersonalPortrait`)
 - §11.4a — New three-space components (`BottomNav`, `InviteCeremonyCard`, `CirclePersonCard` preview)

@@ -33,8 +33,9 @@ export interface SendMessageOutput {
  * Send Message Use Case
  *
  * Dependencies: ConversationRepository, MessageRepository,
- *               LoggerRepository, NerinAgentRepository, AppConfig,
- *               ConversanalyzerRepository, ConversationEvidenceRepository
+ *               LoggerRepository, AppConfig,
+ *               ConversanalyzerRepository, ConversationEvidenceRepository,
+ *               NerinDirectorRepository, NerinActorRepository (via runNerinPipeline)
  *
  * @throws SessionNotFound - Invalid session or access denied
  * @throws SessionCompletedError - Session is finalizing or completed

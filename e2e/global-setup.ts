@@ -12,11 +12,7 @@ import { dirname, resolve } from "node:path";
 import { AUTH_FILES, OTHER_USER, OWNER_USER } from "./e2e-env.js";
 import {
 	createAssessmentSession,
-	getSessionUserId,
-	getUserByEmail,
-	linkSessionToUser,
 	seedSessionForResults,
-	sendAssessmentMessage,
 } from "./factories/conversation.factory.js";
 import { createUser, markFirstVisitCompleted } from "./factories/user.factory.js";
 import { createApiContext } from "./utils/api-client.js";
@@ -49,52 +45,25 @@ async function createAuthState(): Promise<void> {
 	// Ensure .auth directory exists
 	mkdirSync(dirname(AUTH_FILES.owner), { recursive: true });
 
-	// ── Owner user: creates session → signs up (links session) → seeds evidence ──
+	// ── Owner user: sign up → start authenticated session → seed evidence ──
+	// (Anonymous conversation start was removed; POST /api/conversation/start requires auth.)
 
-	// 1. Create an anonymous assessment session
-	const anonApi = await createApiContext();
-	const sessionId = await createAssessmentSession(anonApi);
-	console.log(`[global-setup] Created anonymous session: ${sessionId}`);
-	await anonApi.dispose();
-
-	// 2. Sign up the owner user with anonymousSessionId → triggers session linking hook
 	const ownerApi = await createApiContext();
-	await createUser(ownerApi, {
-		...OWNER_USER,
-		anonymousSessionId: sessionId,
-	});
+	await createUser(ownerApi, OWNER_USER);
 	console.log(`[global-setup] Owner signed up: ${OWNER_USER.email}`);
 
-	// 3. Verify the Better Auth hook linked the session, fallback to direct DB update
-	const linkedUserId = await getSessionUserId(sessionId);
-	if (!linkedUserId) {
-		console.log("[global-setup] Hook did not link session, falling back to direct DB update");
-		const ownerUser = await getUserByEmail(OWNER_USER.email);
-		if (!ownerUser) throw new Error("Owner user not found after sign-up");
-		await linkSessionToUser(sessionId, ownerUser.id);
-		console.log(`[global-setup] Linked session ${sessionId} to user ${ownerUser.id}`);
-	} else {
-		console.log(`[global-setup] Session linked to user ${linkedUserId} via hook`);
-	}
+	const sessionId = await createAssessmentSession(ownerApi);
+	console.log(`[global-setup] Started authenticated session: ${sessionId}`);
 
-	// 4. Seed conversation_evidence so results page renders
+	// Seed conversation_evidence so results page renders
 	await seedSessionForResults(sessionId);
 	console.log("[global-setup] Seeded evidence data for results");
 
-	// 5. Send a user message via the API so messageCount reaches
-	//    the configured assessment threshold and the profile card shows "completed"
-	await sendAssessmentMessage(
-		ownerApi,
-		sessionId,
-		"I also enjoy trying new cuisines and traveling to new places.",
-	);
-	console.log("[global-setup] Sent user message to reach assessment threshold");
-
-	// 6. Mark first visit as completed so /today doesn't redirect to /me
+	// Mark first visit as completed so /today doesn't redirect to /me
 	await markFirstVisitCompleted(OWNER_USER.email);
 	console.log("[global-setup] Marked owner first visit as completed");
 
-	// 7. Save owner storage state (cookies auto-captured by Playwright request context)
+	// Save owner storage state (cookies auto-captured by Playwright request context)
 	await ownerApi.storageState({ path: AUTH_FILES.owner });
 	console.log(`[global-setup] Saved owner storage state → ${AUTH_FILES.owner}`);
 	await ownerApi.dispose();
