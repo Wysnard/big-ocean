@@ -3080,7 +3080,7 @@ CREATE INDEX weekly_summaries_user_week_idx ON weekly_summaries (user_id, week_s
 - **Backfill:** On cron miss (downtime, deploy gap), the next cron tick picks up any users whose Sunday 18:00 has passed but have no row for the current week. No retroactive generation beyond the current week.
 
 **Generation:**
-- **LLM call:** Sonnet 4.6 with the letter-format prompt (ADR-48). Input: user's **UserSummary** (ADR-55 — canonical user-state input, replaces raw facets/traits/evidence), week's check-ins (mood + note + dates), and persona context. The UserSummary provides themes, quote bank, voice cues, and unresolved tensions; the weekly check-ins provide the week-specific narrative arc.
+- **LLM call:** Sonnet 4.6 with the letter-format prompt (ADR-48). Input: user's **UserSummary** (ADR-55 — canonical personality-state input, replaces raw facets/traits/evidence), week's check-ins (mood + note + dates), and persona context. The UserSummary provides the durable personality backdrop (`summary_text`, themes, quote bank); the weekly check-ins are the fresh event slice that provides the week-specific narrative arc.
 - **Prompt variants (FR87 vs FR88):** MVP ships **only the free prompt**. The subscriber prescriptive version (FR88) is post-MVP Phase 1b and uses the same LLM call with additional prompt sections — not a separate call. Entitlement gate: `isEntitledTo(userId, "prescriptive_weekly_letter")` selects the prompt variant.
 - **Cost envelope (NFR7a):** ~$0.02–0.05 per user per week. This is the only LLM touchpoint in the free-tier weekly loop; combined with silent daily check-ins (ADR-44) it keeps free-tier ongoing cost at ~$0.02–0.08/user/month.
 
@@ -3784,9 +3784,9 @@ Rubric prompt defines each dimension concretely and provides 1/3/5 anchoring exa
 
 **Source:** Architectural gap analysis — ADR-52 established UserSummary as a cross-cutting asset but only wired the portrait pipeline. Weekly letter (ADR-45), relationship letter (ADR-10), subscriber chat, and future Nerin surfaces still planned to read raw evidence, defeating the cost and quality benefits of the compression layer.
 
-**Decision:** UserSummary is the **canonical user-state input for all Nerin LLM surfaces**. No Nerin-voiced LLM call reads raw conversation evidence or raw check-in data directly — it reads the UserSummary. The UserSummary is a **living document** maintained via rolling regeneration: each refresh takes the previous summary + new raw data and produces a replacement at a fixed token budget.
+**Decision:** UserSummary is the **canonical personality-state input for all Nerin LLM surfaces**. No Nerin-voiced LLM call reads raw conversation evidence, raw facet derivations, or raw assessment transcript as its primary personality state — it reads the UserSummary. A surface may pass its own fresh event slice alongside UserSummary when that slice is the subject of the output (for example, weekly check-ins in ADR-45). The UserSummary is a **living document** maintained via rolling regeneration: each refresh takes the previous summary + new raw data and produces a replacement at a fixed token budget.
 
-**Binding rule:** Any new Nerin LLM surface (agent, letter, prompt) MUST consume UserSummary as its primary user-state input. Raw evidence and raw conversation are never passed to Nerin-voiced generation prompts. Agents still own how they frame and select from the UserSummary (per ADR-41), but the UserSummary is the data source, not raw repositories.
+**Binding rule:** Any new Nerin LLM surface (agent, letter, prompt) MUST consume UserSummary as its primary personality-state input. Raw evidence and raw conversation are never passed to Nerin-voiced generation prompts as personality context. Surface-local event input is allowed only when it is the thing being interpreted (weekly check-ins, a subscriber chat transcript during UserSummary refresh, etc.). Agents still own how they frame and select from the UserSummary (per ADR-41), but the UserSummary is the durable data source, not raw repositories.
 
 **Rolling regeneration model:**
 
@@ -3916,7 +3916,7 @@ All versions are retained for audit and personality-drift research. The "current
 | Consumer | What it reads from UserSummary | How it frames it |
 |---|---|---|
 | Portrait Spine Extractor (ADR-51) | Full summary — themes, quotes, tensions, voice cues | Raw input alongside facet scores for spine inference |
-| Weekly Letter (ADR-45) | themes, quoteBank, unresolvedTensions + week's check-ins (separate input) | Personality backdrop for the week's narrative |
+| Weekly Letter (ADR-45) | summary_text, themes, quoteBank + week's check-ins (separate fresh event slice) | Personality backdrop for the week's narrative |
 | Relationship Letter (ADR-10) | Both users' full summaries | Cross-user comparison — shared themes, complementary tensions, quote juxtaposition |
 | Subscriber Nerin Chat (ADR-56) | Full summary injected into Director context | Nerin "knows" the user — references past themes, uses their language |
 | Future agents (ADR-40, ADR-41) | Agent-selected subset | Per ADR-41, each agent owns selection and framing |

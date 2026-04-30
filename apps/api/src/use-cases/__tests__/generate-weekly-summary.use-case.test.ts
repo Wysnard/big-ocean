@@ -4,13 +4,9 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-	ALL_FACETS,
 	AppConfig,
-	AssessmentResultRepository,
-	ConversationRepository,
 	CostGuardRepository,
 	DailyCheckInRepository,
-	type FacetName,
 	LoggerRepository,
 	type PurchaseEvent,
 	PurchaseEventRepository,
@@ -18,6 +14,7 @@ import {
 	PushSubscriptionRepository,
 	ResendEmailRepository,
 	UserAccountRepository,
+	UserSummaryRepository,
 	WebPushRepository,
 	WeeklySummaryGenerationError,
 	WeeklySummaryGeneratorRepository,
@@ -53,16 +50,14 @@ const mockCostGuard = {
 	setFreeTierLlmPaused: vi.fn(),
 };
 
-const mockSessionRepo = {
-	findSessionByUserId: vi.fn(),
-};
-
-const mockResultsRepo = {
-	getBySessionId: vi.fn(),
-};
-
 const mockGenerator = {
 	generateLetter: vi.fn(),
+};
+
+const mockUserSummaryRepo = {
+	saveVersion: vi.fn(),
+	getForAssessmentResult: vi.fn(),
+	getCurrentForUser: vi.fn(),
 };
 
 const mockUserAccount = {
@@ -149,20 +144,22 @@ const mockConfig = {
 	cronSecret: Redacted.make(""),
 };
 
-const facetsRecord = Object.fromEntries(
-	ALL_FACETS.map((f) => [f, { score: 10, confidence: 0.8 }]),
-) as Record<FacetName, { score: number; confidence: number }>;
-
-const mockAssessmentResult = (sessionId: string) => ({
-	id: `result-${sessionId}`,
-	assessmentSessionId: sessionId,
-	facets: facetsRecord,
-	traits: {},
-	domainCoverage: {},
-	portrait: "",
-	stage: "completed" as const,
-	createdAt: new Date(),
-});
+const currentUserSummary = {
+	id: "summary-1",
+	userId: "user-1",
+	assessmentResultId: "result-1",
+	summaryText: "You tend to find steadiness by noticing small rituals and returning to them.",
+	themes: [
+		{
+			theme: "Quiet steadiness",
+			description: "They look for grounded, repeatable practices when the week gets crowded.",
+		},
+	],
+	quoteBank: [{ quote: "I just need one quiet hour", context: "Describing how they reset" }],
+	version: 1,
+	refreshSource: "assessment_completion" as const,
+	generatedAt: new Date(),
+};
 
 const threeCheckIns = (userId: string) => [
 	{
@@ -211,11 +208,10 @@ const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(DailyCheckInRepository, mockDailyRepo),
 		Layer.succeed(WeeklySummaryRepository, mockWeeklyRepo),
-		Layer.succeed(ConversationRepository, mockSessionRepo),
-		Layer.succeed(AssessmentResultRepository, mockResultsRepo),
 		Layer.succeed(WeeklySummaryGeneratorRepository, mockGenerator),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.succeed(AppConfig, mockConfig),
+		Layer.succeed(UserSummaryRepository, mockUserSummaryRepo),
 		Layer.succeed(UserAccountRepository, mockUserAccount),
 		Layer.succeed(ResendEmailRepository, mockResendEmail),
 		Layer.succeed(PushSubscriptionRepository, mockPushSubscription),
@@ -235,8 +231,7 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 		mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed([]));
 		mockWeeklyRepo.getByUserAndWeekStart.mockReturnValue(Effect.succeed(null));
 		mockWeeklyRepo.save.mockReturnValue(Effect.succeed(savedRow));
-		mockSessionRepo.findSessionByUserId.mockReturnValue(Effect.succeed(null));
-		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(null));
+		mockUserSummaryRepo.getCurrentForUser.mockReturnValue(Effect.succeed(currentUserSummary));
 		mockGenerator.generateLetter.mockReturnValue(
 			Effect.succeed({ content: "# Hello week", modelUsed: "claude-sonnet-test", llmCostCents: 3 }),
 		);
@@ -310,24 +305,10 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 		}),
 	);
 
-	it.effect("generates and saves when user qualifies and has assessment", () =>
+	it.effect("generates and saves when user qualifies and has a current UserSummary", () =>
 		Effect.gen(function* () {
 			const userId = "user-1";
 			mockDailyRepo.listUserIdsWithAtLeastNCheckInsInRange.mockReturnValue(Effect.succeed([userId]));
-			mockSessionRepo.findSessionByUserId.mockReturnValue(
-				Effect.succeed({
-					id: "session-1",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-					status: "completed" as const,
-					messageCount: 10,
-					oceanCode5: "OCBAV",
-					archetypeName: "The Tapestry",
-				}),
-			);
-			mockResultsRepo.getBySessionId.mockReturnValue(
-				Effect.succeed(mockAssessmentResult("session-1")),
-			);
 			mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed(threeCheckIns(userId)));
 
 			const out = yield* generateWeeklySummariesForWeek({ weekId: WEEK_ID }).pipe(
@@ -336,6 +317,15 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 
 			expect(out.processed).toBe(1);
 			expect(out.failed).toBe(0);
+			expect(mockGenerator.generateLetter).toHaveBeenCalledWith(
+				expect.objectContaining({
+					userSummary: {
+						summaryText: currentUserSummary.summaryText,
+						themes: currentUserSummary.themes,
+						quoteBank: currentUserSummary.quoteBank,
+					},
+				}),
+			);
 			expect(mockWeeklyRepo.save).toHaveBeenCalledWith(
 				expect.objectContaining({
 					outcome: "generated",
@@ -352,24 +342,26 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 		}),
 	);
 
+	it.effect("skips user when current UserSummary is missing", () =>
+		Effect.gen(function* () {
+			const userId = "user-1";
+			mockDailyRepo.listUserIdsWithAtLeastNCheckInsInRange.mockReturnValue(Effect.succeed([userId]));
+			mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed(threeCheckIns(userId)));
+			mockUserSummaryRepo.getCurrentForUser.mockReturnValue(Effect.succeed(null));
+
+			const out = yield* generateWeeklySummariesForWeek({ weekId: WEEK_ID }).pipe(
+				Effect.provide(createTestLayer()),
+			);
+
+			expect(out).toEqual({ processed: 0, skipped: 1, failed: 0 });
+			expect(mockGenerator.generateLetter).not.toHaveBeenCalled();
+		}),
+	);
+
 	it.scoped("records failure after LLM errors exhaust retries", () =>
 		Effect.gen(function* () {
 			const userId = "user-1";
 			mockDailyRepo.listUserIdsWithAtLeastNCheckInsInRange.mockReturnValue(Effect.succeed([userId]));
-			mockSessionRepo.findSessionByUserId.mockReturnValue(
-				Effect.succeed({
-					id: "session-1",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-					status: "completed",
-					messageCount: 10,
-					oceanCode5: "OCBAV",
-					archetypeName: "The Tapestry",
-				}),
-			);
-			mockResultsRepo.getBySessionId.mockReturnValue(
-				Effect.succeed(mockAssessmentResult("session-1")),
-			);
 			mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed(threeCheckIns(userId)));
 
 			mockGenerator.generateLetter.mockReturnValue(
@@ -401,20 +393,6 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 		Effect.gen(function* () {
 			const userId = "user-1";
 			mockDailyRepo.listUserIdsWithAtLeastNCheckInsInRange.mockReturnValue(Effect.succeed([userId]));
-			mockSessionRepo.findSessionByUserId.mockReturnValue(
-				Effect.succeed({
-					id: "session-1",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-					status: "completed" as const,
-					messageCount: 10,
-					oceanCode5: "OCBAV",
-					archetypeName: "The Tapestry",
-				}),
-			);
-			mockResultsRepo.getBySessionId.mockReturnValue(
-				Effect.succeed(mockAssessmentResult("session-1")),
-			);
 			mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed(threeCheckIns(userId)));
 			mockCostGuard.getFreeTierLlmPaused.mockReturnValue(Effect.succeed(true));
 
@@ -444,20 +422,6 @@ describe("generateWeeklySummariesForWeek (Story 5.1)", () => {
 				createdAt: new Date(),
 			};
 			mockDailyRepo.listUserIdsWithAtLeastNCheckInsInRange.mockReturnValue(Effect.succeed([userId]));
-			mockSessionRepo.findSessionByUserId.mockReturnValue(
-				Effect.succeed({
-					id: "session-1",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-					status: "completed" as const,
-					messageCount: 10,
-					oceanCode5: "OCBAV",
-					archetypeName: "The Tapestry",
-				}),
-			);
-			mockResultsRepo.getBySessionId.mockReturnValue(
-				Effect.succeed(mockAssessmentResult("session-1")),
-			);
 			mockDailyRepo.listForWeek.mockReturnValue(Effect.succeed(threeCheckIns(userId)));
 			mockPurchaseRepo.getEventsByUserId.mockReturnValue(Effect.succeed([subscriptionStarted]));
 			mockCostGuard.getFreeTierLlmPaused.mockReturnValue(Effect.succeed(true));

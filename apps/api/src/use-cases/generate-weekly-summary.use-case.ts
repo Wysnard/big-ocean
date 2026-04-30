@@ -8,27 +8,19 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import {
 	AppConfig,
-	AssessmentResultError,
-	AssessmentResultRepository,
-	ConversationRepository,
 	CostGuardRepository,
-	computeTraitResults,
 	DailyCheckInRepository,
 	DatabaseError,
-	type FacetName,
-	type FacetScoresMap,
-	generateOceanCode,
 	isEntitledTo,
 	LoggerRepository,
-	lookupArchetype,
 	PurchaseEventRepository,
 	PushNotificationQueueRepository,
 	PushSubscriptionRepository,
 	ResendEmailRepository,
 	resolveIsoWeekBounds,
-	TRAIT_NAMES,
 	Unauthorized,
 	UserAccountRepository,
+	UserSummaryRepository,
 	WebPushRepository,
 	WeeklySummaryGeneratorRepository,
 	WeeklySummaryRepository,
@@ -63,12 +55,10 @@ export const generateWeeklySummariesForWeek = (
 	input: GenerateWeeklySummariesForWeekInput,
 ): Effect.Effect<
 	GenerateWeeklySummariesForWeekOutput,
-	DatabaseError | AssessmentResultError | Unauthorized,
+	DatabaseError | Unauthorized,
 	| AppConfig
 	| WeeklySummaryRepository
 	| DailyCheckInRepository
-	| ConversationRepository
-	| AssessmentResultRepository
 	| WeeklySummaryGeneratorRepository
 	| LoggerRepository
 	| UserAccountRepository
@@ -78,6 +68,7 @@ export const generateWeeklySummariesForWeek = (
 	| WebPushRepository
 	| PurchaseEventRepository
 	| CostGuardRepository
+	| UserSummaryRepository
 > =>
 	Effect.gen(function* () {
 		const config = yield* AppConfig;
@@ -99,12 +90,11 @@ export const generateWeeklySummariesForWeek = (
 
 		const dailyRepo = yield* DailyCheckInRepository;
 		const weeklyRepo = yield* WeeklySummaryRepository;
-		const sessionRepo = yield* ConversationRepository;
-		const resultsRepo = yield* AssessmentResultRepository;
 		const generator = yield* WeeklySummaryGeneratorRepository;
 		const logger = yield* LoggerRepository;
 		const purchaseRepo = yield* PurchaseEventRepository;
 		const costGuard = yield* CostGuardRepository;
+		const userSummaryRepo = yield* UserSummaryRepository;
 
 		const eligibleUserIds = yield* dailyRepo.listUserIdsWithAtLeastNCheckInsInRange(
 			MIN_CHECK_INS,
@@ -116,18 +106,6 @@ export const generateWeeklySummariesForWeek = (
 			Effect.gen(function* () {
 				const existing = yield* weeklyRepo.getByUserAndWeekStart(userId, weekStartLocal);
 				if (existing?.generatedAt && existing.content) {
-					return { processed: 0, skipped: 1, failed: 0 };
-				}
-
-				const session = yield* sessionRepo.findSessionByUserId(userId);
-				if (!session) {
-					logger.info("Weekly summary: skip user without conversation session", { userId });
-					return { processed: 0, skipped: 1, failed: 0 };
-				}
-
-				const result = yield* resultsRepo.getBySessionId(session.id);
-				if (!result) {
-					logger.info("Weekly summary: skip user without assessment result", { userId });
 					return { processed: 0, skipped: 1, failed: 0 };
 				}
 
@@ -157,28 +135,11 @@ export const generateWeeklySummariesForWeek = (
 					}
 				}
 
-				const facetScoresMap: FacetScoresMap = {} as FacetScoresMap;
-				for (const [facetName, data] of Object.entries(result.facets)) {
-					if (typeof data === "object" && data !== null && "score" in data && "confidence" in data) {
-						facetScoresMap[facetName as FacetName] = {
-							score: data.score,
-							confidence: data.confidence,
-						};
-					}
-				}
-
-				if (Object.keys(facetScoresMap).length === 0) {
-					logger.info("Weekly summary: skip user with empty facet scores", { userId });
+				const userSummary = yield* userSummaryRepo.getCurrentForUser(userId);
+				if (!userSummary) {
+					logger.info("Weekly summary: skip user without UserSummary", { userId });
 					return { processed: 0, skipped: 1, failed: 0 };
 				}
-
-				const traitScoresMap = computeTraitResults(facetScoresMap);
-				const oceanCode = generateOceanCode(facetScoresMap);
-				const archetype = lookupArchetype(oceanCode.slice(0, 4));
-				const traitLines = TRAIT_NAMES.map((trait) => {
-					const t = traitScoresMap[trait];
-					return `- ${trait}: score=${t.score}, confidence=${Math.round(t.confidence)}`;
-				});
 
 				const genResult = yield* generator
 					.generateLetter({
@@ -190,10 +151,11 @@ export const generateWeeklySummariesForWeek = (
 							mood: c.mood,
 							note: c.note,
 						})),
-						oceanCode,
-						archetypeName: archetype.name,
-						archetypeDescription: archetype.description,
-						traitLines,
+						userSummary: {
+							summaryText: userSummary.summaryText,
+							themes: userSummary.themes,
+							quoteBank: userSummary.quoteBank,
+						},
 					})
 					.pipe(
 						Effect.retry({

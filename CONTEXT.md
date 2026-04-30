@@ -5,7 +5,7 @@ Shared domain language for Big Ocean architecture discussions. This file records
 ## Language
 
 **Assessment Finalization**:
-The completion step that turns a finished Nerin conversation into persisted assessment results, a UserSummary, queued portrait generation, and—before success is returned—the idempotent creation of the session’s shareable public profile row (private by default) so read paths such as `/results` only query profile metadata; they do not create that row.
+The completion step that turns a finished Nerin conversation into persisted assessment results, a UserSummary, queued portrait generation, and—before success is returned—the idempotent creation of the session’s shareable public profile row (private by default) so **Completed Assessment Session Read (Me)** paths only query profile metadata; they do not create that row.
 *Avoid*: lazy finalization, result generation
 
 **Authenticated Conversation**:
@@ -33,13 +33,13 @@ The read-time personality summary derived from facet scores: the five-letter OCE
 *Avoid*: OCEAN row, stored archetype
 *Implementation*: `AssessmentSurfaceProjection` in `@workspace/domain`; hydrate persisted facets and derive the surface with `projectAssessmentSurfaceFromPersistedFacets`.
 
-**Completed Assessment Results Read**:
-The authenticated read of a finished **Authenticated Conversation** that returns the scored facet/trait presentation plus **Assessment surface**, latest-version metadata, and the session’s shareable public profile identifiers. It succeeds only when the persisted assessment result is at `stage=completed` and the session’s `public_profiles` row exists (provisioned during **Assessment Finalization**).
-*Avoid*: lazy results, partial results payload
+**Completed Assessment Session Read (Me)**:
+The authenticated read of a finished **Authenticated Conversation** on the **Me** identity surface (canonical `/me/$conversationSessionId`; legacy `/results/*` may redirect only) that returns the scored facet/trait presentation plus **Assessment surface**, latest-version metadata, and the session’s shareable public profile identifiers; it succeeds only when the persisted assessment result is at `stage=completed` and the session’s `public_profiles` row exists (provisioned during **Assessment Finalization**).
+*Avoid*: lazy results, partial results payload, product copy “results page” for this surface, using `/results` as the primary URL in new work
 
 **Public profile row (shareable)**:
-The persisted `public_profiles` record for a completed assessment session (private by default), used to build stable share URLs and visibility state for the **Completed Assessment Results Read**.
-*Avoid*: lazy profile creation on `/results`
+The persisted `public_profiles` record for a completed assessment session (private by default), used to build stable share URLs and visibility state for the **Completed Assessment Session Read (Me)**.
+*Avoid*: lazy profile creation on the Me read path
 
 ## Relationships
 
@@ -47,17 +47,18 @@ The persisted `public_profiles` record for a completed assessment session (priva
 - An **Assessment Finalization** produces exactly one scored assessment result.
 - An **Assessment Finalization** requires a **UserSummary** before it can complete.
 - An **Assessment Finalization** queues **Portrait** generation after the result and UserSummary are ready.
-- An **Assessment Finalization** provisions the session’s shareable public profile row (private by default); `/results` reads that row and does not create it.
-- A **Completed Assessment Results Read** requires both `assessment_results.stage=completed` and an existing **Public profile row (shareable)** for the same session.
+- An **Assessment Finalization** provisions the session’s shareable public profile row (private by default); **Completed Assessment Session Read (Me)** uses that row and does not create it.
+- A **Completed Assessment Session Read (Me)** requires both `assessment_results.stage=completed` and an existing **Public profile row (shareable)** for the same session.
 - An **Assessment surface** is derived from the same facet scores that feed trait views and confidence; it does not replace **UserSummary** or **Portrait**.
 - A conversation extension contributes to the user’s **Living Personality Model** by default; callers may deliberately request a narrower current-session scope when the product surface needs it.
 
 ## Example Dialogue
 
-> **Dev:** "Can `/results` finish an assessment if the user refreshes during finalization?"
-> **Domain expert:** "No. `/results` only reads. **Assessment Finalization** owns the transition to a completed result."
+> **Dev:** "Can the **Me** session read finish an assessment if the user refreshes during finalization?"
+> **Domain expert:** "No. That read path is read-only. **Assessment Finalization** owns the transition to a completed result."
 
 ## Flagged Ambiguities
 
 - "results generation" has been used for both scoring and the whole completion workflow. Resolved: use **Assessment Finalization** for the whole workflow and "scoring" for facet/trait computation.
 - Historical migrations may still mention legacy conversation tokens. Resolved: active product flow uses **Authenticated Conversation** only.
+- **Completed Assessment Results Read** vs **Me** URLs: Resolved — use **Completed Assessment Session Read (Me)**; canonical route `/me/$conversationSessionId`; `/results/*` is legacy redirect-only, not primary product language.

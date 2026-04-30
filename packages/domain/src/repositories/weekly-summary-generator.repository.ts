@@ -4,6 +4,7 @@
 
 import { Context, Data, Effect } from "effect";
 import type { DailyCheckInMood } from "./daily-check-in.repository";
+import type { UserSummaryQuoteEntry, UserSummaryThemeEntry } from "./user-summary.repository";
 
 export interface WeeklySummaryCheckInLine {
 	readonly localDate: string;
@@ -16,10 +17,11 @@ export interface WeeklySummaryGenerationInput {
 	readonly weekStartDate: string;
 	readonly weekEndDate: string;
 	readonly checkIns: readonly WeeklySummaryCheckInLine[];
-	readonly oceanCode: string;
-	readonly archetypeName: string;
-	readonly archetypeDescription: string;
-	readonly traitLines: readonly string[];
+	readonly userSummary: {
+		readonly summaryText: string;
+		readonly themes: readonly UserSummaryThemeEntry[];
+		readonly quoteBank: readonly UserSummaryQuoteEntry[];
+	};
 }
 
 export interface WeeklySummaryGenerationOutput {
