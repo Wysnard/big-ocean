@@ -276,7 +276,7 @@ flowchart LR
 | Nerin Director | Claude Sonnet / Haiku | Every message after evidence extraction | Reads full conversation + coverage targets and writes a creative-director brief | Fatal (mapped to `AgentInvocationError`) |
 | Nerin Actor | Haiku 4.5 | Every message after Nerin Director | Voices the brief as the user-facing Nerin response | Fatal |
 | ConversAnalyzer | Haiku 4.5 | Every user message, **before Nerin Director** (sequential, not parallel) | Evidence-only extraction — **single source of truth** for scoring, coverage, portraits, and relationship analysis | Three-tier: strict ×3 → lenient ×1 → neutral defaults |
-| UserSummary Generator | Haiku 4.5 | On assessment completion, conversation extension, subscriber chat completion, and monthly check-in aggregation (ADR-52, ADR-55) | Rolling regeneration: compresses raw data into themed summary + verbatim `quoteBank` (≤50 entries). **Canonical user-state input for all Nerin LLM surfaces** — portrait, weekly letter, relationship letter, subscriber chat. Versioned for audit/personality-drift research. | Fatal on first generation (assessment completion); non-fatal on subsequent refreshes (stale-but-valid previous version persists) |
+| UserSummary Generator | Haiku 4.5 | On assessment completion, conversation extension, subscriber chat completion, and monthly check-in aggregation (ADR-52, ADR-55) | Rolling regeneration: compresses raw data into themed summary + verbatim `quoteBank` (≤50 entries). **Canonical user-state input for all Nerin LLM surfaces** — portrait, weekly letter, relationship letter, subscriber chat. Versioned history in `user_summary_versions` (ADR-55). | **Fatal** when the completion flow may enqueue a portrait (base assessment, first extension, subscriber chat): failure blocks finalization. **Non-fatal** only for explicitly non-portrait refreshes (e.g. future monthly check-in aggregation) where stale current summary is acceptable |
 | Spine Extractor | Sonnet 4.6 with `thinking: { budget_tokens: 2048 }` | Stage A of portrait pipeline (ADR-51) | Reads UserSummary + facet scores → produces prescriptive `SpineBrief` JSON (insight, 6-beat arc, coined-phrase targets, verbatim anchors). Inference, not summary. | Bounded retry: Verifier-driven re-extraction, max 2 attempts |
 | Spine Verifier | Haiku 4.5 | Stage B of portrait pipeline (ADR-51) | Judges the SpineBrief against structural + specificity + insight-falsifiability checklist. Produces `SpineVerification` with `gapFeedback`. Brief-only input. | Verifier pass → Stage C; fail → re-extract once with gap feedback; second fail → ship best brief, log for audit |
 | Prose Renderer | Sonnet 4.6 (Phase 4a may swap to Haiku 4.5) | Stage C of portrait pipeline (ADR-51) | Renders `SpineBrief` + `PORTRAIT_CONTEXT` craft rules into 6-movement prose. **No UserSummary, no raw conversation** — brief is the sole user-state input. | Placeholder + lazy retry (reconciliation per ADR-13) |
@@ -515,7 +515,9 @@ type SubscriptionFeature =
 
 **Updated 2026-04-11:** Relationship letters are free and unlimited (FR33). Credit consumption removed from the accept path. User-facing term is "relationship letter" (ADR-48 letter format); table and field names retain `relationship_analyses` for code compatibility. Adds Letter History versioning support (FR29, FR35) and post-MVP annual regeneration hook (FR35a).
 
-**Updated 2026-04-12 (ADR-55):** Relationship letter generation now reads **both users' UserSummaries** (ADR-55) as primary input instead of raw evidence. The Sonnet prompt receives User A's UserSummary + User B's UserSummary + both users' facet scores. This replaces the prior approach of reading raw per-user evidence, cutting input tokens from ~70K+ (two users' raw evidence) to ~30K (two 15K summaries) and providing richer context (themes, tensions, quote banks for both users).
+**Updated 2026-04-12 (ADR-55):** Relationship letter generation reads **each user’s current UserSummary** (`getCurrentForUser` — living personality model) as primary narrative input, paired with **facet scores from each user’s completed assessment result** for the same letter. This replaces raw per-user evidence for the summary blocks, cutting tokens and preserving themes/quote banks.
+
+**Portrait vs relationship read policy (2026-04-30 refinement):** Full portrait generation uses a **frozen** summary row keyed by the portrait’s `assessment_result_id` (`getForAssessmentResult`) so prose stays coherent with the facet snapshot; relationship letters intentionally read the **latest** summary per user.
 
 **Decision:** Replace invitation link model with QR token model. Users generate ephemeral QR codes to initiate a free relationship letter.
 
@@ -610,7 +612,7 @@ type SubscriptionFeature =
 
 **Implementation:** Reconciliation logic in `reconcile-portrait-generation.use-case.ts` (renamed from `reconcile-portrait-purchase.use-case.ts`), called from `getPortraitStatus` when status is "generating" (assessment result exists but no portrait row):
 1. Does an `assessment_results` row exist for this user?
-2. Does a `user_summary` row exist for that assessment? If not, run UserSummary generation first (ADR-52).
+2. Does a `user_summary_versions` row exist for that assessment result (unique `assessment_result_id`)? If not, run UserSummary generation first (ADR-52/55). Portrait reads that frozen row via `getForAssessmentResult`.
 3. Does a portrait row exist with `assessment_result_id` matching the latest result?
 4. If (1) yes and (3) no → `Queue.offer` to `PortraitJobQueue`. The worker re-runs the full three-stage pipeline; per-stage intermediate artifacts (SpineBrief, SpineVerification) are not persisted across worker runs — they are recomputed, which is cheap relative to the Prose Renderer.
 
@@ -2859,14 +2861,17 @@ _Added 2026-04-07. Source: innovation-strategy-2026-04-06.md._
 
 **Decision:** No shared personality context builder or injection service. Each agent builds its own personality context from shared read-only utilities. Agents have full freedom over what personality data they consume and how they frame it in their prompts.
 
-**Updated 2026-04-12 (ADR-55):** The **UserSummary is now the primary personality context data source** for all Nerin-voiced LLM surfaces. Agents read UserSummary (via `getUserSummary(userId)`) instead of raw evidence. The shared read utilities below remain available for agents that need raw facet scores or archetype data, but evidence access for prompt construction is through UserSummary, not raw repositories.
+**Updated 2026-04-12 (ADR-55):** The **UserSummary is now the primary personality context data source** for all Nerin-voiced LLM surfaces. Repository reads are explicit: **`getCurrentForUser(userId)`** for the living model (weekly, relationship narrative, subscriber chat context) and **`getForAssessmentResult(resultId)`** where a surface must stay pinned to a scored assessment (full portrait Stage A).
+
+**Updated 2026-04-30:** Replace informal `getUserSummary(userId)` wording below with the versioned repository methods above.
 
 **Rationale:** A shared builder assumes agents want personality data formatted the same way. They won't. A Coach needs conflict patterns; a Journal needs emotional baseline; a Career agent needs openness-to-change profile. Different data, different framing, different prompt structure. A shared abstraction becomes a constraint, not a service. UserSummary provides the compressed user-state; agents own selection and framing from it.
 
 **Shared read utilities** (domain layer, pure functions — most already exist or are trivial wrappers):
 
 ```typescript
-getUserSummary(userId): UserSummary             // PRIMARY — canonical user state (ADR-55)
+getCurrentForUser(userId): UserSummary | null   // latest version — living model (ADR-55)
+getForAssessmentResult(resultId): UserSummary | null  // frozen row for that assessment — portrait Stage A (ADR-55)
 getFacetScores(userId): FacetScoreMap           // all 30 facets
 getTraitScores(userId): TraitScoreMap           // 5 traits (derived from facets)
 getArchetype(userId): Archetype                 // derived from OCEAN code

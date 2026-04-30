@@ -3,14 +3,27 @@ import {
 	LoggerRepository,
 	type UserSummaryQuoteEntry,
 	type UserSummaryRecord,
+	type UserSummaryRefreshSource,
 	UserSummaryRepository,
+	type UserSummarySaveVersionInput,
 	type UserSummaryThemeEntry,
-	type UserSummaryUpsertInput,
 } from "@workspace/domain";
 import { Database } from "@workspace/infrastructure/context/database";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, max } from "drizzle-orm";
 import { Effect, Layer } from "effect";
-import { userSummaries } from "../db/drizzle/schema";
+import { userSummaryVersions } from "../db/drizzle/schema";
+
+const REFRESH_SOURCES = [
+	"assessment_completion",
+	"conversation_extension",
+	"subscriber_chat_completion",
+	"monthly_checkin_aggregation",
+] as const satisfies readonly UserSummaryRefreshSource[];
+
+const parseRefreshSource = (raw: string): UserSummaryRefreshSource =>
+	(REFRESH_SOURCES as readonly string[]).includes(raw)
+		? (raw as UserSummaryRefreshSource)
+		: "assessment_completion";
 
 const mapThemes = (raw: unknown): readonly UserSummaryThemeEntry[] => {
 	if (!Array.isArray(raw)) return [];
@@ -27,17 +40,26 @@ const mapQuotes = (raw: unknown): readonly UserSummaryQuoteEntry[] => {
 	) as UserSummaryQuoteEntry[];
 };
 
-const mapRow = (row: typeof userSummaries.$inferSelect): UserSummaryRecord => ({
-	id: row.id,
-	userId: row.userId,
-	assessmentResultId: row.assessmentResultId,
-	themes: mapThemes(row.themes),
-	quoteBank: mapQuotes(row.quoteBank),
-	summaryText: row.summaryText,
-	version: row.version,
-	createdAt: row.createdAt,
-	updatedAt: row.updatedAt,
-});
+type ContentShape = {
+	readonly themes?: unknown;
+	readonly quoteBank?: unknown;
+	readonly summaryText?: string;
+};
+
+const mapRow = (row: typeof userSummaryVersions.$inferSelect): UserSummaryRecord => {
+	const c = row.content as ContentShape;
+	return {
+		id: row.id,
+		userId: row.userId,
+		assessmentResultId: row.assessmentResultId,
+		themes: mapThemes(c.themes),
+		quoteBank: mapQuotes(c.quoteBank),
+		summaryText: typeof c.summaryText === "string" ? c.summaryText : "",
+		version: row.version,
+		refreshSource: parseRefreshSource(row.refreshSource),
+		generatedAt: row.generatedAt,
+	};
+};
 
 export const UserSummaryDrizzleRepositoryLive = Layer.effect(
 	UserSummaryRepository,
@@ -56,59 +78,70 @@ export const UserSummaryDrizzleRepositoryLive = Layer.effect(
 		};
 
 		return UserSummaryRepository.of({
-			upsertForAssessmentResult: (input: UserSummaryUpsertInput) =>
-				Effect.gen(function* () {
-					const rows = yield* db
-						.insert(userSummaries)
-						.values({
-							userId: input.userId,
-							assessmentResultId: input.assessmentResultId,
-							themes: [...input.themes],
-							quoteBank: [...input.quoteBank],
-							summaryText: input.summaryText,
-							version: input.version,
-						})
-						.onConflictDoUpdate({
-							target: [userSummaries.assessmentResultId],
-							set: {
+			saveVersion: (input: UserSummarySaveVersionInput) =>
+				db
+					.transaction((tx) =>
+						Effect.gen(function* () {
+							const agg = yield* tx
+								.select({ v: max(userSummaryVersions.version) })
+								.from(userSummaryVersions)
+								.where(eq(userSummaryVersions.userId, input.userId))
+								.pipe(Effect.mapError((e) => toDatabaseError("select max user summary version", e)));
+
+							const maxV = agg[0]?.v;
+							const nextVersion = typeof maxV === "number" ? maxV + 1 : Number(maxV ?? 0) + 1;
+
+							const content = {
 								themes: [...input.themes],
 								quoteBank: [...input.quoteBank],
 								summaryText: input.summaryText,
-								version: input.version,
-								userId: input.userId,
-							},
-						})
-						.returning()
-						.pipe(Effect.mapError((e) => toDatabaseError("upsert user summary", e)));
+							};
 
-					const row = rows[0];
-					if (!row) {
-						return yield* Effect.fail(new DatabaseError({ message: "Failed to upsert user summary" }));
-					}
-					return mapRow(row);
-				}),
+							const rows = yield* tx
+								.insert(userSummaryVersions)
+								.values({
+									userId: input.userId,
+									assessmentResultId: input.assessmentResultId,
+									version: nextVersion,
+									content,
+									refreshSource: input.refreshSource,
+									tokenCount: input.tokenCount ?? null,
+								})
+								.returning()
+								.pipe(Effect.mapError((e) => toDatabaseError("insert user summary version", e)));
 
-			getByAssessmentResultId: (assessmentResultId) =>
+							const inserted = rows[0];
+							if (!inserted) {
+								return yield* Effect.fail(
+									new DatabaseError({ message: "Failed to insert user summary version" }),
+								);
+							}
+							return mapRow(inserted);
+						}),
+					)
+					.pipe(Effect.mapError((e) => toDatabaseError("save user summary version transaction", e))),
+
+			getForAssessmentResult: (assessmentResultId) =>
 				db
 					.select()
-					.from(userSummaries)
-					.where(eq(userSummaries.assessmentResultId, assessmentResultId))
+					.from(userSummaryVersions)
+					.where(eq(userSummaryVersions.assessmentResultId, assessmentResultId))
 					.limit(1)
 					.pipe(
 						Effect.map((rows) => (rows[0] ? mapRow(rows[0]) : null)),
-						Effect.mapError((e) => toDatabaseError("get user summary by assessment result", e)),
+						Effect.mapError((e) => toDatabaseError("get user summary for assessment result", e)),
 					),
 
-			getLatestForUser: (userId) =>
+			getCurrentForUser: (userId) =>
 				db
 					.select()
-					.from(userSummaries)
-					.where(eq(userSummaries.userId, userId))
-					.orderBy(desc(userSummaries.updatedAt))
+					.from(userSummaryVersions)
+					.where(eq(userSummaryVersions.userId, userId))
+					.orderBy(desc(userSummaryVersions.version))
 					.limit(1)
 					.pipe(
 						Effect.map((rows) => (rows[0] ? mapRow(rows[0]) : null)),
-						Effect.mapError((e) => toDatabaseError("get latest user summary for user", e)),
+						Effect.mapError((e) => toDatabaseError("get current user summary for user", e)),
 					),
 		});
 	}),

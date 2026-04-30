@@ -76,7 +76,7 @@ export const generateFullPortrait = (input: GenerateFullPortraitInput) =>
 			return;
 		}
 
-		const userSummaryRow = yield* userSummaryRepo.getByAssessmentResultId(result.id);
+		const userSummaryRow = yield* userSummaryRepo.getForAssessmentResult(result.id);
 		if (!userSummaryRow) {
 			logger.error("UserSummary missing for portrait generation — cannot proceed", {
 				sessionId: input.sessionId,

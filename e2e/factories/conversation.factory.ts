@@ -358,7 +358,7 @@ Your imagination isn't idle daydreaming; it's an active force that shapes how yo
 There's an interesting tension in your personality: you value deep, meaningful connections with others, yet you also need space to explore on your own terms. This isn't contradictory — it's what makes your relationships feel authentic rather than performative.`;
 
 /**
- * Check that a user_summaries row exists for a given session (via assessment_results join).
+ * Check that a user_summary_versions row exists for a given session (via assessment_results join).
  * Returns the row or null.
  */
 export async function getUserSummaryBySessionId(
@@ -369,9 +369,9 @@ export async function getUserSummaryBySessionId(
 
 	try {
 		const result = await client.query(
-			`SELECT us.id, us.user_id, us.summary_text, us.version
-			 FROM user_summaries us
-			 JOIN assessment_results ar ON ar.id = us.assessment_result_id
+			`SELECT usv.id, usv.user_id, (usv.content->>'summaryText')::text AS summary_text, usv.version
+			 FROM user_summary_versions usv
+			 JOIN assessment_results ar ON ar.id = usv.assessment_result_id
 			 WHERE ar.conversation_id = $1
 			 LIMIT 1`,
 			[sessionId],

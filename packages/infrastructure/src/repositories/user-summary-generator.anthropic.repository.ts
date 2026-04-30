@@ -61,6 +61,7 @@ export const UserSummaryGeneratorAnthropicRepositoryLive = Layer.effect(
 						sessionId: input.sessionId,
 						facets: input.facets,
 						evidence: input.evidence,
+						previousSummary: input.previousSummary ?? undefined,
 					});
 
 					const rawContent = yield* Effect.tryPromise({

@@ -1,56 +1,57 @@
 /**
- * Mock: user-summary.drizzle.repository.ts (Story 7.1)
+ * Mock: user-summary.drizzle.repository.ts (ADR-55)
  */
 
 import {
 	type UserSummaryRecord,
 	UserSummaryRepository,
-	type UserSummaryUpsertInput,
+	type UserSummarySaveVersionInput,
 } from "@workspace/domain";
 import { Effect, Layer } from "effect";
 
-const byResultId = new Map<string, UserSummaryRecord>();
+const rows: UserSummaryRecord[] = [];
 
 export const _resetUserSummaryMockState = () => {
-	byResultId.clear();
+	rows.length = 0;
 };
 
 export const _getUserSummaryByResultId = (assessmentResultId: string) =>
-	byResultId.get(assessmentResultId) ?? null;
+	rows.find((r) => r.assessmentResultId === assessmentResultId) ?? null;
 
 export const UserSummaryDrizzleRepositoryLive = Layer.succeed(
 	UserSummaryRepository,
 	UserSummaryRepository.of({
-		upsertForAssessmentResult: (input: UserSummaryUpsertInput) =>
+		saveVersion: (input: UserSummarySaveVersionInput) =>
 			Effect.sync(() => {
-				const existing = byResultId.get(input.assessmentResultId);
+				const maxV = rows
+					.filter((r) => r.userId === input.userId)
+					.reduce((m, r) => Math.max(m, r.version), 0);
+				const nextVersion = maxV + 1;
 				const now = new Date();
 				const row: UserSummaryRecord = {
-					id: existing?.id ?? crypto.randomUUID(),
+					id: crypto.randomUUID(),
 					userId: input.userId,
 					assessmentResultId: input.assessmentResultId,
 					themes: input.themes,
 					quoteBank: input.quoteBank,
 					summaryText: input.summaryText,
-					version: input.version,
-					createdAt: existing?.createdAt ?? now,
-					updatedAt: now,
+					version: nextVersion,
+					refreshSource: input.refreshSource,
+					generatedAt: now,
 				};
-				byResultId.set(input.assessmentResultId, row);
+				rows.push(row);
 				return row;
 			}),
 
-		getByAssessmentResultId: (assessmentResultId) =>
-			Effect.sync(() => byResultId.get(assessmentResultId) ?? null),
+		getForAssessmentResult: (assessmentResultId) =>
+			Effect.sync(() => rows.find((r) => r.assessmentResultId === assessmentResultId) ?? null),
 
-		getLatestForUser: (userId) =>
+		getCurrentForUser: (userId) =>
 			Effect.sync(() => {
 				let best: UserSummaryRecord | null = null;
-				for (const row of byResultId.values()) {
-					if (row.userId !== userId) continue;
-					if (!best || row.updatedAt.getTime() > best.updatedAt.getTime()) {
-						best = row;
-					}
+				for (const r of rows) {
+					if (r.userId !== userId) continue;
+					if (!best || r.version > best.version) best = r;
 				}
 				return best;
 			}),

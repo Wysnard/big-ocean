@@ -13,7 +13,7 @@
  * - conversationEvidence: Lean evidence for steering (conversanalyzer)
  * - conversationEvidence: Evidence extracted by ConversAnalyzer on every message
  * - assessmentResults: Final scored results with portrait
- * - userSummaries: Compressed UserSummary per assessment result (Story 7.1)
+ * - userSummaryVersions: ADR-55 versioned UserSummary history (current + frozen per result)
  * - publicProfile: Shareable profile links
  */
 
@@ -663,31 +663,30 @@ export const weeklySummaries = pgTable(
 	],
 );
 
-// ─── User summaries (Story 7.1) — compressed user-state for Nerin surfaces ─
+// ─── User summary versions (ADR-55) — versioned history + frozen snapshot per result ─
 
-export const userSummaries = pgTable(
-	"user_summaries",
+export const userSummaryVersions = pgTable(
+	"user_summary_versions",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		assessmentResultId: uuid("assessment_result_id")
-			.notNull()
-			.references(() => assessmentResults.id, { onDelete: "cascade" }),
-		themes: jsonb("themes").notNull(),
-		quoteBank: jsonb("quote_bank").notNull(),
-		summaryText: text("summary_text").notNull(),
-		version: integer("version").notNull().default(1),
-		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-		updatedAt: timestamp("updated_at", { withTimezone: true })
-			.notNull()
-			.defaultNow()
-			.$onUpdate(() => new Date()),
+		assessmentResultId: uuid("assessment_result_id").references(() => assessmentResults.id, {
+			onDelete: "cascade",
+		}),
+		version: integer("version").notNull(),
+		content: jsonb("content").notNull(),
+		refreshSource: text("refresh_source").notNull(),
+		generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
+		tokenCount: integer("token_count"),
 	},
 	(table) => [
-		uniqueIndex("user_summaries_assessment_result_id_unique").on(table.assessmentResultId),
-		index("user_summaries_user_id_updated_at_desc_idx").on(table.userId, table.updatedAt.desc()),
+		uniqueIndex("user_summary_versions_user_version_unique").on(table.userId, table.version),
+		uniqueIndex("user_summary_versions_assessment_result_unique")
+			.on(table.assessmentResultId)
+			.where(sql`${table.assessmentResultId} IS NOT NULL`),
+		index("user_summary_versions_user_id_version_desc_idx").on(table.userId, table.version.desc()),
 	],
 );
 
@@ -741,7 +740,7 @@ export const relations = defineRelations(
 		pushNotificationQueue,
 		dailyCheckIns,
 		weeklySummaries,
-		userSummaries,
+		userSummaryVersions,
 		portraitRatings,
 	},
 	(r) => ({
@@ -759,7 +758,7 @@ export const relations = defineRelations(
 			pushNotifications: r.many.pushNotificationQueue(),
 			dailyCheckIns: r.many.dailyCheckIns(),
 			weeklySummaries: r.many.weeklySummaries(),
-			userSummaries: r.many.userSummaries(),
+			userSummaryVersions: r.many.userSummaryVersions(),
 		},
 		session: {
 			user: r.one.user({
@@ -824,9 +823,9 @@ export const relations = defineRelations(
 			}),
 			publicProfile: r.many.publicProfile(),
 			portraits: r.many.portraits(),
-			userSummary: r.one.userSummaries({
+			userSummary: r.one.userSummaryVersions({
 				from: r.assessmentResults.id,
-				to: r.userSummaries.assessmentResultId,
+				to: r.userSummaryVersions.assessmentResultId,
 			}),
 		},
 		portraits: {
@@ -913,13 +912,13 @@ export const relations = defineRelations(
 				to: r.user.id,
 			}),
 		},
-		userSummaries: {
+		userSummaryVersions: {
 			user: r.one.user({
-				from: r.userSummaries.userId,
+				from: r.userSummaryVersions.userId,
 				to: r.user.id,
 			}),
 			assessmentResult: r.one.assessmentResults({
-				from: r.userSummaries.assessmentResultId,
+				from: r.userSummaryVersions.assessmentResultId,
 				to: r.assessmentResults.id,
 			}),
 		},

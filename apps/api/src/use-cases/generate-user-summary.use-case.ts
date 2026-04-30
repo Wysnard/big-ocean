@@ -1,7 +1,8 @@
 /**
- * Generate UserSummary after assessment scoring (Story 7.1).
+ * Generate UserSummary after assessment scoring (Story 7.1, ADR-55 versioning).
  *
- * Idempotent: if a row already exists for the assessment result, skips LLM call.
+ * Idempotent per assessment result: if a frozen version already exists for `result.id`, skips LLM call.
+ * Rolling regeneration: passes the user's **current** summary (if any) into the generator when creating a new version.
  */
 
 import {
@@ -9,6 +10,7 @@ import {
 	AssessmentResultRepository,
 	LoggerRepository,
 	UserSummaryGeneratorRepository,
+	type UserSummaryRefreshSource,
 	UserSummaryRepository,
 } from "@workspace/domain";
 import { Effect } from "effect";
@@ -21,6 +23,11 @@ import {
 export interface GenerateUserSummaryInput {
 	readonly conversation: AuthenticatedConversation;
 }
+
+const resolveRefreshSource = (
+	session: AuthenticatedConversation["session"],
+): UserSummaryRefreshSource =>
+	session.parentConversationId != null ? "conversation_extension" : "assessment_completion";
 
 export const generateUserSummary = (input: GenerateUserSummaryInput) =>
 	Effect.gen(function* () {
@@ -39,14 +46,24 @@ export const generateUserSummary = (input: GenerateUserSummaryInput) =>
 			);
 		}
 
-		const existing = yield* userSummaryRepo.getByAssessmentResultId(result.id);
-		if (existing) {
-			logger.info("User summary: already exists, skipping generation", {
+		const existingFrozen = yield* userSummaryRepo.getForAssessmentResult(result.id);
+		if (existingFrozen) {
+			logger.info("User summary: already exists for assessment result, skipping generation", {
 				sessionId: session.id,
 				assessmentResultId: result.id,
 			});
 			return;
 		}
+
+		const previousCurrent = yield* userSummaryRepo.getCurrentForUser(session.userId);
+		const previousSummary =
+			previousCurrent != null
+				? {
+						themes: previousCurrent.themes,
+						quoteBank: previousCurrent.quoteBank,
+						summaryText: previousCurrent.summaryText,
+					}
+				: undefined;
 
 		const evidence = yield* loadScopedConversationEvidence(
 			resolveAuthenticatedConversationScope(input.conversation),
@@ -56,15 +73,16 @@ export const generateUserSummary = (input: GenerateUserSummaryInput) =>
 			sessionId: session.id,
 			facets: result.facets,
 			evidence,
+			previousSummary,
 		});
 
-		yield* userSummaryRepo.upsertForAssessmentResult({
+		yield* userSummaryRepo.saveVersion({
 			userId: session.userId,
 			assessmentResultId: result.id,
 			themes: genOut.themes,
 			quoteBank: genOut.quoteBank,
 			summaryText: genOut.summaryText,
-			version: 1,
+			refreshSource: resolveRefreshSource(session),
 		});
 
 		logger.info("User summary: persisted", {

@@ -326,11 +326,13 @@ export {
 	UserAccountRepository,
 } from "./repositories/user-account.repository";
 export {
+	type UserSummaryPreviousSnapshot,
 	type UserSummaryQuoteEntry,
 	type UserSummaryRecord,
+	type UserSummaryRefreshSource,
 	UserSummaryRepository,
+	type UserSummarySaveVersionInput,
 	type UserSummaryThemeEntry,
-	type UserSummaryUpsertInput,
 } from "./repositories/user-summary.repository";
 export {
 	UserSummaryGenerationError,

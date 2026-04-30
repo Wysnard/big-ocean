@@ -31,8 +31,8 @@ function makeUserSummary(overrides: Partial<UserSummaryRecord> = {}): UserSummar
 		],
 		summaryText: "A thoughtful, pattern-seeking orientation.",
 		version: 1,
-		createdAt: new Date("2026-01-01"),
-		updatedAt: new Date("2026-01-01"),
+		refreshSource: "assessment_completion",
+		generatedAt: new Date("2026-01-01"),
 	};
 	return { ...base, ...overrides };
 }

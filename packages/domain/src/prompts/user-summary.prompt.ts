@@ -4,11 +4,13 @@
  */
 
 import type { ConversationEvidenceRecord } from "../repositories/conversation-evidence.repository";
+import type { UserSummaryPreviousSnapshot } from "../repositories/user-summary.repository";
 
 export interface BuildUserSummaryPromptInput {
 	readonly sessionId: string;
 	readonly facets: Readonly<Record<string, { score: number; confidence: number }>>;
 	readonly evidence: readonly ConversationEvidenceRecord[];
+	readonly previousSummary?: UserSummaryPreviousSnapshot | null;
 }
 
 const jsonShapeInstructions = `Return a single JSON object with exactly these keys (snake_case):
@@ -20,6 +22,14 @@ Rules:
 - Ground every theme in the facet scores and evidence; do not invent facts.
 - Prefer vivid, specific quotes from user messages in evidence notes/messages.
 - No markdown fences — raw JSON only.`;
+
+const rollingRegenInstructions = `You are REFRESHING an existing UserSummary using NEW evidence plus the prior summary below.
+
+Rules for refresh:
+- STRENGTHEN themes when new evidence supports them; FADE themes that lack recent support.
+- REPLACE quotes with more vivid or recent verbatim lines when the new evidence offers them.
+- Keep "summary_text" coherent as one narrative; do not paste the old summary wholesale unless nothing changed.
+- Preserve the JSON shape exactly as specified.`;
 
 export const buildUserSummaryPrompt = (
 	input: BuildUserSummaryPromptInput,
@@ -35,9 +45,22 @@ export const buildUserSummaryPrompt = (
 		return `${i + 1}. facet=${ev.bigfiveFacet} domain=${ev.domain} strength=${ev.strength} confidence=${ev.confidence} polarity=${ev.polarity} note=${JSON.stringify(note)}`;
 	});
 
+	const priorBlock =
+		input.previousSummary != null
+			? `PRIOR USER SUMMARY (memory — revise, do not ignore):
+Themes: ${JSON.stringify(input.previousSummary.themes)}
+Quote bank: ${JSON.stringify(input.previousSummary.quoteBank)}
+Narrative:
+${input.previousSummary.summaryText}
+
+${rollingRegenInstructions}
+
+`
+			: "";
+
 	const userPrompt = `Session id: ${input.sessionId}
 
-Facet scores:
+${priorBlock}Facet scores:
 ${facetLines.join("\n")}
 
 Conversation evidence (use verbatim user language from notes when building quote_bank):

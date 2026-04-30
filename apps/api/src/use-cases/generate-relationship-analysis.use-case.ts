@@ -4,7 +4,8 @@
  * Background daemon that generates a personality comparison analysis
  * for two users. Called by forkDaemon from accept-invitation use-case.
  *
- * Loads **UserSummaries** per assessment result (ADR-55) — not raw conversation evidence.
+ * Loads **current UserSummary** per user (ADR-55 `getCurrentForUser`) — not raw conversation evidence.
+ * Facet scores still come from each user’s latest completed assessment result session.
  */
 
 import {
@@ -31,8 +32,9 @@ export interface GenerateRelationshipAnalysisOutput {
 }
 
 /**
- * Load a user's assessment data: facet scores + UserSummary for that result.
- * Returns null if the user has no completed assessment, no result, or no UserSummary row.
+ * Load a user's assessment data: facet scores from their latest completed session's result
+ * plus **current** UserSummary (living cross-cutting asset, ADR-55).
+ * Returns null if the user has no completed assessment, no result, or no UserSummary version.
  */
 const loadUserAssessmentData = (userId: string) =>
 	Effect.gen(function* () {
@@ -47,11 +49,10 @@ const loadUserAssessmentData = (userId: string) =>
 		const result = yield* resultsRepo.getBySessionId(session.id);
 		if (!result) return null;
 
-		const userSummary = yield* userSummaryRepo.getByAssessmentResultId(result.id);
+		const userSummary = yield* userSummaryRepo.getCurrentForUser(userId);
 		if (!userSummary) {
-			logger.warn("UserSummary missing for assessment result — cannot generate relationship letter", {
+			logger.warn("UserSummary missing for user — cannot generate relationship letter", {
 				userId,
-				assessmentResultId: result.id,
 			});
 			return null;
 		}

@@ -4,12 +4,17 @@
 
 import { Context, Effect, Schema as S } from "effect";
 import type { ConversationEvidenceRecord } from "./conversation-evidence.repository";
-import type { UserSummaryQuoteEntry, UserSummaryThemeEntry } from "./user-summary.repository";
+import type {
+	UserSummaryPreviousSnapshot,
+	UserSummaryQuoteEntry,
+	UserSummaryThemeEntry,
+} from "./user-summary.repository";
 
 export interface UserSummaryGenerationInput {
 	readonly sessionId: string;
 	readonly facets: Readonly<Record<string, { score: number; confidence: number }>>;
 	readonly evidence: readonly ConversationEvidenceRecord[];
+	readonly previousSummary?: UserSummaryPreviousSnapshot | null;
 }
 
 export interface UserSummaryGenerationOutput {

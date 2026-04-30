@@ -6,7 +6,7 @@
  * - Retry when inviter session/result/UserSummary missing
  * - Retry when invitee inputs not ready
  * - Idempotent update (already has content)
- * - UserSummaryRepository.getByAssessmentResultId (not raw evidence)
+ * - UserSummaryRepository.getCurrentForUser (living summary per user; not raw evidence)
  * - Email notification sent after successful generation (Story 35-5)
  * - Email notification NOT sent on idempotent skip (Story 35-5)
  */
@@ -135,9 +135,9 @@ const mockResultsRepo = {
 };
 
 const mockUserSummaryRepo = {
-	upsertForAssessmentResult: vi.fn(),
-	getByAssessmentResultId: vi.fn(),
-	getLatestForUser: vi.fn(),
+	saveVersion: vi.fn(),
+	getForAssessmentResult: vi.fn(),
+	getCurrentForUser: vi.fn(),
 };
 
 const mockLogger = {
@@ -166,18 +166,20 @@ const INVITER_ID = "inviter-user-1";
 const INVITEE_ID = "invitee-user-2";
 const ANALYSIS_ID = "analysis-123";
 
-function mockUserSummaryForResult(resultId: string): UserSummaryRecord {
-	const isInviter = resultId.includes("inviter-user-1");
+function mockUserSummaryForUser(userId: string): UserSummaryRecord {
+	const sessionId = `session-${userId}`;
+	const resultId = `result-${sessionId}`;
+	const isInviter = userId === INVITER_ID;
 	return {
-		id: `us-${resultId}`,
-		userId: isInviter ? INVITER_ID : INVITEE_ID,
+		id: `us-${userId}`,
+		userId,
 		assessmentResultId: resultId,
 		themes: [{ theme: "Core", description: isInviter ? "Inviter theme" : "Invitee theme" }],
 		quoteBank: [{ quote: isInviter ? "Inviter quote" : "Invitee quote" }],
 		summaryText: isInviter ? "Inviter summary text" : "Invitee summary text",
 		version: 1,
-		createdAt: new Date(),
-		updatedAt: new Date(),
+		refreshSource: "assessment_completion",
+		generatedAt: new Date(),
 	};
 }
 
@@ -214,8 +216,8 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 		mockResultsRepo.getBySessionId.mockImplementation((sessionId: string) =>
 			Effect.succeed(mockResult(sessionId)),
 		);
-		mockUserSummaryRepo.getByAssessmentResultId.mockImplementation((resultId: string) =>
-			Effect.succeed(mockUserSummaryForResult(resultId)),
+		mockUserSummaryRepo.getCurrentForUser.mockImplementation((userId: string) =>
+			Effect.succeed(mockUserSummaryForUser(userId)),
 		);
 		mockAnalysisGen.generateAnalysis.mockReturnValue(
 			Effect.succeed({
@@ -375,7 +377,7 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
-	it.effect("should load UserSummary by assessment result id for both users (Story 7.2)", () =>
+	it.effect("should load current UserSummary for both users (ADR-55)", () =>
 		Effect.gen(function* () {
 			yield* generateRelationshipAnalysis({
 				analysisId: ANALYSIS_ID,
@@ -388,23 +390,19 @@ describe("generateRelationshipAnalysis Use Case (Story 18-6)", () => {
 
 			expect(mockResultsRepo.getBySessionId).toHaveBeenCalledTimes(2);
 
-			expect(mockUserSummaryRepo.getByAssessmentResultId).toHaveBeenCalledTimes(2);
-			expect(mockUserSummaryRepo.getByAssessmentResultId).toHaveBeenCalledWith(
-				"result-session-inviter-user-1",
-			);
-			expect(mockUserSummaryRepo.getByAssessmentResultId).toHaveBeenCalledWith(
-				"result-session-invitee-user-2",
-			);
+			expect(mockUserSummaryRepo.getCurrentForUser).toHaveBeenCalledTimes(2);
+			expect(mockUserSummaryRepo.getCurrentForUser).toHaveBeenCalledWith(INVITER_ID);
+			expect(mockUserSummaryRepo.getCurrentForUser).toHaveBeenCalledWith(INVITEE_ID);
 		}).pipe(Effect.provide(createTestLayer())),
 	);
 
 	it.effect("should increment retry when inviter UserSummary is missing (Story 7.2)", () =>
 		Effect.gen(function* () {
-			mockUserSummaryRepo.getByAssessmentResultId.mockImplementation((resultId: string) => {
-				if (resultId === "result-session-inviter-user-1") {
+			mockUserSummaryRepo.getCurrentForUser.mockImplementation((userId: string) => {
+				if (userId === INVITER_ID) {
 					return Effect.succeed(null);
 				}
-				return Effect.succeed(mockUserSummaryForResult(resultId));
+				return Effect.succeed(mockUserSummaryForUser(userId));
 			});
 
 			const result = yield* generateRelationshipAnalysis({

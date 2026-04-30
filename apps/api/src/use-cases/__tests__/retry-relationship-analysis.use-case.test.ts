@@ -54,9 +54,9 @@ const mockResultsRepo = {
 };
 
 const mockUserSummaryRepo = {
-	upsertForAssessmentResult: vi.fn(),
-	getByAssessmentResultId: vi.fn(),
-	getLatestForUser: vi.fn(),
+	saveVersion: vi.fn(),
+	getForAssessmentResult: vi.fn(),
+	getCurrentForUser: vi.fn(),
 };
 
 const mockLogger = {

@@ -21,15 +21,15 @@ All active jobs go through `PortraitJobQueue` → `portrait-generation.worker.ts
 
 ## Module responsibilities
 
-1. **Assessment Finalization** completes scoring, UserSummary, public profile row, session completion; then enqueues portrait work when product rules require a new portrait.
-2. **Worker** runs `generateFullPortrait` with mandatory `userId`, authenticated session scope, UserSummary required before LLM; persists portrait success or failure rows.
+1. **Assessment Finalization** completes scoring, UserSummary (a versioned row for that assessment result), public profile row, session completion; then enqueues portrait work when product rules require a new portrait.
+2. **Worker** runs `generateFullPortrait` with mandatory `userId`, authenticated session scope; loads the **frozen** UserSummary for the same `assessment_result_id` as facet scores (`UserSummaryRepository.getForAssessmentResult`) before Stage A; persists portrait success or failure rows. **UserSummary generation failure in flows that enqueue a portrait must fail finalization** (no silent stale portrait).
 3. **Status (read path)** derives `generating` from `assessment_results.stage === "completed"` and absence of a terminal portrait row, not from purchase events.
 
 ## ADR-51 three-stage module (live)
 
 Production uses **Spine Extractor → Spine Verifier → Prose Renderer** (separate `Context.Tag` Adapters, direct `@anthropic-ai/sdk` per ADR-53). There is no single-shot portrait generator or feature flag.
 
-1. **Stage A (Spine Extractor)** input: persisted `UserSummary` + facet/trait score maps only — no raw messages or evidence objects in the LLM call.
+1. **Stage A (Spine Extractor)** input: **frozen** `UserSummary` for the portrait’s `assessment_result_id` + facet/trait score maps only — no raw messages or evidence objects in the LLM call. (`getCurrentForUser` is for other surfaces; portraits must stay aligned with the scores row.)
 2. **Stage B (Spine Verifier)** input: `SpineBrief` JSON only.
 3. **Stage C (Prose Renderer)** input: `SpineBrief` + `NERIN_PERSONA` + `PORTRAIT_CONTEXT` — no `UserSummary`, messages, or evidence.
 
@@ -44,7 +44,7 @@ Orchestration: `apps/api/src/use-cases/generate-full-portrait.use-case.ts` (work
 | Base assessment finalization | Exactly one `PortraitJob` enqueued with `sessionId` + `userId`. |
 | First extension completion | One bundled portrait job enqueued. |
 | Subsequent extension completion | No portrait job. |
-| `generateFullPortrait` | Fails closed if `userId` missing or UserSummary missing for result. |
+| `generateFullPortrait` | Fails closed if `userId` missing, assessment result missing, or **no UserSummary version** for that result (`getForAssessmentResult`). |
 | `getPortraitStatus` | `generating` when result `completed` and no portrait row; not tied to `portrait_unlocked`. |
 | Purchase / webhook | No queue offer for portrait from purchase handlers. |
 | `retryPortrait` | Failed row deleted, job re-queued. |

@@ -133,9 +133,43 @@ describe("generateUserSummary", () => {
 			yield* generateUserSummary({ conversation: makeConversation("session_abc") });
 
 			expect(mockLoggerRepo.info).toHaveBeenCalledWith(
-				"User summary: already exists, skipping generation",
+				"User summary: already exists for assessment result, skipping generation",
 				expect.objectContaining({ assessmentResultId: seeded.id }),
 			);
 		}).pipe(Effect.provide(testLayer)),
+	);
+
+	it.effect(
+		"conversation extension bumps version and ties new row to extension result (ADR-55)",
+		() =>
+			Effect.gen(function* () {
+				const parentSeeded = seedResult("session_parent", {
+					stage: "scored",
+					facets: { imagination: { score: 55, confidence: 0.5 } } as never,
+					traits: {} as never,
+					domainCoverage: {} as never,
+				});
+				seedConversationEvidence(makeEvidence("session_parent"));
+				yield* generateUserSummary({ conversation: makeConversation("session_parent") });
+
+				const extSeeded = seedResult("session_ext", {
+					stage: "scored",
+					facets: { imagination: { score: 58, confidence: 0.55 } } as never,
+					traits: {} as never,
+					domainCoverage: {} as never,
+				});
+				seedConversationEvidence(makeEvidence("session_ext"));
+
+				yield* generateUserSummary({
+					conversation: makeConversation("session_ext", "session_parent"),
+				});
+
+				const parentStored = getUserSummaryByResultId(parentSeeded.id);
+				const extStored = getUserSummaryByResultId(extSeeded.id);
+				expect(parentStored?.version).toBe(1);
+				expect(extStored?.version).toBe(2);
+				expect(extStored?.assessmentResultId).toBe(extSeeded.id);
+				expect(extStored?.refreshSource).toBe("conversation_extension");
+			}).pipe(Effect.provide(testLayer)),
 	);
 });

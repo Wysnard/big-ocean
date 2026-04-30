@@ -126,9 +126,9 @@ const mockConversationRepo = {
 };
 
 const mockUserSummaryRepo = {
-	getByAssessmentResultId: vi.fn(),
-	getLatestForUser: vi.fn(),
-	upsertForAssessmentResult: vi.fn(),
+	saveVersion: vi.fn(),
+	getForAssessmentResult: vi.fn(),
+	getCurrentForUser: vi.fn(),
 };
 
 const mockLogger = {
@@ -236,8 +236,8 @@ const mockUserSummaryRecord = {
 	quoteBank: [{ quote: "I map everything first" }],
 	summaryText: "A reflective, systematic mind.",
 	version: 1,
-	createdAt: new Date(),
-	updatedAt: new Date(),
+	refreshSource: "assessment_completion" as const,
+	generatedAt: new Date(),
 };
 
 describe("generateFullPortrait Use Case (ADR-51 pipeline)", () => {
@@ -246,9 +246,7 @@ describe("generateFullPortrait Use Case (ADR-51 pipeline)", () => {
 
 		mockResultsRepo.getBySessionId.mockReturnValue(Effect.succeed(mockResult));
 		mockConversationRepo.getSession.mockReturnValue(Effect.succeed(mockOwnedSession));
-		mockUserSummaryRepo.getByAssessmentResultId.mockReturnValue(
-			Effect.succeed(mockUserSummaryRecord),
-		);
+		mockUserSummaryRepo.getForAssessmentResult.mockReturnValue(Effect.succeed(mockUserSummaryRecord));
 		mockConversationEvidenceRepo.findBySession.mockReturnValue(
 			Effect.succeed(mockConversationEvidence),
 		);
@@ -269,6 +267,7 @@ describe("generateFullPortrait Use Case (ADR-51 pipeline)", () => {
 		Effect.gen(function* () {
 			yield* generateFullPortrait({ sessionId: "session_123", userId: "user_789" });
 
+			expect(mockUserSummaryRepo.getForAssessmentResult).toHaveBeenCalledWith("result_456");
 			expect(mockExtractor.extractSpineBrief).toHaveBeenCalledWith(
 				expect.objectContaining({
 					sessionId: "session_123",
@@ -324,7 +323,7 @@ describe("generateFullPortrait Use Case (ADR-51 pipeline)", () => {
 
 	it.effect("should insert failed portrait when UserSummary is missing", () =>
 		Effect.gen(function* () {
-			mockUserSummaryRepo.getByAssessmentResultId.mockReturnValue(Effect.succeed(null));
+			mockUserSummaryRepo.getForAssessmentResult.mockReturnValue(Effect.succeed(null));
 
 			yield* generateFullPortrait({ sessionId: "session_123", userId: "user_789" });
 
