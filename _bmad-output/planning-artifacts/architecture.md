@@ -888,7 +888,7 @@ Status poll → reconcile-portrait: if assessment_results exists but no portrait
 
 **API endpoints:**
 - Effect/Platform HttpApiEndpoint names: `camelCase` (`sendMessage`, `generateResults`)
-- URL paths: `kebab-case` (`/api/assessment/generate-results`)
+- URL paths: `kebab-case` (`/api/conversation/:sessionId/generate-results`)
 
 ### Structure Patterns
 
@@ -1055,11 +1055,11 @@ big-ocean/                                    # Monorepo root
 │   │   │   │   ├── auth.middleware.ts         # Effect auth middleware
 │   │   │   │   └── better-auth.ts            # Better Auth route handler
 │   │   │   ├── handlers/                     # HTTP adapters (NO business logic)
-│   │   │   │   ├── assessment.ts             # /api/assessment/*
+│   │   │   │   ├── conversation.ts         # /api/conversation/*
 │   │   │   │   ├── evidence.ts               # /api/evidence/*
 │   │   │   │   ├── health.ts                 # /health
 │   │   │   │   ├── portrait.ts               # /api/portrait/*
-│   │   │   │   ├── profile.ts                # /api/profile/*
+│   │   │   │   ├── profile.ts                # /api/public-profile/*
 │   │   │   │   ├── purchase.ts               # /api/purchase/*
 │   │   │   │   ├── relationship.ts           # /api/relationship/*
 │   │   │   │   ├── waitlist.ts               # /api/waitlist/*
@@ -1143,7 +1143,7 @@ big-ocean/                                    # Monorepo root
 │           │   ├── NerinAvatar.tsx / Logo.tsx
 │           │   └── __fixtures__/             # Component test fixtures
 │           ├── hooks/                        # Custom React hooks
-│           │   ├── use-assessment.ts         # Assessment API hooks
+│           │   ├── use-conversation.ts       # Conversation API hooks (assessment + extension)
 │           │   ├── use-auth.ts               # Auth state hook
 │           │   ├── use-evidence.ts           # Evidence query hooks
 │           │   ├── use-relationship.ts        # Relationship QR + analysis hooks
@@ -1264,7 +1264,7 @@ big-ocean/                                    # Monorepo root
 │   │       ├── http/                         # HttpApiGroup/HttpApiEndpoint
 │   │       │   ├── api.ts                    # Root API composition
 │   │       │   └── groups/                   # One file per handler group
-│   │       │       ├── assessment.ts         # Assessment endpoints
+│   │       │       ├── conversation.ts       # Conversation endpoints
 │   │       │       ├── evidence.ts           # Evidence endpoints
 │   │       │       ├── health.ts
 │   │       │       ├── portrait.ts
@@ -1347,13 +1347,13 @@ big-ocean/                                    # Monorepo root
 
 | Boundary | Surface | Auth | Handler |
 |----------|---------|------|---------|
-| Assessment flow | `POST /api/assessment/start`, `POST /api/assessment/send-message`, `POST /api/assessment/generate-results`, `GET /api/assessment/finalization-status` | Auth required (all endpoints) | `assessment.ts` |
-| Evidence | `GET /api/evidence/facet/:facet`, `GET /api/evidence/message/:messageId` | Auth required | `evidence.ts` |
-| Portrait | `GET /api/portrait/status`, `POST /api/portrait/rate` | Auth required | `portrait.ts` |
-| Profile | `GET /api/profile/results`, `POST /api/profile/toggle-visibility`, `GET /api/profile/public/:id` | Auth / Public | `profile.ts` |
-| Purchase | `POST /api/purchase/process` | Auth required | `purchase.ts` |
+| Conversation (assessment + extension) | `POST /api/conversation/start`, `POST /api/conversation/message`, `GET /api/conversation/sessions`, `GET /api/conversation/:sessionId/resume`, `GET /api/conversation/:sessionId/results`, `GET /api/conversation/:sessionId/transcript`, `POST /api/conversation/:sessionId/generate-results`, `GET /api/conversation/:sessionId/finalization-status`, `POST /api/conversation/activate-extension` | Auth required (all endpoints) | `conversation.ts` |
+| Evidence | `GET /api/evidence/facet` (query: `sessionId`, `facetName`), `GET /api/evidence/message/:assessmentMessageId` | Auth required | `evidence.ts` |
+| Portrait | `GET /api/portrait/:sessionId/status`, `POST /api/portrait/rate`, `POST /api/portrait/:sessionId/retry` | Auth required (rate + retry); status optional-auth per contract | `portrait.ts` |
+| Public profile | `POST /api/public-profile/share`, `GET /api/public-profile/:publicProfileId`, `PATCH /api/public-profile/:publicProfileId/visibility` | Auth / Public | `profile.ts` |
+| Purchase | `GET /api/purchase/verify`, `GET /api/purchase/credits`, `GET /api/purchase/subscription-state` | Auth optional per contract | `purchase.ts` |
 | Relationship | `POST /api/relationship/qr/generate`, `GET /api/relationship/qr/:token/status`, `POST /api/relationship/qr/:token/accept`, `POST /api/relationship/qr/:token/refuse`, `GET /api/relationship/analyses`, `GET /api/relationship/analysis/:id` | Auth required | `relationship.ts` |
-| Waitlist | `POST /api/waitlist/join` | None | `waitlist.ts` |
+| Waitlist | `POST /api/waitlist/signup` | None | `waitlist.ts` |
 | Auth | `/api/auth/*`, `/api/polar/*` | Better Auth middleware | `better-auth.ts` |
 | Health | `GET /health` | None | `health.ts` |
 
@@ -1403,7 +1403,7 @@ _`/dashboard` and the `Dashboard*Card` component family are removed (ADR-23 supe
 
 | Epic | Backend Use-Cases | Frontend Routes/Components | Packages |
 |------|------------------|---------------------------|----------|
-| **1-4: Assessment Engine** | `start-assessment`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, useTherapistChat | domain/utils/formula.ts, domain/utils/coverage-analyzer.ts, domain/constants/nerin-director-prompt.ts, domain/constants/nerin-actor-prompt.ts |
+| **1-4: Assessment Engine** | `start-conversation`, `send-message`, `nerin-pipeline`, `resume-session`, `calculate-confidence` | `/chat` → TherapistChat, useTherapistChat | domain/utils/formula.ts, domain/utils/coverage-analyzer.ts, domain/constants/nerin-director-prompt.ts, domain/constants/nerin-actor-prompt.ts |
 | **9-11: Results & Finalization** | `generate-results`, `get-results`, `get-finalization-status`, `get-facet-evidence`, `get-message-evidence`, `get-transcript` | `/me/$id` → ProfileView, TraitCard, ArchetypeCard, EvidencePanel, DetailZone | domain/utils/ocean-code-generator.ts, scoring, archetype-lookup |
 | **11-12: Portraits** | `generate-full-portrait`, `get-portrait-status`, `rate-portrait` | PersonalPortrait, PortraitReadingView, PortraitUnlockButton, PortraitWaitScreen | `infrastructure/spine-extractor.anthropic.repository.ts`, `spine-verifier.anthropic.repository.ts`, `portrait-prose-renderer.anthropic.repository.ts`, `portrait.drizzle.repository.ts` |
 | **13: Monetization** | `process-purchase`, `get-credits` | polar-checkout.ts, RelationshipCreditsSection | `infrastructure/context/better-auth.ts` (Polar plugin), `purchase-event.drizzle.repository.ts` |
@@ -1449,7 +1449,7 @@ Frontend (TanStack Query) → HTTP → Better Auth middleware → Effect middlew
 
 2. **Results generation flow:**
    ```text
-   POST /generate-results → idempotency check → compute facet scores (derive-at-read) →
+   POST /api/conversation/:sessionId/generate-results → idempotency check → compute facet scores (derive-at-read) →
    compute trait scores → generate OCEAN code → lookup archetype →
    save assessment_results → redirect to /me/$sessionId?view=portrait
    ```
@@ -1591,7 +1591,7 @@ _Formerly `architecture-conversation-experience-evolution.md` (668 lines, 5 ADRs
 
 **Pattern Consistency:** Naming conventions are uniform: `kebab-case` files, `PascalCase` exports, `camelCase` properties, `UPPER_SNAKE_CASE` constants. The repository interface → implementation → mock triplet follows the same pattern across Domain ports and their Drizzle / Anthropic / other adapters. Test patterns (vi.mock + local TestLayer) are consistent. Error architecture (three locations, no remapping) is applied uniformly. Director model patterns (Director + Actor prompt separation, coverage-analyzer pure function, exchange persistence) are consistent with the hexagonal architecture.
 
-**Structure Alignment:** Project structure maps directly to architectural layers — `packages/domain` = ports, `packages/infrastructure` = adapters, `apps/api/src/use-cases` = business logic, `apps/api/src/handlers` = HTTP adapters. The live conversation pure functions center on `domain/src/utils/coverage-analyzer.ts` and `domain/src/utils/formula.ts`, with Director/Actor prompt contracts in `domain/src/constants/`. The orchestrator (`nerin-pipeline.ts`) lives in `apps/api/src/use-cases/`. The `__mocks__/` co-location supports the testing strategy. Contract groups mirror handler groups 1:1. This is a fully self-contained architecture document — no satellite files required.
+**Structure Alignment:** Project structure maps directly to architectural layers — `packages/domain` = ports, `packages/infrastructure` = adapters, `apps/api/src/use-cases` = business logic, `apps/api/src/handlers` = HTTP adapters. The live conversation pure functions center on `domain/src/utils/coverage-analyzer.ts` and `domain/src/utils/formula.ts`, with Director/Actor prompt contracts in `domain/src/constants/`. The orchestrator (`nerin-pipeline.ts`) lives in `apps/api/src/use-cases/`. The `__mocks__/` co-location supports the testing strategy. Contract groups mirror handler groups 1:1. **HTTP Interface:** mounted routes and prefixes are the `BigOceanApi` composition in `packages/contracts/src/http/api.ts` (e.g. authenticated assessment and extension flows live under `ConversationGroup` → `/api/conversation/*`, not `/api/assessment/*`). This is a fully self-contained architecture document — no satellite files required.
 
 ### Requirements Coverage Validation
 
@@ -4014,7 +4014,7 @@ Subscriber chat turn 15 (or user ends early)
 - `packages/domain/src/constants/nerin-subscriber-chat-director-prompt.ts` — Director prompt augmented with UserSummary context
 
 **Implementation files (edited):**
-- `apps/api/src/handlers/assessment.ts` (or new `subscriber-chat.ts` handler) — new endpoints for subscriber chat lifecycle
+- `apps/api/src/handlers/conversation.ts` (same `ConversationGroup` as assessment; optional split to `subscriber-chat.ts` if lifecycle grows) — new endpoints for subscriber chat lifecycle
 - `packages/contracts/src/` — new subscriber chat endpoint definitions
 - `packages/domain/src/types/subscription-feature.ts` — add `"subscriber_chat"` variant
 - Coverage analyzer — no code change needed (already facet-first and history-aware)
