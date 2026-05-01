@@ -99,6 +99,50 @@ SKILL_ROOTS=".agents/skills:$HOME/.codex/skills/.system" pnpm skills:check
 - Exit `0` when every discovered skill name is unique
 - Exit `1` when duplicate discovery is ambiguous and should be cleaned up before relying on skill routing
 
+## CI Helpers
+
+### Run CI Locally
+
+Mirror the main CI quality gates:
+
+```bash
+scripts/ci-local.sh
+```
+
+Include Playwright E2E when `.env.e2e` is configured:
+
+```bash
+RUN_E2E=true scripts/ci-local.sh
+```
+
+### Burn-In
+
+Run the Playwright suite repeatedly to catch flakes:
+
+```bash
+scripts/burn-in.sh
+```
+
+Override the default 10 iterations:
+
+```bash
+BURN_IN_ITERATIONS=3 scripts/burn-in.sh
+```
+
+### Changed-Test Helper
+
+Run the relevant test tier for local changes:
+
+```bash
+scripts/test-changed.sh
+```
+
+Override the comparison base:
+
+```bash
+BASE_REF=origin/master scripts/test-changed.sh
+```
+
 ## Future Scripts
 
 Add additional development scripts here as needed:

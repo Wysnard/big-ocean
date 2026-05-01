@@ -85,6 +85,8 @@ Generated: 2026-02-12 | Scan Level: Deep | Mode: Initial Scan
 ### Operations
 
 - [COMMANDS.md](./COMMANDS.md) - Development commands, database operations, testing
+- [ci.md](./ci.md) - CI quality gates, local parity, artifacts, and notifications
+- [ci-secrets-checklist.md](./ci-secrets-checklist.md) - GitHub Actions secrets and variables checklist
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Railway deployment, Docker builds, CI/CD
 - [COMPLETED-STORIES.md](./COMPLETED-STORIES.md) - Implemented features and their details
 

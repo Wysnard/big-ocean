@@ -2,20 +2,30 @@ name: CI - TypeScript, Lint, Build, Test
 
 on:
   push:
-    branches: ['**']  # All branches
+    branches: ["**"]
   pull_request:
     branches: [master]
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
+  schedule:
+    # Weekly burn-in on Sundays at 2 AM UTC.
+    - cron: "0 2 * * 0"
 
-# Cancel in-progress runs on same PR/branch
+permissions:
+  contents: read
+
+# Cancel in-progress runs on the same PR/branch.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: 20.x
+
 jobs:
-  ci:
-    name: CI Pipeline
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -24,14 +34,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'pnpm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       # Workaround: pnpm may skip optional native binaries (rollup, esbuild)
       # when the store cache is cold. --force ensures all optional deps are linked.
@@ -39,22 +49,423 @@ jobs:
         run: |
           node -e "require('@rollup/rollup-linux-x64-gnu')" 2>/dev/null && echo "rollup native binary OK" || {
             echo "rollup native binary missing, reinstalling..."
-            pnpm install --force
+            pnpm install --force --frozen-lockfile
           }
 
-      - name: Lint
+      - name: Run lint
         run: pnpm lint
 
-      - name: Build (includes TypeScript check)
+  build:
+    name: Typecheck and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Ensure native binaries
+        run: |
+          node -e "require('@rollup/rollup-linux-x64-gnu')" 2>/dev/null && echo "rollup native binary OK" || {
+            echo "rollup native binary missing, reinstalling..."
+            pnpm install --force --frozen-lockfile
+          }
+
+      - name: Run typecheck
+        run: pnpm typecheck
+
+      - name: Run build
         run: pnpm build
 
-      - name: Run Tests
+  unit-tests:
+    name: Unit and Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Ensure native binaries
+        run: |
+          node -e "require('@rollup/rollup-linux-x64-gnu')" 2>/dev/null && echo "rollup native binary OK" || {
+            echo "rollup native binary missing, reinstalling..."
+            pnpm install --force --frozen-lockfile
+          }
+
+      - name: Run tests
         run: pnpm test:run
 
-      - name: Upload Coverage Reports
+      - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: '**/coverage/'
+          path: "**/coverage/"
           retention-days: 7
+          if-no-files-found: ignore
+
+  e2e-tests:
+    name: E2E Tests (Shard ${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: build
+    if: ${{ vars.RUN_E2E == 'true' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter=@workspace/e2e exec playwright install --with-deps chromium
+
+      - name: Create E2E environment file
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM_ADDRESS: ${{ vars.E2E_EMAIL_FROM_ADDRESS || 'onboarding@resend.dev' }}
+          POLAR_ACCESS_TOKEN: ${{ secrets.POLAR_ACCESS_TOKEN }}
+          POLAR_WEBHOOK_SECRET: ${{ secrets.POLAR_WEBHOOK_SECRET }}
+          POLAR_PRODUCT_PORTRAIT_UNLOCK: ${{ secrets.POLAR_PRODUCT_PORTRAIT_UNLOCK }}
+          POLAR_PRODUCT_RELATIONSHIP_SINGLE: ${{ secrets.POLAR_PRODUCT_RELATIONSHIP_SINGLE }}
+          POLAR_PRODUCT_RELATIONSHIP_5PACK: ${{ secrets.POLAR_PRODUCT_RELATIONSHIP_5PACK }}
+          POLAR_PRODUCT_EXTENDED_CONVERSATION: ${{ secrets.POLAR_PRODUCT_EXTENDED_CONVERSATION }}
+          POLAR_PRODUCT_SUBSCRIPTION: ${{ secrets.POLAR_PRODUCT_SUBSCRIPTION }}
+        run: |
+          required=(
+            RESEND_API_KEY
+            POLAR_WEBHOOK_SECRET
+            POLAR_PRODUCT_PORTRAIT_UNLOCK
+            POLAR_PRODUCT_RELATIONSHIP_SINGLE
+            POLAR_PRODUCT_RELATIONSHIP_5PACK
+            POLAR_PRODUCT_EXTENDED_CONVERSATION
+          )
+
+          for key in "${required[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "::error::$key is required for E2E tests"
+              missing=1
+            fi
+          done
+
+          if [ "${missing:-0}" -ne 0 ]; then
+            exit 1
+          fi
+
+          cat > .env.e2e <<EOF
+          RESEND_API_KEY=$RESEND_API_KEY
+          EMAIL_FROM_ADDRESS=$EMAIL_FROM_ADDRESS
+          POLAR_ACCESS_TOKEN=$POLAR_ACCESS_TOKEN
+          POLAR_WEBHOOK_SECRET=$POLAR_WEBHOOK_SECRET
+          POLAR_PRODUCT_PORTRAIT_UNLOCK=$POLAR_PRODUCT_PORTRAIT_UNLOCK
+          POLAR_PRODUCT_RELATIONSHIP_SINGLE=$POLAR_PRODUCT_RELATIONSHIP_SINGLE
+          POLAR_PRODUCT_RELATIONSHIP_5PACK=$POLAR_PRODUCT_RELATIONSHIP_5PACK
+          POLAR_PRODUCT_EXTENDED_CONVERSATION=$POLAR_PRODUCT_EXTENDED_CONVERSATION
+          POLAR_PRODUCT_SUBSCRIPTION=$POLAR_PRODUCT_SUBSCRIPTION
+          EOF
+
+      - name: Run Playwright shard
+        run: pnpm --filter=@workspace/e2e exec playwright test --shard=${{ matrix.shard }}/4
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts-${{ matrix.shard }}
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+          retention-days: 30
+          if-no-files-found: ignore
+
+  contract-test:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [unit-tests, e2e-tests]
+    if: ${{ always() && needs.unit-tests.result == 'success' && (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') }}
+
+    env:
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+      GITHUB_BRANCH: ${{ github.head_ref || github.ref_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Detect Pact scripts
+        id: pact-scripts
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const scripts = packageJson.scripts || {};
+          const required = [
+            "test:pact:consumer",
+            "publish:pact",
+            "test:pact:provider:remote:contract",
+            "can:i:deploy:provider"
+          ];
+          const missing = required.filter((script) => !scripts[script]);
+
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `available=${missing.length === 0}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `missing=${missing.join(",")}\n`);
+          NODE
+
+      - name: Skip contract tests when Pact is not configured
+        if: steps.pact-scripts.outputs.available != 'true'
+        run: |
+          echo "## Contract Tests" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Skipped: Pact scripts are not configured in package.json." >> "$GITHUB_STEP_SUMMARY"
+          echo "Missing scripts: ${{ steps.pact-scripts.outputs.missing }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run consumer contract tests
+        if: steps.pact-scripts.outputs.available == 'true'
+        run: pnpm run test:pact:consumer
+
+      - name: Publish consumer pacts
+        if: steps.pact-scripts.outputs.available == 'true' && (github.event_name == 'pull_request' || github.ref_name == 'master')
+        run: pnpm run publish:pact
+
+      - name: Run provider verification
+        if: steps.pact-scripts.outputs.available == 'true'
+        run: pnpm run test:pact:provider:remote:contract
+
+      - name: Run can-i-deploy gate
+        if: steps.pact-scripts.outputs.available == 'true'
+        run: pnpm run can:i:deploy:provider
+
+  burn-in:
+    name: Burn-In (Flaky Detection)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    needs: e2e-tests
+    if: ${{ github.event_name == 'schedule' && needs.e2e-tests.result == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter=@workspace/e2e exec playwright install --with-deps chromium
+
+      - name: Create E2E environment file
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM_ADDRESS: ${{ vars.E2E_EMAIL_FROM_ADDRESS || 'onboarding@resend.dev' }}
+          POLAR_ACCESS_TOKEN: ${{ secrets.POLAR_ACCESS_TOKEN }}
+          POLAR_WEBHOOK_SECRET: ${{ secrets.POLAR_WEBHOOK_SECRET }}
+          POLAR_PRODUCT_PORTRAIT_UNLOCK: ${{ secrets.POLAR_PRODUCT_PORTRAIT_UNLOCK }}
+          POLAR_PRODUCT_RELATIONSHIP_SINGLE: ${{ secrets.POLAR_PRODUCT_RELATIONSHIP_SINGLE }}
+          POLAR_PRODUCT_RELATIONSHIP_5PACK: ${{ secrets.POLAR_PRODUCT_RELATIONSHIP_5PACK }}
+          POLAR_PRODUCT_EXTENDED_CONVERSATION: ${{ secrets.POLAR_PRODUCT_EXTENDED_CONVERSATION }}
+          POLAR_PRODUCT_SUBSCRIPTION: ${{ secrets.POLAR_PRODUCT_SUBSCRIPTION }}
+        run: |
+          cat > .env.e2e <<EOF
+          RESEND_API_KEY=$RESEND_API_KEY
+          EMAIL_FROM_ADDRESS=$EMAIL_FROM_ADDRESS
+          POLAR_ACCESS_TOKEN=$POLAR_ACCESS_TOKEN
+          POLAR_WEBHOOK_SECRET=$POLAR_WEBHOOK_SECRET
+          POLAR_PRODUCT_PORTRAIT_UNLOCK=$POLAR_PRODUCT_PORTRAIT_UNLOCK
+          POLAR_PRODUCT_RELATIONSHIP_SINGLE=$POLAR_PRODUCT_RELATIONSHIP_SINGLE
+          POLAR_PRODUCT_RELATIONSHIP_5PACK=$POLAR_PRODUCT_RELATIONSHIP_5PACK
+          POLAR_PRODUCT_EXTENDED_CONVERSATION=$POLAR_PRODUCT_EXTENDED_CONVERSATION
+          POLAR_PRODUCT_SUBSCRIPTION=$POLAR_PRODUCT_SUBSCRIPTION
+          EOF
+
+      - name: Run burn-in loop
+        run: pnpm --filter=@workspace/e2e exec playwright test --repeat-each=10
+
+      - name: Upload burn-in artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: burn-in-artifacts
+          path: |
+            e2e/test-results/
+            e2e/playwright-report/
+          retention-days: 30
+          if-no-files-found: ignore
+
+  report:
+    name: Quality Gate Report
+    runs-on: ubuntu-latest
+    needs: [lint, build, unit-tests, e2e-tests, contract-test, burn-in]
+    if: always()
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: artifacts
+
+      - name: Generate summary
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          echo "## Quality Gate Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Artifact links are available from the workflow run: $RUN_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Lint: ${{ needs.lint.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Build: ${{ needs.build.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Unit and integration tests: ${{ needs.unit-tests.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- E2E shards: ${{ needs.e2e-tests.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Contract tests: ${{ needs.contract-test.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Burn-in: ${{ needs.burn-in.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Gate policy:" >> "$GITHUB_STEP_SUMMARY"
+          echo "- P0 gates require 100% pass: lint, build, unit/integration tests, enabled E2E shards, enabled contract tests." >> "$GITHUB_STEP_SUMMARY"
+          echo "- P1 gates target at least 95% stability: scheduled burn-in must pass when enabled." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skipped optional gates are reported explicitly and do not block this workflow." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify Slack on quality gate failure
+        continue-on-error: true
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          UNIT_RESULT: ${{ needs.unit-tests.result }}
+          E2E_RESULT: ${{ needs.e2e-tests.result }}
+          CONTRACT_RESULT: ${{ needs.contract-test.result }}
+          BURN_IN_RESULT: ${{ needs.burn-in.result }}
+        run: |
+          node <<'NODE'
+          const https = require("node:https");
+
+          const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+          const statuses = {
+            lint: process.env.LINT_RESULT,
+            build: process.env.BUILD_RESULT,
+            unit: process.env.UNIT_RESULT,
+            e2e: process.env.E2E_RESULT,
+            contract: process.env.CONTRACT_RESULT,
+            burnIn: process.env.BURN_IN_RESULT,
+          };
+
+          const failures = Object.entries(statuses).filter(([, result]) => result === "failure");
+          if (failures.length === 0) {
+            console.log("No quality gate failures to notify.");
+            process.exit(0);
+          }
+
+          if (!webhookUrl) {
+            console.log("SLACK_WEBHOOK_URL is not configured; skipping Slack notification.");
+            process.exit(0);
+          }
+
+          const text = [
+            "Big Ocean CI quality gate failed.",
+            `Run: ${process.env.RUN_URL}`,
+            `Failures: ${failures.map(([name]) => name).join(", ")}`,
+          ].join("\n");
+
+          const request = https.request(
+            webhookUrl,
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+            },
+            (response) => {
+              response.resume();
+              response.on("end", () => {
+                if (response.statusCode && response.statusCode >= 400) {
+                  throw new Error(`Slack webhook returned ${response.statusCode}`);
+                }
+              });
+            },
+          );
+
+          request.on("error", (error) => {
+            console.error(error);
+            process.exitCode = 1;
+          });
+
+          request.end(JSON.stringify({ text }));
+          NODE
