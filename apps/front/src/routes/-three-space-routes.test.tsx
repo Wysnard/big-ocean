@@ -10,6 +10,7 @@ const {
 	mockLoaderData,
 	mockListSessionsQuery,
 	mockUseGetResults,
+	mockUseListConversations,
 	mockIdentityHeroSection,
 	mockUseHasCheckIns,
 	mockUseSubscriptionState,
@@ -19,6 +20,7 @@ const {
 	mockLoaderData: vi.fn(),
 	mockListSessionsQuery: vi.fn(),
 	mockUseGetResults: vi.fn(),
+	mockUseListConversations: vi.fn(),
 	mockIdentityHeroSection: vi.fn(),
 	mockUseHasCheckIns: vi.fn(() => ({
 		data: { hasCheckIns: false },
@@ -73,6 +75,7 @@ vi.mock("@/hooks/use-conversation", () => ({
 		queryFn: () => mockListSessionsQuery(),
 	}),
 	useGetResults: (...args: unknown[]) => mockUseGetResults(...args),
+	useListConversations: (...args: unknown[]) => mockUseListConversations(...args),
 }));
 
 vi.mock("@/hooks/use-subscription-state", () => ({
@@ -167,6 +170,24 @@ describe("three-space route guards", () => {
 			error: null,
 			refetch: vi.fn(),
 		});
+		mockUseListConversations.mockReturnValue({
+			data: {
+				sessions: [
+					{
+						id: "session-completed",
+						createdAt: new Date("2026-02-15T00:00:00.000Z"),
+						updatedAt: new Date("2026-02-15T00:00:00.000Z"),
+						status: "completed",
+						messageCount: 24,
+						oceanCode5: "OCEAR",
+						archetypeName: "Deep Current",
+					},
+				],
+				assessmentTurnCount: 15,
+			},
+			isLoading: false,
+			isError: false,
+		});
 	});
 
 	it("redirects unauthenticated users from /today to /login", async () => {
@@ -253,6 +274,24 @@ describe("Me route layout", () => {
 			error: null,
 			refetch: vi.fn(),
 		});
+		mockUseListConversations.mockReturnValue({
+			data: {
+				sessions: [
+					{
+						id: "session-completed",
+						createdAt: new Date("2026-02-15T00:00:00.000Z"),
+						updatedAt: new Date("2026-02-15T00:00:00.000Z"),
+						status: "completed",
+						messageCount: 24,
+						oceanCode5: "OCEAR",
+						archetypeName: "Deep Current",
+					},
+				],
+				assessmentTurnCount: 15,
+			},
+			isLoading: false,
+			isError: false,
+		});
 	});
 
 	it("renders me-page sections for a completed assessment (growth only when user has check-ins)", async () => {
@@ -262,6 +301,8 @@ describe("Me route layout", () => {
 
 		expect(await screen.findByTestId("me-section-identity-hero")).toBeTruthy();
 		expect(screen.getByTestId("me-section-portrait")).toBeTruthy();
+		expect(screen.getByTestId("me-section-conversation-history")).toBeTruthy();
+		expect(screen.getByTestId("conversation-history-list")).toBeTruthy();
 		expect(screen.queryByTestId("me-section-growth")).toBeNull();
 		expect(screen.getByTestId("me-section-public-face")).toBeTruthy();
 		expect(screen.getByTestId("me-section-circle")).toBeTruthy();
@@ -270,6 +311,8 @@ describe("Me route layout", () => {
 		expect(screen.getByTestId("me-section-account")).toBeTruthy();
 		expect(await screen.findByTestId("me-settings-link")).toHaveAttribute("href", "/settings");
 		expect(mockUseGetResults).toHaveBeenCalledWith("session-completed");
+		expect(screen.getByText("Deep Current")).toBeTruthy();
+		expect(screen.getByText(/OCEAR/)).toBeTruthy();
 		expect(mockIdentityHeroSection).toHaveBeenCalledWith(
 			expect.objectContaining({
 				results: expect.objectContaining({
@@ -310,7 +353,61 @@ describe("Me route layout", () => {
 
 		const heroSection = await screen.findByTestId("me-section-identity-hero");
 		expect(heroSection).toHaveAttribute("aria-busy", "true");
+		expect(screen.getByTestId("me-section-conversation-history")).toHaveAttribute(
+			"aria-busy",
+			"true",
+		);
 		expect(screen.getByTestId("me-section-account")).toHaveAttribute("aria-busy", "true");
+	});
+
+	it("renders active and finalizing conversations in chronological history", async () => {
+		mockUseListConversations.mockReturnValue({
+			data: {
+				sessions: [
+					{
+						id: "session-active",
+						createdAt: new Date("2026-02-20T00:00:00.000Z"),
+						updatedAt: new Date("2026-02-20T00:00:00.000Z"),
+						status: "active",
+						messageCount: 3,
+						oceanCode5: null,
+						archetypeName: null,
+					},
+					{
+						id: "session-finalizing",
+						createdAt: new Date("2026-02-19T00:00:00.000Z"),
+						updatedAt: new Date("2026-02-19T00:00:00.000Z"),
+						status: "finalizing",
+						messageCount: 15,
+						oceanCode5: null,
+						archetypeName: null,
+					},
+					{
+						id: "session-completed",
+						createdAt: new Date("2026-02-18T00:00:00.000Z"),
+						updatedAt: new Date("2026-02-18T00:00:00.000Z"),
+						status: "completed",
+						messageCount: 24,
+						oceanCode5: "OCEAR",
+						archetypeName: "Deep Current",
+					},
+				],
+				assessmentTurnCount: 15,
+			},
+			isLoading: false,
+			isError: false,
+		});
+		const Component = MeRoute.component as ComponentType;
+
+		render(<Component />);
+
+		const items = await screen.findAllByTestId("conversation-history-item");
+		expect(items).toHaveLength(3);
+		expect(items[0]).toHaveAttribute("data-session-status", "active");
+		expect(items[1]).toHaveAttribute("data-session-status", "finalizing");
+		expect(items[2]).toHaveAttribute("data-session-status", "completed");
+		expect(screen.getByText("In progress")).toBeTruthy();
+		expect(screen.getByText("Finalizing")).toBeTruthy();
 	});
 
 	it("shows an error banner when results fail to load", async () => {

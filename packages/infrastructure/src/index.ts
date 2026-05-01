@@ -20,6 +20,7 @@ export { BetterAuthLive, BetterAuthService } from "./context/better-auth";
 export { Database, DatabaseStack } from "./context/database";
 // Database schema (for Better Auth adapter and migrations)
 export * as dbSchema from "./db/drizzle/schema";
+export { AssessmentCompletionDrizzleRepositoryLive } from "./repositories/assessment-completion.drizzle.repository";
 // Assessment result repository implementation (Story 11.2)
 export { AssessmentResultDrizzleRepositoryLive } from "./repositories/assessment-result.drizzle.repository";
 // Conversanalyzer repository implementations (Story 10.2)
@@ -49,6 +50,7 @@ export { NerinDirectorAnthropicRepositoryLive } from "./repositories/nerin-direc
 export { NerinDirectorMockRepositoryLive } from "./repositories/nerin-director.mock.repository";
 // Portrait repository implementation (Story 13.3)
 export { PortraitDrizzleRepositoryLive } from "./repositories/portrait.drizzle.repository";
+export { PortraitJobOfferDrizzleRepositoryLive } from "./repositories/portrait-job-offer.drizzle.repository";
 export {
 	PortraitProseRendererMockRepositoryLive,
 	SpineExtractorMockRepositoryLive,

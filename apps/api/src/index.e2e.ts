@@ -18,6 +18,7 @@ import { AppConfig, PortraitJobQueue } from "@workspace/domain";
 import { LoggerRepository } from "@workspace/domain/repositories/logger.repository";
 import {
 	AppConfigLive,
+	AssessmentCompletionDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,
 	BetterAuthLive,
 	BetterAuthService,
@@ -30,6 +31,7 @@ import {
 	FacetEvidenceDrizzleRepositoryLive,
 	LifecycleEmailDrizzleRepositoryLive,
 	PortraitDrizzleRepositoryLive,
+	PortraitJobOfferDrizzleRepositoryLive,
 	PortraitProseRendererMockRepositoryLive,
 	PortraitRatingDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
@@ -131,10 +133,12 @@ const RepositoryLayers = Layer.mergeAll(
 	MessageDrizzleRepositoryLive,
 	ExchangeDrizzleRepositoryLive,
 	AssessmentResultDrizzleRepositoryLive,
+	AssessmentCompletionDrizzleRepositoryLive,
 	ConversationEvidenceDrizzleRepositoryLive,
 	LifecycleEmailDrizzleRepositoryLive,
 	ConversanalyzerMockRepositoryLive,
 	PublicProfileDrizzleRepositoryLive,
+	PortraitJobOfferDrizzleRepositoryLive,
 	ProfileAccessLogDrizzleRepositoryLive,
 	FacetEvidenceDrizzleRepositoryLive,
 	NerinActorMockRepositoryLive,

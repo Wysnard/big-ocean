@@ -17,6 +17,8 @@ import { DatabaseError, ProfileError, ProfileNotFound, Unauthorized } from "../e
 export interface CreatePublicProfileInput {
 	readonly sessionId: string;
 	readonly userId: string;
+	/** When known, links the shareable row to the scored assessment result row. */
+	readonly assessmentResultId?: string;
 }
 
 export interface PublicProfileData {

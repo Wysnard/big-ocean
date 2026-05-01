@@ -1,7 +1,7 @@
 /**
  * Conversation Evidence Repository Tests
  *
- * Tests save, findBySession, and countByMessage using the in-memory mock.
+ * Tests save, findBySession, and exchange-scoped idempotency using the in-memory mock.
  * Story 10.1, updated for Evidence v2 (Story 18-1)
  */
 import { vi } from "vitest";
@@ -107,27 +107,27 @@ describe("ConversationEvidenceRepository", () => {
 		);
 	});
 
-	describe("countByMessage", () => {
-		it.effect("should return correct count", () =>
+	describe("hasEvidenceForExchange", () => {
+		it.effect("should detect evidence by exchange", () =>
 			Effect.gen(function* () {
 				const repo = yield* ConversationEvidenceRepository;
 				yield* repo.save([
-					makeInput({ messageId: "msg-1" }),
-					makeInput({ messageId: "msg-1", bigfiveFacet: "intellect" }),
-					makeInput({ messageId: "msg-2", bigfiveFacet: "orderliness" }),
+					makeInput({ exchangeId: "exchange-1" }),
+					makeInput({ exchangeId: "exchange-1", bigfiveFacet: "intellect" }),
+					makeInput({ exchangeId: "exchange-2", bigfiveFacet: "orderliness" }),
 				]);
-				const count1 = yield* repo.countByMessage("msg-1");
-				expect(count1).toBe(2);
-				const count2 = yield* repo.countByMessage("msg-2");
-				expect(count2).toBe(1);
+				const hasExchange1Evidence = yield* repo.hasEvidenceForExchange("exchange-1");
+				expect(hasExchange1Evidence).toBe(true);
+				const hasExchange2Evidence = yield* repo.hasEvidenceForExchange("exchange-2");
+				expect(hasExchange2Evidence).toBe(true);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 
-		it.effect("should return 0 for unknown message", () =>
+		it.effect("should return false for unknown exchange", () =>
 			Effect.gen(function* () {
 				const repo = yield* ConversationEvidenceRepository;
-				const count = yield* repo.countByMessage("nonexistent");
-				expect(count).toBe(0);
+				const hasEvidence = yield* repo.hasEvidenceForExchange("nonexistent");
+				expect(hasEvidence).toBe(false);
 			}).pipe(Effect.provide(TestLayer)),
 		);
 	});

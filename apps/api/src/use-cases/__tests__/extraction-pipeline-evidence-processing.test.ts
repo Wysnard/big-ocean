@@ -88,7 +88,7 @@ const mockEvidenceRepo = {
 	save: vi.fn(),
 	findBySession: vi.fn(),
 	findByUserId: vi.fn(),
-	countByMessage: vi.fn(),
+	hasEvidenceForExchange: vi.fn(),
 };
 
 const mockCostGuardRepo = {
@@ -281,7 +281,7 @@ function setupDefaultMocks() {
 	mockEvidenceRepo.save.mockReturnValue(Effect.succeed(undefined));
 	mockEvidenceRepo.findBySession.mockReturnValue(Effect.succeed([]));
 	mockEvidenceRepo.findByUserId.mockReturnValue(Effect.succeed([]));
-	mockEvidenceRepo.countByMessage.mockReturnValue(Effect.succeed(0));
+	mockEvidenceRepo.hasEvidenceForExchange.mockReturnValue(Effect.succeed(false));
 
 	mockCostGuardRepo.checkDailyBudget.mockReturnValue(Effect.void);
 	mockCostGuardRepo.incrementDailyCost.mockReturnValue(Effect.succeed(1));

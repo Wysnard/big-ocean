@@ -7,9 +7,11 @@
  * Validates session ownership before allowing retry.
  */
 
+import { randomUUID } from "node:crypto";
 import {
 	AssessmentResultRepository,
 	LoggerRepository,
+	PortraitJobOfferRepository,
 	PortraitJobQueue,
 	PortraitRepository,
 	type PortraitStatus,
@@ -31,6 +33,7 @@ export const retryPortrait = (input: RetryPortraitInput) =>
 	Effect.gen(function* () {
 		const resultRepo = yield* AssessmentResultRepository;
 		const portraitRepo = yield* PortraitRepository;
+		const portraitJobOffers = yield* PortraitJobOfferRepository;
 		const queue = yield* PortraitJobQueue;
 		const logger = yield* LoggerRepository;
 
@@ -68,8 +71,26 @@ export const retryPortrait = (input: RetryPortraitInput) =>
 
 		yield* portraitRepo.deleteByResultIdAndTier(result.id, "full");
 
-		// 5. Queue new generation job
-		yield* Queue.offer(queue, { sessionId: input.sessionId, userId: input.userId });
+		// Clear any prior manual retry claims so a new retry can enqueue.
+		yield* portraitJobOffers.deleteOffersByJobKeyPrefix(input.sessionId, "retry_manual:");
+
+		// 5. Queue new generation job (durable at-most-once enqueue)
+		const jobKey = `retry_manual:${randomUUID()}`;
+		const claimed = yield* portraitJobOffers.claimOffer({
+			sessionId: input.sessionId,
+			userId: input.userId,
+			jobKey,
+		});
+
+		if (claimed) {
+			yield* Queue.offer(queue, { sessionId: input.sessionId, userId: input.userId });
+		} else {
+			logger.warn("Manual portrait retry: skipped duplicate portrait job enqueue", {
+				sessionId: input.sessionId,
+				userId: input.userId,
+				jobKey,
+			});
+		}
 
 		return { status: "generating" as PortraitStatus } satisfies RetryPortraitOutput;
 	});

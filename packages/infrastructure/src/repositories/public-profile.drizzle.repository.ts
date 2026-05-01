@@ -58,7 +58,9 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						.values({
 							conversationId: input.sessionId,
 							userId: input.userId,
+							...(input.assessmentResultId ? { assessmentResultId: input.assessmentResultId } : {}),
 						})
+						.onConflictDoNothing({ target: publicProfile.conversationId })
 						.returning()
 						.pipe(
 							Effect.mapError((error) => {
@@ -75,7 +77,33 @@ export const PublicProfileDrizzleRepositoryLive = Layer.effect(
 						);
 
 					if (!profile) {
-						return yield* Effect.fail(new ProfileError({ message: "Failed to create public profile" }));
+						// Another finalization path may have created the row concurrently.
+						const existing = yield* db
+							.select({
+								id: publicProfile.id,
+								conversationId: publicProfile.conversationId,
+								userId: publicProfile.userId,
+								isPublic: publicProfile.isPublic,
+								viewCount: publicProfile.viewCount,
+								createdAt: publicProfile.createdAt,
+								userName: user.name,
+							})
+							.from(publicProfile)
+							.leftJoin(user, eq(publicProfile.userId, user.id))
+							.where(eq(publicProfile.conversationId, input.sessionId))
+							.limit(1)
+							.pipe(
+								Effect.mapError(
+									() => new DatabaseError({ message: "Failed to fetch existing public profile" }),
+								),
+							);
+
+						const row = existing[0];
+						if (!row) {
+							return yield* Effect.fail(new ProfileError({ message: "Failed to create public profile" }));
+						}
+
+						return mapProfileRecord(row, (row.userName ?? row.userId) as string);
 					}
 
 					// Fetch user's display name — userId is always present for created profiles.

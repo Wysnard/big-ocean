@@ -169,14 +169,14 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 		const previousExchangeId =
 			sessionExchanges.length > 0 ? sessionExchanges[sessionExchanges.length - 1]?.id : null;
 
-		// Check for existing evidence on this exchange (idempotency on retry)
-		const existingEvidenceCount = previousExchangeId
+		// Check for existing evidence on the answered exchange (idempotency on retry).
+		const hasEvidenceForPreviousExchange = previousExchangeId
 			? yield* evidenceRepo
-					.countByMessage(previousExchangeId)
-					.pipe(Effect.catchAll(() => Effect.succeed(0)))
-			: 0;
+					.hasEvidenceForExchange(previousExchangeId)
+					.pipe(Effect.catchAll(() => Effect.succeed(false)))
+			: false;
 
-		const shouldExtract = turnState.currentTurn >= 1 && existingEvidenceCount === 0;
+		const shouldExtract = turnState.currentTurn >= 1 && !hasEvidenceForPreviousExchange;
 
 		let pendingEvidence: ConversanalyzerEvidenceOutput["evidence"] = [];
 		let extractionTier: ExtractionTier | null = null;
@@ -215,10 +215,10 @@ export const runNerinPipeline = (input: NerinPipelineInput) =>
 			if (evidenceResult.evidence.length > 0) {
 				pendingEvidence = evidenceResult.evidence;
 			}
-		} else if (existingEvidenceCount > 0) {
+		} else if (hasEvidenceForPreviousExchange) {
 			logger.info("Evidence extraction skipped (idempotency — evidence already exists)", {
 				sessionId: input.sessionId,
-				existingEvidenceCount,
+				exchangeId: previousExchangeId,
 			});
 		}
 

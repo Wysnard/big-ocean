@@ -25,6 +25,12 @@ export const PublicProfileDrizzleRepositoryLive = Layer.succeed(
 	PublicProfileRepository.of({
 		createProfile: (input: CreatePublicProfileInput) =>
 			Effect.sync(() => {
+				const existingId = profilesBySession.get(input.sessionId);
+				if (existingId) {
+					const existing = profiles.get(existingId);
+					if (existing) return existing;
+				}
+
 				const id = crypto.randomUUID();
 				const profile: PublicProfileData = {
 					id,

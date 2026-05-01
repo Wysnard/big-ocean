@@ -1,7 +1,7 @@
 /**
  * Conversation Evidence Repository Implementation (Drizzle)
  *
- * Pure data access layer — no cap enforcement (caller responsibility).
+ * Pure data access layer. Evidence retry idempotency is exchange-scoped.
  *
  * Story 10.1
  */
@@ -133,22 +133,22 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.effect(
 					}));
 				}),
 
-			countByMessage: (messageId) =>
+			hasEvidenceForExchange: (exchangeId) =>
 				Effect.gen(function* () {
 					const result = yield* db
 						.select({ count: sql<number>`cast(count(*) as int)` })
 						.from(conversationEvidence)
-						.where(eq(conversationEvidence.messageId, messageId))
+						.where(eq(conversationEvidence.exchangeId, exchangeId))
 						.pipe(
 							Effect.mapError(
 								(error) =>
 									new ConversationEvidenceError({
-										message: `Failed to count conversation evidence: ${error instanceof Error ? error.message : String(error)}`,
+										message: `Failed to check exchange evidence: ${error instanceof Error ? error.message : String(error)}`,
 									}),
 							),
 						);
 
-					return result[0]?.count ?? 0;
+					return (result[0]?.count ?? 0) > 0;
 				}),
 		});
 	}),

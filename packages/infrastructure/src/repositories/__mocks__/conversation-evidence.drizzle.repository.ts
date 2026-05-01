@@ -54,7 +54,7 @@ export const ConversationEvidenceDrizzleRepositoryLive = Layer.succeed(
 
 		findByUserId: (_userId: string) => Effect.sync(() => [...records]),
 
-		countByMessage: (messageId: string) =>
-			Effect.sync(() => records.filter((r) => r.messageId === messageId).length),
+		hasEvidenceForExchange: (exchangeId: string) =>
+			Effect.sync(() => records.some((r) => r.exchangeId === exchangeId)),
 	}),
 );

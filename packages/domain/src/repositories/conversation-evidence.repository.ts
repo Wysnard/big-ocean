@@ -2,7 +2,8 @@
  * Conversation Evidence Repository Interface
  *
  * Pure data access layer for conversation_evidence table.
- * No cap enforcement — caller responsibility (3-record cap enforced by use-case).
+ * Evidence retry idempotency is exchange-scoped: the exchange is the prompt
+ * whose answer produced the evidence.
  *
  * Story 10.1
  */
@@ -56,6 +57,8 @@ export class ConversationEvidenceRepository extends Context.Tag("ConversationEvi
 		readonly findByUserId: (
 			userId: string,
 		) => Effect.Effect<ConversationEvidenceRecord[], ConversationEvidenceError>;
-		readonly countByMessage: (messageId: string) => Effect.Effect<number, ConversationEvidenceError>;
+		readonly hasEvidenceForExchange: (
+			exchangeId: string,
+		) => Effect.Effect<boolean, ConversationEvidenceError>;
 	}
 >() {}

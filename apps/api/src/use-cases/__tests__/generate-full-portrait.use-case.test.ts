@@ -118,7 +118,7 @@ const mockConversationEvidenceRepo = {
 	save: vi.fn(),
 	findBySession: vi.fn(),
 	findByUserId: vi.fn(),
-	countByMessage: vi.fn(),
+	hasEvidenceForExchange: vi.fn(),
 };
 
 const mockConversationRepo = {

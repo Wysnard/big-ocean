@@ -87,7 +87,7 @@ const mockEvidenceRepo = {
 	save: vi.fn(),
 	findBySession: vi.fn(),
 	findByUserId: vi.fn(),
-	countByMessage: vi.fn(),
+	hasEvidenceForExchange: vi.fn(),
 };
 
 const mockCostGuardRepo = {
@@ -384,7 +384,7 @@ function setupDefaultMocks() {
 	mockEvidenceRepo.save.mockReturnValue(Effect.succeed(undefined));
 	mockEvidenceRepo.findBySession.mockReturnValue(Effect.succeed([]));
 	mockEvidenceRepo.findByUserId.mockReturnValue(Effect.succeed([]));
-	mockEvidenceRepo.countByMessage.mockReturnValue(Effect.succeed(0));
+	mockEvidenceRepo.hasEvidenceForExchange.mockReturnValue(Effect.succeed(false));
 
 	mockCostGuardRepo.checkDailyBudget.mockReturnValue(Effect.void);
 	mockCostGuardRepo.incrementDailyCost.mockReturnValue(Effect.succeed(1));
@@ -710,7 +710,7 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 				mockExchangeRepo.findBySession.mockReturnValue(Effect.succeed(postColdStartExchanges));
 
 				// Evidence already exists for the previous exchange (retry scenario)
-				mockEvidenceRepo.countByMessage.mockReturnValue(Effect.succeed(2));
+				mockEvidenceRepo.hasEvidenceForExchange.mockReturnValue(Effect.succeed(true));
 
 				yield* runNerinPipeline({
 					sessionId: "session_test_123",
@@ -719,6 +719,9 @@ describe("Nerin Pipeline - Director Model (Story 43-5)", () => {
 
 				// Extraction should be skipped (no ConversAnalyzer calls)
 				expect(mockConversanalyzerRepo.analyzeEvidence).not.toHaveBeenCalled();
+				expect(mockEvidenceRepo.hasEvidenceForExchange).toHaveBeenCalledWith(
+					postColdStartExchanges.at(-1)?.id,
+				);
 
 				// Director and Actor should still be called
 				expect(mockDirectorRepo.generateBrief).toHaveBeenCalledTimes(1);

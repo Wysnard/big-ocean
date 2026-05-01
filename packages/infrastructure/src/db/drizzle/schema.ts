@@ -298,7 +298,10 @@ export const conversationEvidence = pgTable(
 		note: text("note").notNull(),
 		createdAt: timestamp("created_at").defaultNow(),
 	},
-	(table) => [index("conversation_evidence_conversation_id_idx").on(table.conversationId)],
+	(table) => [
+		index("conversation_evidence_conversation_id_idx").on(table.conversationId),
+		index("conversation_evidence_exchange_id_idx").on(table.exchangeId),
+	],
 );
 
 /**
@@ -351,7 +354,35 @@ export const publicProfile = pgTable(
 	},
 	(table) => [
 		index("public_profile_conversation_id_idx").on(table.conversationId),
+		uniqueIndex("public_profile_conversation_id_unique").on(table.conversationId),
 		index("public_profile_user_id_idx").on(table.userId),
+	],
+);
+
+/**
+ * Portrait job offers (queue dedupe ledger)
+ *
+ * The portrait worker queue is in-memory; this table provides at-most-once enqueue semantics.
+ */
+export const portraitJobOffers = pgTable(
+	"portrait_job_offers",
+	{
+		id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+		conversationId: uuid("conversation_id")
+			.notNull()
+			.references(() => conversation.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		jobKey: text("job_key").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		uniqueIndex("portrait_job_offers_conversation_job_key_unique").on(
+			table.conversationId,
+			table.jobKey,
+		),
+		index("portrait_job_offers_conversation_id_idx").on(table.conversationId),
 	],
 );
 

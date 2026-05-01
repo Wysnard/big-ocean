@@ -16,12 +16,15 @@ vi.mock("@workspace/infrastructure/repositories/user-summary.drizzle.repository"
 import { describe, expect, it } from "@effect/vitest";
 import {
 	ALL_FACETS,
+	AssessmentCompletionRepository,
+	AssessmentResultRepository,
 	type ConversationEvidenceRecord,
 	ConversationRepository,
 	CostGuardRepository,
 	FORMULA_DEFAULTS,
 	LIFE_DOMAINS,
 	LoggerRepository,
+	PortraitJobOfferRepository,
 	PortraitJobQueue,
 	PublicProfileRepository,
 	TRAIT_NAMES,
@@ -102,6 +105,34 @@ const mockProfileRepo = {
 	incrementViewCount: vi.fn(() => Effect.void),
 };
 
+const mockCompletionRepo = {
+	commitCompletionWithPublicProfile: vi.fn(() => Effect.void),
+};
+
+const setupDefaultCompletionMock = () => {
+	mockCompletionRepo.commitCompletionWithPublicProfile.mockImplementation((input) =>
+		Effect.gen(function* () {
+			const assessmentResultRepo = yield* AssessmentResultRepository;
+
+			yield* assessmentResultRepo.updateStage(input.sessionId, "completed");
+
+			yield* Effect.sync(() => {
+				mockSessionRepo.updateSession(input.sessionId, {
+					status: "completed",
+					finalizationProgress: "completed",
+				});
+			});
+
+			return yield* Effect.void;
+		}),
+	);
+};
+
+const mockPortraitJobOffersRepo = {
+	claimOffer: vi.fn(() => Effect.succeed(true)),
+	deleteOffersByJobKeyPrefix: vi.fn(() => Effect.void),
+};
+
 const mockFinalizingSession = {
 	id: "session_123",
 	userId: "user_456",
@@ -119,6 +150,14 @@ const createTestLayer = () =>
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 		Layer.succeed(PublicProfileRepository, mockProfileRepo),
+		Layer.succeed(
+			AssessmentCompletionRepository,
+			AssessmentCompletionRepository.of(mockCompletionRepo),
+		),
+		Layer.succeed(
+			PortraitJobOfferRepository,
+			PortraitJobOfferRepository.of(mockPortraitJobOffersRepo),
+		),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
 		UserSummaryDrizzleRepositoryLive,
@@ -132,6 +171,14 @@ const createTestLayerWithFailingUserSummaryGenerator = () =>
 		Layer.succeed(LoggerRepository, mockLoggerRepo),
 		Layer.succeed(CostGuardRepository, mockCostGuardRepo),
 		Layer.succeed(PublicProfileRepository, mockProfileRepo),
+		Layer.succeed(
+			AssessmentCompletionRepository,
+			AssessmentCompletionRepository.of(mockCompletionRepo),
+		),
+		Layer.succeed(
+			PortraitJobOfferRepository,
+			PortraitJobOfferRepository.of(mockPortraitJobOffersRepo),
+		),
 		AssessmentResultDrizzleRepositoryLive,
 		ConversationEvidenceDrizzleRepositoryLive,
 		UserSummaryDrizzleRepositoryLive,
@@ -201,6 +248,9 @@ describe("generateResults Use Case (Story 18-4)", () => {
 				createdAt: new Date(),
 			}),
 		);
+		setupDefaultCompletionMock();
+		mockPortraitJobOffersRepo.claimOffer.mockReturnValue(Effect.succeed(true));
+		mockPortraitJobOffersRepo.deleteOffersByJobKeyPrefix.mockReturnValue(Effect.void);
 	});
 
 	describe("Session validation", () => {
@@ -242,6 +292,7 @@ describe("generateResults Use Case (Story 18-4)", () => {
 			"should return completed, ensure public profile, and not re-acquire finalization lock",
 			() =>
 				Effect.gen(function* () {
+					seedResult("session_123", { stage: "completed" });
 					mockSessionRepo.getSession.mockReturnValue(
 						Effect.succeed({ ...mockFinalizingSession, status: "completed" }),
 					);
@@ -255,9 +306,12 @@ describe("generateResults Use Case (Story 18-4)", () => {
 					expect(mockSessionRepo.acquireSessionLock).not.toHaveBeenCalled();
 					expect(mockSessionRepo.updateSession).not.toHaveBeenCalled();
 					expect(mockProfileRepo.getProfileBySessionId).toHaveBeenCalledWith("session_123");
+					const seeded = getStoredResults().get("session_123");
+					expect(seeded?.id).toBeDefined();
 					expect(mockProfileRepo.createProfile).toHaveBeenCalledWith({
 						sessionId: "session_123",
 						userId: "user_456",
+						assessmentResultId: seeded?.id,
 					});
 				}).pipe(Effect.provide(createTestLayer())),
 		);
@@ -371,11 +425,6 @@ describe("generateResults Use Case (Story 18-4)", () => {
 
 					expect(result).toEqual({ status: "completed" });
 
-					expect(mockProfileRepo.createProfile).toHaveBeenCalledWith({
-						sessionId: "session_123",
-						userId: "user_456",
-					});
-
 					const results = getStoredResults();
 					expect(results.size).toBe(1);
 					const record = results.get("session_123");
@@ -384,6 +433,17 @@ describe("generateResults Use Case (Story 18-4)", () => {
 					expect(Object.keys(record?.facets ?? {})).toHaveLength(30);
 					expect(Object.keys(record?.traits ?? {})).toHaveLength(5);
 					expect(record?.portrait).toBe("");
+
+					expect(mockCompletionRepo.commitCompletionWithPublicProfile).toHaveBeenCalledWith({
+						sessionId: "session_123",
+						userId: "user_456",
+						assessmentResultId: record?.id,
+					});
+					expect(mockPortraitJobOffersRepo.claimOffer).toHaveBeenCalledWith({
+						sessionId: "session_123",
+						userId: "user_456",
+						jobKey: "initial_free",
+					});
 
 					const queue = yield* PortraitJobQueue;
 					const job = yield* Queue.take(queue);
@@ -419,6 +479,12 @@ describe("generateResults Use Case (Story 18-4)", () => {
 				yield* generateResults({
 					sessionId: "session_123",
 					authenticatedUserId: "user_456",
+				});
+
+				expect(mockPortraitJobOffersRepo.claimOffer).toHaveBeenCalledWith({
+					sessionId: "session_123",
+					userId: "user_456",
+					jobKey: "bundled_extension",
 				});
 
 				const queue = yield* PortraitJobQueue;

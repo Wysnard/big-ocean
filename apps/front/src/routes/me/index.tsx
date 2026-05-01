@@ -4,6 +4,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { ConversationHistorySection } from "@/components/me/ConversationHistorySection";
 import { IdentityHeroSection } from "@/components/me/IdentityHeroSection";
 import { MePageSection } from "@/components/me/MePageSection";
 import { SubscriptionPitchSection } from "@/components/me/SubscriptionPitchSection";
@@ -12,7 +13,11 @@ import { YourCirclePreviewSection } from "@/components/me/YourCirclePreviewSecti
 import { YourGrowthSection } from "@/components/me/YourGrowthSection";
 import { YourPublicFaceSection } from "@/components/me/YourPublicFaceSection";
 import { ThreeSpaceLayout } from "@/components/ThreeSpaceLayout";
-import { listConversationsQueryOptions, useGetResults } from "@/hooks/use-conversation";
+import {
+	listConversationsQueryOptions,
+	useGetResults,
+	useListConversations,
+} from "@/hooks/use-conversation";
 import { useSubscriptionState } from "@/hooks/use-subscription-state";
 import { getSession } from "@/lib/auth-client";
 import {
@@ -30,6 +35,7 @@ type MeSectionSpec = {
 const ME_SECTION_SPECS: readonly MeSectionSpec[] = [
 	{ key: "identity-hero", title: "Your identity" },
 	{ key: "portrait", title: "Your Portrait" },
+	{ key: "conversation-history", title: "Conversation History" },
 	{ key: "growth", title: "Your Growth", isConditional: true, hidden: true },
 	{ key: "public-face", title: "Your Public Face" },
 	{ key: "circle", title: "Your Circle" },
@@ -103,6 +109,7 @@ export const Route = createFileRoute("/me/")({
 function MePage() {
 	const { sessionId } = Route.useLoaderData();
 	const { data: results, isLoading, error, refetch } = useGetResults(sessionId);
+	const conversationsQuery = useListConversations();
 	const subscriptionQuery = useSubscriptionState();
 	const [isErrorVisible, setIsErrorVisible] = useState(true);
 
@@ -140,7 +147,11 @@ function MePage() {
 			{isLoading ? (
 				<MePageSkeleton />
 			) : (
-				<MePageSections results={results} subscriptionQuery={subscriptionQuery} />
+				<MePageSections
+					results={results}
+					conversationsQuery={conversationsQuery}
+					subscriptionQuery={subscriptionQuery}
+				/>
 			)}
 		</ThreeSpaceLayout>
 	);
@@ -211,9 +222,11 @@ function MePageSkeleton() {
 
 function MePageSections({
 	results,
+	conversationsQuery,
 	subscriptionQuery,
 }: {
 	results: GetResultsResponse | undefined;
+	conversationsQuery: ReturnType<typeof useListConversations>;
 	subscriptionQuery: ReturnType<typeof useSubscriptionState>;
 }) {
 	return (
@@ -243,6 +256,18 @@ function MePageSections({
 						? `Your latest completed assessment is ready to revisit. Built from ${results.messageCount} conversation turns, this section will become the home for your full portrait reading.`
 						: "Your latest portrait will appear here once the results load again."}
 				</p>
+			</MePageSection>
+
+			<MePageSection
+				title="Conversation History"
+				data-slot="me-section-conversation-history"
+				data-testid="me-section-conversation-history"
+			>
+				<ConversationHistorySection
+					sessions={conversationsQuery.data?.sessions ?? []}
+					isLoading={conversationsQuery.isLoading}
+					isError={conversationsQuery.isError}
+				/>
 			</MePageSection>
 
 			<YourGrowthSection />

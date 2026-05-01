@@ -13,6 +13,8 @@
 
 import type { EvidenceInput } from "@workspace/domain";
 import {
+	AssessmentCompletionRepository,
+	AssessmentResultError,
 	AssessmentResultRepository,
 	ConversationRepository,
 	CostGuardRepository,
@@ -20,6 +22,7 @@ import {
 	computeDomainCoverage,
 	computeTraitResults,
 	LoggerRepository,
+	PortraitJobOfferRepository,
 	PortraitJobQueue,
 	SessionNotFinalizing,
 } from "@workspace/domain";
@@ -44,6 +47,8 @@ export const generateResults = (input: GenerateResultsInput) =>
 		const sessionRepo = yield* ConversationRepository;
 		const logger = yield* LoggerRepository;
 		const assessmentResultRepo = yield* AssessmentResultRepository;
+		const completionRepo = yield* AssessmentCompletionRepository;
+		const portraitJobOffers = yield* PortraitJobOfferRepository;
 
 		const conversation = yield* requireAuthenticatedConversation({
 			sessionId: input.sessionId,
@@ -222,16 +227,20 @@ export const generateResults = (input: GenerateResultsInput) =>
 
 			const shouldQueueFreePortraitOnCompletion = session.parentConversationId == null;
 
-			// Set stage=completed on assessment_results
-			yield* assessmentResultRepo.updateStage(input.sessionId, "completed");
+			const latestResult = yield* assessmentResultRepo.getBySessionId(input.sessionId);
+			if (!latestResult?.id) {
+				return yield* Effect.fail(
+					new AssessmentResultError({
+						message: `Assessment result missing before completion commit (sessionId=${input.sessionId})`,
+					}),
+				);
+			}
 
-			// Mark session completed
-			yield* sessionRepo.updateSession(input.sessionId, {
-				status: "completed",
-				finalizationProgress: "completed",
+			yield* completionRepo.commitCompletionWithPublicProfile({
+				sessionId: input.sessionId,
+				userId,
+				assessmentResultId: latestResult.id,
 			});
-
-			yield* ensurePublicProfileForSession({ sessionId: input.sessionId, userId });
 
 			const costGuard = yield* CostGuardRepository;
 			const totalSessionCents = yield* costGuard
@@ -245,20 +254,36 @@ export const generateResults = (input: GenerateResultsInput) =>
 			});
 
 			if (shouldQueueFreePortraitOnCompletion || shouldQueueBundledPortrait) {
-				const portraitQueue = yield* PortraitJobQueue;
-				yield* Queue.offer(portraitQueue, {
+				const jobKey = shouldQueueBundledPortrait ? "bundled_extension" : "initial_free";
+				const claimed = yield* portraitJobOffers.claimOffer({
 					sessionId: input.sessionId,
 					userId,
+					jobKey,
 				});
-				logger.info(
-					shouldQueueBundledPortrait
-						? "Generate results: queued bundled portrait for first extension completion"
-						: "Generate results: queued initial free portrait on assessment completion",
-					{
+
+				if (claimed) {
+					const portraitQueue = yield* PortraitJobQueue;
+					yield* Queue.offer(portraitQueue, {
 						sessionId: input.sessionId,
 						userId,
-					},
-				);
+					});
+					logger.info(
+						shouldQueueBundledPortrait
+							? "Generate results: queued bundled portrait for first extension completion"
+							: "Generate results: queued initial free portrait on assessment completion",
+						{
+							sessionId: input.sessionId,
+							userId,
+							jobKey,
+						},
+					);
+				} else {
+					logger.info("Generate results: skipped duplicate portrait job enqueue", {
+						sessionId: input.sessionId,
+						userId,
+						jobKey,
+					});
+				}
 			}
 
 			logger.info("Generate results: finalization complete", {

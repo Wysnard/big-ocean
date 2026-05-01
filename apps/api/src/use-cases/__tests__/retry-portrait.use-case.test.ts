@@ -13,6 +13,7 @@ import {
 	AssessmentResultRepository,
 	ConversationRepository,
 	LoggerRepository,
+	PortraitJobOfferRepository,
 	PortraitJobQueue,
 	PortraitRepository,
 	PurchaseEventRepository,
@@ -63,11 +64,20 @@ const mockLogger = {
 	debug: vi.fn(),
 };
 
+const mockPortraitJobOffersRepo = {
+	claimOffer: vi.fn(() => Effect.succeed(true)),
+	deleteOffersByJobKeyPrefix: vi.fn(() => Effect.void),
+};
+
 const createTestLayer = () =>
 	Layer.mergeAll(
 		Layer.succeed(ConversationRepository, mockSessionRepo),
 		Layer.succeed(AssessmentResultRepository, mockResultRepo),
 		Layer.succeed(PortraitRepository, mockPortraitRepo),
+		Layer.succeed(
+			PortraitJobOfferRepository,
+			PortraitJobOfferRepository.of(mockPortraitJobOffersRepo),
+		),
 		Layer.succeed(PurchaseEventRepository, mockPurchaseRepo),
 		Layer.succeed(LoggerRepository, mockLogger),
 		Layer.effect(PortraitJobQueue, Queue.unbounded()),
@@ -87,6 +97,8 @@ const createMockPortrait = (overrides: Partial<Portrait> = {}): Portrait => ({
 describe("retryPortrait Use Case (Story 32-6, queue-based)", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockPortraitJobOffersRepo.claimOffer.mockReturnValue(Effect.succeed(true));
+		mockPortraitJobOffersRepo.deleteOffersByJobKeyPrefix.mockReturnValue(Effect.void);
 	});
 
 	it.effect("deletes failed portrait and queues regeneration", () =>
@@ -108,6 +120,11 @@ describe("retryPortrait Use Case (Story 32-6, queue-based)", () => {
 
 			expect(result.status).toBe("generating");
 			expect(mockPortraitRepo.deleteByResultIdAndTier).toHaveBeenCalledWith("result_456", "full");
+			expect(mockPortraitJobOffersRepo.deleteOffersByJobKeyPrefix).toHaveBeenCalledWith(
+				"session_123",
+				"retry_manual:",
+			);
+			expect(mockPortraitJobOffersRepo.claimOffer).toHaveBeenCalled();
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"Manual portrait retry: deleting failed portrait and queuing regeneration",
 				expect.objectContaining({ portraitId: "portrait_123" }),

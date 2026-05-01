@@ -165,6 +165,10 @@ export {
 	buildWeeklySummaryPrompt,
 	type WeeklySummaryPromptParts,
 } from "./prompts/weekly-summary.prompt";
+export {
+	AssessmentCompletionRepository,
+	type CommitAssessmentCompletionInput,
+} from "./repositories/assessment-completion.repository";
 // Assessment result repository (Story 11.2)
 export {
 	AssessmentResultError,
@@ -240,6 +244,10 @@ export {
 	type PortraitStatus,
 	type PortraitTier,
 } from "./repositories/portrait.repository";
+export {
+	type ClaimPortraitJobOfferInput,
+	PortraitJobOfferRepository,
+} from "./repositories/portrait-job-offer.repository";
 export { PortraitGenerationError } from "./repositories/portrait-pipeline.errors";
 export {
 	type PortraitProseRendererInput,
