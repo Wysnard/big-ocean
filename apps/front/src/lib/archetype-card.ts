@@ -9,7 +9,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 
 export const generateArchetypeCardPng = createServerFn({ method: "GET" })
-	.inputValidator((data: { publicProfileId: string; format: "9:16" | "1:1" }) => data)
+	.validator((data: { publicProfileId: string; format: "9:16" | "1:1" }) => data)
 	.handler(async ({ data }) => {
 		const { publicProfileId, format } = data;
 		const cookie = getRequestHeader("cookie");
