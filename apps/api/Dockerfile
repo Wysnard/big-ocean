@@ -2,8 +2,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install latest pnpm
-RUN npm install -g pnpm@latest
+# Install pinned pnpm (matches packageManager; pnpm@latest now requires Node >=22)
+RUN npm install -g pnpm@10.33.0
 
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
@@ -29,8 +29,8 @@ COPY drizzle/ ./drizzle/
 FROM node:20-alpine AS development
 WORKDIR /app
 
-# Install latest pnpm
-RUN npm install -g pnpm@latest && corepack enable
+# Install pinned pnpm (matches packageManager; pnpm@latest now requires Node >=22)
+RUN npm install -g pnpm@10.33.0 && corepack enable
 
 # Copy package files for dependency installation
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
