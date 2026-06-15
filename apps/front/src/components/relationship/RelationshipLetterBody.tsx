@@ -52,6 +52,7 @@ export const RelationshipLetterBody = memo(function RelationshipLetterBody({
 			<div className={letterRelationshipBodyWrapClass}>
 				{sections.length > 0 ? (
 					sections.map((section, i) => (
+						// biome-ignore lint/suspicious/noArrayIndexKey: letter sections render once in fixed parsed order, so the index is a stable key
 						<div key={`${section.header}-${i}`} className={i > 0 ? "mt-8" : ""}>
 							{section.level === 1 ? (
 								<h3 className="text-xl font-heading font-semibold text-foreground">{section.header}</h3>
