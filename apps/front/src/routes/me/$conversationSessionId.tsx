@@ -32,6 +32,7 @@ import {
 	generateResultsForSession,
 	getResultsQueryOptions,
 	isConversationApiError,
+	useDriveFinalization,
 	useGetResults,
 } from "@/hooks/use-conversation";
 import { useFacetEvidence } from "@/hooks/use-evidence";
@@ -122,6 +123,14 @@ function ResultsSessionPage() {
 	const { isAuthenticated, isPending: isAuthPending } = useAuth();
 	const canLoadResults = isAuthenticated && !isAuthPending;
 	const { data: results, isLoading, error } = useGetResults(conversationSessionId, canLoadResults);
+
+	// Finalization race: the results-page trigger can fire before the message
+	// pipeline flips the session to "finalizing", so a single generateResults call
+	// can 409 and never recover. Keep driving finalization until results are ready.
+	const isResultsNotFound = isConversationApiError(error) && error.status === 404;
+	const resultsNotReady = canLoadResults && !results && !isResultsNotFound;
+	const finalizationDrive = useDriveFinalization(conversationSessionId, resultsNotReady);
+
 	const subscriptionQueryForExtend = useSubscriptionState(canLoadResults);
 	const activateExtensionMutation = useActivateExtension();
 	const toggleVisibility = useToggleVisibility();
@@ -421,7 +430,18 @@ function ResultsSessionPage() {
 		);
 	}
 
-	if (error || !results) {
+	if (!results) {
+		// Finalization may still be running (race between message completion and
+		// the results-page finalization trigger). Keep showing the wait screen while
+		// the driver polls; only surface the terminal error if finalization failed.
+		if (finalizationDrive !== "failed") {
+			return (
+				<PageMain title="Loading your results" className="bg-background">
+					<FinalizationWaitScreen status="analyzing" progress={40} />
+				</PageMain>
+			);
+		}
+
 		return (
 			<PageMain className="min-h-screen bg-background flex items-center justify-center px-6">
 				<div className="text-center">

@@ -16,6 +16,7 @@ const {
 	mockSyncPushSubscription,
 	mockUseSubscriptionQuery,
 	mockUseActivateExtension,
+	mockUseDriveFinalization,
 } = vi.hoisted(() => ({
 	mockUseParams: vi.fn(() => ({ conversationSessionId: "session-123" })),
 	mockUseSearch: vi.fn(() => ({ scrollToFacet: undefined })),
@@ -43,6 +44,7 @@ const {
 		isPending: false,
 		isError: false,
 	})),
+	mockUseDriveFinalization: vi.fn(() => "driving"),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -83,6 +85,7 @@ vi.mock("@/hooks/use-account", () => ({
 
 vi.mock("@/hooks/use-conversation", () => ({
 	useGetResults: (...args: unknown[]) => mockUseGetResults(...args),
+	useDriveFinalization: (...args: unknown[]) => mockUseDriveFinalization(...args),
 	getResultsQueryOptions: (sessionId: string) => ({
 		queryKey: ["conversation", "results", sessionId],
 		queryFn: vi.fn(),
@@ -415,6 +418,36 @@ describe("me/$conversationSessionId route behavior (session-scoped identity + po
 		render(<Component />);
 
 		expect(screen.queryByText("Continue Assessment")).toBeNull();
+	});
+
+	it("shows the finalization wait screen while finalization is still being driven", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockUseGetResults.mockReturnValue({
+			data: null,
+			isLoading: false,
+			error: { status: 409, message: "Session is 'finalizing', results are not ready yet" },
+		});
+		mockUseDriveFinalization.mockReturnValue("driving");
+
+		render(<Component />);
+
+		expect(screen.getByTestId("finalization-wait")).toBeInTheDocument();
+		expect(screen.queryByText("Could Not Load Results")).toBeNull();
+	});
+
+	it("shows the error screen only once finalization has failed", () => {
+		mockUseAuth.mockReturnValue({ isAuthenticated: true, isPending: false });
+		mockUseGetResults.mockReturnValue({
+			data: null,
+			isLoading: false,
+			error: { status: 409, message: "Session is 'finalizing', results are not ready yet" },
+		});
+		mockUseDriveFinalization.mockReturnValue("failed");
+
+		render(<Component />);
+
+		expect(screen.getByText("Could Not Load Results")).toBeInTheDocument();
+		expect(screen.queryByTestId("finalization-wait")).toBeNull();
 	});
 
 	it("shows results extension CTA when entitled and results are the latest version", () => {
