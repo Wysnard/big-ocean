@@ -18,15 +18,15 @@
     "./http/groups/relationship": "./src/http/groups/relationship.ts"
   },
   "dependencies": {
-    "@workspace/domain": "workspace:*",
-    "effect": "catalog:",
     "@effect/rpc": "catalog:",
-    "@effect/schema": "catalog:"
+    "@effect/schema": "catalog:",
+    "@workspace/domain": "workspace:*",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",
     "@workspace/lint": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
-    "typescript": "^5.7.2"
+    "typescript": "^5.9.3"
   }
 }
