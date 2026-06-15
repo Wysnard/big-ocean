@@ -36,14 +36,12 @@
     "dotenv": "^17.4.2",
     "effect": "catalog:",
     "pino": "catalog:",
-    "uuid": "^13.0.2",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
     "@effect/vitest": "catalog:",
     "@types/node": "^20.19.43",
-    "@types/uuid": "^11.0.0",
     "@vitest/coverage-v8": "catalog:",
     "@workspace/lint": "workspace:*",
     "pino-pretty": "^13.1.3",
