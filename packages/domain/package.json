@@ -22,7 +22,6 @@
     "./types/*": "./src/types/*.ts"
   },
   "dependencies": {
-    "@effect/schema": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

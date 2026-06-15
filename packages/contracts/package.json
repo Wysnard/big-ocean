@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@effect/rpc": "catalog:",
-    "@effect/schema": "catalog:",
     "@workspace/domain": "workspace:*",
     "effect": "catalog:"
   },

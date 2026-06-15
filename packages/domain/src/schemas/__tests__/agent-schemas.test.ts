@@ -6,13 +6,13 @@
  * validation and JSON Schema generation.
  */
 
-import { JSONSchema } from "@effect/schema";
 import {
 	AnalyzerResponseSchema,
 	NerinResponseSchema,
 	validateAnalyzerResponse,
 	validateNerinResponse,
 } from "@workspace/domain";
+import { JSONSchema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("NerinResponseSchema", () => {
