@@ -8,7 +8,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LoginForm } from "../components/auth";
 import { PageMain } from "../components/PageMain";
-import { getServerSession } from "../lib/auth.server";
+import { getServerSession } from "../lib/auth-session";
 
 export const Route = createFileRoute("/login")({
 	validateSearch: (search: Record<string, unknown>) => ({

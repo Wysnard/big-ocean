@@ -4,8 +4,8 @@ import { Button } from "@workspace/ui/components/button";
 import { OceanHieroglyphSet } from "@workspace/ui/components/ocean-hieroglyph-set";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "../../components/ThemeToggle";
-import type { RenderedTemplate } from "../../lib/email-preview.server";
-import { getRenderedEmailTemplates } from "../../lib/email-preview.server";
+import type { RenderedTemplate } from "../../lib/email-preview";
+import { getRenderedEmailTemplates } from "../../lib/email-preview";
 
 export const Route = createFileRoute("/dev/emails")({
 	beforeLoad: () => {

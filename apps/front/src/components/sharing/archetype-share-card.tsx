@@ -9,7 +9,7 @@ import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
 import { Download, Loader2, Share2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { generateArchetypeCardPng } from "@/lib/archetype-card.server";
+import { generateArchetypeCardPng } from "@/lib/archetype-card";
 
 interface ArchetypeShareCardProps {
 	publicProfileId: string;
