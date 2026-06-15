@@ -18,12 +18,12 @@
     "./services/*": "./src/services/*.ts",
     "./schemas/*": "./src/schemas/*.ts",
     "./constants/*": "./src/constants/*.ts",
-"./utils/*": "./src/utils/*.ts",
+    "./utils/*": "./src/utils/*.ts",
     "./types/*": "./src/types/*.ts"
   },
   "dependencies": {
-    "effect": "catalog:",
-    "@effect/schema": "catalog:"
+    "@effect/schema": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",
