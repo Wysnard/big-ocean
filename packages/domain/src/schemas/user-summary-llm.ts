@@ -3,8 +3,7 @@
  * Validates Haiku structured output before persistence.
  */
 
-import { Schema as S } from "@effect/schema";
-import { Either } from "effect";
+import { Either, Schema as S } from "effect";
 import type {
 	UserSummaryQuoteEntry,
 	UserSummaryThemeEntry,

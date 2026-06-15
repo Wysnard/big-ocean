@@ -4,7 +4,7 @@
  * Common data structures used across multiple RPC services.
  */
 
-import * as S from "@effect/schema/Schema";
+import * as S from "effect/Schema";
 
 /**
  * Email validation schema

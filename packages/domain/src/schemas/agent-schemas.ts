@@ -6,7 +6,7 @@
  * providing both TypeScript types and JSON Schema conversion for LangChain.
  *
  * Pattern:
- * 1. Define schema using @effect/schema
+ * 1. Define schema using effect Schema
  * 2. Export both Effect Schema and JSON Schema (via JSONSchema.make)
  * 3. Use JSON Schema with LangChain's model.withStructuredOutput()
  * 4. Validate responses using Schema.decodeUnknownEither(schema)
@@ -19,7 +19,7 @@
  * - JSON Schema annotations help LLM understand structure
  */
 
-import { JSONSchema, Schema as S } from "@effect/schema";
+import { JSONSchema, Schema as S } from "effect";
 import { ALL_FACETS } from "../constants/big-five";
 
 // ============================================================================
