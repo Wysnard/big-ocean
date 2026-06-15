@@ -128,6 +128,7 @@ export function OceanSkeleton({
 
 				return (
 					<span
+						// biome-ignore lint/suspicious/noArrayIndexKey: fixed positional OCEAN slots that never reorder, so the index is a stable key
 						key={`${index}-${letter}`}
 						{...traitAttrs}
 						className={cn("inline-flex items-center justify-center", animClassName)}

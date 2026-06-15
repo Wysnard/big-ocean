@@ -53,7 +53,7 @@
     "vite-tsconfig-paths": "^6.1.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
+    "@biomejs/biome": "^2.5.0",
     "@mdx-js/rollup": "^3.1.1",
     "@storybook/addon-a11y": "^10.4.5",
     "@storybook/addon-themes": "^10.4.5",

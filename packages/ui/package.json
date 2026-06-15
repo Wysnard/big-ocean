@@ -32,7 +32,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
+    "@biomejs/biome": "^2.5.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@turbo/gen": "^2.9.18",
     "@types/node": "^20.19.43",
