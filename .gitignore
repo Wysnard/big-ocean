@@ -1,8 +1,23 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Claude Code
+# AI assistants & local agent config (personal/local — not for sharing)
 .claude/worktrees/
 .claude/memory/
+.claude/settings.local.json
+.claude/.last_session
+CLAUDE.local.md
+AGENT.local.md
+agent.local.md
+# Codex / OpenCode / 1code local state
+.codex/sessions/
+.opencode/node_modules/
+.1code/worktree.json
+# BMad per-user overrides
+**/*.user.toml
+# Aider / Continue / Cursor local caches
+.aider*
+.continue/
+.cursor/.cache/
 
 # Dependencies
 node_modules
@@ -36,7 +51,9 @@ out/
 build
 dist
 
-# Debug
+# Debug & logs
+*.log
+logs/
 npm-debug.log*
 pnpm-debug.log*
 
