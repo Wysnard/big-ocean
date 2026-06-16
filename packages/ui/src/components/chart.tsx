@@ -2,10 +2,13 @@
 
 import { cn } from "@workspace/ui/lib/utils";
 import * as React from "react";
+import type { TooltipValueType } from "recharts";
 import * as RechartsPrimitive from "recharts";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
+
+type TooltipNameType = number | string;
 
 export type ChartConfig = {
 	[k in string]: {
@@ -117,7 +120,10 @@ function ChartTooltipContent({
 		indicator?: "line" | "dot" | "dashed";
 		nameKey?: string;
 		labelKey?: string;
-	}) {
+	} & Omit<
+		RechartsPrimitive.DefaultTooltipContentProps<TooltipValueType, TooltipNameType>,
+		"accessibilityLayer"
+	>) {
 	const { config } = useChart();
 
 	const tooltipLabel = React.useMemo(() => {
@@ -168,7 +174,8 @@ function ChartTooltipContent({
 
 						return (
 							<div
-								key={item.dataKey}
+								// biome-ignore lint/suspicious/noArrayIndexKey: tooltip payload renders in fixed order and re-renders fully per hover, so the index is a stable key (recharts 3 types dataKey as possibly a function)
+								key={index}
 								className={cn(
 									"[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
 									indicator === "dot" && "items-center",
@@ -233,7 +240,7 @@ function ChartLegendContent({
 	verticalAlign = "bottom",
 	nameKey,
 }: React.ComponentProps<"div"> &
-	Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+	RechartsPrimitive.DefaultLegendContentProps & {
 		hideIcon?: boolean;
 		nameKey?: string;
 	}) {
@@ -310,9 +317,9 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
 
 export {
 	ChartContainer,
-	ChartTooltip,
-	ChartTooltipContent,
 	ChartLegend,
 	ChartLegendContent,
 	ChartStyle,
+	ChartTooltip,
+	ChartTooltipContent,
 };
